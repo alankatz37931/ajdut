@@ -37,12 +37,14 @@ export function EditProjectForm({
   hasStartupProfile,
   maxAvailable,
   currentTotalShares,
+  openLeadsCount,
 }: {
   projectSlug: string;
   initial: Initial;
   hasStartupProfile: boolean;
   maxAvailable: number;
   currentTotalShares: number;
+  openLeadsCount: number;
 }) {
   const [form, setForm] = useState<Initial>(initial);
   const [error, setError] = useState<string | null>(null);
@@ -255,6 +257,22 @@ export function EditProjectForm({
               <p className="mt-2 eyebrow">
                 Hoy: {initial.availableShares.toLocaleString("es-MX")} disponibles.
               </p>
+              {form.availableShares === 0 && openLeadsCount > 0 && (
+                <div className="hairline mt-3 p-3 bg-paper">
+                  <p className="eyebrow !text-gold">⚠ Tenés {openLeadsCount} {openLeadsCount === 1 ? "lead abierto" : "leads abiertos"}</p>
+                  <p className="mt-2 text-sm text-navy/85 leading-relaxed">
+                    Si dejás disponibles en cero, esos pedidos quedan imposibles de cumplir. Revisalos
+                    en{" "}
+                    <a
+                      href={`/founder/${projectSlug}/leads`}
+                      className="!text-gold hover:!text-navy underline"
+                    >
+                      Interés de compra
+                    </a>{" "}
+                    antes de bajar el pool.
+                  </p>
+                </div>
+              )}
             </Field>
           </section>
 

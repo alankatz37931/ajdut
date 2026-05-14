@@ -53,6 +53,9 @@ export async function createInterestLead(input: CreateInterestInput) {
   if (input.shareCountRequested < 1) {
     throw new ValidationError("shareCountRequested", "Cantidad mínima: 1 acción.");
   }
+  if (input.message.length > 2000) {
+    throw new ValidationError("message", "El mensaje no puede superar los 2000 caracteres.");
+  }
   const available = project.participations
     .filter((p) => p.status === "AVAILABLE")
     .reduce((s, p) => s + p.shareCount, 0);

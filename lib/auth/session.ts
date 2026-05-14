@@ -19,7 +19,9 @@ export async function requireSession(): Promise<SessionUser> {
 export async function requireRole(allowed: SessionUser["role"][]): Promise<SessionUser> {
   const user = await requireSession();
   if (!allowed.includes(user.role)) {
-    redirect("/");
+    // Mandamos al dispatcher por rol — no a la landing pública. Así un PARTNER
+    // que pincha por error una URL de admin termina en /partner, no en "/".
+    redirect("/redirect-by-role");
   }
   return user;
 }

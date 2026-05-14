@@ -138,6 +138,24 @@ export default async function ProjectPage({ params }: Params) {
       : [];
 
   const myShares = myParticipations.reduce((s, p) => s + p.shareCount, 0);
+  const myPct = totalShares > 0 ? (myShares / totalShares) * 100 : 0;
+
+  // Valor de la posición del viewer si hay valoración declarada.
+  const valuationNum = project.startupProfile?.preMoneyValuation
+    ? Number(project.startupProfile.preMoneyValuation)
+    : null;
+  const pricePerShare =
+    valuationNum && totalShares > 0 ? valuationNum / totalShares : null;
+  const myValue = pricePerShare !== null ? myShares * pricePerShare : null;
+  const projectCurrency = project.startupProfile?.valuationCurrency ?? "USD";
+
+  const PARTICIPATION_STATUS_LABEL: Record<string, string> = {
+    ASSIGNED: "Asignada",
+    IN_RESALE: "En reventa",
+    TRANSFER_PENDING: "Transferencia pendiente",
+    IN_NEGOTIATION: "En negociación",
+    AVAILABLE: "Disponible",
+  };
 
   const isAdminViewer = access.role === "ADMIN" && project.ownerId !== user.id;
 
@@ -233,17 +251,84 @@ export default async function ProjectPage({ params }: Params) {
               )}
               hint="declarada"
             />
-            <KpiCard
-              label="Tu participación"
-              value={myShares > 0 ? formatNumber(myShares) : "—"}
-              hint={myShares > 0 ? formatPercent((myShares / totalShares) * 100) : "sin participación"}
-            />
             {project.startupProfile.websiteUrl && (
               <KpiCard label="Sitio" value="↗" hint={project.startupProfile.websiteUrl} />
             )}
           </div>
         )}
       </Section>
+
+      {/* Vista personalizada del viewer: qué tiene en este proyecto.
+          Respeta A1 (no muestra otros socios) — solo la posición propia. */}
+      {myShares > 0 && (
+        <Section title="Tu participación">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-line">
+            <KpiCard
+              label="Acciones"
+              value={formatNumber(myShares)}
+              hint={formatPercent(myPct)}
+              highlight
+            />
+            <KpiCard
+              label="Valor"
+              value={myValue !== null ? formatCurrency(myValue, projectCurrency) : "—"}
+              hint={
+                pricePerShare !== null
+                  ? `a ${formatCurrency(pricePerShare, projectCurrency)} / acción`
+                  : "sin valoración declarada"
+              }
+            />
+            <KpiCard
+              label="Participaciones"
+              value={String(myParticipations.length)}
+              hint={
+                myParticipations.length === 1 ? "1 registro" : `${myParticipations.length} registros`
+              }
+            />
+          </div>
+
+          {myParticipations.length > 0 && (
+            <ul className="mt-6 hairline-t">
+              {myParticipations.map((p) => (
+                <li
+                  key={p.id}
+                  className="hairline-b grid grid-cols-12 items-center gap-3 py-4"
+                >
+                  <div className="col-span-12 sm:col-span-5 min-w-0">
+                    <p className="font-mono text-sm text-navy break-all">{p.serialCode}</p>
+                    <p className="mt-1 eyebrow">
+                      {PARTICIPATION_STATUS_LABEL[p.status] ?? p.status}
+                    </p>
+                  </div>
+                  <div className="col-span-6 sm:col-span-3">
+                    <p className="eyebrow">Acciones</p>
+                    <p className="mt-1 font-mono text-navy">{formatNumber(p.shareCount)}</p>
+                  </div>
+                  <div className="col-span-6 sm:col-span-2">
+                    <p className="eyebrow">% del total</p>
+                    <p className="mt-1 font-mono text-navy">
+                      {formatPercent((p.shareCount / totalShares) * 100)}
+                    </p>
+                  </div>
+                  <div className="col-span-12 sm:col-span-2 text-right">
+                    <p className="eyebrow">Adquirida</p>
+                    <p className="mt-1 eyebrow !text-navy">
+                      {p.acquiredAt ? formatDate(p.acquiredAt) : "—"}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {!access.canSeeCapTable && (
+            <p className="mt-4 eyebrow !text-navy/40">
+              Solo ves tu propia posición. El cap table completo es información sensible y
+              queda reservada al founder y al equipo de AJDUT.
+            </p>
+          )}
+        </Section>
+      )}
 
       {access.canManifestInterest && availableShares > 0 && (
         <Section title="Comprar acciones">

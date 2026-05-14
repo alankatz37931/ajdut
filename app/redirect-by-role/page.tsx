@@ -9,8 +9,9 @@ export default async function RedirectByRolePage() {
       redirect("/proyectos");
     case "PROJECT_OWNER":
       redirect("/founder");
-    case "CO_ADMIN":
     case "PARTNER":
+      redirect("/partner");
+    case "CO_ADMIN":
       redirect("/proyectos");
     default:
       redirect("/");

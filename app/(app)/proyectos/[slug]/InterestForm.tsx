@@ -270,11 +270,15 @@ export function InterestForm({
           id="message"
           name="message"
           rows={4}
+          maxLength={2000}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Si querés, contale por qué te interesa o cualquier consulta."
           className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy focus:outline-none focus:border-navy"
         />
+        <span className="eyebrow mt-2 block !text-navy/40">
+          {message.length} / 2000
+        </span>
       </div>
 
       {error && (

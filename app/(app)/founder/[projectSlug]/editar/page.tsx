@@ -33,6 +33,15 @@ export default async function EditProjectPage({ params }: Params) {
     .reduce((s, p) => s + p.shareCount, 0);
   const maxAvailable = project.totalShares - assigned;
 
+  // Leads OPEN/CONTACTED: si el founder reduce disponibles a 0 con leads abiertos,
+  // estos quedan rotos (no se pueden cumplir). Avisamos para que actúe antes.
+  const openLeadsCount = await prisma.lead.count({
+    where: {
+      projectId: project.id,
+      status: { in: ["OPEN", "CONTACTED"] },
+    },
+  });
+
   const access = await getProjectAccess({
     userId: user.id,
     userRole: user.role,
@@ -80,6 +89,7 @@ export default async function EditProjectPage({ params }: Params) {
         hasStartupProfile={!!project.startupProfile}
         maxAvailable={maxAvailable}
         currentTotalShares={project.totalShares}
+        openLeadsCount={openLeadsCount}
       />
     </div>
   );

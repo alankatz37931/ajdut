@@ -44,6 +44,13 @@ export async function manifestInterestAction(
   if (!Number.isFinite(n) || n < 1) {
     return { ok: false, error: "Cantidad inválida.", code: "VALIDATION" };
   }
+  if (message.length > 2000) {
+    return {
+      ok: false,
+      error: "El mensaje no puede superar los 2000 caracteres.",
+      code: "VALIDATION",
+    };
+  }
 
   let lead;
   try {
