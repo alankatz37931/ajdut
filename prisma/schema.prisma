@@ -1,0 +1,696 @@
+// AJDUT — Schema de base de datos
+// Filosofía: Cero Transacciones · Trazabilidad de Legado · Gatekeeping Estricto
+// Toda transferencia de propiedad genera un registro inmutable en OwnershipHistory.
+// Las cifras monetarias se almacenan en Decimal; los IDs son cuid.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── IDENTIDAD Y GATEKEEPING ────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  PROJECT_OWNER
+  CO_ADMIN
+  PARTNER
+  PLATFORM
+}
+
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model Application {
+  id              String            @id @default(cuid())
+  fullName        String
+  email           String            @unique
+  phone           String
+  country         String
+  motivation      String
+  referredBy      String?
+  status          ApplicationStatus @default(PENDING)
+  // El email del aplicante quedó verificado al momento de enviar (vía código OTP).
+  // Si una aplicación llegó por algún path legacy sin verificación, queda nullable.
+  emailVerifiedAt DateTime?
+  reviewedById    String?
+  reviewedBy      User?             @relation("ApplicationReviewer", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
+  rejectionNote   String?
+  createdUser     User?             @relation("ApplicationOrigin")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([status, createdAt])
+}
+
+// Códigos one-time para verificar el email antes de crear la Application.
+// El "payload" guarda los datos del form firmados/serializados — recién creamos
+// la Application cuando el usuario ingresa el código correcto.
+model EmailVerificationCode {
+  id          String    @id @default(cuid())
+  email       String
+  codeHash    String
+  payload     Json
+  attempts    Int       @default(0)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email, createdAt])
+}
+
+model User {
+  id              String       @id @default(cuid())
+  email           String       @unique
+  // passwordHash es nullable: usuarios recién aprobados existen sin contraseña
+  // hasta que la establecen vía PasswordSetupToken.
+  passwordHash    String?
+  fullName        String
+  role            UserRole
+  isActive        Boolean      @default(true)
+  applicationId   String?      @unique
+  application     Application? @relation("ApplicationOrigin", fields: [applicationId], references: [id])
+
+  // 2FA (TOTP obligatorio para ADMIN y PROJECT_OWNER)
+  totpSecret      String?
+  totpEnabled     Boolean      @default(false)
+
+  lastLoginAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  // Relaciones inversas
+  ownedProjects          Project[]               @relation("ProjectOwner")
+  coAdminAssignments     ProjectCoAdmin[]
+  participationsOwned    Participation[]         @relation("CurrentOwner")
+  ownershipFrom          OwnershipHistory[]      @relation("TransferFrom")
+  ownershipTo            OwnershipHistory[]      @relation("TransferTo")
+  ownershipAuthorized    OwnershipHistory[]      @relation("AuthorizedBy")
+  ownershipCoAuthorized  OwnershipHistory[]      @relation("CoAuthorizedBy")
+  leads                  Lead[]
+  resaleListings         ResaleListing[]
+  messages               Message[]
+  applicationsReviewed   Application[]           @relation("ApplicationReviewer")
+  auditEntries           AuditLog[]
+  notifications          Notification[]
+  dividendDeclared       DividendDistribution[]  @relation("DividendDeclarer")
+  dividendPayments       DividendPayment[]
+  passwordSetupTokens    PasswordSetupToken[]
+
+  @@index([role, isActive])
+}
+
+// ─── TOKENS DE SETEO DE CONTRASEÑA ──────────────────────────────────
+// Cuando un Admin aprueba una Application, NO genera contraseña. En su lugar
+// crea un PasswordSetupToken válido por 24h. El usuario recibe un link único
+// y elige su propia contraseña. Patrón estándar (Stripe, Linear, Vercel).
+
+enum PasswordSetupTokenKind {
+  INITIAL_SETUP      // primera vez tras aprobación de Application
+  RESET              // olvido de contraseña (futuro)
+  BOOTSTRAP          // admin bootstrap inicial (futuro)
+}
+
+model PasswordSetupToken {
+  id          String                  @id @default(cuid())
+  userId      String
+  user        User                    @relation(fields: [userId], references: [id])
+  // SHA-256 del token plano. El plano nunca se almacena; solo viaja en el link.
+  tokenHash   String                  @unique
+  kind        PasswordSetupTokenKind  @default(INITIAL_SETUP)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime                @default(now())
+
+  @@index([userId, kind])
+  @@index([expiresAt])
+}
+
+// ─── PROYECTOS ──────────────────────────────────────────────────────
+
+enum ProjectKind {
+  STARTUP
+  REAL_ESTATE
+  MERCHANDISE
+}
+
+enum ProjectStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  ARCHIVED
+}
+
+model Project {
+  id              String         @id @default(cuid())
+  slug            String         @unique
+  name            String
+  kind            ProjectKind    @default(STARTUP)
+  status          ProjectStatus  @default(DRAFT)
+  ownerId         String
+  owner           User           @relation("ProjectOwner", fields: [ownerId], references: [id])
+  shortPitch      String         @db.VarChar(280)
+  description     String
+  totalShares     Int
+  shareUnitLabel  String         @default("participación")
+  coverImageKey   String?
+  startsAt        DateTime?
+  closesAt        DateTime?
+  approvedAt      DateTime?
+  approvedById    String?
+  suspendedAt     DateTime?
+  suspensionReason String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+
+  startupProfile  StartupProfile?
+  coAdmins        ProjectCoAdmin[]
+  participations  Participation[]
+  reports         Report[]
+  chatChannel     ChatChannel?
+  leads           Lead[]
+  resaleListings  ResaleListing[]
+  distributions   DividendDistribution[]
+  auditEntries    AuditLog[]
+
+  @@index([status, kind])
+}
+
+model ProjectCoAdmin {
+  projectId  String
+  userId     String
+  assignedAt DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@id([projectId, userId])
+}
+
+// ─── PERFIL DE STARTUP ──────────────────────────────────────────────
+
+enum StartupStage {
+  IDEA
+  PRE_SEED
+  SEED
+  EARLY_REVENUE
+  GROWTH
+  SCALE
+}
+
+enum FundingRoundType {
+  FRIENDS_AND_FAMILY
+  PRE_SEED
+  SEED
+  SERIES_A
+  SERIES_B
+  SERIES_C_PLUS
+  BRIDGE
+  CONVERTIBLE_NOTE
+  SAFE
+}
+
+model StartupProfile {
+  id                          String        @id @default(cuid())
+  projectId                   String        @unique
+  project                     Project       @relation(fields: [projectId], references: [id])
+  legalName                   String
+  taxId                       String?
+  incorporationDate           DateTime?
+  jurisdiction                String
+  sector                      String
+  oneLiner                    String        @db.VarChar(160)
+  problemStatement            String
+  solutionStatement           String
+  businessModel               String
+  stage                       StartupStage
+  preMoneyValuation           Decimal?      @db.Decimal(18, 2)
+  valuationCurrency           String        @default("USD")
+  totalEquityShares           Int
+
+  // Stake institucional AJDUT
+  platformEquityPercent       Decimal       @default(10.00) @db.Decimal(5, 2)
+  platformEquityAgreementKey  String?
+
+  websiteUrl                  String?
+  pitchDeckStorageKey         String?
+  dataRoomStorageKey          String?
+
+  createdAt                   DateTime      @default(now())
+  updatedAt                   DateTime      @updatedAt
+
+  founders                    Founder[]
+  fundingRounds               FundingRound[]
+  metrics                     StartupMetric[]
+  milestones                  Milestone[]
+}
+
+model Founder {
+  id                String         @id @default(cuid())
+  startupProfileId  String
+  startupProfile    StartupProfile @relation(fields: [startupProfileId], references: [id])
+  fullName          String
+  role              String
+  linkedinUrl       String?
+  equityPercent     Decimal        @db.Decimal(5, 2)
+  joinedAt          DateTime?
+  isActive          Boolean        @default(true)
+}
+
+model FundingRound {
+  id                 String           @id @default(cuid())
+  startupProfileId   String
+  startupProfile     StartupProfile   @relation(fields: [startupProfileId], references: [id])
+  type               FundingRoundType
+  announcedAt        DateTime
+  closedAt           DateTime?
+  amountRaised       Decimal          @db.Decimal(18, 2)
+  currency           String           @default("USD")
+  preMoneyValuation  Decimal?         @db.Decimal(18, 2)
+  notes              String?
+
+  @@index([startupProfileId, closedAt])
+}
+
+enum MetricKind {
+  MRR
+  ARR
+  GMV
+  ACTIVE_USERS
+  PAYING_CUSTOMERS
+  CHURN_RATE
+  BURN_RATE
+  RUNWAY_MONTHS
+  CAC
+  LTV
+  GROSS_MARGIN
+  HEADCOUNT
+  CUSTOM
+}
+
+enum MetricVisibility {
+  PRIVATE          // Solo founder / admin
+  PUBLIC_TO_HOLDERS // Visible para socios del proyecto
+}
+
+model StartupMetric {
+  id                String           @id @default(cuid())
+  startupProfileId  String
+  startupProfile    StartupProfile   @relation(fields: [startupProfileId], references: [id])
+  kind              MetricKind
+  customLabel       String?
+  value             Decimal          @db.Decimal(18, 4)
+  unit              String
+  asOf              DateTime
+  reportedById      String
+  sourceReportId    String?
+  sourceReport      Report?          @relation(fields: [sourceReportId], references: [id])
+  visibility        MetricVisibility @default(PUBLIC_TO_HOLDERS)
+  createdAt         DateTime         @default(now())
+
+  @@index([startupProfileId, kind, asOf])
+}
+
+enum MilestoneStatus {
+  PLANNED
+  IN_PROGRESS
+  ACHIEVED
+  DELAYED
+  CANCELLED
+}
+
+model Milestone {
+  id                String          @id @default(cuid())
+  startupProfileId  String
+  startupProfile    StartupProfile  @relation(fields: [startupProfileId], references: [id])
+  title             String
+  description       String
+  targetDate        DateTime?
+  achievedAt        DateTime?
+  status            MilestoneStatus @default(PLANNED)
+  createdAt         DateTime        @default(now())
+}
+
+// ─── PARTICIPACIONES Y CADENA INMUTABLE DE PROPIEDAD ────────────────
+
+enum ParticipationStatus {
+  AVAILABLE
+  IN_NEGOTIATION
+  ASSIGNED
+  IN_RESALE
+  TRANSFER_PENDING
+}
+
+model Participation {
+  id              String              @id @default(cuid())
+  projectId       String
+  project         Project             @relation(fields: [projectId], references: [id])
+  serialCode      String              @unique
+  shareCount      Int
+  status          ParticipationStatus @default(AVAILABLE)
+  currentOwnerId  String?
+  currentOwner    User?               @relation("CurrentOwner", fields: [currentOwnerId], references: [id])
+  acquiredAt      DateTime?
+  isPlatformStake Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  history         OwnershipHistory[]
+  certificates    Certificate[]
+  leads           Lead[]
+  resaleListings  ResaleListing[]
+  dividendPayments DividendPayment[]
+
+  @@index([projectId, status])
+  @@index([projectId, isPlatformStake])
+  @@index([currentOwnerId])
+}
+
+model OwnershipHistory {
+  id                String         @id @default(cuid())
+  participationId   String
+  participation     Participation  @relation(fields: [participationId], references: [id])
+  fromUserId        String?
+  fromUser          User?          @relation("TransferFrom", fields: [fromUserId], references: [id])
+  toUserId          String
+  toUser            User           @relation("TransferTo", fields: [toUserId], references: [id])
+  authorizedById    String
+  authorizedBy      User           @relation("AuthorizedBy", fields: [authorizedById], references: [id])
+
+  // Doble firma obligatoria cuando la participación es stake institucional
+  coAuthorizedById  String?
+  coAuthorizedBy    User?          @relation("CoAuthorizedBy", fields: [coAuthorizedById], references: [id])
+
+  reason            String
+  resaleListingId   String?        @unique
+  resaleListing     ResaleListing? @relation(fields: [resaleListingId], references: [id])
+  effectiveAt       DateTime
+  validatedAt       DateTime       @default(now())
+
+  // Cadena de hashes — cualquier mutación retroactiva la rompe
+  blockHash         String
+  prevHash          String?
+
+  @@index([participationId, validatedAt])
+  @@index([toUserId])
+}
+
+// ─── LEADS Y REVENTA ────────────────────────────────────────────────
+
+enum LeadStatus {
+  OPEN
+  CONTACTED
+  CONVERTED
+  DISMISSED
+  EXPIRED
+}
+
+model Lead {
+  id                   String         @id @default(cuid())
+  projectId            String
+  project              Project        @relation(fields: [projectId], references: [id])
+  participationId      String?
+  participation        Participation? @relation(fields: [participationId], references: [id])
+  userId               String
+  user                 User           @relation(fields: [userId], references: [id])
+  message              String
+  shareCountRequested  Int            @default(1)
+  status               LeadStatus     @default(OPEN)
+  createdAt            DateTime       @default(now())
+  expiresAt            DateTime       // 30 días desde createdAt
+  resolvedAt           DateTime?
+
+  @@index([projectId, status])
+  @@index([expiresAt, status])
+}
+
+enum ResaleStatus {
+  LISTED
+  IN_CONVERSATION
+  AWAITING_VALIDATION
+  COMPLETED
+  CANCELLED
+}
+
+model ResaleListing {
+  id                String           @id @default(cuid())
+  participationId   String
+  participation     Participation    @relation(fields: [participationId], references: [id])
+  projectId         String
+  project           Project          @relation(fields: [projectId], references: [id])
+  sellerId          String
+  seller            User             @relation(fields: [sellerId], references: [id])
+  intentNote        String
+  contactChannel    String
+  status            ResaleStatus     @default(LISTED)
+
+  // Comprador propuesto al cerrar trato offline (cualquier User aprobado de AJDUT)
+  proposedBuyerId   String?
+  // Evidencia de firma electrónica de ambas partes (in-app)
+  sellerSignedAt    DateTime?
+  buyerSignedAt     DateTime?
+
+  // Checkbox obligatorio del founder antes de TRANSFER_PENDING
+  rofrWaivedAt      DateTime?
+  rofrWaivedById    String?
+  rofrWaiverNote    String?
+
+  createdAt         DateTime         @default(now())
+  closedAt          DateTime?
+
+  ownershipRecord   OwnershipHistory?
+
+  @@index([projectId, status])
+}
+
+// ─── DOCUMENTACIÓN, CERTIFICADOS, CHAT ──────────────────────────────
+
+enum ReportPeriod {
+  Q1
+  Q2
+  Q3
+  Q4
+  ANNUAL
+  EXTRAORDINARY
+}
+
+enum ReportKind {
+  QUARTERLY_FINANCIAL
+  INVESTOR_UPDATE
+  ANNUAL_AUDIT
+  EXTRAORDINARY
+}
+
+model Report {
+  id           String          @id @default(cuid())
+  projectId    String
+  project      Project         @relation(fields: [projectId], references: [id])
+  kind         ReportKind      @default(QUARTERLY_FINANCIAL)
+  period       ReportPeriod
+  fiscalYear   Int
+  title        String
+  summary      String
+  storageKey   String
+  fileMime     String
+  fileSizeKb   Int
+  publishedAt  DateTime        @default(now())
+  publishedBy  String
+
+  metrics      StartupMetric[]
+
+  @@unique([projectId, fiscalYear, period, kind])
+  @@index([projectId, publishedAt])
+}
+
+model Certificate {
+  id              String        @id @default(cuid())
+  participationId String
+  participation   Participation @relation(fields: [participationId], references: [id])
+  issuedToUserId  String
+  issuedAt        DateTime      @default(now())
+  validUntil      DateTime?
+  serialCode      String        @unique
+  pdfStorageKey   String
+  watermarkSeed   String
+  disclaimerHash  String
+  revokedAt       DateTime?
+  revocationNote  String?
+
+  @@index([participationId])
+}
+
+model ChatChannel {
+  id        String    @id @default(cuid())
+  projectId String    @unique
+  project   Project   @relation(fields: [projectId], references: [id])
+  isLocked  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  messages  Message[]
+}
+
+model Message {
+  id            String      @id @default(cuid())
+  channelId     String
+  channel       ChatChannel @relation(fields: [channelId], references: [id])
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id])
+  body          String
+  attachmentKey String?
+  pinnedAt      DateTime?
+  createdAt     DateTime    @default(now())
+  editedAt      DateTime?
+  deletedAt     DateTime?
+
+  @@index([channelId, createdAt])
+}
+
+// ─── DIVIDENDOS ─────────────────────────────────────────────────────
+
+enum DividendStatus {
+  DRAFT
+  ANNOUNCED
+  IN_PAYOUT
+  COMPLETED
+  PARTIAL_CLOSED
+  CANCELLED
+}
+
+enum DividendPaymentStatus {
+  PENDING
+  SENT
+  RECEIVED
+  DISPUTED
+  WAIVED
+}
+
+model DividendDistribution {
+  id                    String            @id @default(cuid())
+  projectId             String
+  project               Project           @relation(fields: [projectId], references: [id])
+  declaredById          String
+  declaredBy            User              @relation("DividendDeclarer", fields: [declaredById], references: [id])
+  title                 String
+  fiscalPeriod          String?
+  notes                 String?
+  totalAmount           Decimal           @db.Decimal(18, 2)
+  currency              String            @default("USD")
+  recordDate            DateTime
+  totalSharesAtRecord   Int
+  amountPerShare        Decimal           @db.Decimal(18, 8)
+  supportingDocKey      String?
+  disclaimerHash        String
+  status                DividendStatus    @default(DRAFT)
+  announcedAt           DateTime?
+  payoutStartedAt       DateTime?
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+  cancellationReason    String?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  payments              DividendPayment[]
+
+  @@index([projectId, status])
+  @@index([recordDate])
+}
+
+model DividendPayment {
+  id                String                @id @default(cuid())
+  distributionId    String
+  distribution      DividendDistribution  @relation(fields: [distributionId], references: [id])
+  participationId   String
+  participation     Participation         @relation(fields: [participationId], references: [id])
+  recipientId       String
+  recipient         User                  @relation(fields: [recipientId], references: [id])
+  shareCount        Int
+  amount            Decimal               @db.Decimal(18, 2)
+  currency          String
+  isPlatformPayment Boolean               @default(false)
+  status            DividendPaymentStatus @default(PENDING)
+
+  // Marcado por el founder al pagar por fuera
+  sentAt            DateTime?
+  sentChannel       String?
+  sentReference     String?
+  sentNote          String?
+
+  // Confirmado por el holder (o Admin si es payment institucional)
+  receivedAt        DateTime?
+  receivedReference String?
+  receivedNote      String?
+  confirmedById     String?
+
+  // Disputas
+  disputedAt        DateTime?
+  disputeReason     String?
+  resolvedAt        DateTime?
+  resolutionNote    String?
+  resolvedById      String?
+
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  @@index([distributionId, status])
+  @@index([recipientId, status])
+  @@index([participationId])
+}
+
+model PlatformPayoutAccount {
+  id          String   @id @default(cuid())
+  currency    String   @unique
+  accountName String
+  bankName    String
+  accountId   String
+  swiftBic    String?
+  notes       String?
+  isActive    Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+  updatedById String
+}
+
+// ─── AUDITORÍA Y NOTIFICACIONES ─────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  payload    Json
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([projectId, createdAt])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  kind      String
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+}

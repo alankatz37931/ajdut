@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: "Inter", system-ui, sans-serif;
+  --font-dm-mono: "DM Mono", ui-monospace, monospace;
+}
+
+html, body {
+  background-color: theme("colors.paper.DEFAULT");
+  color: theme("colors.navy.DEFAULT");
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: theme("colors.gold.DEFAULT");
+  color: theme("colors.paper.DEFAULT");
+}
+
+@layer components {
+  /* Hairline 0.5pt — divisor base del sistema */
+  .hairline-b {
+    border-bottom: 0.5px solid theme("colors.line.DEFAULT");
+  }
+  .hairline-t {
+    border-top: 0.5px solid theme("colors.line.DEFAULT");
+  }
+  .hairline {
+    border: 0.5px solid theme("colors.line.DEFAULT");
+  }
+
+  /* Texturas */
+  .surface-paper {
+    background-color: theme("colors.paper.DEFAULT");
+    background-image: url("/textures/paper.svg");
+    background-blend-mode: multiply;
+  }
+  .surface-cement {
+    background-color: theme("colors.navy.DEFAULT");
+    background-image: url("/textures/cement.svg");
+    background-blend-mode: overlay;
+    color: theme("colors.paper.DEFAULT");
+  }
+
+  /* Texto de eyebrow estilizado */
+  .eyebrow {
+    font-family: var(--font-dm-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: theme("colors.navy.muted");
+  }
+
+  /* KPI numérico */
+  .kpi {
+    font-family: var(--font-dm-mono);
+    font-feature-settings: "tnum" 1;
+    color: theme("colors.navy.DEFAULT");
+  }
+
+  /* Delta favorable en oro; adverso/neutro en navy 60% */
+  .delta-up {
+    color: theme("colors.gold.DEFAULT");
+  }
+  .delta-down,
+  .delta-neutral {
+    color: theme("colors.navy.muted");
+  }
+
+  /* Botones primario y outline */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-navy text-paper font-medium tracking-wide transition-colors hover:bg-navy-soft;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 border-hairline border-navy text-navy font-medium tracking-wide transition-colors;
+  }
+  .btn-outline:hover {
+    box-shadow: inset 0 -1px 0 0 theme("colors.gold.DEFAULT");
+  }
+}
+
+/* ─── Inputs numéricos: ocultar flechas de incremento/decremento ─── */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
