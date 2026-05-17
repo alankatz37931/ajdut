@@ -17,11 +17,11 @@ export default async function ProfilePage() {
   const session = await requireSession();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: session.id },
-    select: { fullName: true, email: true, role: true, createdAt: true },
+    select: { fullName: true, role: true, createdAt: true },
   });
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <h1 className="font-sans text-h1 text-navy">Mi perfil</h1>
       <p className="mt-3 text-navy/75 leading-relaxed">
         Rol: <span className="font-mono text-navy">{ROLE_LABEL[user.role] ?? user.role}</span>
@@ -32,7 +32,7 @@ export default async function ProfilePage() {
         </span>
       </p>
 
-      <ProfileForm initialName={user.fullName} email={user.email} />
+      <ProfileForm initialName={user.fullName} />
     </div>
   );
 }

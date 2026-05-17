@@ -4,7 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/utils/format";
-import { AuditFilters } from "./AuditFilters";
+import { AuditSearch } from "./AuditSearch";
 
 export const metadata = { title: "Auditoría · AJDUT" };
 
@@ -46,7 +46,7 @@ const ACTION_LABEL: Record<string, string> = {
   "DISTRIBUTION.COMPLETED": "Dividendo completado",
   "DISTRIBUTION.CANCELLED": "Dividendo cancelado",
   "EMAIL.FAILED": "Email fallido",
-  "RATE_LIMIT.HIT": "Rate limit",
+  "RATE_LIMIT.HIT": "Rate limit alcanzado",
   "FOUNDER.UPSERTED": "Miembro de equipo editado",
   "FOUNDER.REMOVED": "Miembro de equipo eliminado",
   "MILESTONE.UPSERTED": "Hito editado",
@@ -54,31 +54,63 @@ const ACTION_LABEL: Record<string, string> = {
   "METRIC.REMOVED": "Métrica eliminada",
 };
 
-const ACTION_GROUP: Record<string, string> = {
-  APPLICATION: "Aplicaciones",
-  USER: "Usuarios",
-  PROJECT: "Proyectos",
-  PARTICIPATION: "Participaciones",
-  CERTIFICATE: "Certificados",
-  REPORT: "Reportes",
-  METRIC: "Métricas",
-  MILESTONE: "Hitos",
-  DISTRIBUTION: "Dividendos",
-  EMAIL: "Sistema",
-  RATE_LIMIT: "Sistema",
-  FOUNDER: "Equipo",
-};
+/**
+ * Traduce el payload crudo a una frase legible. El admin no necesita ver JSON
+ * ni IDs internos — necesita entender qué pasó de un vistazo.
+ */
+function describePayload(
+  action: string,
+  payload: Record<string, unknown> | null
+): string | null {
+  if (!payload) return null;
+  const n = (k: string) =>
+    typeof payload[k] === "number" ? (payload[k] as number).toLocaleString("es-MX") : null;
+  const s = (k: string) => (typeof payload[k] === "string" ? (payload[k] as string) : null);
 
-function actionGroup(action: string): string {
-  const prefix = action.split(".")[0] ?? "";
-  return ACTION_GROUP[prefix] ?? "Otros";
+  switch (action) {
+    case "PARTICIPATION.LEAD_CREATED": {
+      const shares = n("shareCountRequested");
+      return shares ? `${shares} acciones de interés` : null;
+    }
+    case "PARTICIPATION.ASSIGNED": {
+      const shares = n("shareCount");
+      return shares ? `${shares} acciones asignadas` : null;
+    }
+    case "CERTIFICATE.ISSUED":
+      return s("serial") ? `Certificado ${s("serial")}` : null;
+    case "APPLICATION.APPROVED":
+      return s("role") ? `Rol asignado: ${s("role")}` : null;
+    case "APPLICATION.REJECTED":
+      return s("rejectionNote") ? `Nota: ${s("rejectionNote")}` : null;
+    case "PROJECT.CREATED": {
+      if (s("event") === "PROJECT_INFO_UPDATED") return "Información actualizada";
+      const shares = n("totalShares");
+      return shares ? `${shares} acciones emitidas` : null;
+    }
+    case "USER.CREATED":
+      if (s("event") === "PASSWORD_SET") return "Contraseña establecida";
+      return s("role") ? `Rol: ${s("role")}` : null;
+    case "METRIC.RECORDED": {
+      const kind = s("kind");
+      const val = n("value");
+      return kind && val ? `${kind}: ${val} ${s("unit") ?? ""}`.trim() : kind;
+    }
+    case "FOUNDER.UPSERTED":
+    case "FOUNDER.REMOVED":
+      return s("fullName");
+    case "MILESTONE.UPSERTED":
+      return s("title");
+    case "RATE_LIMIT.HIT":
+      return s("reason") ? `Límite por ${s("reason")}` : null;
+    case "EMAIL.FAILED":
+      return s("subject") ? `Falló: ${s("subject")}` : null;
+    default:
+      return null;
+  }
 }
 
 type SearchParams = {
-  group?: string;
-  action?: string;
   actor?: string;
-  q?: string;
   page?: string;
 };
 
@@ -90,40 +122,15 @@ export default async function AdminAuditPage({
   await requireRole(["ADMIN"]);
   const sp = await searchParams;
 
-  const group = (sp.group ?? "").trim();
-  const action = (sp.action ?? "").trim();
   const actor = (sp.actor ?? "").trim();
-  const q = (sp.q ?? "").trim();
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
 
   const where: Prisma.AuditLogWhereInput = {};
-
-  if (action) {
-    where.action = action;
-  } else if (group) {
-    // Match acciones cuyo prefijo (antes del primer ".") sea `group`.
-    where.action = { startsWith: `${group}.` };
-  }
-
   if (actor) {
     where.OR = [
       { actor: { email: { contains: actor, mode: "insensitive" } } },
       { actor: { fullName: { contains: actor, mode: "insensitive" } } },
     ];
-  }
-
-  if (q) {
-    const orList: Prisma.AuditLogWhereInput[] = [
-      { entityId: { contains: q, mode: "insensitive" } },
-      { ipAddress: { contains: q, mode: "insensitive" } },
-      { project: { name: { contains: q, mode: "insensitive" } } },
-    ];
-    if (where.OR) {
-      where.AND = [{ OR: where.OR }, { OR: orList }];
-      delete where.OR;
-    } else {
-      where.OR = orList;
-    }
   }
 
   const [total, logs] = await Promise.all([
@@ -142,45 +149,26 @@ export default async function AdminAuditPage({
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  // Lista distinta de prefijos (APPLICATION, USER, PROJECT, …) que mapeamos a labels.
-  const groupOptions = Object.entries(ACTION_GROUP)
-    .map(([prefix, label]) => ({ prefix, label }))
-    // un mismo label puede tener varios prefijos (EMAIL/RATE_LIMIT → "Sistema"), los unimos
-    .reduce<Array<{ prefix: string; label: string }>>((acc, cur) => {
-      if (!acc.some((g) => g.prefix === cur.prefix)) acc.push(cur);
-      return acc;
-    }, [])
-    .sort((a, b) => a.label.localeCompare(b.label));
-  const actionOptions = Object.keys(ACTION_LABEL)
-    .filter((a) => !group || actionGroup(a) === ACTION_GROUP[group])
-    .sort();
-
   return (
     <div>
-      <header className="hairline-b pb-8">
+      <header className="hairline-b pb-6">
         <p className="eyebrow">Admin · Auditoría</p>
         <h1 className="font-sans mt-4 text-h1 text-navy">Bitácora del sistema</h1>
-        <p className="mt-3 max-w-2xl text-navy/75 leading-relaxed">
-          Historial inmutable de eventos sensibles. Cada acción que altera estado (aprobaciones,
-          asignaciones, edición de contenido, pagos) deja un rastro acá.
-        </p>
-        <p className="mt-3 font-mono text-sm text-navy/60">
-          {total.toLocaleString("es-MX")} evento{total === 1 ? "" : "s"} · página {page} de{" "}
-          {totalPages}
+        <p className="mt-3 font-mono text-sm text-navy/50">
+          {total.toLocaleString("es-MX")} evento{total === 1 ? "" : "s"}
+          {totalPages > 1 ? ` · página ${page}/${totalPages}` : ""}
         </p>
       </header>
 
-      <div className="mt-8">
-        <AuditFilters
-          groupOptions={groupOptions}
-          actionOptions={actionOptions}
-          actionLabels={ACTION_LABEL}
-          actionGroupLabels={ACTION_GROUP}
-        />
+      {/* Búsqueda por actor — instantánea, sin botón */}
+      <div className="mt-6">
+        <AuditSearch />
       </div>
 
       {logs.length === 0 ? (
-        <p className="mt-12 text-navy/60">No hay eventos que coincidan con los filtros.</p>
+        <p className="mt-10 text-navy/60">
+          {actor ? "Sin eventos para ese actor." : "Todavía no hay eventos."}
+        </p>
       ) : (
         <ul className="mt-8 hairline-t">
           {logs.map((l) => {
@@ -188,60 +176,38 @@ export default async function AdminAuditPage({
               l.payload && typeof l.payload === "object"
                 ? (l.payload as Record<string, unknown>)
                 : null;
+            const detail = describePayload(l.action, payload);
+            const who = l.actor
+              ? `${l.actor.fullName ?? l.actor.email} · ${l.actor.role}`
+              : "Sistema";
             return (
               <li key={l.id} className="hairline-b py-4">
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div className="min-w-0">
-                    <p className="font-sans text-navy">
-                      {ACTION_LABEL[l.action] ?? l.action}
-                    </p>
-                    <p className="mt-1 eyebrow">
-                      {l.actor
-                        ? `${l.actor.fullName ?? l.actor.email} · ${l.actor.role}`
-                        : "Sistema"}
-                      {" · "}
-                      <span className="font-mono">{l.action}</span>
-                    </p>
-                  </div>
-                  <p className="eyebrow font-mono shrink-0">
-                    {formatDate(l.createdAt)} · {l.createdAt.toISOString().slice(11, 19)}
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="font-sans text-navy">
+                    {ACTION_LABEL[l.action] ?? l.action}
+                  </p>
+                  <p className="eyebrow font-mono shrink-0 !text-navy/40">
+                    {formatDate(l.createdAt)} ·{" "}
+                    {l.createdAt.toISOString().slice(11, 16)}
                   </p>
                 </div>
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                  <div>
-                    <p className="eyebrow">Entidad</p>
-                    <p className="mt-1 font-mono text-navy break-all">
-                      {l.entityType}
-                      <br />
-                      <span className="text-navy/60">{l.entityId}</span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="eyebrow">Proyecto</p>
-                    <p className="mt-1 text-navy">
-                      {l.project ? (
-                        <Link
-                          href={`/proyectos/${l.project.slug}` as Route}
-                          className="hover:!text-gold"
-                        >
-                          {l.project.name}
-                        </Link>
-                      ) : (
-                        "—"
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="eyebrow">IP</p>
-                    <p className="mt-1 font-mono text-navy">{l.ipAddress ?? "—"}</p>
-                  </div>
-                  <div>
-                    <p className="eyebrow">Payload</p>
-                    <p className="mt-1 font-mono text-xs text-navy/75 break-all">
-                      {payload ? JSON.stringify(payload) : "—"}
-                    </p>
-                  </div>
-                </div>
+                <p className="mt-1 eyebrow">
+                  {who}
+                  {l.project ? (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`/proyectos/${l.project.slug}` as Route}
+                        className="hover:!text-gold"
+                      >
+                        {l.project.name}
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+                {detail && (
+                  <p className="mt-1.5 text-sm text-navy/70">{detail}</p>
+                )}
               </li>
             );
           })}
@@ -250,19 +216,14 @@ export default async function AdminAuditPage({
 
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-between hairline-t pt-6">
-          <PageLink
-            page={page - 1}
-            disabled={page <= 1}
-            sp={sp}
-            label="← Anterior"
-          />
+          <PageLink page={page - 1} disabled={page <= 1} actor={actor} label="← Anterior" />
           <p className="eyebrow font-mono">
             {page} / {totalPages}
           </p>
           <PageLink
             page={page + 1}
             disabled={page >= totalPages}
-            sp={sp}
+            actor={actor}
             label="Siguiente →"
           />
         </div>
@@ -274,22 +235,19 @@ export default async function AdminAuditPage({
 function PageLink({
   page,
   disabled,
-  sp,
+  actor,
   label,
 }: {
   page: number;
   disabled: boolean;
-  sp: SearchParams;
+  actor: string;
   label: string;
 }) {
   if (disabled) {
     return <span className="eyebrow !text-navy/30">{label}</span>;
   }
   const params = new URLSearchParams();
-  if (sp.group) params.set("group", sp.group);
-  if (sp.action) params.set("action", sp.action);
-  if (sp.actor) params.set("actor", sp.actor);
-  if (sp.q) params.set("q", sp.q);
+  if (actor) params.set("actor", actor);
   params.set("page", String(page));
   return (
     <Link

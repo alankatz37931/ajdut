@@ -1,10 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-label="AJDUT">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 512 188" role="img" aria-label="AJDUT — Comunidades de negocio">
   <title>AJDUT — El Sello de Unión</title>
-  <text x="8" y="68"
+  <g fill-rule="evenodd">
+    <!-- A J D T en Navy -->
+    <g fill="#1A1A2E">
+      <g transform="translate(0,0)">
+        <path d="M0,100 L45,0 L90,100 Z M24,100 L45,40 L66,100 Z"/>
+        <rect x="25" y="70" width="40" height="15"/>
+      </g>
+      <path transform="translate(114,0)" d="M56,0 L56,72 A28,28 0 0,1 0,72 L18,72 A10,10 0 0,1 38,72 L36,0 Z"/>
+      <path transform="translate(194,0)" d="M0,0 L40,0 A50,50 0 0,1 40,100 L0,100 Z M20,20 L38,20 A32,32 0 0,1 38,80 L20,80 Z"/>
+      <path transform="translate(418,0)" d="M0,0 L78,0 L78,20 L49,20 L49,100 L29,100 L29,20 L0,20 Z"/>
+    </g>
+    <!-- U en Oro: el Sello de Unión -->
+    <g fill="#C8A96E">
+      <path transform="translate(308,0)" d="M0,0 L0,57 A43,43 0 0,1 86,57 L86,0 L66,0 L66,57 A23,23 0 0,1 20,57 L20,0 Z"/>
+    </g>
+  </g>
+  <text x="248" y="150" text-anchor="middle"
         font-family="'Inter','Helvetica Neue',Arial,sans-serif"
-        font-size="64" font-weight="700" letter-spacing="5"
-        textLength="344" lengthAdjust="spacingAndGlyphs"
-        fill="#1A1A2E">AJDUT</text>
-  <!-- Sello de Unión: el puente en Oro bajo la U -->
-  <rect x="224" y="74" width="54" height="7" rx="2" fill="#C8A96E"/>
+        font-size="26" font-weight="400" letter-spacing="3"
+        fill="#C8A96E">Comunidades de negocio</text>
 </svg>

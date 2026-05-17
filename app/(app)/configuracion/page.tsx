@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/auth/session";
 import { getUserPreferences } from "@/lib/preferences";
+import { ROLE_LABEL } from "@/components/app/nav-items";
 import { SettingsForm } from "./SettingsForm";
 
 export const metadata = {
@@ -7,19 +8,19 @@ export const metadata = {
 };
 
 export default async function SettingsPage() {
-  await requireSession();
+  const user = await requireSession();
   const prefs = await getUserPreferences();
+  const roleLabel = ROLE_LABEL[user.role] ?? user.role;
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <h1 className="font-sans text-h1 text-navy">Configuración</h1>
-      <p className="mt-3 text-navy/75 leading-relaxed">
-        Ajustá las preferencias de tu cuenta. Se guardan en este navegador.
-      </p>
 
       <SettingsForm
         initialLanguage={prefs.language}
         initialCurrency={prefs.currency}
+        initialTheme={prefs.theme}
+        roleLabel={roleLabel}
       />
     </div>
   );

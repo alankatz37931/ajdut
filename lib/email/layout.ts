@@ -73,7 +73,7 @@ export function renderEmail(input: EmailLayoutInput): string {
         ${cta}
 
         <tr><td style="padding:48px 0 24px 0;border-top:0.5px solid ${LINE};font-family:'DM Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:${NAVY_MUTED};">
-          AJDUT · Sello de Unión · v1.0<br>
+          AJDUT · v1.0<br>
           Este email se generó automáticamente. AJDUT no procesa pagos ni custodia fondos.
         </td></tr>
 

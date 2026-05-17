@@ -3,13 +3,7 @@
 import { useState, useTransition } from "react";
 import { updateNameAction, changePasswordAction } from "./actions";
 
-export function ProfileForm({
-  initialName,
-  email,
-}: {
-  initialName: string;
-  email: string;
-}) {
+export function ProfileForm({ initialName }: { initialName: string }) {
   const [fullName, setFullName] = useState(initialName);
   const [savedName, setSavedName] = useState(initialName);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -61,20 +55,6 @@ export function ProfileForm({
       {/* Datos básicos */}
       <form action={onSubmitName} className="hairline p-6 bg-paper-light space-y-5">
         <p className="eyebrow">Datos básicos</p>
-
-        <div>
-          <label htmlFor="email" className="eyebrow block mb-2">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            disabled
-            className="w-full border-hairline border-navy/20 bg-paper-dark px-3 py-2 font-mono text-navy/60"
-          />
-          <p className="mt-2 eyebrow">El email no se puede cambiar.</p>
-        </div>
 
         <div>
           <label htmlFor="fullName" className="eyebrow block mb-2">

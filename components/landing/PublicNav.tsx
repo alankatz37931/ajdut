@@ -11,9 +11,14 @@ export function PublicNav() {
             href="/nosotros"
             className="eyebrow hover:!text-gold transition-colors"
           >
-            Nosotros
+            Sobre nosotros
           </Link>
-          <span className="eyebrow !text-navy/40">ESP</span>
+          <Link
+            href="/acceder"
+            className="eyebrow hover:!text-gold transition-colors"
+          >
+            Acceder
+          </Link>
         </div>
       </div>
     </nav>

@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/session";
-import { saveUserPreferences, type Language, type PreferredCurrency } from "@/lib/preferences";
+import {
+  saveUserPreferences,
+  type Language,
+  type PreferredCurrency,
+  type Theme,
+} from "@/lib/preferences";
 
 export type SaveResult =
   | { ok: true }
@@ -22,7 +27,12 @@ export async function savePreferencesAction(formData: FormData): Promise<SaveRes
 
   const currency: PreferredCurrency = currencyRaw === "MXN" ? "MXN" : "USD";
 
-  await saveUserPreferences({ language, currency });
+  const themeRaw = String(formData.get("theme") ?? "light");
+  const theme: Theme = themeRaw === "dark" ? "dark" : "light";
+
+  await saveUserPreferences({ language, currency, theme });
   revalidatePath("/configuracion");
+  // El tema lo aplica el RootLayout (clase en <html>) en el próximo render.
+  revalidatePath("/", "layout");
   return { ok: true };
 }

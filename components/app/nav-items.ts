@@ -1,0 +1,87 @@
+import type { Route } from "next";
+import { prisma } from "@/lib/db/client";
+import type { NavItem } from "@/components/app/SideNav";
+
+export const ROLE_LABEL: Record<string, string> = {
+  ADMIN: "Admin",
+  PROJECT_OWNER: "Founder",
+  CO_ADMIN: "Co-admin",
+  PARTNER: "Socio",
+};
+
+/**
+ * Construye los items del sidebar según rol. Compartido entre el layout
+ * de la app y la página /nosotros (que muestra el mismo chrome si hay sesión).
+ */
+export async function navItemsFor(role: string): Promise<NavItem[]> {
+  const profileItem: NavItem = {
+    label: "Mi perfil",
+    href: "/perfil" as Route,
+    pinBottom: true,
+  };
+  const settingsItem: NavItem = {
+    label: "Configuración",
+    href: "/configuracion" as Route,
+    pinBottom: true,
+  };
+  const nosotrosItem: NavItem = {
+    label: "Sobre nosotros",
+    href: "/nosotros" as Route,
+    pinBottom: true,
+  };
+  const legalItem: NavItem = {
+    label: "Aviso legal",
+    href: "/legal" as Route,
+    pinBottom: true,
+  };
+
+  if (role === "ADMIN") {
+    const pendingApps = await prisma.application.count({
+      where: { status: { in: ["PENDING", "UNDER_REVIEW"] } },
+    });
+    return [
+      { label: "Proyectos", href: "/proyectos" as Route },
+      {
+        label: "Aplicaciones",
+        href: "/admin/applications" as Route,
+        badge: pendingApps,
+        badgeHighlight: true,
+      },
+      { label: "Auditoría", href: "/admin/auditoria" as Route },
+      profileItem,
+      settingsItem,
+      nosotrosItem,
+      legalItem,
+    ];
+  }
+  if (role === "PROJECT_OWNER") {
+    return [
+      { label: "Mi proyecto", href: "/founder" as Route },
+      { label: "Explorar", href: "/proyectos" as Route },
+      profileItem,
+      settingsItem,
+      nosotrosItem,
+      legalItem,
+    ];
+  }
+  if (role === "PARTNER") {
+    return [
+      { label: "Explorar", href: "/proyectos" as Route },
+      { label: "Mis participaciones", href: "/partner" as Route },
+      profileItem,
+      settingsItem,
+      nosotrosItem,
+      legalItem,
+    ];
+  }
+  if (role === "CO_ADMIN") {
+    return [
+      { label: "Proyectos", href: "/proyectos" as Route },
+      profileItem,
+      settingsItem,
+      nosotrosItem,
+      legalItem,
+    ];
+  }
+  return [];
+}

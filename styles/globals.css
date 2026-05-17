@@ -5,6 +5,38 @@
 :root {
   --font-inter: "Inter", system-ui, sans-serif;
   --font-dm-mono: "DM Mono", ui-monospace, monospace;
+
+  /* ─── Paleta del manual (modo claro) — canal RGB para alpha utilities ─── */
+  --c-paper: 245 243 238;       /* #F5F3EE  Crema · papel de alto gramaje */
+  --c-paper-light: 250 248 243; /* #FAF8F3 */
+  --c-paper-dark: 237 233 224;  /* #EDE9E0 */
+  --c-navy: 26 26 46;           /* #1A1A2E  Navy · cemento pulido */
+  --c-navy-soft: 42 42 63;      /* #2A2A3F */
+  --c-navy-muted: 75 75 94;     /* #4B4B5E */
+  --c-gold: 200 169 110;        /* #C8A96E  Oro · único acento (regla 09) */
+  --c-gold-soft: 217 190 133;   /* #D9BE85 */
+  --c-gold-deep: 168 139 84;    /* #A88B54 */
+  --c-line: 232 227 217;        /* #E8E3D9  Gris cálido · retícula 0.5pt */
+  --c-line-strong: 214 207 192; /* #D6CFC0 */
+}
+
+/* ─── Modo oscuro ────────────────────────────────────────────────────
+   Inversión fiel al manual §5.3: el fondo pasa a Navy "cemento pulido",
+   el texto a Crema "papel". El Oro NO cambia — es el único acento y la
+   regla 09 prohíbe alterarlo. La retícula se oscurece para "estructurar
+   sin dominar" sobre fondo profundo. */
+html.dark {
+  --c-paper: 20 20 32;          /* fondo principal — navy profundo */
+  --c-paper-light: 30 30 46;    /* superficies elevadas (cards) */
+  --c-paper-dark: 14 14 24;     /* superficies hundidas */
+  --c-navy: 245 243 238;        /* "ink": el texto ahora es crema */
+  --c-navy-soft: 224 219 208;
+  --c-navy-muted: 165 162 152;  /* texto sutil sobre oscuro */
+  --c-gold: 200 169 110;        /* sin cambios */
+  --c-gold-soft: 217 190 133;
+  --c-gold-deep: 168 139 84;
+  --c-line: 47 47 66;           /* retícula sobre oscuro */
+  --c-line-strong: 64 64 86;
 }
 
 html, body {
@@ -38,11 +70,19 @@ html, body {
     background-image: url("/textures/paper.svg");
     background-blend-mode: multiply;
   }
+  /* En oscuro el grano oscuro de paper.svg desaparece: usamos el grano claro
+     de cement.svg con soft-light para conservar la materialidad sin brillar. */
+  html.dark .surface-paper {
+    background-image: url("/textures/cement.svg");
+    background-blend-mode: soft-light;
+  }
+  /* Cemento pulido: superficie de énfasis (headers, banners admin).
+     SIEMPRE oscura en ambos temas — hex fijo, no se invierte. */
   .surface-cement {
-    background-color: theme("colors.navy.DEFAULT");
+    background-color: #1a1a2e;
     background-image: url("/textures/cement.svg");
     background-blend-mode: overlay;
-    color: theme("colors.paper.DEFAULT");
+    color: #f5f3ee;
   }
 
   /* Texto de eyebrow estilizado */

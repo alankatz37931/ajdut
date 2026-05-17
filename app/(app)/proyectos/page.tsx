@@ -44,14 +44,8 @@ const STATUS_RANK: Record<string, number> = {
   ARCHIVED: 5,
 };
 
-const VALID_STAGES = new Set(["IDEA", "PRE_SEED", "SEED", "EARLY_REVENUE", "GROWTH", "SCALE"]);
-const VALID_STATUSES = new Set(["ACTIVE", "PENDING_APPROVAL", "SUSPENDED", "CLOSED"]);
-
 type SearchParams = {
   q?: string;
-  sector?: string;
-  stage?: string;
-  status?: string;
 };
 
 export default async function ProjectsDiscoveryPage({
@@ -64,30 +58,16 @@ export default async function ProjectsDiscoveryPage({
   const sp = await searchParams;
 
   const q = (sp.q ?? "").trim();
-  const sector = (sp.sector ?? "").trim();
-  const stage = (sp.stage ?? "").trim();
-  const status = (sp.status ?? "").trim();
 
   const where: Prisma.ProjectWhereInput = {};
 
-  // El no-admin solo ve proyectos ACTIVE (independiente de los filtros).
+  // El no-admin solo ve proyectos ACTIVE. El admin ve todos.
   if (!isAdmin) {
     where.status = "ACTIVE";
-  } else if (status && VALID_STATUSES.has(status)) {
-    where.status = status as Prisma.ProjectWhereInput["status"];
   }
 
   if (q) {
     where.name = { contains: q, mode: "insensitive" };
-  }
-
-  const startupWhere: Prisma.StartupProfileWhereInput = {};
-  if (sector) startupWhere.sector = { contains: sector, mode: "insensitive" };
-  if (stage && VALID_STAGES.has(stage)) {
-    startupWhere.stage = stage as Prisma.StartupProfileWhereInput["stage"];
-  }
-  if (Object.keys(startupWhere).length > 0) {
-    where.startupProfile = startupWhere;
   }
 
   const projects = await prisma.project.findMany({
@@ -118,7 +98,7 @@ export default async function ProjectsDiscoveryPage({
 
   const activeCount = projects.filter((p) => p.status === "ACTIVE").length;
   const pendingCount = projects.filter((p) => p.status === "PENDING_APPROVAL").length;
-  const hasFilters = Boolean(q || sector || stage || (isAdmin && status));
+  const hasFilters = Boolean(q);
 
   return (
     <div>
@@ -139,7 +119,7 @@ export default async function ProjectsDiscoveryPage({
       </header>
 
       <div className="mt-8">
-        <ProjectFilters isAdmin={isAdmin} />
+        <ProjectFilters />
       </div>
 
       {projects.length === 0 ? (

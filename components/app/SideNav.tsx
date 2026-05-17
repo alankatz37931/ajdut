@@ -22,11 +22,10 @@ export type NavItem = {
 
 type Props = {
   user: { name: string; email: string };
-  roleLabel: string;
   navItems: NavItem[];
 };
 
-export function SideNav({ user, roleLabel, navItems }: Props) {
+export function SideNav({ user, navItems }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "";
 
@@ -153,9 +152,6 @@ export function SideNav({ user, roleLabel, navItems }: Props) {
           </button>
         </div>
 
-        {/* Role badge */}
-        <p className="eyebrow px-6 py-4 hairline-b leading-none">{roleLabel}</p>
-
         {/* Nav items */}
         <nav className="flex-1 overflow-y-auto py-2 flex flex-col">
           <div>
@@ -173,7 +169,7 @@ export function SideNav({ user, roleLabel, navItems }: Props) {
           </div>
 
           {bottomItems.length > 0 && (
-            <div className="mt-auto pt-4 hairline-t">
+            <div className="mt-2 pt-4 hairline-t">
               <ul>{bottomItems.map(renderItem)}</ul>
             </div>
           )}

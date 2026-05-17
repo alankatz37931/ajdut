@@ -1,28 +1,30 @@
 import Link from "next/link";
 
-export const dynamic = "force-static";
-
 export default function HomePage() {
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       {/* Hero */}
-      <section className="pt-12 pb-16 sm:pt-24 sm:pb-section">
+      <section className="pt-8 pb-10 sm:pt-12 sm:pb-16">
         <div className="max-w-3xl">
           <p className="eyebrow">— Comunidad cerrada de proyectos validados</p>
 
-          <h1 className="font-sans mt-6 sm:mt-10 text-display !leading-[1.05] text-navy">
-            Una participación.
+          <h1 className="font-sans mt-4 sm:mt-6 text-display !leading-[1.05] text-navy">
+            Coordinamos
             <br />
-            Un legado verificable.
+            comunidades de negocios.
           </h1>
 
-          <p className="mt-6 sm:mt-10 max-w-2xl text-base sm:text-lg text-navy/80 leading-relaxed">
+          <p className="mt-5 sm:mt-8 eyebrow !text-navy/50">
+            Transparencia · Unidad · Valor
+          </p>
+
+          <p className="mt-6 sm:mt-8 max-w-2xl text-base sm:text-lg text-navy/80 leading-relaxed">
             AJDUT no procesa pagos ni custodia fondos. Es la herramienta de gestión,
             comunicación y certificación que respalda proyectos reales — startups,
             inmobiliarios y de mercancía — para sus socios.
           </p>
 
-          <div className="mt-8 sm:mt-12 flex flex-col items-stretch sm:items-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
+          <div className="mt-6 sm:mt-8 flex flex-col items-stretch sm:items-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
             <Link href="/acceder" className="btn-primary text-center">
               Acceder
             </Link>

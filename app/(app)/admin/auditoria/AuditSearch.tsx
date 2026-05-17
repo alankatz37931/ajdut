@@ -3,38 +3,36 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
-export function ProjectFilters() {
+/**
+ * Búsqueda instantánea por actor — mismo patrón que /proyectos:
+ * debounce ~250ms + router.replace, sin botón.
+ */
+export function AuditSearch() {
   const router = useRouter();
   const params = useSearchParams();
-  const [query, setQuery] = useState(params.get("q") ?? "");
+  const [query, setQuery] = useState(params.get("actor") ?? "");
 
-  // Sincronizar al cambiar la URL externamente (back/forward).
   useEffect(() => {
-    setQuery(params.get("q") ?? "");
+    setQuery(params.get("actor") ?? "");
   }, [params]);
 
-  // Búsqueda instantánea: empuja la URL ~250ms después de dejar de tipear.
-  // `replace` (no `push`) para no inundar el historial con cada tecla.
   useEffect(() => {
-    const current = params.get("q") ?? "";
+    const current = params.get("actor") ?? "";
     const next = query.trim();
-    if (next === current) return; // sin cambios (también corta el loop con el sync de arriba)
+    if (next === current) return;
     const t = setTimeout(() => {
       router.replace(
-        next ? `/proyectos?q=${encodeURIComponent(next)}` : "/proyectos"
+        next ? `/admin/auditoria?actor=${encodeURIComponent(next)}` : "/admin/auditoria"
       );
     }, 250);
     return () => clearTimeout(t);
   }, [query, params, router]);
 
-  const inputCls =
-    "w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy text-sm focus:outline-none focus:border-navy";
-
   return (
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <label htmlFor="q" className="eyebrow">
-          Buscar por nombre
+        <label htmlFor="actor" className="eyebrow">
+          Buscar por actor
         </label>
         {query && (
           <button
@@ -47,12 +45,12 @@ export function ProjectFilters() {
         )}
       </div>
       <input
-        id="q"
+        id="actor"
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Pushka, Mercurio, ..."
-        className={inputCls}
+        placeholder="email o nombre"
+        className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy text-sm focus:outline-none focus:border-navy"
         autoComplete="off"
       />
     </div>
