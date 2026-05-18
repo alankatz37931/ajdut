@@ -44,8 +44,9 @@ export default async function FounderTeamPage({ params }: Params) {
         ← {project.name}
       </Link>
 
-      <header className="mt-6 hairline-b pb-8">
-        <h1 className="font-sans text-h1 text-navy">Equipo fundador</h1>
+      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+        <p className="eyebrow">— Founder</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Equipo fundador</h1>
         <p className="mt-3 text-navy/75 leading-relaxed">
           Quiénes son los founders detrás del proyecto. Se muestra en la página pública del
           proyecto a quienes tengan acceso.

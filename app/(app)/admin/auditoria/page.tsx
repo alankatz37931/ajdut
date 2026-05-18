@@ -151,9 +151,9 @@ export default async function AdminAuditPage({
 
   return (
     <div>
-      <header className="hairline-b pb-6">
-        <p className="eyebrow">Admin · Auditoría</p>
-        <h1 className="font-sans mt-4 text-h1 text-navy">Bitácora del sistema</h1>
+      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+        <p className="eyebrow">— Admin</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Bitácora del sistema</h1>
         <p className="mt-3 font-mono text-sm text-navy/50">
           {total.toLocaleString("es-MX")} evento{total === 1 ? "" : "s"}
           {totalPages > 1 ? ` · página ${page}/${totalPages}` : ""}
@@ -161,16 +161,16 @@ export default async function AdminAuditPage({
       </header>
 
       {/* Búsqueda por actor — instantánea, sin botón */}
-      <div className="mt-6">
+      <div className="mt-2">
         <AuditSearch />
       </div>
 
       {logs.length === 0 ? (
-        <p className="mt-10 text-navy/60">
+        <p className="mt-6 text-navy/60">
           {actor ? "Sin eventos para ese actor." : "Todavía no hay eventos."}
         </p>
       ) : (
-        <ul className="mt-8 hairline-t">
+        <ul className="mt-6 hairline-t">
           {logs.map((l) => {
             const payload =
               l.payload && typeof l.payload === "object"

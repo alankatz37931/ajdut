@@ -14,7 +14,10 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 className="font-sans text-h1 text-navy">Configuración</h1>
+      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+        <p className="eyebrow">— Tu cuenta</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Configuración</h1>
+      </header>
 
       <SettingsForm
         initialLanguage={prefs.language}

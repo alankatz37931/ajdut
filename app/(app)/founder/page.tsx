@@ -28,10 +28,10 @@ export default async function FounderRootPage() {
 
   return (
     <div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="pt-5 pb-5 sm:pt-7 sm:pb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="eyebrow">Founder</p>
-          <h1 className="font-sans mt-6 text-h1 text-navy">Tus proyectos</h1>
+          <p className="eyebrow">— Founder</p>
+          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Tus proyectos</h1>
         </div>
         <Link href={"/founder/nuevo-proyecto" as Route} className="btn-primary shrink-0">
           + Nuevo proyecto

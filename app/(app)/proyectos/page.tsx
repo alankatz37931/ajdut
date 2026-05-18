@@ -101,8 +101,9 @@ export default async function ProjectsDiscoveryPage({
 
   return (
     <div>
-      <header className="hairline-b pb-8">
-        <h1 className="font-sans text-h1 text-navy">Proyectos</h1>
+      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+        <p className="eyebrow">— AJDUT</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Proyectos</h1>
         {isAdmin ? (
           pendingCount > 0 && (
             <p className="mt-3 font-mono text-sm text-navy/75">
@@ -118,12 +119,12 @@ export default async function ProjectsDiscoveryPage({
         )}
       </header>
 
-      <div className="mt-8">
+      <div className="mt-2">
         <ProjectFilters />
       </div>
 
       {projects.length === 0 ? (
-        <p className="mt-12 text-navy/60">
+        <p className="mt-6 text-navy/60">
           {hasFilters
             ? "Ningún proyecto coincide con los filtros aplicados."
             : isAdmin
@@ -131,7 +132,7 @@ export default async function ProjectsDiscoveryPage({
               : "Aún no hay proyectos activos en AJDUT."}
         </p>
       ) : (
-        <ul className="mt-12 grid grid-cols-1 gap-px bg-line md:grid-cols-2">
+        <ul className="mt-6 grid grid-cols-1 gap-px bg-line md:grid-cols-2">
           {projects.map((p) => {
             const total = p.totalShares;
             const available = p.participations

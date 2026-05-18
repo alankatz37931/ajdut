@@ -84,8 +84,9 @@ export default async function FounderLeadsPage({ params }: Params) {
         ← {project.name}
       </Link>
 
-      <header className="mt-6 hairline-b pb-8">
-        <h1 className="font-sans text-h1 text-navy">Interés de compra</h1>
+      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+        <p className="eyebrow">— Founder</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Interés de compra</h1>
         {summaryParts.length > 0 ? (
           <p className="mt-3 font-mono text-sm text-navy/75">{summaryParts.join(" · ")}</p>
         ) : (

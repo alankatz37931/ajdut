@@ -12,7 +12,7 @@ export default function NosotrosPage() {
       {/* Hero */}
       <section className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <p className="eyebrow">— Sobre nosotros</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-display !leading-[1.05] text-navy">
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
           Coordinamos comunidades de negocios.
         </h1>
         <p className="mt-4 sm:mt-5 text-base sm:text-lg text-navy/80 leading-relaxed">

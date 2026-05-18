@@ -76,14 +76,17 @@ export default async function ApplicationsListPage({
 
   return (
     <div>
-      <h1 className="font-sans text-h1 text-navy">Aplicaciones</h1>
-      {summaryParts.length > 0 ? (
-        <p className="mt-3 font-mono text-sm text-navy/75">
-          {summaryParts.join(" · ")}
-        </p>
-      ) : (
-        <p className="mt-3 font-mono text-sm text-navy/60">Bandeja al día.</p>
-      )}
+      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+        <p className="eyebrow">— Admin</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Aplicaciones</h1>
+        {summaryParts.length > 0 ? (
+          <p className="mt-3 font-mono text-sm text-navy/75">
+            {summaryParts.join(" · ")}
+          </p>
+        ) : (
+          <p className="mt-3 font-mono text-sm text-navy/60">Bandeja al día.</p>
+        )}
+      </header>
 
       <nav className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
         {Object.entries(FILTER_LABEL).map(([key, label]) => {
