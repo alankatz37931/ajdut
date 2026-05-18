@@ -51,7 +51,7 @@ export function ProfileForm({ initialName }: { initialName: string }) {
     "w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy focus:outline-none focus:border-navy";
 
   return (
-    <div className="space-y-12 mt-10">
+    <div className="space-y-12 mt-2">
       {/* Datos básicos */}
       <form action={onSubmitName} className="hairline p-6 bg-paper-light space-y-5">
         <p className="eyebrow">Datos básicos</p>

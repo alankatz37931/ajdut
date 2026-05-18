@@ -47,7 +47,7 @@ export function SettingsForm({
   }
 
   return (
-    <form action={onSubmit} className="mt-8">
+    <form action={onSubmit} className="mt-2">
       <input type="hidden" name="language" value={initialLanguage} />
       <input type="hidden" name="currency" value={currency} />
       <input type="hidden" name="theme" value={theme} />
