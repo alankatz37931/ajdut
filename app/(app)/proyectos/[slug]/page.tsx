@@ -174,47 +174,48 @@ export default async function ProjectPage({ params }: Params) {
   sections.push({
     title: "Participaciones",
     node: (
-      <div className="space-y-px">
-        {/* Renglón 1: participaciones (siempre 3, sin celdas muertas) */}
-        <div className="grid grid-cols-1 gap-px bg-line sm:grid-cols-3">
-          <KpiCard
-            label="Participaciones totales"
-            value={formatNumber(totalShares)}
-            hint="emitidas"
-          />
-          {/* Para no-admin/owner ocultamos el stake institucional de la cuenta de asignadas */}
-          <KpiCard
-            label="Asignadas"
-            value={formatNumber(
-              access.canSeeCapTable ? assignedShares : assignedShares - platformShares
-            )}
-            hint={formatPercent(
-              ((access.canSeeCapTable ? assignedShares : assignedShares - platformShares) /
-                totalShares) *
-                100
-            )}
-          />
-          <KpiCard
-            label="Disponibles"
-            value={formatNumber(availableShares)}
-            hint={formatPercent((availableShares / totalShares) * 100)}
-          />
-        </div>
-
-        {/* Renglón 2: valoración a ancho completo. El sitio web vive en el
-            header (es contexto del proyecto, no un número). */}
+      // Una sola grilla uniforme — mismo patrón que Métricas (gap-px bg-line
+      // + KpiCard). Con valoración son 4 celdas iguales (sin renglón huérfano
+      // ni vacío a la derecha); sin valoración, 3.
+      <div
+        className={`grid grid-cols-1 sm:grid-cols-2 gap-px bg-line ${
+          project.startupProfile?.preMoneyValuation
+            ? "lg:grid-cols-4"
+            : "lg:grid-cols-3"
+        }`}
+      >
+        <KpiCard
+          label="Participaciones totales"
+          value={formatNumber(totalShares)}
+          hint="emitidas"
+        />
+        {/* Para no-admin/owner ocultamos el stake institucional de la cuenta de asignadas */}
+        <KpiCard
+          label="Asignadas"
+          value={formatNumber(
+            access.canSeeCapTable ? assignedShares : assignedShares - platformShares
+          )}
+          hint={formatPercent(
+            ((access.canSeeCapTable ? assignedShares : assignedShares - platformShares) /
+              totalShares) *
+              100
+          )}
+        />
+        <KpiCard
+          label="Disponibles"
+          value={formatNumber(availableShares)}
+          hint={formatPercent((availableShares / totalShares) * 100)}
+        />
         {project.startupProfile?.preMoneyValuation && (
-          <div className="flex flex-col gap-px bg-line sm:flex-row">
-            <KpiCard
-              label="Valoración (pre-money)"
-              value={formatCurrency(
-                Number(project.startupProfile.preMoneyValuation),
-                project.startupProfile.valuationCurrency
-              )}
-              hint="declarada"
-              className="sm:flex-1"
-            />
-          </div>
+          <KpiCard
+            label="Valoración (pre-money)"
+            value={formatCurrency(
+              Number(project.startupProfile.preMoneyValuation),
+              project.startupProfile.valuationCurrency,
+              0
+            )}
+            hint="declarada"
+          />
         )}
       </div>
     ),
@@ -359,15 +360,15 @@ export default async function ProjectPage({ params }: Params) {
           {project.startupProfile!.founders.map((f) => (
             <li
               key={f.id}
-              className="grid grid-cols-12 items-center gap-3"
+              className="grid grid-cols-12 items-baseline gap-3"
             >
-              <span className="col-span-7 sm:col-span-6 text-navy break-words">
+              <span className="col-span-12 sm:col-span-6 text-navy break-words">
                 {f.fullName}
               </span>
-              <span className="col-span-5 sm:col-span-4 eyebrow sm:text-left text-right">
+              <span className="col-span-6 sm:col-span-3 eyebrow">
                 {f.role}
               </span>
-              <span className="col-span-12 sm:col-span-2 font-mono text-navy sm:text-right">
+              <span className="col-span-6 sm:col-span-3 font-mono text-navy text-right">
                 {formatPercent(Number(f.equityPercent))}
               </span>
             </li>
@@ -385,12 +386,12 @@ export default async function ProjectPage({ params }: Params) {
           {project.startupProfile!.milestones.map((m) => (
             <li
               key={m.id}
-              className="grid grid-cols-12 items-baseline gap-x-3 gap-y-1"
+              className="grid grid-cols-12 items-baseline gap-3"
             >
-              <span className="col-span-12 sm:col-span-7 text-navy">
+              <span className="col-span-12 sm:col-span-6 text-navy">
                 {m.title}
               </span>
-              <span className="col-span-6 sm:col-span-2 eyebrow !text-navy">
+              <span className="col-span-6 sm:col-span-3 eyebrow !text-navy">
                 {MILESTONE_STATUS_LABEL[m.status] ?? m.status}
               </span>
               <span className="col-span-6 sm:col-span-3 eyebrow text-right">
@@ -411,7 +412,7 @@ export default async function ProjectPage({ params }: Params) {
     sections.push({
       title: "Métricas",
       node: (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-4">
           {Array.from(latestByKind.values()).map((m) => (
             <KpiCard
               key={m.kind}
@@ -434,36 +435,30 @@ export default async function ProjectPage({ params }: Params) {
       node: (
         <ul className="space-y-4">
           {project.startupProfile.pitchDeckStorageKey && (
-            <li className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-navy">Pitch deck</p>
-                <p className="eyebrow mt-1 !text-navy/40">
-                  Documento del proyecto
-                </p>
-              </div>
+            <li className="grid grid-cols-12 items-baseline gap-3">
+              <span className="col-span-6 sm:col-span-9 text-navy">
+                Pitch deck
+              </span>
               <a
                 href={project.startupProfile.pitchDeckStorageKey}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="eyebrow hover:!text-gold shrink-0"
+                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
               >
                 Abrir ↗
               </a>
             </li>
           )}
           {project.startupProfile.dataRoomStorageKey && (
-            <li className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-navy">Data room</p>
-                <p className="eyebrow mt-1 !text-navy/40">
-                  Acceso a documentación
-                </p>
-              </div>
+            <li className="grid grid-cols-12 items-baseline gap-3">
+              <span className="col-span-6 sm:col-span-9 text-navy">
+                Data room
+              </span>
               <a
                 href={project.startupProfile.dataRoomStorageKey}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="eyebrow hover:!text-gold shrink-0"
+                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
               >
                 Abrir ↗
               </a>
@@ -478,17 +473,17 @@ export default async function ProjectPage({ params }: Params) {
     sections.push({
       title: "Cap table",
       node: (
-        <ul className="space-y-3">
+        <ul className="space-y-4">
           {capTable.map((r, i) => (
             <li
               key={i}
-              className="grid grid-cols-12 items-center gap-3"
+              className="grid grid-cols-12 items-baseline gap-3"
             >
               <span className="col-span-12 sm:col-span-6 text-navy break-words">
                 {r.holder}
                 {r.isPlatform && <span className="ml-2 text-gold">◆</span>}
               </span>
-              <span className="col-span-6 sm:col-span-3 font-mono text-navy sm:text-right">
+              <span className="col-span-6 sm:col-span-3 font-mono text-navy">
                 {formatNumber(r.shares)}
               </span>
               <span className="col-span-6 sm:col-span-3 font-mono text-navy text-right">
