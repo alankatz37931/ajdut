@@ -16,12 +16,17 @@ export function formatPercent(n: number, fractionDigits = 2): string {
   return `${formatNumber(n, { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits })}%`;
 }
 
-export function formatCurrency(amount: number | string, currency = "USD"): string {
+export function formatCurrency(
+  amount: number | string,
+  currency = "USD",
+  fractionDigits = 2
+): string {
   const value = typeof amount === "string" ? Number(amount) : amount;
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
   }).format(value);
 }
 
