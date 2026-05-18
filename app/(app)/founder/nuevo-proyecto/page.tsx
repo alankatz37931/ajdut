@@ -15,8 +15,9 @@ export default async function NewProjectPage() {
         ← Mi proyecto
       </Link>
 
-      <header className="mt-6 hairline-b pb-8">
-        <h1 className="font-sans text-h1 text-navy">Crear nuevo proyecto</h1>
+      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+        <p className="eyebrow">— Founder</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Crear nuevo proyecto</h1>
         <p className="mt-3 text-navy/75 leading-relaxed">
           Registrá tu empresa en AJDUT. Una vez completado el formulario, el equipo lo revisa antes
           de activarlo para inversores.
