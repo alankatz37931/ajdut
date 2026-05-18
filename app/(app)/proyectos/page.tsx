@@ -96,7 +96,6 @@ export default async function ProjectsDiscoveryPage({
     );
   }
 
-  const activeCount = projects.filter((p) => p.status === "ACTIVE").length;
   const pendingCount = projects.filter((p) => p.status === "PENDING_APPROVAL").length;
   const hasFilters = Boolean(q);
 
@@ -105,10 +104,11 @@ export default async function ProjectsDiscoveryPage({
       <header className="hairline-b pb-8">
         <h1 className="font-sans text-h1 text-navy">Proyectos</h1>
         {isAdmin ? (
-          <p className="mt-3 font-mono text-sm text-navy/75">
-            {activeCount} {activeCount === 1 ? "activo" : "activos"}
-            {pendingCount > 0 && ` · ${pendingCount} pendiente${pendingCount === 1 ? "" : "s"} de aprobación`}
-          </p>
+          pendingCount > 0 && (
+            <p className="mt-3 font-mono text-sm text-navy/75">
+              {pendingCount} pendiente{pendingCount === 1 ? "" : "s"} de aprobación
+            </p>
+          )
         ) : (
           <p className="mt-3 max-w-2xl text-navy/75 leading-relaxed">
             Todos los proyectos en AJDUT son aprobados manualmente. Si te interesa una idea y los

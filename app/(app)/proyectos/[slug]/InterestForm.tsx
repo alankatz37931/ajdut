@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { manifestInterestAction } from "./actions";
 
 type Props = {
   projectSlug: string;
+  projectName: string;
+  /** Nombre del usuario logueado, para pre-armar el mensaje. */
+  viewerName: string;
   availableShares: number;
   /** Pre-money valuation declarada por el founder. */
   valuation: number | null;
@@ -16,12 +19,41 @@ type Mode = "amount" | "shares";
 
 export function InterestForm({
   projectSlug,
+  projectName,
+  viewerName,
   availableShares,
   valuation,
   totalShares,
   currency,
 }: Props) {
   const [open, setOpen] = useState(false);
+
+  // El botón "Comprar acciones →" del header es un ancla a #comprar.
+  // Al apretarlo (o si se entra con ese hash) abrimos esta sección.
+  useEffect(() => {
+    const check = () => {
+      if (window.location.hash === "#comprar") setOpen(true);
+    };
+    check();
+    window.addEventListener("hashchange", check);
+    return () => window.removeEventListener("hashchange", check);
+  }, []);
+
+  // Al cerrar limpiamos el hash para que (a) volver a apretar el botón del
+  // header dispare otro `hashchange` y reabra, y (b) los tabs reaparezcan.
+  // `replaceState` NO emite `hashchange`, así que lo despachamos a mano.
+  function close() {
+    setOpen(false);
+    if (window.location.hash === "#comprar") {
+      history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+      window.dispatchEvent(new Event("hashchange"));
+    }
+  }
+
   const [mode, setMode] = useState<Mode>("amount");
   const [amount, setAmount] = useState("");
   const [shares, setShares] = useState("");
@@ -117,7 +149,7 @@ export function InterestForm({
 
   if (success) {
     return (
-      <div className="hairline p-6 bg-paper-light">
+      <div className="mt-6 hairline p-6 bg-paper-light">
         <p className="eyebrow">Interés registrado</p>
         <p className="mt-3 font-sans text-h2 text-navy">Gracias.</p>
         <p className="mt-3 text-navy/75 leading-relaxed">
@@ -128,153 +160,158 @@ export function InterestForm({
     );
   }
 
-  if (!open) {
-    return (
-      <div className="hairline p-6 bg-paper-light">
-        <p className="eyebrow">Te interesa este proyecto</p>
-        <p className="mt-3 text-navy leading-relaxed">
-          Si los números y la idea cierran para vos, podés manifestar tu interés en comprar
-          acciones. El founder revisa los pedidos y se pone en contacto. El cierre se realiza por
-          fuera de AJDUT.
-        </p>
-        <button onClick={() => setOpen(true)} className="btn-primary mt-6">
-          Quiero comprar acciones →
-        </button>
-      </div>
-    );
-  }
+  // Cerrada: no renderiza nada. Se abre con el botón del header (#comprar).
+  if (!open) return null;
 
   return (
-    <form action={submit} className="hairline p-6 bg-paper-light space-y-6">
-      <p className="eyebrow">Manifestar interés</p>
-
-      {/* Toggle de modo */}
-      {canUseAmountMode && (
-        <div>
-          <p className="eyebrow block mb-2">Calcular en</p>
-          <div className="inline-flex hairline">
-            <button
-              type="button"
-              onClick={() => setMode("shares")}
-              className={`px-4 py-2 eyebrow leading-none transition-colors cursor-pointer ${
-                activeMode === "shares"
-                  ? "bg-navy !text-paper"
-                  : "bg-transparent hover:!text-navy"
-              }`}
-            >
-              Acciones
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("amount")}
-              className={`px-4 py-2 eyebrow leading-none transition-colors border-l-hairline border-navy/30 cursor-pointer ${
-                activeMode === "amount"
-                  ? "bg-navy !text-paper"
-                  : "bg-transparent hover:!text-navy"
-              }`}
-            >
-              {moneyLabel}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Input — varía según modo */}
-      {activeMode === "amount" ? (
-        <div>
-          <label htmlFor="amount" className="eyebrow block mb-2">
-            ¿Cuánto querés invertir?
-          </label>
-          <div className="flex items-stretch gap-0 hairline bg-paper">
-            <span className="px-3 py-2 eyebrow !text-navy/60 border-r-hairline border-navy/30 leading-none self-center">
-              {currency}
-            </span>
-            <input
-              id="amount"
-              name="amount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              autoFocus
-              placeholder="0.00"
-              className="flex-1 min-w-0 px-3 py-2 font-mono text-navy bg-transparent focus:outline-none"
-            />
-          </div>
-        </div>
-      ) : (
-        <div>
-          <label htmlFor="shares" className="eyebrow block mb-2">
-            ¿Cuántas acciones?
-          </label>
-          <input
-            id="shares"
-            name="shares"
-            type="number"
-            min={1}
-            step={1}
-            value={shares}
-            onChange={(e) => setShares(e.target.value)}
-            required
-            autoFocus
-            placeholder="0"
-            className="w-full hairline bg-paper px-3 py-2 font-mono text-navy focus:outline-none focus:border-navy"
-          />
-        </div>
-      )}
-
-      {/* Equivalencia en vivo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-sm hairline-t pt-4">
-        <p className="text-navy/75">
-          <span className="eyebrow !text-navy/40">
-            {activeMode === "amount" ? "Equivale a" : "Monto aproximado"}
-          </span>
-          <br />
-          {inputValid ? (
-            <span className={overAvailable ? "text-navy/50 line-through" : "text-navy"}>
-              {activeMode === "amount"
-                ? `${fmtInt(computedShares)} ${computedShares === 1 ? "acción" : "acciones"}`
-                : pricePerShare
-                ? fmtMoney(computedAmount)
-                : "—"}
-            </span>
-          ) : (
-            <span className="text-navy/40">—</span>
-          )}
-        </p>
-        <p className="text-navy/75">
-          <span className="eyebrow !text-navy/40">Precio por acción</span>
-          <br />
-          {pricePerShare ? (
-            <span className="text-navy">{fmtMoney(pricePerShare)}</span>
-          ) : (
-            <span className="text-navy/40">no informado</span>
-          )}
-        </p>
+    <form action={submit} className="mt-6 hairline p-6 bg-paper-light">
+      <div className="flex items-center justify-between gap-3">
+        <p className="eyebrow">Manifestar interés</p>
+        <button
+          type="button"
+          onClick={close}
+          disabled={isPending}
+          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+        >
+          ← Volver
+        </button>
       </div>
 
-      <p className="eyebrow">
-        {activeMode === "amount" && maxAmount !== null
-          ? `Máximo ${fmtMoney(maxAmount)} (${fmtInt(maxShares)} acciones disponibles)`
-          : `Máximo ${fmtInt(maxShares)} acciones disponibles`}
-      </p>
+      {/* Cluster principal: el monto es el foco */}
+      <div className="mt-6 space-y-4">
+        {canUseAmountMode && (
+          <div>
+            <p className="eyebrow mb-2">Calcular en</p>
+            <div className="inline-flex hairline">
+              <button
+                type="button"
+                onClick={() => setMode("shares")}
+                className={`px-4 py-2 eyebrow leading-none transition-colors cursor-pointer ${
+                  activeMode === "shares"
+                    ? "bg-navy !text-paper"
+                    : "bg-transparent hover:!text-navy"
+                }`}
+              >
+                Acciones
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("amount")}
+                className={`px-4 py-2 eyebrow leading-none transition-colors border-l-hairline border-navy/30 cursor-pointer ${
+                  activeMode === "amount"
+                    ? "bg-navy !text-paper"
+                    : "bg-transparent hover:!text-navy"
+                }`}
+              >
+                {moneyLabel}
+              </button>
+            </div>
+          </div>
+        )}
 
-      {/* Mensaje opcional */}
-      <div>
+        {/* Input protagonista: número grande */}
+        {activeMode === "amount" ? (
+          <div>
+            <label htmlFor="amount" className="eyebrow block mb-2">
+              ¿Cuánto querés invertir?
+            </label>
+            <div className="flex items-stretch hairline bg-paper">
+              <span className="self-center px-4 font-mono text-lg text-navy/40">
+                {currency}
+              </span>
+              <input
+                id="amount"
+                name="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                autoFocus
+                placeholder="0.00"
+                className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-3 font-mono text-2xl text-navy bg-transparent focus:outline-none"
+              />
+            </div>
+          </div>
+        ) : (
+          <div>
+            <label htmlFor="shares" className="eyebrow block mb-2">
+              ¿Cuántas acciones?
+            </label>
+            <input
+              id="shares"
+              name="shares"
+              type="number"
+              min={1}
+              step={1}
+              value={shares}
+              onChange={(e) => setShares(e.target.value)}
+              required
+              autoFocus
+              placeholder="0"
+              className="w-full hairline bg-paper px-4 py-3 font-mono text-2xl text-navy focus:outline-none focus:border-navy"
+            />
+          </div>
+        )}
+
+        <p className="eyebrow !text-navy/40">
+          {activeMode === "amount" && maxAmount !== null
+            ? `Máximo ${fmtMoney(maxAmount)} · ${fmtInt(maxShares)} acciones`
+            : `Máximo ${fmtInt(maxShares)} acciones disponibles`}
+        </p>
+
+        {/* Equivale / Precio — estilo KPI, consistente con el resto */}
+        <div className="grid grid-cols-2 gap-px bg-line">
+          <div className="bg-paper p-4">
+            <p className="eyebrow !text-navy/40">
+              {activeMode === "amount" ? "Equivale a" : "Monto aproximado"}
+            </p>
+            <p className="mt-1 font-mono text-lg">
+              {inputValid ? (
+                <span
+                  className={
+                    overAvailable
+                      ? "text-navy/40 line-through"
+                      : "text-gold"
+                  }
+                >
+                  {activeMode === "amount"
+                    ? `${fmtInt(computedShares)} ${
+                        computedShares === 1 ? "acción" : "acciones"
+                      }`
+                    : pricePerShare
+                    ? fmtMoney(computedAmount)
+                    : "—"}
+                </span>
+              ) : (
+                <span className="text-navy/30">—</span>
+              )}
+            </p>
+          </div>
+          <div className="bg-paper p-4">
+            <p className="eyebrow !text-navy/40">Precio por acción</p>
+            <p className="mt-1 font-mono text-lg text-navy">
+              {pricePerShare ? fmtMoney(pricePerShare) : "no informado"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Mensaje (secundario) */}
+      <div className="mt-6 hairline-t pt-5">
         <label htmlFor="message" className="eyebrow block mb-2">
           Mensaje al founder <span className="!text-navy/40">(opcional)</span>
         </label>
         <textarea
           id="message"
           name="message"
-          rows={4}
+          rows={3}
           maxLength={2000}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Si querés, contale por qué te interesa o cualquier consulta."
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy focus:outline-none focus:border-navy"
+          placeholder={`Mi nombre es ${viewerName.trim() || "[tu nombre]"} y me interesa invertir en ${projectName} porque…`}
+          className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
         />
         <span className="eyebrow mt-2 block !text-navy/40">
           {message.length} / 2000
@@ -282,12 +319,12 @@ export function InterestForm({
       </div>
 
       {error && (
-        <p className="eyebrow !text-navy" role="alert">
+        <p className="eyebrow !text-navy mt-4" role="alert">
           {error}
         </p>
       )}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-4">
         <button
           type="submit"
           disabled={isPending || !inputValid || overAvailable}
@@ -297,7 +334,7 @@ export function InterestForm({
         </button>
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={close}
           disabled={isPending}
           className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
         >
@@ -305,9 +342,9 @@ export function InterestForm({
         </button>
       </div>
 
-      <p className="eyebrow">
-        AJDUT no procesa pagos. El cierre se realiza por fuera de la plataforma según los términos
-        que acuerdes con el founder.
+      <p className="mt-4 text-xs leading-relaxed text-navy/40">
+        AJDUT no procesa pagos. El cierre se realiza por fuera de la plataforma
+        según los términos que acuerdes con el founder.
       </p>
     </form>
   );
