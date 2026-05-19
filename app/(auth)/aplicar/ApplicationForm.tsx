@@ -51,11 +51,32 @@ export function ApplicationForm() {
   }
 
   function canAdvance(): boolean {
-    if (step === "identity") return draft.fullName.length >= 2;
-    if (step === "contact")
-      return draft.email.includes("@") && draft.phone.length >= 6 && draft.country.length >= 2;
-    if (step === "motivation") return draft.motivation.length >= 40;
+    if (step === "identity")
+      return draft.fullName.length >= 2 && draft.email.includes("@");
     return true;
+  }
+
+  const stepOrder: Step[] = [
+    "identity",
+    "contact",
+    "motivation",
+    "review",
+    "verify",
+    "submitted",
+  ];
+
+  /** Saltar a un paso ANTERIOR tocándolo en el indicador (no hacia adelante). */
+  function goTo(target: Step) {
+    const cur = stepOrder.indexOf(step);
+    const tgt = stepOrder.indexOf(target);
+    if (tgt < 0 || tgt >= cur) return;
+    if (step === "verify") {
+      setVerifiedEmail(null);
+      setCode("");
+      setCodeExpiresAt(null);
+    }
+    setError(null);
+    setStep(target);
   }
 
   function next() {
@@ -146,54 +167,68 @@ export function ApplicationForm() {
 
   return (
     <div>
-      <ol className="mb-8 flex w-full items-center gap-2">
-        {steps.map((s, i) => (
-          <li
-            key={s.id}
-            className={`flex items-center gap-2 whitespace-nowrap ${
-              i < steps.length - 1 ? "flex-1" : "shrink-0"
-            }`}
-          >
-            <span
-              className={`font-mono text-xs shrink-0 ${
-                step === s.id ? "text-gold" : "text-navy/40"
+      <ol className="mb-5 flex w-full items-center gap-1.5">
+        {steps.map((s, i) => {
+          const isPast =
+            stepOrder.indexOf(s.id) < stepOrder.indexOf(step);
+          const isCurrent = step === s.id;
+          const numCls = `font-mono text-xs shrink-0 ${
+            isCurrent ? "text-gold" : "text-navy/40"
+          }`;
+          const lblCls = `eyebrow tracking-wide shrink-0 ${
+            isCurrent ? "!text-navy" : "!text-navy/40"
+          }`;
+          const inner = (
+            <>
+              <span className={numCls}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className={`${lblCls} hidden sm:inline`}>{s.label}</span>
+              {isCurrent && (
+                <span className={`${lblCls} sm:hidden`}>{s.label}</span>
+              )}
+            </>
+          );
+          return (
+            <li
+              key={s.id}
+              className={`flex items-center gap-2 whitespace-nowrap ${
+                i < steps.length - 1 ? "flex-1" : "shrink-0"
               }`}
             >
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <span
-              className={`eyebrow shrink-0 hidden sm:inline ${
-                step === s.id ? "!text-navy" : "!text-navy/40"
-              }`}
-            >
-              {s.label}
-            </span>
-            {step === s.id && (
-              <span className="eyebrow shrink-0 sm:hidden !text-navy">{s.label}</span>
-            )}
-            {i < steps.length - 1 && (
-              <span className="ml-2 h-px flex-1 bg-line" aria-hidden />
-            )}
-          </li>
-        ))}
+              {isPast ? (
+                <button
+                  type="button"
+                  onClick={() => goTo(s.id)}
+                  className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+                  aria-label={`Volver a ${s.label}`}
+                >
+                  {inner}
+                </button>
+              ) : (
+                <span className="flex items-center gap-2">{inner}</span>
+              )}
+              {i < steps.length - 1 && (
+                <span className="ml-2 h-px flex-1 bg-line" aria-hidden />
+              )}
+            </li>
+          );
+        })}
       </ol>
 
-      <div className="space-y-5">
+      <div className="space-y-3">
         {step === "identity" && (
-          <Field label="Nombre completo" htmlFor="fullName">
-            <input
-              id="fullName"
-              type="text"
-              value={draft.fullName}
-              onChange={(e) => update("fullName", e.target.value)}
-              className="input"
-              autoFocus
-            />
-          </Field>
-        )}
-
-        {step === "contact" && (
           <>
+            <Field label="Nombre completo" htmlFor="fullName">
+              <input
+                id="fullName"
+                type="text"
+                value={draft.fullName}
+                onChange={(e) => update("fullName", e.target.value)}
+                className="input"
+                autoFocus
+              />
+            </Field>
             <Field label="Email" htmlFor="email">
               <input
                 id="email"
@@ -201,9 +236,13 @@ export function ApplicationForm() {
                 value={draft.email}
                 onChange={(e) => update("email", e.target.value)}
                 className="input"
-                autoFocus
               />
             </Field>
+          </>
+        )}
+
+        {step === "contact" && (
+          <>
             <Field label="Teléfono" htmlFor="phone">
               <input
                 id="phone"
@@ -211,6 +250,7 @@ export function ApplicationForm() {
                 value={draft.phone}
                 onChange={(e) => update("phone", e.target.value)}
                 className="input"
+                autoFocus
               />
             </Field>
             <Field label="País de residencia" htmlFor="country">
@@ -235,10 +275,10 @@ export function ApplicationForm() {
         )}
 
         {step === "motivation" && (
-          <Field label="Motivación (mínimo 40 caracteres)" htmlFor="motivation">
+          <Field label="Motivación" htmlFor="motivation">
             <textarea
               id="motivation"
-              rows={8}
+              rows={5}
               value={draft.motivation}
               onChange={(e) => update("motivation", e.target.value)}
               className="input"
@@ -255,10 +295,14 @@ export function ApplicationForm() {
           <div className="space-y-3 text-navy/85">
             <Row label="Nombre" value={draft.fullName} />
             <Row label="Email" value={draft.email} />
-            <Row label="Teléfono" value={draft.phone} />
-            <Row label="País" value={draft.country} />
-            {draft.referredBy && <Row label="Referido por" value={draft.referredBy} />}
-            <Row label="Motivación" value={draft.motivation} multiline />
+            {draft.phone.trim() && <Row label="Teléfono" value={draft.phone} />}
+            {draft.country.trim() && <Row label="País" value={draft.country} />}
+            {draft.referredBy.trim() && (
+              <Row label="Referido por" value={draft.referredBy} />
+            )}
+            {draft.motivation.trim() && (
+              <Row label="Motivación" value={draft.motivation} multiline />
+            )}
 
             <p className="mt-6 eyebrow">
               Al continuar, te vamos a enviar un código de verificación al email de arriba para
@@ -362,7 +406,7 @@ export function ApplicationForm() {
           width: 100%;
           border: 0.5px solid rgba(26, 26, 46, 0.4);
           background: #f5f3ee;
-          padding: 0.5rem 0.75rem;
+          padding: 0.4rem 0.7rem;
           font-family: var(--font-inter);
           color: #1a1a2e;
         }
@@ -386,7 +430,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="eyebrow block mb-2">
+      <label htmlFor={htmlFor} className="eyebrow block mb-1.5">
         {label}
       </label>
       {children}

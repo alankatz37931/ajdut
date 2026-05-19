@@ -9,13 +9,13 @@ export function PublicNav() {
         <div className="flex items-center gap-6">
           <Link
             href="/nosotros"
-            className="eyebrow hover:!text-gold transition-colors"
+            className="eyebrow tracking-widest hover:!text-gold transition-colors"
           >
             Sobre nosotros
           </Link>
           <Link
             href="/acceder"
-            className="eyebrow hover:!text-gold transition-colors"
+            className="eyebrow tracking-widest hover:!text-gold transition-colors"
           >
             Acceder
           </Link>

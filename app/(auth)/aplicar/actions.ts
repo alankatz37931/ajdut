@@ -17,9 +17,9 @@ import { consumeRateLimit } from "@/lib/utils/rate-limit";
 const applicationSchema = z.object({
   fullName: z.string().min(2).max(120),
   email: z.string().email().max(180),
-  phone: z.string().min(6).max(40),
-  country: z.string().min(2).max(60),
-  motivation: z.string().min(40).max(2000),
+  phone: z.string().max(40),
+  country: z.string().max(60),
+  motivation: z.string().max(2000),
   referredBy: z.string().max(120).optional().or(z.literal("")),
 });
 

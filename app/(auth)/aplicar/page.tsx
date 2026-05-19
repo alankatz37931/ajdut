@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function AplicarPage() {
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 sm:px-6 pb-section">
+    <div className="mx-auto w-full max-w-2xl px-4 sm:px-6">
       <div className="flex items-center gap-3 -ml-2">
         <Link
           href="/"
@@ -19,13 +19,13 @@ export default function AplicarPage() {
         <p className="eyebrow">Aplicación de acceso</p>
       </div>
 
-      <h1 className="font-sans mt-6 text-h1 text-navy">Aplica para ser parte</h1>
-      <p className="mt-4 max-w-xl text-navy/75 leading-relaxed">
+      <h1 className="font-sans mt-4 text-h1 text-navy">Aplica para ser parte</h1>
+      <p className="mt-3 max-w-xl text-sm text-navy/75 leading-relaxed">
         AJDUT es una comunidad cerrada. Tu aplicación será revisada manualmente por el equipo.
         No hay registro automático; el acceso se concede tras evaluación.
       </p>
 
-      <div className="mt-10 hairline p-6 bg-paper-light">
+      <div className="mt-6 hairline p-5 bg-paper-light">
         <ApplicationForm />
       </div>
     </div>
