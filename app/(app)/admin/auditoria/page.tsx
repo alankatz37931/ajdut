@@ -125,7 +125,11 @@ export default async function AdminAuditPage({
   const actor = (sp.actor ?? "").trim();
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
 
-  const where: Prisma.AuditLogWhereInput = {};
+  // Los emails fallidos son ruido operativo, no eventos de negocio:
+  // quedan registrados pero no se listan en la bitácora.
+  const where: Prisma.AuditLogWhereInput = {
+    action: { not: "EMAIL.FAILED" },
+  };
   if (actor) {
     where.OR = [
       { actor: { email: { contains: actor, mode: "insensitive" } } },

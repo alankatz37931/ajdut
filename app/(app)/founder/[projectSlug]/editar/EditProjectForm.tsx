@@ -279,7 +279,7 @@ export function EditProjectForm({
           <section className="space-y-5 hairline-t pt-8">
             <p className="eyebrow">Valoración</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Valoración pre-money" htmlFor="preMoneyValuation">
+              <Field label="Monto" htmlFor="preMoneyValuation">
                 <input
                   id="preMoneyValuation"
                   name="preMoneyValuation"

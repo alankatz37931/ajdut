@@ -130,7 +130,7 @@ export default async function FounderDashboardPage({ params }: Params) {
                 Number(project.startupProfile.preMoneyValuation),
                 project.startupProfile.valuationCurrency
               )}
-              hint="pre-money"
+              hint="declarada"
             />
             <KpiCard label="Founders" value={String(project.startupProfile.founders.length)} hint="activos" />
             <KpiCard label="Hitos" value={String(project.startupProfile.milestones.length)} hint="registrados" />

@@ -8,11 +8,12 @@ export function ProfileForm({ initialName }: { initialName: string }) {
   const [savedName, setSavedName] = useState(initialName);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [pwError, setPwError] = useState<string | null>(null);
   const [nameSuccess, setNameSuccess] = useState(false);
   const [pwSuccess, setPwSuccess] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function onSubmitName(formData: FormData) {
@@ -42,7 +43,6 @@ export function ProfileForm({ initialName }: { initialName: string }) {
       setPwSuccess(true);
       setCurrentPassword("");
       setNewPassword("");
-      setConfirmPassword("");
       setTimeout(() => setPwSuccess(false), 4000);
     });
   }
@@ -51,9 +51,9 @@ export function ProfileForm({ initialName }: { initialName: string }) {
     "w-full border-hairline border-navy/40 bg-paper px-3 py-1.5 font-sans text-navy focus:outline-none focus:border-navy";
 
   return (
-    <div className="space-y-6 mt-2">
+    <div className="hairline bg-paper-light p-5 sm:p-6 mt-2">
       {/* Datos básicos */}
-      <form action={onSubmitName} className="hairline p-5 bg-paper-light space-y-4">
+      <form action={onSubmitName} className="space-y-3">
         <p className="eyebrow">Datos básicos</p>
 
         <div>
@@ -88,58 +88,58 @@ export function ProfileForm({ initialName }: { initialName: string }) {
         </div>
       </form>
 
-      {/* Cambio de contraseña */}
-      <form action={onSubmitPassword} className="hairline p-5 bg-paper-light space-y-4">
+      {/* Cambio de contraseña — mismo cuadro, separado por una hairline */}
+      <form
+        action={onSubmitPassword}
+        className="mt-6 hairline-t pt-6 space-y-3"
+      >
         <p className="eyebrow">Cambiar contraseña</p>
 
-        <div>
-          <label htmlFor="currentPassword" className="eyebrow block mb-1.5">
-            Contraseña actual
-          </label>
-          <input
-            id="currentPassword"
-            name="currentPassword"
-            type="password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            className={inputCls}
-          />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="currentPassword" className="eyebrow block mb-1.5">
+              Actual
+            </label>
+            <div className="relative">
+              <input
+                id="currentPassword"
+                name="currentPassword"
+                type={showCurrent ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className={`${inputCls} pr-9`}
+              />
+              <EyeBtn
+                shown={showCurrent}
+                onToggle={() => setShowCurrent((v) => !v)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="newPassword" className="eyebrow block mb-1.5">
+              Nueva
+            </label>
+            <div className="relative">
+              <input
+                id="newPassword"
+                name="newPassword"
+                type={showNew ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                className={`${inputCls} pr-9`}
+              />
+              <EyeBtn shown={showNew} onToggle={() => setShowNew((v) => !v)} />
+            </div>
+          </div>
+
         </div>
 
-        <div>
-          <label htmlFor="newPassword" className="eyebrow block mb-1.5">
-            Nueva contraseña
-          </label>
-          <input
-            id="newPassword"
-            name="newPassword"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-            className={inputCls}
-          />
-          <p className="mt-2 eyebrow">Mínimo 10 caracteres.</p>
-        </div>
-
-        <div>
-          <label htmlFor="confirmPassword" className="eyebrow block mb-1.5">
-            Repetir nueva contraseña
-          </label>
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-            className={inputCls}
-          />
-        </div>
+        <p className="eyebrow !text-navy/40">Mínimo 10 caracteres.</p>
 
         {pwError && (
           <p className="eyebrow !text-navy" role="alert">
@@ -155,5 +155,43 @@ export function ProfileForm({ initialName }: { initialName: string }) {
         </div>
       </form>
     </div>
+  );
+}
+
+/** Botón de ojo dentro del input (a la derecha) para ver/ocultar la clave. */
+function EyeBtn({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={shown ? "Ocultar contraseña" : "Mostrar contraseña"}
+      aria-pressed={shown}
+      tabIndex={-1}
+      className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-navy/40 hover:text-navy transition-colors"
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        {shown ? (
+          <>
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+            <path d="M1 1l22 22" />
+          </>
+        ) : (
+          <>
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </>
+        )}
+      </svg>
+    </button>
   );
 }
