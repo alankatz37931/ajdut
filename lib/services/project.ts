@@ -137,6 +137,15 @@ export type UpdateProjectInfoInput = {
   // Documentos como URLs externas (drive/dropbox/notion/etc.)
   pitchDeckUrl?: string | null;
   dataRoomUrl?: string | null;
+  // Estructura y respaldo (texto informativo)
+  assetBackingNote?: string | null;
+  equityStructureNote?: string | null;
+  // Documentos opcionales adicionales (URLs externas)
+  projectionsUrl?: string | null;
+  planNegociosUrl?: string | null;
+  estrategiasPeriodicasUrl?: string | null;
+  estadosFinancierosUrl?: string | null;
+  estrategiaEmisionUrl?: string | null;
 };
 
 /**
@@ -203,6 +212,24 @@ export async function updateProjectInfo(input: UpdateProjectInfoInput) {
         profileUpdates.pitchDeckStorageKey = input.pitchDeckUrl || null;
       if (input.dataRoomUrl !== undefined)
         profileUpdates.dataRoomStorageKey = input.dataRoomUrl || null;
+      if (input.assetBackingNote !== undefined)
+        profileUpdates.assetBackingNote = input.assetBackingNote
+          ? input.assetBackingNote.trim() || null
+          : null;
+      if (input.equityStructureNote !== undefined)
+        profileUpdates.equityStructureNote = input.equityStructureNote
+          ? input.equityStructureNote.trim() || null
+          : null;
+      if (input.projectionsUrl !== undefined)
+        profileUpdates.projectionsUrl = input.projectionsUrl || null;
+      if (input.planNegociosUrl !== undefined)
+        profileUpdates.planNegociosUrl = input.planNegociosUrl || null;
+      if (input.estrategiasPeriodicasUrl !== undefined)
+        profileUpdates.estrategiasPeriodicasUrl = input.estrategiasPeriodicasUrl || null;
+      if (input.estadosFinancierosUrl !== undefined)
+        profileUpdates.estadosFinancierosUrl = input.estadosFinancierosUrl || null;
+      if (input.estrategiaEmisionUrl !== undefined)
+        profileUpdates.estrategiaEmisionUrl = input.estrategiaEmisionUrl || null;
 
       if (Object.keys(profileUpdates).length > 0) {
         await tx.startupProfile.update({
@@ -247,6 +274,15 @@ export type CreateProjectInput = {
   websiteUrl?: string;
   legalName: string;
   jurisdiction: string;
+  // Estructura y respaldo (texto informativo)
+  assetBackingNote?: string | null;
+  equityStructureNote?: string | null;
+  // Documentos opcionales (URLs externas)
+  projectionsUrl?: string | null;
+  planNegociosUrl?: string | null;
+  estrategiasPeriodicasUrl?: string | null;
+  estadosFinancierosUrl?: string | null;
+  estrategiaEmisionUrl?: string | null;
 };
 
 function slugify(text: string): string {
@@ -336,6 +372,13 @@ export async function createProject(input: CreateProjectInput) {
         totalEquityShares: totalShares,
         platformEquityPercent: new Prisma.Decimal(10),
         websiteUrl: input.websiteUrl?.trim() || null,
+        assetBackingNote: input.assetBackingNote?.trim() || null,
+        equityStructureNote: input.equityStructureNote?.trim() || null,
+        projectionsUrl: input.projectionsUrl?.trim() || null,
+        planNegociosUrl: input.planNegociosUrl?.trim() || null,
+        estrategiasPeriodicasUrl: input.estrategiasPeriodicasUrl?.trim() || null,
+        estadosFinancierosUrl: input.estadosFinancierosUrl?.trim() || null,
+        estrategiaEmisionUrl: input.estrategiaEmisionUrl?.trim() || null,
       },
     });
 

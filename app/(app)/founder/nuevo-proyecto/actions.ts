@@ -42,6 +42,13 @@ export async function createProjectAction(
   const websiteUrl = get("websiteUrl") || undefined;
   const legalName = get("legalName") || name;
   const jurisdiction = get("jurisdiction");
+  const assetBackingNote = get("assetBackingNote") || undefined;
+  const equityStructureNote = get("equityStructureNote") || undefined;
+  const projectionsUrl = get("projectionsUrl") || undefined;
+  const planNegociosUrl = get("planNegociosUrl") || undefined;
+  const estrategiasPeriodicasUrl = get("estrategiasPeriodicasUrl") || undefined;
+  const estadosFinancierosUrl = get("estadosFinancierosUrl") || undefined;
+  const estrategiaEmisionUrl = get("estrategiaEmisionUrl") || undefined;
 
   if (name.length < 2) return { ok: false, error: "Falta el nombre del proyecto." };
   if (oneLiner.length < 10) return { ok: false, error: "Escribí un one-liner descriptivo." };
@@ -90,6 +97,13 @@ export async function createProjectAction(
       websiteUrl,
       legalName,
       jurisdiction,
+      assetBackingNote,
+      equityStructureNote,
+      projectionsUrl,
+      planNegociosUrl,
+      estrategiasPeriodicasUrl,
+      estadosFinancierosUrl,
+      estrategiaEmisionUrl,
     });
   } catch (e) {
     if (e instanceof DomainError) {

@@ -462,6 +462,35 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
+  if (
+    project.startupProfile?.assetBackingNote ||
+    project.startupProfile?.equityStructureNote
+  ) {
+    sections.push({
+      title: "Estructura y respaldo",
+      node: (
+        <div className="space-y-6">
+          {project.startupProfile.assetBackingNote && (
+            <div>
+              <p className="eyebrow mb-3">Activo respaldado</p>
+              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                {project.startupProfile.assetBackingNote}
+              </p>
+            </div>
+          )}
+          {project.startupProfile.equityStructureNote && (
+            <div>
+              <p className="eyebrow mb-3">Estructura accionaria</p>
+              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                {project.startupProfile.equityStructureNote}
+              </p>
+            </div>
+          )}
+        </div>
+      ),
+    });
+  }
+
   if ((project.startupProfile?.founders.length ?? 0) > 0) {
     sections.push({
       title: "Equipo",
@@ -550,7 +579,12 @@ export default async function ProjectPage({ params }: Params) {
 
   if (
     project.startupProfile?.pitchDeckStorageKey ||
-    project.startupProfile?.dataRoomStorageKey
+    project.startupProfile?.dataRoomStorageKey ||
+    project.startupProfile?.projectionsUrl ||
+    project.startupProfile?.planNegociosUrl ||
+    project.startupProfile?.estrategiasPeriodicasUrl ||
+    project.startupProfile?.estadosFinancierosUrl ||
+    project.startupProfile?.estrategiaEmisionUrl
   ) {
     sections.push({
       title: "Documentos",
@@ -578,6 +612,81 @@ export default async function ProjectPage({ params }: Params) {
               </span>
               <a
                 href={project.startupProfile.dataRoomStorageKey}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
+              >
+                Abrir ↗
+              </a>
+            </li>
+          )}
+          {project.startupProfile.projectionsUrl && (
+            <li className="grid grid-cols-12 items-baseline gap-3">
+              <span className="col-span-6 sm:col-span-9 text-navy">
+                Proyecciones financieras
+              </span>
+              <a
+                href={project.startupProfile.projectionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
+              >
+                Abrir ↗
+              </a>
+            </li>
+          )}
+          {project.startupProfile.planNegociosUrl && (
+            <li className="grid grid-cols-12 items-baseline gap-3">
+              <span className="col-span-6 sm:col-span-9 text-navy">
+                Plan de negocios
+              </span>
+              <a
+                href={project.startupProfile.planNegociosUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
+              >
+                Abrir ↗
+              </a>
+            </li>
+          )}
+          {project.startupProfile.estrategiasPeriodicasUrl && (
+            <li className="grid grid-cols-12 items-baseline gap-3">
+              <span className="col-span-6 sm:col-span-9 text-navy">
+                Objetivos y estrategias periódicas
+              </span>
+              <a
+                href={project.startupProfile.estrategiasPeriodicasUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
+              >
+                Abrir ↗
+              </a>
+            </li>
+          )}
+          {project.startupProfile.estadosFinancierosUrl && (
+            <li className="grid grid-cols-12 items-baseline gap-3">
+              <span className="col-span-6 sm:col-span-9 text-navy">
+                Estados financieros trimestrales
+              </span>
+              <a
+                href={project.startupProfile.estadosFinancierosUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
+              >
+                Abrir ↗
+              </a>
+            </li>
+          )}
+          {project.startupProfile.estrategiaEmisionUrl && (
+            <li className="grid grid-cols-12 items-baseline gap-3">
+              <span className="col-span-6 sm:col-span-9 text-navy">
+                Estrategia de emisión
+              </span>
+              <a
+                href={project.startupProfile.estrategiaEmisionUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
