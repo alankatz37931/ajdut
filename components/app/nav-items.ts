@@ -13,7 +13,22 @@ export const ROLE_LABEL: Record<string, string> = {
  * Construye los items del sidebar según rol. Compartido entre el layout
  * de la app y la página /nosotros (que muestra el mismo chrome si hay sesión).
  */
-export async function navItemsFor(role: string): Promise<NavItem[]> {
+export async function navItemsFor(
+  role: string,
+  userId?: string
+): Promise<NavItem[]> {
+  // Cualquier rol que tenga acciones asignadas ve "Mis participaciones",
+  // igual que un socio. PARTNER ya lo tiene fijo en su menú.
+  const ownsShares =
+    !!userId &&
+    (await prisma.participation.count({
+      where: { currentOwnerId: userId },
+    })) > 0;
+  const misParticipacionesItem: NavItem = {
+    label: "Mis participaciones",
+    href: "/partner" as Route,
+  };
+
   const profileItem: NavItem = {
     label: "Mi perfil",
     href: "/perfil" as Route,
@@ -48,6 +63,7 @@ export async function navItemsFor(role: string): Promise<NavItem[]> {
         badgeHighlight: true,
       },
       { label: "Auditoría", href: "/admin/auditoria" as Route },
+      ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,
       nosotrosItem,
@@ -58,6 +74,7 @@ export async function navItemsFor(role: string): Promise<NavItem[]> {
     return [
       { label: "Mi proyecto", href: "/founder" as Route },
       { label: "Explorar", href: "/proyectos" as Route },
+      ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,
       nosotrosItem,
@@ -77,6 +94,7 @@ export async function navItemsFor(role: string): Promise<NavItem[]> {
   if (role === "CO_ADMIN") {
     return [
       { label: "Proyectos", href: "/proyectos" as Route },
+      ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,
       nosotrosItem,

@@ -17,7 +17,7 @@ export default async function NosotrosLayout({
   const user = await getOptionalSession();
 
   if (user) {
-    const navItems = await navItemsFor(user.role);
+    const navItems = await navItemsFor(user.role, user.id);
     return (
       <AppShell
         user={{ name: user.name ?? user.email, email: user.email }}

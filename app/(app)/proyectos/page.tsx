@@ -24,16 +24,6 @@ const STATUS_LABEL: Record<string, string> = {
   ARCHIVED: "Archivado",
 };
 
-// Símbolo geométrico para cada estado (lenguaje de planos técnicos)
-const STATUS_SYMBOL: Record<string, string> = {
-  ACTIVE: "●",
-  PENDING_APPROVAL: "○",
-  SUSPENDED: "◐",
-  CLOSED: "◇",
-  DRAFT: "◇",
-  ARCHIVED: "▪",
-};
-
 // Orden de visualización para la lista (admin ve todos los estados).
 const STATUS_RANK: Record<string, number> = {
   ACTIVE: 0,
@@ -132,7 +122,7 @@ export default async function ProjectsDiscoveryPage({
               : "Aún no hay proyectos activos en AJDUT."}
         </p>
       ) : (
-        <ul className="mt-6 grid grid-cols-1 gap-px bg-line md:grid-cols-2">
+        <ul className="mt-6 hairline-t">
           {projects.map((p) => {
             const total = p.totalShares;
             const available = p.participations
@@ -143,71 +133,70 @@ export default async function ProjectsDiscoveryPage({
               p.status !== "ACTIVE" && p.status !== "PENDING_APPROVAL";
 
             return (
-              <li key={p.id} className="bg-paper">
+              <li key={p.id} className="hairline-b">
                 <Link
                   href={`/proyectos/${p.slug}` as Route}
-                  className="relative block p-6 hover:bg-paper-light transition-colors h-full after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-gold after:scale-x-0 after:origin-left after:transition-transform hover:after:scale-x-100"
+                  className="group grid grid-cols-12 items-baseline gap-x-4 gap-y-2 px-2 py-4 hover:bg-paper-light transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="eyebrow min-w-0">
+                  <div className="col-span-12 sm:col-span-6 min-w-0">
+                    <p className="eyebrow">
                       {p.startupProfile?.sector ?? p.kind}
                       {p.startupProfile?.stage &&
                         ` · ${STAGE_LABEL[p.startupProfile.stage]}`}
-                    </p>
-                    {isAdmin && p.status !== "ACTIVE" && (
-                      <span
-                        className={`eyebrow shrink-0 inline-flex items-center gap-1.5 ${
-                          isPending ? "!text-gold" : "!text-navy/50"
-                        }`}
-                      >
-                        <span aria-hidden className="text-base leading-none">
-                          {STATUS_SYMBOL[p.status] ?? "·"}
+                      {isAdmin && p.status !== "ACTIVE" && (
+                        <span
+                          className={isPending ? "!text-gold" : "!text-navy/50"}
+                        >
+                          {" · "}
+                          {STATUS_LABEL[p.status]}
                         </span>
-                        {STATUS_LABEL[p.status]}
-                      </span>
+                      )}
+                    </p>
+                    <h2
+                      className={`font-sans mt-1 text-h2 ${
+                        isInactive ? "text-navy/60" : "text-navy"
+                      }`}
+                    >
+                      {p.name}
+                    </h2>
+                    {p.startupProfile?.oneLiner && (
+                      <p className="mt-1 text-sm text-navy/70 leading-snug">
+                        “{p.startupProfile.oneLiner}” ·{" "}
+                        <span className="!text-navy/50">
+                          {p.owner.fullName}
+                        </span>
+                      </p>
                     )}
                   </div>
 
-                  <h2
-                    className={`font-sans mt-3 text-h2 ${
-                      isInactive ? "text-navy/60" : "text-navy"
-                    }`}
-                  >
-                    {p.name}
-                  </h2>
-                  {p.startupProfile?.oneLiner && (
-                    <p className="mt-3 text-navy/80 leading-relaxed">
-                      “{p.startupProfile.oneLiner}”
+                  <div className="col-span-5 sm:col-span-3">
+                    <p className="eyebrow !text-navy/40">Valoración</p>
+                    <p className="mt-0.5 font-mono text-sm text-navy">
+                      {p.startupProfile?.preMoneyValuation
+                        ? formatCurrency(
+                            Number(p.startupProfile.preMoneyValuation),
+                            p.startupProfile.valuationCurrency,
+                            0
+                          )
+                        : "—"}
                     </p>
-                  )}
-                  <p className="mt-3 eyebrow">Founder: {p.owner.fullName}</p>
-
-                  <div className="mt-6 grid grid-cols-2 gap-4 hairline-t pt-4">
-                    <div>
-                      <p className="eyebrow">Valoración</p>
-                      <p className="mt-1 font-mono text-navy">
-                        {p.startupProfile?.preMoneyValuation
-                          ? formatCurrency(
-                              Number(p.startupProfile.preMoneyValuation),
-                              p.startupProfile.valuationCurrency
-                            )
-                          : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="eyebrow">Disponibles</p>
-                      <p className="mt-1 font-mono text-navy">
-                        {formatNumber(available)}{" "}
-                        <span className="eyebrow">
-                          {formatPercent((available / total) * 100)}
-                        </span>
-                      </p>
-                    </div>
                   </div>
 
-                  <p className="mt-6 eyebrow !text-gold">
-                    {isPending ? "Revisar →" : "Ver detalle →"}
-                  </p>
+                  <div className="col-span-5 sm:col-span-2">
+                    <p className="eyebrow !text-navy/40">Disponibles</p>
+                    <p className="mt-0.5 font-mono text-sm text-navy">
+                      {formatNumber(available)}{" "}
+                      <span className="eyebrow !text-navy/40">
+                        {formatPercent((available / total) * 100)}
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-1 self-center text-right">
+                    <span className="eyebrow !text-gold">
+                      {isPending ? "Revisar →" : "→"}
+                    </span>
+                  </div>
                 </Link>
               </li>
             );

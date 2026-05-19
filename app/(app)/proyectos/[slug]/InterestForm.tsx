@@ -149,7 +149,7 @@ export function InterestForm({
 
   if (success) {
     return (
-      <div className="mt-6 hairline p-6 bg-paper-light">
+      <div className="mt-4 hairline p-5 bg-paper-light">
         <p className="eyebrow">Interés registrado</p>
         <p className="mt-3 font-sans text-h2 text-navy">Gracias.</p>
         <p className="mt-3 text-navy/75 leading-relaxed">
@@ -164,7 +164,7 @@ export function InterestForm({
   if (!open) return null;
 
   return (
-    <form action={submit} className="mt-6 hairline p-6 bg-paper-light">
+    <form action={submit} className="mt-4 hairline p-5 bg-paper-light">
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">Manifestar interés</p>
         <button
@@ -178,15 +178,15 @@ export function InterestForm({
       </div>
 
       {/* Cluster principal: el monto es el foco */}
-      <div className="mt-6 space-y-4">
+      <div className="mt-4 space-y-3">
         {canUseAmountMode && (
           <div>
-            <p className="eyebrow mb-2">Calcular en</p>
+            <p className="eyebrow mb-1.5">Calcular en</p>
             <div className="inline-flex hairline">
               <button
                 type="button"
                 onClick={() => setMode("shares")}
-                className={`px-4 py-2 eyebrow leading-none transition-colors cursor-pointer ${
+                className={`px-4 py-1.5 eyebrow leading-none transition-colors cursor-pointer ${
                   activeMode === "shares"
                     ? "bg-navy !text-paper"
                     : "bg-transparent hover:!text-navy"
@@ -197,7 +197,7 @@ export function InterestForm({
               <button
                 type="button"
                 onClick={() => setMode("amount")}
-                className={`px-4 py-2 eyebrow leading-none transition-colors border-l-hairline border-navy/30 cursor-pointer ${
+                className={`px-4 py-1.5 eyebrow leading-none transition-colors border-l-hairline border-navy/30 cursor-pointer ${
                   activeMode === "amount"
                     ? "bg-navy !text-paper"
                     : "bg-transparent hover:!text-navy"
@@ -212,7 +212,7 @@ export function InterestForm({
         {/* Input protagonista: número grande */}
         {activeMode === "amount" ? (
           <div>
-            <label htmlFor="amount" className="eyebrow block mb-2">
+            <label htmlFor="amount" className="eyebrow block mb-1.5">
               ¿Cuánto querés invertir?
             </label>
             <div className="flex items-stretch hairline bg-paper">
@@ -230,13 +230,13 @@ export function InterestForm({
                 required
                 autoFocus
                 placeholder="0.00"
-                className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-3 font-mono text-2xl text-navy bg-transparent focus:outline-none"
+                className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-2 font-mono text-xl text-navy bg-transparent focus:outline-none"
               />
             </div>
           </div>
         ) : (
           <div>
-            <label htmlFor="shares" className="eyebrow block mb-2">
+            <label htmlFor="shares" className="eyebrow block mb-1.5">
               ¿Cuántas acciones?
             </label>
             <input
@@ -250,7 +250,7 @@ export function InterestForm({
               required
               autoFocus
               placeholder="0"
-              className="w-full hairline bg-paper px-4 py-3 font-mono text-2xl text-navy focus:outline-none focus:border-navy"
+              className="w-full hairline bg-paper px-4 py-2 font-mono text-xl text-navy focus:outline-none focus:border-navy"
             />
           </div>
         )}
@@ -263,11 +263,11 @@ export function InterestForm({
 
         {/* Equivale / Precio — estilo KPI, consistente con el resto */}
         <div className="grid grid-cols-2 gap-px bg-line">
-          <div className="bg-paper p-4">
+          <div className="bg-paper px-3 py-2">
             <p className="eyebrow !text-navy/40">
               {activeMode === "amount" ? "Equivale a" : "Monto aproximado"}
             </p>
-            <p className="mt-1 font-mono text-lg">
+            <p className="mt-0.5 font-mono text-base">
               {inputValid ? (
                 <span
                   className={
@@ -289,9 +289,9 @@ export function InterestForm({
               )}
             </p>
           </div>
-          <div className="bg-paper p-4">
+          <div className="bg-paper px-3 py-2">
             <p className="eyebrow !text-navy/40">Precio por acción</p>
-            <p className="mt-1 font-mono text-lg text-navy">
+            <p className="mt-0.5 font-mono text-base text-navy">
               {pricePerShare ? fmtMoney(pricePerShare) : "no informado"}
             </p>
           </div>
@@ -299,8 +299,8 @@ export function InterestForm({
       </div>
 
       {/* Mensaje (secundario) */}
-      <div className="mt-6 hairline-t pt-5">
-        <label htmlFor="message" className="eyebrow block mb-2">
+      <div className="mt-4 hairline-t pt-4">
+        <label htmlFor="message" className="eyebrow block mb-1.5">
           Mensaje al founder <span className="!text-navy/40">(opcional)</span>
         </label>
         <textarea
@@ -313,7 +313,7 @@ export function InterestForm({
           placeholder={`Mi nombre es ${viewerName.trim() || "[tu nombre]"} y me interesa invertir en ${projectName} porque…`}
           className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
         />
-        <span className="eyebrow mt-2 block !text-navy/40">
+        <span className="eyebrow mt-1.5 block !text-navy/40">
           {message.length} / 2000
         </span>
       </div>
@@ -324,7 +324,7 @@ export function InterestForm({
         </p>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center gap-4">
+      <div className="mt-4 flex flex-wrap items-center gap-4">
         <button
           type="submit"
           disabled={isPending || !inputValid || overAvailable}
@@ -342,7 +342,7 @@ export function InterestForm({
         </button>
       </div>
 
-      <p className="mt-4 text-xs leading-relaxed text-navy/40">
+      <p className="mt-3 text-xs leading-relaxed text-navy/40">
         AJDUT no procesa pagos. El cierre se realiza por fuera de la plataforma
         según los términos que acuerdes con el founder.
       </p>

@@ -48,16 +48,16 @@ export function ProfileForm({ initialName }: { initialName: string }) {
   }
 
   const inputCls =
-    "w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy focus:outline-none focus:border-navy";
+    "w-full border-hairline border-navy/40 bg-paper px-3 py-1.5 font-sans text-navy focus:outline-none focus:border-navy";
 
   return (
-    <div className="space-y-12 mt-2">
+    <div className="space-y-6 mt-2">
       {/* Datos básicos */}
-      <form action={onSubmitName} className="hairline p-6 bg-paper-light space-y-5">
+      <form action={onSubmitName} className="hairline p-5 bg-paper-light space-y-4">
         <p className="eyebrow">Datos básicos</p>
 
         <div>
-          <label htmlFor="fullName" className="eyebrow block mb-2">
+          <label htmlFor="fullName" className="eyebrow block mb-1.5">
             Nombre completo
           </label>
           <input
@@ -89,11 +89,11 @@ export function ProfileForm({ initialName }: { initialName: string }) {
       </form>
 
       {/* Cambio de contraseña */}
-      <form action={onSubmitPassword} className="hairline p-6 bg-paper-light space-y-5">
+      <form action={onSubmitPassword} className="hairline p-5 bg-paper-light space-y-4">
         <p className="eyebrow">Cambiar contraseña</p>
 
         <div>
-          <label htmlFor="currentPassword" className="eyebrow block mb-2">
+          <label htmlFor="currentPassword" className="eyebrow block mb-1.5">
             Contraseña actual
           </label>
           <input
@@ -109,7 +109,7 @@ export function ProfileForm({ initialName }: { initialName: string }) {
         </div>
 
         <div>
-          <label htmlFor="newPassword" className="eyebrow block mb-2">
+          <label htmlFor="newPassword" className="eyebrow block mb-1.5">
             Nueva contraseña
           </label>
           <input
@@ -126,7 +126,7 @@ export function ProfileForm({ initialName }: { initialName: string }) {
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="eyebrow block mb-2">
+          <label htmlFor="confirmPassword" className="eyebrow block mb-1.5">
             Repetir nueva contraseña
           </label>
           <input

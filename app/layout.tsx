@@ -39,10 +39,11 @@ export default function RootLayout({
       className={`${inter.variable} ${dmMono.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
-      </head>
       <body className="min-h-screen surface-paper" suppressHydrationWarning>
+        {/* Script bloqueante: corre síncrono antes de pintar el contenido,
+            así no hay FOUC. Va en <body> (no en un <head> manual) para no
+            chocar con el manejo de <head> del App Router → sin mismatch. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         {children}
       </body>
     </html>
