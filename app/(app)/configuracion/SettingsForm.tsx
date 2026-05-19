@@ -19,39 +19,38 @@ export function SettingsForm({
 }: Props) {
   const [currency, setCurrency] = useState<PreferredCurrency>(initialCurrency);
   const [theme, setTheme] = useState<Theme>(initialTheme);
-  const [savedCurrency, setSavedCurrency] =
-    useState<PreferredCurrency>(initialCurrency);
-  const [savedTheme, setSavedTheme] = useState<Theme>(initialTheme);
   const [saved, setSaved] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
-  const hasChanges = currency !== savedCurrency || theme !== savedTheme;
-
-  // Preview en vivo del tema; la cookie se persiste al Guardar.
-  function pickTheme(next: Theme) {
-    setTheme(next);
-    document.documentElement.classList.toggle("dark", next === "dark");
-  }
-
-  function onSubmit(formData: FormData) {
-    setSaved(false);
+  // Guardado instantáneo: cada cambio persiste solo (sin botón). Mismo
+  // patrón que el resto de AJDUT (acciones inmediatas, sin "Guardar").
+  function persist(next: { currency?: PreferredCurrency; theme?: Theme }) {
+    const fd = new FormData();
+    fd.set("language", initialLanguage);
+    fd.set("currency", next.currency ?? currency);
+    fd.set("theme", next.theme ?? theme);
     startTransition(async () => {
-      const r = await savePreferencesAction(formData);
+      const r = await savePreferencesAction(fd);
       if (r.ok) {
         setSaved(true);
-        setSavedCurrency(currency);
-        setSavedTheme(theme);
-        setTimeout(() => setSaved(false), 3000);
+        setTimeout(() => setSaved(false), 2000);
       }
     });
   }
 
-  return (
-    <form action={onSubmit} className="mt-2">
-      <input type="hidden" name="language" value={initialLanguage} />
-      <input type="hidden" name="currency" value={currency} />
-      <input type="hidden" name="theme" value={theme} />
+  function pickTheme(next: Theme) {
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+    persist({ theme: next });
+  }
 
+  function pickCurrency(next: PreferredCurrency) {
+    setCurrency(next);
+    persist({ currency: next });
+  }
+
+  return (
+    <div className="mt-2">
       <div className="hairline-t">
         <Row label="Rol">
           <span className="eyebrow !text-navy/40">{roleLabel}</span>
@@ -75,7 +74,7 @@ export function SettingsForm({
               { value: "USD", content: "USD", aria: "Dólares" },
               { value: "MXN", content: "MXN", aria: "Pesos" },
             ]}
-            onChange={(v) => setCurrency(v as PreferredCurrency)}
+            onChange={(v) => pickCurrency(v as PreferredCurrency)}
           />
         </Row>
 
@@ -84,17 +83,10 @@ export function SettingsForm({
         </Row>
       </div>
 
-      <div className="mt-8 flex items-center gap-4">
-        <button
-          type="submit"
-          disabled={isPending || !hasChanges}
-          className="btn-primary disabled:opacity-50"
-        >
-          {isPending ? "Guardando…" : "Guardar"}
-        </button>
+      <div className="mt-4 h-4">
         {saved && <span className="eyebrow !text-gold">✓ Guardado</span>}
       </div>
-    </form>
+    </div>
   );
 }
 

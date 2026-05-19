@@ -4,7 +4,7 @@ import { navItemsFor } from "@/components/app/nav-items";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireSession();
-  const navItems = await navItemsFor(user.role);
+  const navItems = await navItemsFor(user.role, user.id);
 
   return (
     <AppShell

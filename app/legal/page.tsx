@@ -8,7 +8,7 @@ export default function LegalPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       {/* Hero */}
-      <section className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+      <section className="pt-4 pb-3 sm:pt-5 sm:pb-4">
         <p className="eyebrow">— Aviso legal</p>
         <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
           Términos y condiciones de uso
@@ -71,11 +71,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="hairline-t py-5 sm:py-6">
+    <section className="hairline-t py-3 sm:py-4">
       <p className="font-mono text-sm tracking-wider text-navy">
         <span className="text-gold">{n}</span> · {title}
       </p>
-      <div className="mt-4 sm:mt-5 text-navy/85 leading-relaxed">{children}</div>
+      <div className="mt-2 sm:mt-3 text-sm text-navy/85 leading-relaxed">{children}</div>
     </section>
   );
 }
