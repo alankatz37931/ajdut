@@ -5,7 +5,8 @@
   "description": "AJDUT — Sistema de gestión de comunidades de negocio. Cero transacciones, máxima trazabilidad.",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
