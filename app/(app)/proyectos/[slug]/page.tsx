@@ -208,7 +208,7 @@ export default async function ProjectPage({ params }: Params) {
         />
         {project.startupProfile?.preMoneyValuation && (
           <KpiCard
-            label="Valoración (pre-money)"
+            label="Valoración"
             value={formatCurrency(
               Number(project.startupProfile.preMoneyValuation),
               project.startupProfile.valuationCurrency,

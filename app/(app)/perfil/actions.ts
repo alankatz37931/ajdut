@@ -28,13 +28,9 @@ export async function changePasswordAction(formData: FormData): Promise<ProfileR
   const user = await requireSession();
   const current = String(formData.get("currentPassword") ?? "");
   const next = String(formData.get("newPassword") ?? "");
-  const confirm = String(formData.get("confirmPassword") ?? "");
 
   if (next.length < 10) {
     return { ok: false, error: "La nueva contraseña debe tener al menos 10 caracteres.", field: "newPassword" };
-  }
-  if (next !== confirm) {
-    return { ok: false, error: "Las contraseñas no coinciden.", field: "confirmPassword" };
   }
 
   const dbUser = await prisma.user.findUnique({

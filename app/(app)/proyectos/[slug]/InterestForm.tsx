@@ -9,7 +9,7 @@ type Props = {
   /** Nombre del usuario logueado, para pre-armar el mensaje. */
   viewerName: string;
   availableShares: number;
-  /** Pre-money valuation declarada por el founder. */
+  /** Valoración declarada por el founder. */
   valuation: number | null;
   totalShares: number;
   currency: string;

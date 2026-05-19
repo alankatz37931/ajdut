@@ -83,5 +83,5 @@ export async function updateProjectInfoAction(
   revalidatePath(`/proyectos/${projectSlug}`);
   revalidatePath(`/founder/${projectSlug}`);
   revalidatePath(`/founder/${projectSlug}/editar`);
-  redirect(`/proyectos/${projectSlug}` as Route);
+  redirect(`/founder/${projectSlug}` as Route);
 }

@@ -1,9 +1,8 @@
-import Link from "next/link";
-import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
+import { BackLink } from "@/components/app/BackLink";
 import { EditProjectForm } from "./EditProjectForm";
 
 type Params = { params: Promise<{ projectSlug: string }> };
@@ -53,9 +52,9 @@ export default async function EditProjectPage({ params }: Params) {
 
   return (
     <div className="max-w-3xl">
-      <Link href={`/proyectos/${projectSlug}` as Route} className="eyebrow hover:!text-gold">
+      <BackLink fallback={`/founder/${projectSlug}`}>
         ← {project.name}
-      </Link>
+      </BackLink>
 
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <p className="eyebrow">— Founder</p>
