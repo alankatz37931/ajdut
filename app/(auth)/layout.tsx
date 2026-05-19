@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex min-h-screen flex-col">
       <PublicNav />
-      <main className="flex flex-1 items-center justify-center py-10">{children}</main>
+      <main className="flex flex-1 items-center justify-center py-4">{children}</main>
       <PublicFooter />
     </div>
   );

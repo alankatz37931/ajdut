@@ -4,27 +4,27 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       {/* Hero */}
-      <section className="pt-8 pb-10 sm:pt-12 sm:pb-16">
+      <section className="pt-5 pb-6 sm:pt-7 sm:pb-8">
         <div className="max-w-3xl">
           <p className="eyebrow">— Comunidad cerrada de proyectos validados</p>
 
-          <h1 className="font-sans mt-4 sm:mt-6 text-display !leading-[1.05] text-navy">
+          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
             Coordinamos
             <br />
             comunidades de negocios.
           </h1>
 
-          <p className="mt-5 sm:mt-8 eyebrow !text-navy/50">
+          <p className="mt-3 sm:mt-4 eyebrow !text-navy/50">
             Transparencia · Unidad · Valor
           </p>
 
-          <p className="mt-6 sm:mt-8 max-w-2xl text-base sm:text-lg text-navy/80 leading-relaxed">
+          <p className="mt-3 sm:mt-4 max-w-2xl text-base sm:text-lg text-navy/80 leading-relaxed">
             AJDUT no procesa pagos ni custodia fondos. Es la herramienta de gestión,
             comunicación y certificación que respalda proyectos reales — startups,
             inmobiliarios y de mercancía — para sus socios.
           </p>
 
-          <div className="mt-6 sm:mt-8 flex flex-col items-stretch sm:items-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
+          <div className="mt-5 sm:mt-6 flex flex-col items-stretch sm:items-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
             <Link href="/acceder" className="btn-primary text-center">
               Acceder
             </Link>
@@ -61,11 +61,11 @@ export default function HomePage() {
 
 function Pillar({ number, title, body }: { number: string; title: string; body: string }) {
   return (
-    <div className="bg-paper p-6 sm:p-10">
+    <div className="bg-paper p-5 sm:p-6">
       <p className="font-mono text-sm tracking-wider text-navy">
         <span className="text-gold">{number}</span> · {title}
       </p>
-      <p className="mt-4 sm:mt-6 max-w-sm text-navy/75 leading-relaxed">{body}</p>
+      <p className="mt-3 max-w-sm text-navy/75 leading-relaxed">{body}</p>
     </div>
   );
 }
