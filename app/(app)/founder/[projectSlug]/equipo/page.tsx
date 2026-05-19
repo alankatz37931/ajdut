@@ -29,6 +29,8 @@ export default async function FounderTeamPage({ params }: Params) {
     id: f.id,
     fullName: f.fullName,
     role: f.role,
+    bio: f.bio ?? "",
+    references: f.references ?? "",
     linkedinUrl: f.linkedinUrl ?? "",
     equityPercent: Number(f.equityPercent),
     joinedAt: f.joinedAt ? f.joinedAt.toISOString().slice(0, 10) : "",

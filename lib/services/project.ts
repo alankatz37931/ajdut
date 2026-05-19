@@ -121,9 +121,12 @@ export type UpdateProjectInfoInput = {
   name?: string;
   shortPitch?: string;
   description?: string;
+  kind?: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE";
   // Startup-specific
   sector?: string;
   stage?: "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
+  location?: string | null;
+  targetRaiseAmount?: string | null;
   oneLiner?: string;
   problemStatement?: string;
   solutionStatement?: string;
@@ -162,6 +165,7 @@ export async function updateProjectInfo(input: UpdateProjectInfoInput) {
     if (input.name !== undefined) projectUpdates.name = input.name.trim();
     if (input.shortPitch !== undefined) projectUpdates.shortPitch = input.shortPitch.trim();
     if (input.description !== undefined) projectUpdates.description = input.description.trim();
+    if (input.kind !== undefined) projectUpdates.kind = input.kind;
 
     if (Object.keys(projectUpdates).length > 0) {
       await tx.project.update({ where: { id: project.id }, data: projectUpdates });
@@ -171,6 +175,14 @@ export async function updateProjectInfo(input: UpdateProjectInfoInput) {
       const profileUpdates: Prisma.StartupProfileUpdateInput = {};
       if (input.sector !== undefined) profileUpdates.sector = input.sector.trim();
       if (input.stage !== undefined) profileUpdates.stage = input.stage;
+      if (input.location !== undefined)
+        profileUpdates.location = input.location ? input.location.trim() : null;
+      if (input.targetRaiseAmount !== undefined) {
+        profileUpdates.targetRaiseAmount =
+          input.targetRaiseAmount === null || input.targetRaiseAmount === ""
+            ? null
+            : new Prisma.Decimal(input.targetRaiseAmount);
+      }
       if (input.oneLiner !== undefined) profileUpdates.oneLiner = input.oneLiner.trim();
       if (input.problemStatement !== undefined)
         profileUpdates.problemStatement = input.problemStatement.trim();
@@ -224,6 +236,9 @@ export type CreateProjectInput = {
   description: string;
   sector: string;
   stage: "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
+  kind?: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE";
+  location?: string;
+  targetRaiseAmount?: number;
   problemStatement: string;
   solutionStatement: string;
   businessModel: string;
@@ -291,7 +306,7 @@ export async function createProject(input: CreateProjectInput) {
       data: {
         slug,
         name: input.name.trim(),
-        kind: "STARTUP",
+        kind: input.kind ?? "STARTUP",
         status: "PENDING_APPROVAL",
         ownerId: input.ownerId,
         shortPitch: input.oneLiner.trim().slice(0, 280),
@@ -305,6 +320,11 @@ export async function createProject(input: CreateProjectInput) {
         projectId: project.id,
         legalName: input.legalName.trim(),
         jurisdiction: input.jurisdiction.trim(),
+        location: input.location?.trim() || null,
+        targetRaiseAmount:
+          input.targetRaiseAmount !== undefined
+            ? new Prisma.Decimal(input.targetRaiseAmount)
+            : null,
         sector: input.sector.trim(),
         oneLiner: input.oneLiner.trim(),
         problemStatement: input.problemStatement.trim(),

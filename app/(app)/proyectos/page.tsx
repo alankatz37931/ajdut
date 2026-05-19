@@ -131,6 +131,10 @@ export default async function ProjectsDiscoveryPage({
             const isPending = p.status === "PENDING_APPROVAL";
             const isInactive =
               p.status !== "ACTIVE" && p.status !== "PENDING_APPROVAL";
+            const fundedPct =
+              total > 0
+                ? Math.min(100, Math.max(0, ((total - available) / total) * 100))
+                : 0;
 
             return (
               <li key={p.id} className="hairline-b">
@@ -196,6 +200,16 @@ export default async function ProjectsDiscoveryPage({
                     <span className="eyebrow !text-gold">
                       {isPending ? "Revisar →" : "→"}
                     </span>
+                  </div>
+
+                  {/* Barra de fondeo: % de acciones ya colocadas */}
+                  <div className="col-span-12 mt-1">
+                    <div className="h-1 w-full bg-line">
+                      <div
+                        className="h-full bg-navy"
+                        style={{ width: `${fundedPct}%` }}
+                      />
+                    </div>
                   </div>
                 </Link>
               </li>

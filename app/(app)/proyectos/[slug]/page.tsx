@@ -17,6 +17,12 @@ import {
 
 type Params = { params: Promise<{ slug: string }> };
 
+const KIND_LABEL: Record<string, string> = {
+  REAL_ESTATE: "Inmobiliario",
+  MERCHANDISE: "Mercancía",
+  STARTUP: "Otro",
+};
+
 const STAGE_LABEL: Record<string, string> = {
   IDEA: "Idea",
   PRE_SEED: "Pre-seed",
@@ -65,6 +71,23 @@ export default async function ProjectPage({ params }: Params) {
       ...(access.canSeePrivateMetrics ? {} : { visibility: "PUBLIC_TO_HOLDERS" }),
     },
     orderBy: { asOf: "desc" },
+  });
+
+  // Reportes publicados por el founder. Visibles para cualquier viewer
+  // del proyecto (mismo criterio que Documentos / Hitos).
+  const reports = await prisma.report.findMany({
+    where: { projectId: project.id },
+    orderBy: { publishedAt: "desc" },
+    select: {
+      id: true,
+      kind: true,
+      period: true,
+      fiscalYear: true,
+      title: true,
+      summary: true,
+      storageKey: true,
+      publishedAt: true,
+    },
   });
 
   // Snapshot de participaciones
@@ -165,24 +188,61 @@ export default async function ProjectPage({ params }: Params) {
     CANCELLED: "Cancelado",
   };
 
+  const REPORT_PERIOD_LABEL: Record<string, string> = {
+    Q1: "Q1",
+    Q2: "Q2",
+    Q3: "Q3",
+    Q4: "Q4",
+    ANNUAL: "Anual",
+    EXTRAORDINARY: "Extraordinario",
+  };
+
+  const REPORT_KIND_LABEL: Record<string, string> = {
+    QUARTERLY_FINANCIAL: "Trimestral",
+    INVESTOR_UPDATE: "Update",
+    ANNUAL_AUDIT: "Auditoría anual",
+    EXTRAORDINARY: "Extraordinario",
+  };
+
+  function humanReportPeriod(period: string, year: number): string {
+    if (period === "ANNUAL") return `Anual ${year}`;
+    if (period === "EXTRAORDINARY") return `Extraordinario ${year}`;
+    return `${REPORT_PERIOD_LABEL[period] ?? period} ${year}`;
+  }
+
   // ─── Opción A: scroll único. El cuerpo fluye y la página mide lo que mide
   //     el contenido — sin marco fijo que llenar. Cada bloque se apila solo
   //     si tiene info. ───
   const sections: { title?: string; node: React.ReactNode }[] = [];
 
+  // Acciones efectivamente colocadas (sin el stake institucional para
+  // quien no ve el cap table) → barra de fondeo.
+  const visibleAssigned = access.canSeeCapTable
+    ? assignedShares
+    : assignedShares - platformShares;
+  const fundedPct =
+    totalShares > 0
+      ? Math.min(100, Math.max(0, (visibleAssigned / totalShares) * 100))
+      : 0;
+
   // Participaciones: los números del proyecto.
+  const hasValuation = !!project.startupProfile?.preMoneyValuation;
+  const hasTargetRaise = !!project.startupProfile?.targetRaiseAmount;
+  const participationsCols = 3 + (hasValuation ? 1 : 0) + (hasTargetRaise ? 1 : 0);
+  const participationsColClass =
+    participationsCols >= 5
+      ? "lg:grid-cols-5"
+      : participationsCols === 4
+      ? "lg:grid-cols-4"
+      : "lg:grid-cols-3";
   sections.push({
     title: "Participaciones",
     node: (
       // Una sola grilla uniforme — mismo patrón que Métricas (gap-px bg-line
-      // + KpiCard). Con valoración son 4 celdas iguales (sin renglón huérfano
-      // ni vacío a la derecha); sin valoración, 3.
+      // + KpiCard). Las celdas opcionales (valoración / monto a levantar) se
+      // agregan solo si el founder las declaró.
       <div
-        className={`grid grid-cols-1 sm:grid-cols-2 gap-px bg-line ${
-          project.startupProfile?.preMoneyValuation
-            ? "lg:grid-cols-4"
-            : "lg:grid-cols-3"
-        }`}
+        className={`grid grid-cols-1 sm:grid-cols-2 gap-px bg-line ${participationsColClass}`}
       >
         <KpiCard
           label="Participaciones totales"
@@ -216,6 +276,56 @@ export default async function ProjectPage({ params }: Params) {
             )}
             hint="declarada"
           />
+        )}
+        {project.startupProfile?.targetRaiseAmount && (
+          <KpiCard
+            label="Monto a levantar"
+            value={formatCurrency(
+              Number(project.startupProfile.targetRaiseAmount),
+              project.startupProfile.valuationCurrency,
+              0
+            )}
+            hint="objetivo de ronda"
+          />
+        )}
+      </div>
+    ),
+  });
+
+  // Barra de fondeo: cuánto del total ya está colocado.
+  sections.push({
+    title: "Fondeo",
+    node: (
+      <div>
+        <div className="flex items-baseline justify-between">
+          <p className="eyebrow !text-navy/40">
+            {formatNumber(visibleAssigned)} de {formatNumber(totalShares)}{" "}
+            acciones colocadas
+          </p>
+          <p className="font-mono text-sm text-navy">
+            {formatPercent(fundedPct)}
+          </p>
+        </div>
+        <div className="mt-2 h-1.5 w-full bg-line">
+          <div
+            className="h-full bg-navy transition-[width]"
+            style={{ width: `${fundedPct}%` }}
+          />
+        </div>
+
+        {pricePerShare !== null && (
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
+            <KpiCard
+              label="Valor sugerido por acción"
+              value={formatCurrency(pricePerShare, projectCurrency)}
+              hint="valoración ÷ acciones totales"
+            />
+            <KpiCard
+              label="Utilidad anual por acción"
+              value="—"
+              hint="no informada por el founder"
+            />
+          </div>
         )}
       </div>
     ),
@@ -356,21 +466,33 @@ export default async function ProjectPage({ params }: Params) {
     sections.push({
       title: "Equipo",
       node: (
-        <ul className="space-y-4">
+        <ul className="space-y-6">
           {project.startupProfile!.founders.map((f) => (
-            <li
-              key={f.id}
-              className="grid grid-cols-12 items-baseline gap-3"
-            >
-              <span className="col-span-12 sm:col-span-6 text-navy break-words">
-                {f.fullName}
-              </span>
-              <span className="col-span-6 sm:col-span-3 eyebrow">
-                {f.role}
-              </span>
-              <span className="col-span-6 sm:col-span-3 font-mono text-navy text-right">
-                {formatPercent(Number(f.equityPercent))}
-              </span>
+            <li key={f.id} className="space-y-3">
+              <div className="grid grid-cols-12 items-baseline gap-3">
+                <span className="col-span-12 sm:col-span-6 text-navy break-words">
+                  {f.fullName}
+                </span>
+                <span className="col-span-6 sm:col-span-3 eyebrow">
+                  {f.role}
+                </span>
+                <span className="col-span-6 sm:col-span-3 font-mono text-navy text-right">
+                  {formatPercent(Number(f.equityPercent))}
+                </span>
+              </div>
+              {f.bio && (
+                <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                  {f.bio}
+                </p>
+              )}
+              {f.references && (
+                <div>
+                  <p className="eyebrow mb-1">Referencias</p>
+                  <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                    {f.references}
+                  </p>
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -469,6 +591,43 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
+  if (reports.length > 0) {
+    sections.push({
+      title: "Reportes",
+      node: (
+        <ul className="space-y-4">
+          {reports.map((r) => (
+            <li key={r.id} className="grid grid-cols-12 items-baseline gap-x-3 gap-y-1">
+              <span className="col-span-12 sm:col-span-6 text-navy break-words">
+                {r.title}
+              </span>
+              <span className="col-span-6 sm:col-span-3 eyebrow !text-navy">
+                {REPORT_KIND_LABEL[r.kind] ?? r.kind} ·{" "}
+                {humanReportPeriod(r.period, r.fiscalYear)}
+              </span>
+              <span className="col-span-6 sm:col-span-2 eyebrow text-right">
+                {formatDate(r.publishedAt)}
+              </span>
+              <a
+                href={r.storageKey}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="col-span-12 sm:col-span-1 eyebrow hover:!text-gold text-right"
+              >
+                Abrir ↗
+              </a>
+              {r.summary.trim().length > 0 && (
+                <p className="col-span-12 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
+                  {r.summary}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      ),
+    });
+  }
+
   if (access.canSeeCapTable && capTable.length > 0) {
     sections.push({
       title: "Cap table",
@@ -505,8 +664,10 @@ export default async function ProjectPage({ params }: Params) {
       <header className="mt-4 hairline-b pb-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="max-w-2xl min-w-0">
           <p className="eyebrow">
-            {project.startupProfile?.sector ?? project.kind}
+            {KIND_LABEL[project.kind] ?? project.kind}
+            {project.startupProfile?.sector ? ` · ${project.startupProfile.sector}` : ""}
             {project.startupProfile?.stage ? ` · ${STAGE_LABEL[project.startupProfile.stage]}` : ""}
+            {project.startupProfile?.location ? ` · ${project.startupProfile.location}` : ""}
           </p>
           <h1 className="font-sans mt-4 text-h1 text-navy">{project.name}</h1>
           {project.startupProfile?.oneLiner && (

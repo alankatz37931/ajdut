@@ -12,6 +12,8 @@ export type UpsertFounderInput = {
   founderId?: string; // si va, es update; sino, create
   fullName: string;
   role: string;
+  bio?: string | null;
+  references?: string | null;
   linkedinUrl?: string | null;
   equityPercent: number;
   joinedAt?: Date | null;
@@ -56,6 +58,8 @@ export async function upsertFounder(input: UpsertFounderInput) {
         data: {
           fullName: input.fullName.trim(),
           role: input.role.trim(),
+          bio: input.bio?.trim() || null,
+          references: input.references?.trim() || null,
           linkedinUrl: input.linkedinUrl || null,
           equityPercent: new Prisma.Decimal(input.equityPercent),
           joinedAt: input.joinedAt ?? null,
@@ -68,6 +72,8 @@ export async function upsertFounder(input: UpsertFounderInput) {
           startupProfileId: profile.id,
           fullName: input.fullName.trim(),
           role: input.role.trim(),
+          bio: input.bio?.trim() || null,
+          references: input.references?.trim() || null,
           linkedinUrl: input.linkedinUrl || null,
           equityPercent: new Prisma.Decimal(input.equityPercent),
           joinedAt: input.joinedAt ?? null,

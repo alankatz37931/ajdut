@@ -8,6 +8,8 @@ type Founder = {
   id: string;
   fullName: string;
   role: string;
+  bio: string;
+  references: string;
   linkedinUrl: string;
   equityPercent: number;
   joinedAt: string; // YYYY-MM-DD
@@ -18,6 +20,8 @@ const empty: Founder = {
   id: "",
   fullName: "",
   role: "",
+  bio: "",
+  references: "",
   linkedinUrl: "",
   equityPercent: 0,
   joinedAt: "",
@@ -216,6 +220,26 @@ function FounderForm({
           type="url"
           defaultValue={founder.linkedinUrl}
           placeholder="https://linkedin.com/in/..."
+          className="input"
+        />
+      </Field>
+      <Field label="Bio / experiencia (opcional)" htmlFor="bio">
+        <textarea
+          id="bio"
+          name="bio"
+          defaultValue={founder.bio}
+          rows={3}
+          placeholder="Trayectoria, experiencia relevante, logros."
+          className="input"
+        />
+      </Field>
+      <Field label="Referencias (3) — opcional" htmlFor="references">
+        <textarea
+          id="references"
+          name="references"
+          defaultValue={founder.references}
+          rows={3}
+          placeholder="Una referencia por línea (nombre · vínculo · contacto)."
           className="input"
         />
       </Field>

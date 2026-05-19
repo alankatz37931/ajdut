@@ -30,6 +30,8 @@ export async function upsertFounderAction(
   const founderId = String(formData.get("founderId") ?? "").trim();
   const fullName = String(formData.get("fullName") ?? "").trim();
   const role = String(formData.get("role") ?? "").trim();
+  const bio = String(formData.get("bio") ?? "").trim();
+  const references = String(formData.get("references") ?? "").trim();
   const linkedinUrl = String(formData.get("linkedinUrl") ?? "").trim();
   const equityRaw = String(formData.get("equityPercent") ?? "0");
   const equityPercent = Number.parseFloat(equityRaw);
@@ -44,6 +46,8 @@ export async function upsertFounderAction(
       founderId: founderId || undefined,
       fullName,
       role,
+      bio: bio || null,
+      references: references || null,
       linkedinUrl: linkedinUrl || null,
       equityPercent: Number.isFinite(equityPercent) ? equityPercent : 0,
       joinedAt,

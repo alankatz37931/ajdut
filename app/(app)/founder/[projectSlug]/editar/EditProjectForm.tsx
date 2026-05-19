@@ -8,8 +8,11 @@ type Initial = {
   name: string;
   shortPitch: string;
   description: string;
+  kind: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE";
   sector: string;
   stage: "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
+  location: string;
+  targetRaiseAmount: string;
   oneLiner: string;
   problemStatement: string;
   solutionStatement: string;
@@ -29,6 +32,12 @@ const STAGES: Array<{ id: Initial["stage"]; label: string }> = [
   { id: "EARLY_REVENUE", label: "Early revenue" },
   { id: "GROWTH", label: "Growth" },
   { id: "SCALE", label: "Scale" },
+];
+
+const KINDS: Array<{ id: Initial["kind"]; label: string }> = [
+  { id: "REAL_ESTATE", label: "Inmobiliario" },
+  { id: "MERCHANDISE", label: "Mercancía" },
+  { id: "STARTUP", label: "Otro" },
 ];
 
 export function EditProjectForm({
@@ -121,6 +130,33 @@ export function EditProjectForm({
         <>
           <section className="space-y-5 hairline-t pt-8">
             <p className="eyebrow">Categorización</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Tipo" htmlFor="kind">
+                <select
+                  id="kind"
+                  name="kind"
+                  value={form.kind}
+                  onChange={(e) => update("kind", e.target.value as Initial["kind"])}
+                  className="input"
+                >
+                  {KINDS.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Ubicación" htmlFor="location">
+                <input
+                  id="location"
+                  name="location"
+                  value={form.location}
+                  onChange={(e) => update("location", e.target.value)}
+                  className="input"
+                  placeholder="Ciudad de México · Buenos Aires · etc."
+                />
+              </Field>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Sector" htmlFor="sector">
                 <input
@@ -305,6 +341,20 @@ export function EditProjectForm({
                 </select>
               </Field>
             </div>
+
+            <Field label="Monto a levantar (opcional)" htmlFor="targetRaiseAmount">
+              <input
+                id="targetRaiseAmount"
+                name="targetRaiseAmount"
+                value={form.targetRaiseAmount}
+                onChange={(e) => update("targetRaiseAmount", e.target.value)}
+                type="number"
+                step="0.01"
+                min="0"
+                className="input font-mono"
+                placeholder="250000"
+              />
+            </Field>
 
             {/* Derivado a partir de la valoración */}
             <DerivedShares

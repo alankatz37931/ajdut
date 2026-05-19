@@ -99,6 +99,14 @@ export default async function FounderDashboardPage({ params }: Params) {
         <Link href={`/founder/${project.slug}/metricas` as Route} className="eyebrow hover:!text-gold">
           Editar métricas →
         </Link>
+        <span className="eyebrow !text-navy/30">·</span>
+        <Link href={`/founder/${project.slug}/avisos` as Route} className="eyebrow hover:!text-gold">
+          Avisos a socios →
+        </Link>
+        <span className="eyebrow !text-navy/30">·</span>
+        <Link href={`/founder/${project.slug}/reportes` as Route} className="eyebrow hover:!text-gold">
+          Reportes trimestrales →
+        </Link>
       </div>
 
       <Section title="Instantánea">

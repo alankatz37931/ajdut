@@ -13,13 +13,22 @@ const STAGES = [
   { id: "SCALE", label: "Scale" },
 ] as const;
 
+const KINDS = [
+  { id: "REAL_ESTATE", label: "Inmobiliario" },
+  { id: "MERCHANDISE", label: "Mercancía" },
+  { id: "STARTUP", label: "Otro" },
+] as const;
+
 export function NewProjectForm() {
   const [form, setForm] = useState({
     name: "",
     legalName: "",
     jurisdiction: "",
+    kind: "STARTUP" as (typeof KINDS)[number]["id"],
     sector: "",
     stage: "IDEA" as (typeof STAGES)[number]["id"],
+    location: "",
+    targetRaiseAmount: "",
     oneLiner: "",
     description: "",
     problemStatement: "",
@@ -135,6 +144,33 @@ export function NewProjectForm() {
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">Categorización</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Tipo" htmlFor="kind">
+            <select
+              id="kind"
+              name="kind"
+              value={form.kind}
+              onChange={(e) => update("kind", e.target.value as typeof form.kind)}
+              className="input"
+            >
+              {KINDS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Ubicación" htmlFor="location">
+            <input
+              id="location"
+              name="location"
+              value={form.location}
+              onChange={(e) => update("location", e.target.value)}
+              placeholder="Ciudad de México · Buenos Aires · etc."
+              className="input"
+            />
+          </Field>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Sector" htmlFor="sector">
             <input
               id="sector"
@@ -249,6 +285,19 @@ export function NewProjectForm() {
             </select>
           </Field>
         </div>
+        <Field label="Monto a levantar (opcional)" htmlFor="targetRaiseAmount">
+          <input
+            id="targetRaiseAmount"
+            name="targetRaiseAmount"
+            type="number"
+            min="0"
+            step="1000"
+            value={form.targetRaiseAmount}
+            onChange={(e) => update("targetRaiseAmount", e.target.value)}
+            placeholder="250000"
+            className="input font-mono"
+          />
+        </Field>
 
         {derived && (
           <div className="hairline p-4 bg-paper grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-sm">

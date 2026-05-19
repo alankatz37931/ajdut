@@ -262,9 +262,12 @@ export default async function PartnerDashboardPage() {
                           Certificado <span className="text-navy">{cert.serialCode}</span> · Emitido{" "}
                           {formatDate(cert.issuedAt)}
                         </div>
-                        <span className="eyebrow !text-navy/40">
-                          {cert.pdfStorageKey ? "PDF pendiente de firma" : "Sin documento adjunto"}
-                        </span>
+                        <Link
+                          href={`/certificado/${cert.id}` as Route}
+                          className="eyebrow hover:!text-gold"
+                        >
+                          Ver certificado →
+                        </Link>
                       </div>
                     )}
                   </div>
