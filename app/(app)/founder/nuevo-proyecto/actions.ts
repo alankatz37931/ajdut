@@ -17,6 +17,9 @@ export type CreateProjectResult =
 const VALID_STAGES = ["IDEA", "PRE_SEED", "SEED", "EARLY_REVENUE", "GROWTH", "SCALE"] as const;
 type Stage = (typeof VALID_STAGES)[number];
 
+const VALID_KINDS = ["STARTUP", "REAL_ESTATE", "MERCHANDISE"] as const;
+type Kind = (typeof VALID_KINDS)[number];
+
 export async function createProjectAction(
   formData: FormData
 ): Promise<CreateProjectResult> {
@@ -28,6 +31,9 @@ export async function createProjectAction(
   const description = get("description");
   const sector = get("sector");
   const stageRaw = get("stage");
+  const kindRaw = get("kind");
+  const location = get("location") || undefined;
+  const targetRaiseRaw = get("targetRaiseAmount");
   const problemStatement = get("problemStatement");
   const solutionStatement = get("solutionStatement");
   const businessModel = get("businessModel");
@@ -42,6 +48,15 @@ export async function createProjectAction(
   if (description.length < 30) return { ok: false, error: "Agregá una descripción más completa (mín 30 caracteres)." };
   if (sector.length < 2) return { ok: false, error: "Indicá un sector." };
   if (!VALID_STAGES.includes(stageRaw as Stage)) return { ok: false, error: "Stage inválido." };
+  const kind: Kind = VALID_KINDS.includes(kindRaw as Kind) ? (kindRaw as Kind) : "STARTUP";
+  let targetRaiseAmount: number | undefined;
+  if (targetRaiseRaw !== "") {
+    const n = Number.parseFloat(targetRaiseRaw);
+    if (!Number.isFinite(n) || n < 0) {
+      return { ok: false, error: "El monto a levantar debe ser un número válido." };
+    }
+    targetRaiseAmount = n;
+  }
   if (problemStatement.length < 20) return { ok: false, error: "Contá más sobre el problema (mín 20 caracteres)." };
   if (solutionStatement.length < 20) return { ok: false, error: "Contá más sobre la solución (mín 20 caracteres)." };
   if (businessModel.length < 10) return { ok: false, error: "Definí el modelo de negocio." };
@@ -64,6 +79,9 @@ export async function createProjectAction(
       description,
       sector,
       stage: stageRaw as Stage,
+      kind,
+      location,
+      targetRaiseAmount,
       problemStatement,
       solutionStatement,
       businessModel,

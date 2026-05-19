@@ -44,6 +44,14 @@ import {
 import {
   sharesAssignedInvestorEmail,
 } from "./templates/shares-assigned-investor";
+import {
+  founderBroadcastEmail,
+  type FounderBroadcastInput,
+} from "./templates/founder-broadcast";
+import {
+  reportPublishedEmail,
+  type ReportPublishedInput,
+} from "./templates/report-published";
 
 function appUrl(): string {
   return (
@@ -195,6 +203,57 @@ export async function notifyInvestorSharesAssigned(input: {
     portfolioUrl,
   });
   return sendEmail({ to: input.to, subject, html, fireAndForget: true, kind: "shares.assigned" });
+}
+
+// ─── Aviso del founder a sus socios ────────────────────────────────
+
+/**
+ * Envía un aviso del founder a todos los socios de su proyecto.
+ * fireAndForget: si Resend está caído no rompe el flujo; queda en AuditLog.
+ */
+export async function notifyProjectMembersBroadcast(
+  input: { to: string[] } & FounderBroadcastInput
+) {
+  const { subject, html } = founderBroadcastEmail({
+    projectName: input.projectName,
+    founderName: input.founderName,
+    subject: input.subject,
+    body: input.body,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "founder.broadcast",
+  });
+}
+
+// ─── Reportes trimestrales / anuales del founder ──────────────────
+
+/**
+ * Notifica a todos los socios del proyecto que se publicó un nuevo reporte.
+ * fireAndForget: si Resend está caído no rompe el flujo; el AuditLog queda
+ * con la acción REPORT.PUBLISHED como fuente de verdad.
+ */
+export async function notifyMembersReportPublished(
+  input: { to: string[] } & ReportPublishedInput
+) {
+  const { subject, html } = reportPublishedEmail({
+    projectName: input.projectName,
+    reportTitle: input.reportTitle,
+    period: input.period,
+    kindLabel: input.kindLabel,
+    summary: input.summary,
+    url: input.url,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "report.published",
+  });
 }
 
 // ─── Verificación de email (para aplicaciones) ────────────────────

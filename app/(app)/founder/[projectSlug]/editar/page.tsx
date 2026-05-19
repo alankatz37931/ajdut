@@ -71,8 +71,13 @@ export default async function EditProjectPage({ params }: Params) {
           name: project.name,
           shortPitch: project.shortPitch,
           description: project.description,
+          kind: project.kind,
           sector: project.startupProfile?.sector ?? "",
           stage: project.startupProfile?.stage ?? "SEED",
+          location: project.startupProfile?.location ?? "",
+          targetRaiseAmount: project.startupProfile?.targetRaiseAmount
+            ? Number(project.startupProfile.targetRaiseAmount).toString()
+            : "",
           oneLiner: project.startupProfile?.oneLiner ?? "",
           problemStatement: project.startupProfile?.problemStatement ?? "",
           solutionStatement: project.startupProfile?.solutionStatement ?? "",

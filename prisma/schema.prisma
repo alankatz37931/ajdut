@@ -231,6 +231,8 @@ model StartupProfile {
   taxId                       String?
   incorporationDate           DateTime?
   jurisdiction                String
+  location                    String?
+  targetRaiseAmount           Decimal?      @db.Decimal(18, 2)
   sector                      String
   oneLiner                    String        @db.VarChar(160)
   problemStatement            String
@@ -264,6 +266,8 @@ model Founder {
   startupProfile    StartupProfile @relation(fields: [startupProfileId], references: [id])
   fullName          String
   role              String
+  bio               String?
+  references        String?
   linkedinUrl       String?
   equityPercent     Decimal        @db.Decimal(5, 2)
   joinedAt          DateTime?

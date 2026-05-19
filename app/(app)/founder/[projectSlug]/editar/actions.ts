@@ -36,6 +36,7 @@ export async function updateProjectInfoAction(
   };
 
   const stage = pickStr("stage");
+  const kind = pickStr("kind");
 
   try {
     await updateProjectInfo({
@@ -44,11 +45,17 @@ export async function updateProjectInfoAction(
       name: pickStr("name"),
       shortPitch: pickStr("shortPitch"),
       description: pickStr("description"),
+      kind:
+        kind && ["STARTUP", "REAL_ESTATE", "MERCHANDISE"].includes(kind)
+          ? (kind as "STARTUP" | "REAL_ESTATE" | "MERCHANDISE")
+          : undefined,
       sector: pickStr("sector"),
       stage:
         stage && ["IDEA", "PRE_SEED", "SEED", "EARLY_REVENUE", "GROWTH", "SCALE"].includes(stage)
           ? (stage as "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE")
           : undefined,
+      location: pickOptionalStr("location"),
+      targetRaiseAmount: pickOptionalStr("targetRaiseAmount"),
       oneLiner: pickStr("oneLiner"),
       problemStatement: pickStr("problemStatement"),
       solutionStatement: pickStr("solutionStatement"),
