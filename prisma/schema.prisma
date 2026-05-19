@@ -258,6 +258,17 @@ model StartupProfile {
   fundingRounds               FundingRound[]
   metrics                     StartupMetric[]
   milestones                  Milestone[]
+
+  // Estructura y respaldo (texto informativo)
+  assetBackingNote            String?
+  equityStructureNote         String?
+
+  // Documentos opcionales (URLs externas: drive/dropbox/notion/etc.)
+  projectionsUrl              String?
+  planNegociosUrl             String?
+  estrategiasPeriodicasUrl    String?
+  estadosFinancierosUrl       String?
+  estrategiaEmisionUrl        String?
 }
 
 model Founder {

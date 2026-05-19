@@ -65,6 +65,13 @@ export async function updateProjectInfoAction(
       websiteUrl: pickOptionalStr("websiteUrl"),
       pitchDeckUrl: pickOptionalStr("pitchDeckUrl"),
       dataRoomUrl: pickOptionalStr("dataRoomUrl"),
+      assetBackingNote: pickOptionalStr("assetBackingNote"),
+      equityStructureNote: pickOptionalStr("equityStructureNote"),
+      projectionsUrl: pickOptionalStr("projectionsUrl"),
+      planNegociosUrl: pickOptionalStr("planNegociosUrl"),
+      estrategiasPeriodicasUrl: pickOptionalStr("estrategiasPeriodicasUrl"),
+      estadosFinancierosUrl: pickOptionalStr("estadosFinancierosUrl"),
+      estrategiaEmisionUrl: pickOptionalStr("estrategiaEmisionUrl"),
     });
 
     // Acciones disponibles (opcional — solo si el founder cambia el valor)

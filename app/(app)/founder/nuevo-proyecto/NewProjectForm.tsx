@@ -37,6 +37,13 @@ export function NewProjectForm() {
     preMoneyValuation: "",
     valuationCurrency: "USD" as "USD" | "MXN",
     websiteUrl: "",
+    assetBackingNote: "",
+    equityStructureNote: "",
+    projectionsUrl: "",
+    planNegociosUrl: "",
+    estrategiasPeriodicasUrl: "",
+    estadosFinancierosUrl: "",
+    estrategiaEmisionUrl: "",
   });
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -244,6 +251,99 @@ export function NewProjectForm() {
             value={form.businessModel}
             onChange={(e) => update("businessModel", e.target.value)}
             required
+            className="input"
+          />
+        </Field>
+      </section>
+
+      {/* Estructura y respaldo */}
+      <section className="space-y-5 hairline-t pt-8">
+        <p className="eyebrow">Estructura y respaldo</p>
+        <Field label="Activo respaldado (opcional)" htmlFor="assetBackingNote">
+          <textarea
+            id="assetBackingNote"
+            name="assetBackingNote"
+            rows={3}
+            maxLength={2000}
+            value={form.assetBackingNote}
+            onChange={(e) => update("assetBackingNote", e.target.value)}
+            placeholder="Describí qué activo concreto respalda al proyecto (inmueble, mercancía, contrato, propiedad intelectual, etc.)."
+            className="input"
+          />
+        </Field>
+        <Field label="Estructura accionaria (opcional)" htmlFor="equityStructureNote">
+          <textarea
+            id="equityStructureNote"
+            name="equityStructureNote"
+            rows={3}
+            maxLength={2000}
+            value={form.equityStructureNote}
+            onChange={(e) => update("equityStructureNote", e.target.value)}
+            placeholder="Cómo está repartida la propiedad: clases de acciones, founders, inversores previos, opciones, etc."
+            className="input"
+          />
+        </Field>
+      </section>
+
+      {/* Documentos del proyecto */}
+      <section className="space-y-5 hairline-t pt-8">
+        <p className="eyebrow">Documentos del proyecto</p>
+        <p className="text-navy/75 leading-relaxed">
+          Pegá las URLs a documentos hospedados en Google Drive, Dropbox, Notion u otro servicio.
+          Todos son opcionales — los podés sumar después desde la pantalla de edición.
+        </p>
+        <Field label="Proyecciones financieras (URL)" htmlFor="projectionsUrl">
+          <input
+            id="projectionsUrl"
+            name="projectionsUrl"
+            type="url"
+            value={form.projectionsUrl}
+            onChange={(e) => update("projectionsUrl", e.target.value)}
+            placeholder="https://drive.google.com/..."
+            className="input"
+          />
+        </Field>
+        <Field label="Plan de negocios inicial (URL)" htmlFor="planNegociosUrl">
+          <input
+            id="planNegociosUrl"
+            name="planNegociosUrl"
+            type="url"
+            value={form.planNegociosUrl}
+            onChange={(e) => update("planNegociosUrl", e.target.value)}
+            placeholder="https://drive.google.com/..."
+            className="input"
+          />
+        </Field>
+        <Field label="Objetivos y estrategias periódicas (URL)" htmlFor="estrategiasPeriodicasUrl">
+          <input
+            id="estrategiasPeriodicasUrl"
+            name="estrategiasPeriodicasUrl"
+            type="url"
+            value={form.estrategiasPeriodicasUrl}
+            onChange={(e) => update("estrategiasPeriodicasUrl", e.target.value)}
+            placeholder="https://www.notion.so/..."
+            className="input"
+          />
+        </Field>
+        <Field label="Estados financieros trimestrales (URL)" htmlFor="estadosFinancierosUrl">
+          <input
+            id="estadosFinancierosUrl"
+            name="estadosFinancierosUrl"
+            type="url"
+            value={form.estadosFinancierosUrl}
+            onChange={(e) => update("estadosFinancierosUrl", e.target.value)}
+            placeholder="https://drive.google.com/..."
+            className="input"
+          />
+        </Field>
+        <Field label="Estrategia de emisión de nuevas participaciones (URL)" htmlFor="estrategiaEmisionUrl">
+          <input
+            id="estrategiaEmisionUrl"
+            name="estrategiaEmisionUrl"
+            type="url"
+            value={form.estrategiaEmisionUrl}
+            onChange={(e) => update("estrategiaEmisionUrl", e.target.value)}
+            placeholder="https://drive.google.com/..."
             className="input"
           />
         </Field>

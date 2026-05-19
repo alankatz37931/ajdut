@@ -22,6 +22,13 @@ type Initial = {
   websiteUrl: string;
   pitchDeckUrl: string;
   dataRoomUrl: string;
+  assetBackingNote: string;
+  equityStructureNote: string;
+  projectionsUrl: string;
+  planNegociosUrl: string;
+  estrategiasPeriodicasUrl: string;
+  estadosFinancierosUrl: string;
+  estrategiaEmisionUrl: string;
   availableShares: number;
 };
 
@@ -231,6 +238,61 @@ export function EditProjectForm({
                 Conviene que el documento esté protegido (acceso solo con link o cuenta).
               </p>
             </Field>
+            <Field label="Proyecciones financieras (URL)" htmlFor="projectionsUrl">
+              <input
+                id="projectionsUrl"
+                name="projectionsUrl"
+                value={form.projectionsUrl}
+                onChange={(e) => update("projectionsUrl", e.target.value)}
+                type="url"
+                className="input"
+                placeholder="https://drive.google.com/..."
+              />
+            </Field>
+            <Field label="Plan de negocios inicial (URL)" htmlFor="planNegociosUrl">
+              <input
+                id="planNegociosUrl"
+                name="planNegociosUrl"
+                value={form.planNegociosUrl}
+                onChange={(e) => update("planNegociosUrl", e.target.value)}
+                type="url"
+                className="input"
+                placeholder="https://drive.google.com/..."
+              />
+            </Field>
+            <Field label="Objetivos y estrategias periódicas (URL)" htmlFor="estrategiasPeriodicasUrl">
+              <input
+                id="estrategiasPeriodicasUrl"
+                name="estrategiasPeriodicasUrl"
+                value={form.estrategiasPeriodicasUrl}
+                onChange={(e) => update("estrategiasPeriodicasUrl", e.target.value)}
+                type="url"
+                className="input"
+                placeholder="https://www.notion.so/..."
+              />
+            </Field>
+            <Field label="Estados financieros trimestrales (URL)" htmlFor="estadosFinancierosUrl">
+              <input
+                id="estadosFinancierosUrl"
+                name="estadosFinancierosUrl"
+                value={form.estadosFinancierosUrl}
+                onChange={(e) => update("estadosFinancierosUrl", e.target.value)}
+                type="url"
+                className="input"
+                placeholder="https://drive.google.com/..."
+              />
+            </Field>
+            <Field label="Estrategia de emisión de nuevas participaciones (URL)" htmlFor="estrategiaEmisionUrl">
+              <input
+                id="estrategiaEmisionUrl"
+                name="estrategiaEmisionUrl"
+                value={form.estrategiaEmisionUrl}
+                onChange={(e) => update("estrategiaEmisionUrl", e.target.value)}
+                type="url"
+                className="input"
+                placeholder="https://drive.google.com/..."
+              />
+            </Field>
           </section>
 
           <section className="space-y-5 hairline-t pt-8">
@@ -266,6 +328,34 @@ export function EditProjectForm({
                 rows={2}
                 className="input"
                 placeholder="Cómo monetiza el proyecto."
+              />
+            </Field>
+          </section>
+
+          <section className="space-y-5 hairline-t pt-8">
+            <p className="eyebrow">Estructura y respaldo</p>
+            <Field label="Activo respaldado (opcional)" htmlFor="assetBackingNote">
+              <textarea
+                id="assetBackingNote"
+                name="assetBackingNote"
+                value={form.assetBackingNote}
+                onChange={(e) => update("assetBackingNote", e.target.value)}
+                rows={3}
+                maxLength={2000}
+                className="input"
+                placeholder="Describí qué activo concreto respalda al proyecto (inmueble, mercancía, contrato, propiedad intelectual, etc.)."
+              />
+            </Field>
+            <Field label="Estructura accionaria (opcional)" htmlFor="equityStructureNote">
+              <textarea
+                id="equityStructureNote"
+                name="equityStructureNote"
+                value={form.equityStructureNote}
+                onChange={(e) => update("equityStructureNote", e.target.value)}
+                rows={3}
+                maxLength={2000}
+                className="input"
+                placeholder="Cómo está repartida la propiedad: clases de acciones, founders, inversores previos, opciones, etc."
               />
             </Field>
           </section>

@@ -89,6 +89,13 @@ export default async function EditProjectPage({ params }: Params) {
           websiteUrl: project.startupProfile?.websiteUrl ?? "",
           pitchDeckUrl: project.startupProfile?.pitchDeckStorageKey ?? "",
           dataRoomUrl: project.startupProfile?.dataRoomStorageKey ?? "",
+          assetBackingNote: project.startupProfile?.assetBackingNote ?? "",
+          equityStructureNote: project.startupProfile?.equityStructureNote ?? "",
+          projectionsUrl: project.startupProfile?.projectionsUrl ?? "",
+          planNegociosUrl: project.startupProfile?.planNegociosUrl ?? "",
+          estrategiasPeriodicasUrl: project.startupProfile?.estrategiasPeriodicasUrl ?? "",
+          estadosFinancierosUrl: project.startupProfile?.estadosFinancierosUrl ?? "",
+          estrategiaEmisionUrl: project.startupProfile?.estrategiaEmisionUrl ?? "",
           availableShares: currentAvailable,
         }}
         hasStartupProfile={!!project.startupProfile}
