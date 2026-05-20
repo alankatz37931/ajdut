@@ -52,6 +52,14 @@ import {
   reportPublishedEmail,
   type ReportPublishedInput,
 } from "./templates/report-published";
+import {
+  infoRequestToFounderEmail,
+  type InfoRequestToFounderInput,
+} from "./templates/info-request-to-founder";
+import {
+  infoRequestResolvedEmail,
+  type InfoRequestResolvedInput,
+} from "./templates/info-request-resolved";
 
 function appUrl(): string {
   return (
@@ -368,5 +376,51 @@ export async function notifyAdminsNewInterest(input: {
     html,
     fireAndForget: true,
     kind: "interest.admin-notice",
+  });
+}
+
+// ─── Solicitudes de información (etapa 1) ─────────────────────────
+
+export async function notifyFounderInfoRequest(input: {
+  to: string;
+  projectSlug: string;
+} & Omit<InfoRequestToFounderInput, "reviewUrl">) {
+  const reviewUrl = `${appUrl()}/founder/${input.projectSlug}/leads`;
+  const { subject, html } = infoRequestToFounderEmail({
+    founderFirstName: input.founderFirstName,
+    projectName: input.projectName,
+    requesterName: input.requesterName,
+    requesterEmail: input.requesterEmail,
+    message: input.message,
+    reviewUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "info-request.founder",
+  });
+}
+
+export async function notifyRequesterInfoRequestResolved(input: {
+  to: string;
+  projectSlug: string;
+} & Omit<InfoRequestResolvedInput, "projectUrl">) {
+  const projectUrl = `${appUrl()}/proyectos/${input.projectSlug}`;
+  const { subject, html } = infoRequestResolvedEmail({
+    requesterFirstName: input.requesterFirstName,
+    projectName: input.projectName,
+    founderName: input.founderName,
+    decision: input.decision,
+    note: input.note,
+    projectUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "info-request.resolved",
   });
 }

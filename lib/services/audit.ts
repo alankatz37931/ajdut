@@ -43,7 +43,10 @@ export type AuditAction =
   | "FOUNDER.REMOVED"
   | "MILESTONE.UPSERTED"
   | "MILESTONE.REMOVED"
-  | "METRIC.REMOVED";
+  | "METRIC.REMOVED"
+  | "INFO_REQUEST.CREATED"
+  | "INFO_REQUEST.APPROVED"
+  | "INFO_REQUEST.REJECTED";
 
 export type AuditEntry = {
   actorId: string | null;

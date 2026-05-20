@@ -54,6 +54,8 @@ export function InterestForm({
 
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
+  const [supportKind, setSupportKind] =
+    useState<"CAPITAL" | "SPONSOR" | "AMBASSADOR" | "ADVISOR" | "OTHER">("CAPITAL");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -119,6 +121,7 @@ export function InterestForm({
 
     formData.set("shareCount", String(computedShares));
     formData.set("message", message);
+    formData.set("supportKind", supportKind);
 
     startTransition(async () => {
       const r = await manifestInterestAction(projectSlug, formData);
@@ -184,6 +187,35 @@ export function InterestForm({
 
       {/* Cluster principal: el monto es el foco */}
       <div className="mt-4 space-y-3">
+        {/* Tipo de apoyo */}
+        <div>
+          <label htmlFor="supportKind" className="eyebrow block mb-1.5">
+            Tipo de apoyo
+          </label>
+          <select
+            id="supportKind"
+            name="supportKind"
+            value={supportKind}
+            onChange={(e) =>
+              setSupportKind(
+                e.target.value as
+                  | "CAPITAL"
+                  | "SPONSOR"
+                  | "AMBASSADOR"
+                  | "ADVISOR"
+                  | "OTHER"
+              )
+            }
+            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
+          >
+            <option value="CAPITAL">Capital</option>
+            <option value="SPONSOR">Sponsor</option>
+            <option value="AMBASSADOR">Embajador</option>
+            <option value="ADVISOR">Advisor</option>
+            <option value="OTHER">Otro</option>
+          </select>
+        </div>
+
         {/* Input protagonista: número grande */}
         <div>
           <label htmlFor="amount" className="eyebrow block mb-1.5">

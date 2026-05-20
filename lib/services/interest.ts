@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/client";
+import type { LeadSupportKind } from "@prisma/client";
 import { recordAudit } from "./audit";
 import { LEAD_EXPIRATION_DAYS } from "@/lib/constants/platform";
 import { ForbiddenError, NotFoundError, ValidationError } from "./errors";
@@ -8,6 +9,7 @@ export type CreateInterestInput = {
   userId: string;            // Cualquier usuario autenticado que quiere invertir
   shareCountRequested: number;
   message: string;           // Opcional — string vacío si el usuario no quiso dejar mensaje
+  supportKind?: LeadSupportKind; // Opcional: tipo de apoyo (Capital, Sponsor, etc.)
 };
 
 /**
@@ -77,6 +79,7 @@ export async function createInterestLead(input: CreateInterestInput) {
       userId: input.userId,
       message: input.message.trim(), // puede ser ""
       shareCountRequested: input.shareCountRequested,
+      supportKind: input.supportKind ?? null,
       status: "OPEN",
       expiresAt,
     },
@@ -91,6 +94,7 @@ export async function createInterestLead(input: CreateInterestInput) {
     payload: {
       shareCountRequested: input.shareCountRequested,
       kind: "INTEREST_PROJECT_LEVEL",
+      supportKind: input.supportKind ?? null,
     },
   });
 

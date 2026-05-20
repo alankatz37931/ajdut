@@ -23,9 +23,19 @@ type Draft = {
   email: string;
   phone: string;
   country: string;
-  motivation: string;
+  motivation: string;          // Texto libre (detalles adicionales, opcional)
+  motivationOption: string;    // Label del select elegido
   referredBy: string;
 };
+
+const MOTIVATION_OPTIONS: string[] = [
+  "Busco diversificar mi portafolio con proyectos reales",
+  "Me interesa apoyar emprendimientos de mi región",
+  "Tengo experiencia en startups / inmobiliario y quiero participar",
+  "Vengo recomendado por un miembro actual",
+  "Conocí AJDUT por redes / medios",
+  "Otro (especificar abajo)",
+];
 
 const emptyDraft: Draft = {
   fullName: "",
@@ -33,8 +43,20 @@ const emptyDraft: Draft = {
   phone: "",
   country: "",
   motivation: "",
+  motivationOption: MOTIVATION_OPTIONS[0]!,
   referredBy: "",
 };
+
+/**
+ * Compone el string que se persiste como `motivation` en la Application:
+ * label del select + (si hay) "\n\n" + texto libre. El backend valida
+ * max(2000), sin mínimo.
+ */
+function composeMotivation(opt: string, freeText: string): string {
+  const trimmed = freeText.trim();
+  if (trimmed.length === 0) return opt;
+  return `${opt}\n\n${trimmed}`;
+}
 
 export function ApplicationForm() {
   const [step, setStep] = useState<Step>("identity");
@@ -104,13 +126,27 @@ export function ApplicationForm() {
     }
   }
 
+  function buildFormData(): FormData {
+    const formData = new FormData();
+    // Componemos el campo motivation (label + texto libre) y descartamos el
+    // option interno: el backend solo conoce `motivation`.
+    const composed = composeMotivation(draft.motivationOption, draft.motivation);
+    const payload: Record<string, string> = {
+      fullName: draft.fullName,
+      email: draft.email,
+      phone: draft.phone,
+      country: draft.country,
+      motivation: composed,
+      referredBy: draft.referredBy,
+    };
+    Object.entries(payload).forEach(([k, v]) => formData.append(k, v));
+    return formData;
+  }
+
   function requestCode() {
     setError(null);
-    const formData = new FormData();
-    Object.entries(draft).forEach(([k, v]) => formData.append(k, v));
-
     startTransition(async () => {
-      const res: RequestCodeResult = await requestEmailVerification(formData);
+      const res: RequestCodeResult = await requestEmailVerification(buildFormData());
       if (res.ok) {
         setVerifiedEmail(res.email);
         setCodeExpiresAt(res.expiresAt);
@@ -138,10 +174,8 @@ export function ApplicationForm() {
   function resendCode() {
     setError(null);
     setCode("");
-    const formData = new FormData();
-    Object.entries(draft).forEach(([k, v]) => formData.append(k, v));
     startTransition(async () => {
-      const res = await requestEmailVerification(formData);
+      const res = await requestEmailVerification(buildFormData());
       if (res.ok) {
         setVerifiedEmail(res.email);
         setCodeExpiresAt(res.expiresAt);
@@ -275,20 +309,37 @@ export function ApplicationForm() {
         )}
 
         {step === "motivation" && (
-          <Field label="Motivación" htmlFor="motivation">
-            <textarea
-              id="motivation"
-              rows={5}
-              value={draft.motivation}
-              onChange={(e) => update("motivation", e.target.value)}
-              className="input"
-              autoFocus
-              placeholder="Cuéntanos qué buscas en AJDUT y qué proyectos te interesan."
-            />
-            <span className="eyebrow mt-2 block">
-              {draft.motivation.length} / 2000 caracteres
-            </span>
-          </Field>
+          <>
+            <Field label="¿Qué te motiva?" htmlFor="motivationOption">
+              <select
+                id="motivationOption"
+                value={draft.motivationOption}
+                onChange={(e) => update("motivationOption", e.target.value)}
+                className="input"
+                autoFocus
+              >
+                {MOTIVATION_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Más detalles" htmlFor="motivation">
+              <textarea
+                id="motivation"
+                rows={4}
+                maxLength={2000}
+                value={draft.motivation}
+                onChange={(e) => update("motivation", e.target.value)}
+                className="input"
+                placeholder="Detalles adicionales (opcional)"
+              />
+              <span className="eyebrow mt-2 block">
+                {draft.motivation.length} / 2000 caracteres
+              </span>
+            </Field>
+          </>
         )}
 
         {step === "review" && (
@@ -300,9 +351,11 @@ export function ApplicationForm() {
             {draft.referredBy.trim() && (
               <Row label="Referido por" value={draft.referredBy} />
             )}
-            {draft.motivation.trim() && (
-              <Row label="Motivación" value={draft.motivation} multiline />
-            )}
+            <Row
+              label="Motivación"
+              value={composeMotivation(draft.motivationOption, draft.motivation)}
+              multiline
+            />
 
             <p className="mt-6 eyebrow">
               Al continuar, te vamos a enviar un código de verificación al email de arriba para

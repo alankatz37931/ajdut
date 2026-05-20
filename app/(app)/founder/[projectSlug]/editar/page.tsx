@@ -87,6 +87,7 @@ export default async function EditProjectPage({ params }: Params) {
             : "",
           valuationCurrency: project.startupProfile?.valuationCurrency ?? "USD",
           websiteUrl: project.startupProfile?.websiteUrl ?? "",
+          videoUrl: project.startupProfile?.videoUrl ?? "",
           pitchDeckUrl: project.startupProfile?.pitchDeckStorageKey ?? "",
           dataRoomUrl: project.startupProfile?.dataRoomStorageKey ?? "",
           assetBackingNote: project.startupProfile?.assetBackingNote ?? "",

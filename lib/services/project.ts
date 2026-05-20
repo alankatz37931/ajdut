@@ -134,6 +134,7 @@ export type UpdateProjectInfoInput = {
   preMoneyValuation?: string | null;
   valuationCurrency?: string;
   websiteUrl?: string | null;
+  videoUrl?: string | null;
   // Documentos como URLs externas (drive/dropbox/notion/etc.)
   pitchDeckUrl?: string | null;
   dataRoomUrl?: string | null;
@@ -208,6 +209,7 @@ export async function updateProjectInfo(input: UpdateProjectInfoInput) {
       if (input.valuationCurrency !== undefined)
         profileUpdates.valuationCurrency = input.valuationCurrency.trim();
       if (input.websiteUrl !== undefined) profileUpdates.websiteUrl = input.websiteUrl || null;
+      if (input.videoUrl !== undefined) profileUpdates.videoUrl = input.videoUrl || null;
       if (input.pitchDeckUrl !== undefined)
         profileUpdates.pitchDeckStorageKey = input.pitchDeckUrl || null;
       if (input.dataRoomUrl !== undefined)
@@ -272,6 +274,7 @@ export type CreateProjectInput = {
   preMoneyValuation: number;
   valuationCurrency: "USD" | "MXN";
   websiteUrl?: string;
+  videoUrl?: string;
   legalName: string;
   jurisdiction: string;
   // Estructura y respaldo (texto informativo)
@@ -372,6 +375,7 @@ export async function createProject(input: CreateProjectInput) {
         totalEquityShares: totalShares,
         platformEquityPercent: new Prisma.Decimal(10),
         websiteUrl: input.websiteUrl?.trim() || null,
+        videoUrl: input.videoUrl?.trim() || null,
         assetBackingNote: input.assetBackingNote?.trim() || null,
         equityStructureNote: input.equityStructureNote?.trim() || null,
         projectionsUrl: input.projectionsUrl?.trim() || null,

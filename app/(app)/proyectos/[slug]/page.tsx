@@ -4,14 +4,19 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
+import { getInfoRequest } from "@/lib/services/info-request";
+import { getUserPreferences } from "@/lib/preferences";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { InterestForm } from "./InterestForm";
+import { InfoRequestForm } from "./InfoRequestForm";
 import { AdminApprovalActions } from "./AdminApprovalActions";
 import { ProjectBody } from "./ProjectBody";
+import { embedUrl } from "@/lib/utils/embed";
 import {
   formatCurrency,
   formatDate,
+  formatDualCurrency,
   formatNumber,
   formatPercent,
 } from "@/lib/utils/format";
@@ -75,6 +80,22 @@ export default async function ProjectPage({ params }: Params) {
     projectStatus: project.status,
   });
   if (!access.canView) notFound();
+
+  // Preferencias del viewer (MXN dual display)
+  const prefs = await getUserPreferences();
+  const prefersMxn = prefs.currency === "MXN";
+  const projectCurrencyForPrefs =
+    project.startupProfile?.valuationCurrency ?? "USD";
+  // Solo mostramos el equivalente MXN cuando el monto original es USD.
+  const showMxnDual = prefersMxn && projectCurrencyForPrefs === "USD";
+
+  // InfoRequest del viewer para este proyecto (etapa 1 del flujo).
+  // PARTNER usa esto para gating de Documentos / Reportes y para el botón.
+  const myInfoRequest =
+    access.role === "PARTNER"
+      ? await getInfoRequest(project.id, user.id)
+      : null;
+  const partnerHasApprovedInfo = myInfoRequest?.status === "APPROVED";
 
   // Métricas con visibility según rol
   const metrics = await prisma.startupMetric.findMany({
@@ -279,28 +300,40 @@ export default async function ProjectPage({ params }: Params) {
           value={formatNumber(availableShares)}
           hint={`${formatNumber(availableShares)} de ${formatNumber(totalShares)}`}
         />
-        {project.startupProfile?.preMoneyValuation && (
-          <KpiCard
-            label="Valoración"
-            value={formatCurrency(
-              Number(project.startupProfile.preMoneyValuation),
-              project.startupProfile.valuationCurrency,
-              0
-            )}
-            hint="declarada"
-          />
-        )}
-        {project.startupProfile?.targetRaiseAmount && (
-          <KpiCard
-            label="Monto a levantar"
-            value={formatCurrency(
-              Number(project.startupProfile.targetRaiseAmount),
-              project.startupProfile.valuationCurrency,
-              0
-            )}
-            hint="objetivo de ronda"
-          />
-        )}
+        {project.startupProfile?.preMoneyValuation && (() => {
+          const amt = Number(project.startupProfile.preMoneyValuation);
+          const dual = showMxnDual
+            ? formatDualCurrency(amt, true, 0)
+            : null;
+          return (
+            <KpiCard
+              label="Valoración"
+              value={formatCurrency(
+                amt,
+                project.startupProfile.valuationCurrency,
+                0
+              )}
+              hint={dual?.secondary ?? "declarada"}
+            />
+          );
+        })()}
+        {project.startupProfile?.targetRaiseAmount && (() => {
+          const amt = Number(project.startupProfile.targetRaiseAmount);
+          const dual = showMxnDual
+            ? formatDualCurrency(amt, true, 0)
+            : null;
+          return (
+            <KpiCard
+              label="Monto a levantar"
+              value={formatCurrency(
+                amt,
+                project.startupProfile.valuationCurrency,
+                0
+              )}
+              hint={dual?.secondary ?? "objetivo de ronda"}
+            />
+          );
+        })()}
       </div>
     ),
   });
@@ -328,7 +361,12 @@ export default async function ProjectPage({ params }: Params) {
             <KpiCard
               label="Valor sugerido por acción"
               value={formatCurrency(pricePerShare, projectCurrency)}
-              hint="valoración ÷ acciones totales"
+              hint={
+                showMxnDual
+                  ? (formatDualCurrency(pricePerShare, true).secondary ??
+                    "valoración ÷ acciones totales")
+                  : "valoración ÷ acciones totales"
+              }
             />
             <KpiCard
               label="Utilidad anual por acción"
@@ -389,9 +427,14 @@ export default async function ProjectPage({ params }: Params) {
               label="Valor"
               value={myValue !== null ? formatCurrency(myValue, projectCurrency) : "—"}
               hint={
-                pricePerShare !== null
-                  ? `a ${formatCurrency(pricePerShare, projectCurrency)} / acción`
-                  : "sin valoración declarada"
+                showMxnDual && myValue !== null
+                  ? (formatDualCurrency(myValue, true).secondary ??
+                    (pricePerShare !== null
+                      ? `a ${formatCurrency(pricePerShare, projectCurrency)} / acción`
+                      : "sin valoración declarada"))
+                  : pricePerShare !== null
+                    ? `a ${formatCurrency(pricePerShare, projectCurrency)} / acción`
+                    : "sin valoración declarada"
               }
               className="bg-paper-light"
             />
@@ -501,7 +544,12 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  if ((project.startupProfile?.founders.length ?? 0) > 0) {
+  // Equipo: información sensible. Lo ocultamos al rol PARTNER (que no es
+  // owner / co-admin / admin del proyecto). El founder / co-admin / admin
+  // sí lo ven.
+  const canSeeTeam = access.role !== "PARTNER";
+
+  if (canSeeTeam && (project.startupProfile?.founders.length ?? 0) > 0) {
     sections.push({
       title: "Equipo",
       node: (
@@ -587,14 +635,27 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
+  // Gating de Documentos / Reportes:
+  //  - Owner / Co-admin / Admin: siempre ven.
+  //  - PARTNER: ve solo si tiene InfoRequest APPROVED o ya es socio (myShares > 0).
+  //  - VIEWER (otros roles autenticados sin participación): tratamos como PARTNER
+  //    sin solicitud — no ve. El founder controla el acceso a info sensible.
+  const isPrivilegedReader =
+    access.role === "OWNER" ||
+    access.role === "CO_ADMIN" ||
+    access.role === "ADMIN";
+  const canSeePrivateDocs =
+    isPrivilegedReader || partnerHasApprovedInfo || myShares > 0;
+
   if (
-    project.startupProfile?.pitchDeckStorageKey ||
-    project.startupProfile?.dataRoomStorageKey ||
-    project.startupProfile?.projectionsUrl ||
-    project.startupProfile?.planNegociosUrl ||
-    project.startupProfile?.estrategiasPeriodicasUrl ||
-    project.startupProfile?.estadosFinancierosUrl ||
-    project.startupProfile?.estrategiaEmisionUrl
+    canSeePrivateDocs &&
+    (project.startupProfile?.pitchDeckStorageKey ||
+      project.startupProfile?.dataRoomStorageKey ||
+      project.startupProfile?.projectionsUrl ||
+      project.startupProfile?.planNegociosUrl ||
+      project.startupProfile?.estrategiasPeriodicasUrl ||
+      project.startupProfile?.estadosFinancierosUrl ||
+      project.startupProfile?.estrategiaEmisionUrl)
   ) {
     sections.push({
       title: "Documentos",
@@ -710,7 +771,7 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  if (reports.length > 0) {
+  if (canSeePrivateDocs && reports.length > 0) {
     sections.push({
       title: "Reportes",
       node: (
@@ -820,10 +881,32 @@ export default async function ProjectPage({ params }: Params) {
           )}
         </div>
         <div className="flex flex-col gap-3 shrink-0 sm:flex-row sm:items-center">
+          {/* Flujo de 2 etapas para rol PARTNER:
+              - sin InfoRequest o REJECTED → "Quiero más información"
+              - APPROVED → "Me interesa participar"
+              Otros roles autenticados (VIEWER) van directo al InterestForm como antes. */}
           {access.canManifestInterest && availableShares > 0 && (
-            <a href="#comprar" className="btn-primary text-center">
-              Me interesa participar →
-            </a>
+            <>
+              {access.role === "PARTNER" ? (
+                myInfoRequest?.status === "PENDING" ? (
+                  <span className="eyebrow !text-navy/60">
+                    Solicitud enviada — esperando aprobación
+                  </span>
+                ) : myInfoRequest?.status === "APPROVED" ? (
+                  <a href="#comprar" className="btn-primary text-center">
+                    Me interesa participar →
+                  </a>
+                ) : (
+                  <a href="#info-request" className="btn-primary text-center">
+                    Quiero más información →
+                  </a>
+                )
+              ) : (
+                <a href="#comprar" className="btn-primary text-center">
+                  Me interesa participar →
+                </a>
+              )}
+            </>
           )}
           {access.canEdit && (
             <Link
@@ -836,6 +919,50 @@ export default async function ProjectPage({ params }: Params) {
         </div>
       </header>
 
+      {/* PARTNER con InfoRequest REJECTED: mensaje visible debajo del header. */}
+      {access.role === "PARTNER" && myInfoRequest?.status === "REJECTED" && (
+        <div className="mt-5 hairline p-4 bg-paper-light">
+          <p className="eyebrow">Solicitud no aprobada</p>
+          {myInfoRequest.reviewNote && (
+            <p className="mt-2 text-navy/75 leading-relaxed whitespace-pre-line text-sm">
+              {myInfoRequest.reviewNote}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Video del proyecto: visible para cualquier viewer con canView. */}
+      {project.startupProfile?.videoUrl && (() => {
+        const embed = embedUrl(project.startupProfile.videoUrl);
+        if (embed) {
+          return (
+            <div className="mt-6">
+              <div className="hairline relative" style={{ paddingTop: "56.25%" }}>
+                <iframe
+                  src={embed}
+                  title={`Video — ${project.name}`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                />
+              </div>
+            </div>
+          );
+        }
+        return (
+          <p className="mt-6">
+            <a
+              href={project.startupProfile.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="eyebrow hover:!text-gold"
+            >
+              Ver video ↗
+            </a>
+          </p>
+        );
+      })()}
+
       {/* Panel de moderación: admin viendo un proyecto PENDING_APPROVAL */}
       {access.role === "ADMIN" && project.status === "PENDING_APPROVAL" && (
         <div className="mt-5">
@@ -846,27 +973,47 @@ export default async function ProjectPage({ params }: Params) {
       {/* Ancla sin padding: si el form está cerrado (null) no deja hueco.
           El espaciado lo aporta el propio form cuando se abre. */}
       {access.canManifestInterest && availableShares > 0 && (
-        <div id="comprar">
-          <InterestForm
-            projectSlug={project.slug}
-            projectName={project.name}
-            viewerName={user.name}
-            availableShares={availableShares}
-            valuation={
-              project.startupProfile?.preMoneyValuation
-                ? Number(project.startupProfile.preMoneyValuation)
-                : null
-            }
-            totalShares={project.totalShares}
-            currency={project.startupProfile?.valuationCurrency ?? "USD"}
-          />
-        </div>
+        <>
+          {/* PARTNER sin InfoRequest aprobada: mini-form de etapa 1. */}
+          {access.role === "PARTNER" && !partnerHasApprovedInfo && (
+            <div id="info-request">
+              <InfoRequestForm
+                projectSlug={project.slug}
+                projectName={project.name}
+                viewerName={user.name}
+              />
+            </div>
+          )}
+
+          {/* InterestForm (etapa 2 / flujo directo para VIEWER). Solo se
+              muestra si el rol no es PARTNER, o si el PARTNER ya tiene la
+              InfoRequest APPROVED. Si no, el botón "Me interesa participar"
+              ni siquiera aparece (ver header). */}
+          {(access.role !== "PARTNER" || partnerHasApprovedInfo) && (
+            <div id="comprar">
+              <InterestForm
+                projectSlug={project.slug}
+                projectName={project.name}
+                viewerName={user.name}
+                availableShares={availableShares}
+                valuation={
+                  project.startupProfile?.preMoneyValuation
+                    ? Number(project.startupProfile.preMoneyValuation)
+                    : null
+                }
+                totalShares={project.totalShares}
+                currency={project.startupProfile?.valuationCurrency ?? "USD"}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Cuerpo del proyecto: scroll único, los bloques fluyen. Se oculta
-          entero en modo foco (#comprar) para no distraer al comprar. */}
+          entero en modo foco (#comprar / #info-request) para no distraer al
+          completar el form. */}
       {sections.length > 0 && (
-        <ProjectBody hideOnHash="#comprar">
+        <ProjectBody hideOnHash={["#comprar", "#info-request"]}>
           {sections.map((s, i) => (
             <section
               key={i}

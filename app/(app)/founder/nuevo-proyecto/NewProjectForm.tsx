@@ -37,6 +37,7 @@ export function NewProjectForm() {
     preMoneyValuation: "",
     valuationCurrency: "USD" as "USD" | "MXN",
     websiteUrl: "",
+    videoUrl: "",
     assetBackingNote: "",
     equityStructureNote: "",
     projectionsUrl: "",
@@ -346,6 +347,20 @@ export function NewProjectForm() {
             placeholder="https://drive.google.com/..."
             className="input"
           />
+        </Field>
+        <Field label="URL del video (YouTube / Vimeo)" htmlFor="videoUrl">
+          <input
+            id="videoUrl"
+            name="videoUrl"
+            type="url"
+            value={form.videoUrl}
+            onChange={(e) => update("videoUrl", e.target.value)}
+            placeholder="https://youtu.be/..."
+            className="input"
+          />
+          <p className="mt-2 eyebrow">
+            Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.
+          </p>
         </Field>
       </section>
 
