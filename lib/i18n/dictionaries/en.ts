@@ -283,6 +283,19 @@ export const dict: Dict = {
     requestNotApproved: "Request not approved",
     editInfo: "Edit information",
     seeProject: "View project →",
+    heroContextEyebrow: "— Project file",
+    nextStep: "Next step",
+    emptySection: "The founder has not completed this section yet.",
+    footerCta: {
+      eyebrow: "— Next step",
+      question: "Would you like to take part in this project?",
+      body:
+        "AJDUT does not process payments or hold funds. If you move forward, the founder will reach out via the email you registered with.",
+      notAvailableEyebrow: "— No shares available",
+      notAvailableTitle: "This project is fully placed.",
+      notAvailableBody:
+        "There are no shares left to assign right now. Stay on the platform — if a participation is released, you'll see it here.",
+    },
     sections: {
       summary: "Summary",
       participations: "Participations",
@@ -315,6 +328,7 @@ export const dict: Dict = {
     },
     funding: {
       placedOf: "shares placed",
+      placedHeadlineSuffix: "shares placed to date",
       pricePerShare: "Suggested price per share",
       pricePerShareHint: "valuation ÷ total shares",
       annualReturnPerShare: "Annual return per share",
@@ -364,6 +378,8 @@ export const dict: Dict = {
     capTable: {
       unassigned: "Available (unassigned)",
       platform: "AJDUT Platform",
+      others: "Others",
+      ofTotal: "of total",
     },
     participationStatus: {
       ASSIGNED: "Assigned",

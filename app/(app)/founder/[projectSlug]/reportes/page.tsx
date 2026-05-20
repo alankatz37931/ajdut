@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
-import { BackLink } from "@/components/app/BackLink";
+import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { formatDate } from "@/lib/utils/format";
 import { ReportForm } from "./ReportForm";
 import { DeleteReportButton } from "./DeleteReportButton";
@@ -72,34 +72,35 @@ export default async function FounderReportsPage({ params }: Params) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="max-w-3xl">
-      <BackLink fallback={`/founder/${projectSlug}`}>
-        ← {project.name}
-      </BackLink>
+    <div className="max-w-4xl">
+      <ProjectHeader
+        projectName={project.name}
+        projectSlug={project.slug}
+        projectStatus={project.status}
+        section="Reportes trimestrales"
+        description="Compartí avances financieros y de negocio con tus miembros. Cuando publicás un reporte, todos los miembros reciben un aviso por email con el link al archivo."
+      />
 
-      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Founder</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Reportes trimestrales</h1>
-        <p className="mt-3 text-navy/75 leading-relaxed">
-          Compartí avances financieros y de negocio con tus miembros. Publicá el reporte y todos
-          los miembros reciben un aviso por email con el link al archivo.
-        </p>
-      </header>
-
-      <ReportForm projectSlug={project.slug} defaultYear={currentYear} />
+      <section className="mt-10">
+        <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
+          <p className="eyebrow !text-navy">01 · Publicar nuevo reporte</p>
+          <p className="eyebrow !text-navy/40">
+            {reports.length} publicado{reports.length === 1 ? "" : "s"} en total
+          </p>
+        </div>
+        <ReportForm projectSlug={project.slug} defaultYear={currentYear} />
+      </section>
 
       <section className="mt-12">
-        <p className="font-mono text-sm tracking-wider mb-4">
-          <span className="text-gold">02</span>{" "}
-          <span className="text-navy">· Historial</span>
-        </p>
+        <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
+          <p className="eyebrow !text-navy">02 · Historial</p>
+        </div>
 
         {reports.length === 0 ? (
           <p className="text-navy/60">Todavía no publicaste ningún reporte.</p>
         ) : (
-          <ul className="space-y-0">
-            {/* Encabezado de columnas: solo desktop, mismo patrón que /founder/leads */}
-            <li className="hidden sm:grid grid-cols-12 gap-3 pb-1">
+          <ul>
+            <li className="hidden sm:grid grid-cols-12 gap-3 pb-2 hairline-b">
               <span className="sm:col-span-2 eyebrow !text-navy/40">Tipo</span>
               <span className="sm:col-span-2 eyebrow !text-navy/40">Período</span>
               <span className="sm:col-span-5 eyebrow !text-navy/40">Título</span>
@@ -128,7 +129,7 @@ export default async function FounderReportsPage({ params }: Params) {
                     href={r.storageKey}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="eyebrow hover:!text-gold"
+                    className="eyebrow hover:!text-gold transition-colors"
                   >
                     Abrir ↗
                   </a>

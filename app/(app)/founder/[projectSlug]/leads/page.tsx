@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import type { Route } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/utils/format";
+import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { LeadActions } from "./LeadActions";
 import { InfoRequestActions } from "./InfoRequestActions";
 
@@ -76,9 +75,7 @@ export default async function FounderLeadsPage({ params }: Params) {
     : null;
   const currency = project.startupProfile?.valuationCurrency ?? "USD";
   const pricePerShare =
-    valuation && project.totalShares > 0
-      ? valuation / project.totalShares
-      : null;
+    valuation && project.totalShares > 0 ? valuation / project.totalShares : null;
 
   function fmtMoney(amt: number) {
     return new Intl.NumberFormat("es-MX", {
@@ -94,37 +91,59 @@ export default async function FounderLeadsPage({ params }: Params) {
   const openCount = leads.filter((l) => l.status === "OPEN").length;
   const contactedCount = leads.filter((l) => l.status === "CONTACTED").length;
   const resolvedCount = leads.filter((l) =>
-    ["CONVERTED", "DISMISSED", "EXPIRED"].includes(l.status)
+    ["CONVERTED", "DISMISSED", "EXPIRED"].includes(l.status),
   ).length;
-
-  const summaryParts: string[] = [];
-  if (openCount > 0) summaryParts.push(`${openCount} sin contactar`);
-  if (contactedCount > 0) summaryParts.push(`${contactedCount} contactado${contactedCount === 1 ? "" : "s"}`);
-  if (resolvedCount > 0) summaryParts.push(`${resolvedCount} resuelto${resolvedCount === 1 ? "" : "s"}`);
 
   return (
     <div>
-      <Link href={`/founder/${projectSlug}` as Route} className="eyebrow hover:!text-gold">
-        ← {project.name}
-      </Link>
+      <ProjectHeader
+        projectName={project.name}
+        projectSlug={project.slug}
+        projectStatus={project.status}
+        section="Interés de compra"
+        description="Quienes piden información primero y quienes ya quieren participar. Aprobá solicitudes, contactá leads y proponé al admin las asignaciones."
+      />
 
-      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Founder</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Interés de compra</h1>
-        {summaryParts.length > 0 ? (
-          <p className="mt-3 font-mono text-sm text-navy/75">{summaryParts.join(" · ")}</p>
-        ) : (
-          <p className="mt-3 font-mono text-sm text-navy/60">Aún no hay interés registrado.</p>
-        )}
-      </header>
+      {/* ─── Banda de stats compacta ───────────────────────────────── */}
+      <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-px bg-line">
+        <LeadStat
+          label="Solicitudes"
+          value={infoRequests.length}
+          urgent={infoRequests.length > 0}
+          hint="pendientes"
+        />
+        <LeadStat
+          label="Sin contactar"
+          value={openCount}
+          urgent={openCount > 0}
+          hint="leads abiertos"
+        />
+        <LeadStat
+          label="En conversación"
+          value={contactedCount}
+          hint="ya contactaste"
+        />
+        <LeadStat
+          label="Resueltos"
+          value={resolvedCount}
+          hint="convertidos o cerrados"
+        />
+      </div>
 
+      {/* ─── Solicitudes de información (etapa 1) ──────────────────── */}
       {infoRequests.length > 0 && (
-        <section className="mt-10">
-          <p className="eyebrow mb-4">Solicitudes de información ({infoRequests.length})</p>
+        <section className="mt-12">
+          <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
+            <p className="eyebrow !text-navy">
+              01 · Solicitudes de información ({infoRequests.length})
+            </p>
+            <p className="eyebrow !text-navy/40">Etapa 1 — antes del interés</p>
+          </div>
+
           <ul className="space-y-4">
             {infoRequests.map((r) => {
               const daysAgo = Math.floor(
-                (Date.now() - r.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+                (Date.now() - r.createdAt.getTime()) / (1000 * 60 * 60 * 24),
               );
               return (
                 <li key={r.id} className="flex gap-4">
@@ -155,114 +174,156 @@ export default async function FounderLeadsPage({ params }: Params) {
         </section>
       )}
 
-      {leads.length === 0 ? (
-        <p className="mt-10 text-navy/60">
-          Cuando alguien diga “me interesa participar” en tu proyecto, va a aparecer acá.
-        </p>
-      ) : (
-        <ul className="mt-10 space-y-4">
-          {leads.map((l) => {
-            const isOpen = l.status === "OPEN";
-            const isCool = l.status === "CONTACTED";
-            const isClosed = ["CONVERTED", "DISMISSED", "EXPIRED"].includes(l.status);
-            const railClass = isOpen ? "bg-gold" : isCool ? "bg-navy/60" : "bg-navy/20";
-            const daysAgo = Math.floor(
-              (Date.now() - l.createdAt.getTime()) / (1000 * 60 * 60 * 24)
-            );
-            const amount = pricePerShare ? l.shareCountRequested * pricePerShare : null;
+      {/* ─── Leads (etapa 2 — interés concreto) ────────────────────── */}
+      <section className="mt-12">
+        <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
+          <p className="eyebrow !text-navy">
+            {infoRequests.length > 0 ? "02 · " : ""}Leads de compra
+            {leads.length > 0 ? ` (${leads.length})` : ""}
+          </p>
+          {leads.length > 0 && (
+            <p className="eyebrow !text-navy/40">Etapa 2 — interés concreto</p>
+          )}
+        </div>
 
-            return (
-              <li key={l.id} className="flex gap-4">
-                <span
-                  aria-hidden
-                  className={`shrink-0 w-[3px] self-stretch ${railClass}`}
-                />
-                <div className="flex-1 min-w-0 py-3 pr-2">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="font-sans text-navy text-lg leading-tight">
-                      {l.user.fullName}
-                    </span>
-                    <span className="eyebrow shrink-0">{daysAgo}d</span>
-                  </div>
+        {leads.length === 0 ? (
+          <p className="text-navy/60">
+            Cuando alguien diga “me interesa participar” en tu proyecto, va a aparecer
+            acá con el detalle del monto que pide.
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {leads.map((l) => {
+              const isOpen = l.status === "OPEN";
+              const isCool = l.status === "CONTACTED";
+              const isClosed = ["CONVERTED", "DISMISSED", "EXPIRED"].includes(l.status);
+              const railClass = isOpen ? "bg-gold" : isCool ? "bg-navy/60" : "bg-navy/20";
+              const daysAgo = Math.floor(
+                (Date.now() - l.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+              );
+              const amount = pricePerShare
+                ? l.shareCountRequested * pricePerShare
+                : null;
 
-                  <p className="mt-1 eyebrow truncate">
-                    <span
-                      className={`inline-flex items-center gap-1.5 ${
-                        isOpen ? "!text-gold" : isCool ? "!text-navy/70" : "!text-navy/50"
-                      }`}
-                    >
-                      <span aria-hidden className="text-base leading-none">
-                        {STATUS_SYMBOL[l.status] ?? "·"}
+              return (
+                <li key={l.id} className="flex gap-4">
+                  <span
+                    aria-hidden
+                    className={`shrink-0 w-[3px] self-stretch ${railClass}`}
+                  />
+                  <div className="flex-1 min-w-0 py-3 pr-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="font-sans text-navy text-lg leading-tight">
+                        {l.user.fullName}
                       </span>
-                      {STATUS_LABEL[l.status] ?? l.status}
-                    </span>
-                    {l.supportKind && (
-                      <>
-                        <span className="!text-navy/30"> · </span>
-                        <span className="!text-navy">
-                          {SUPPORT_KIND_LABEL[l.supportKind] ?? l.supportKind}
-                        </span>
-                      </>
-                    )}
-                    <span className="!text-navy/30"> · </span>
-                    <span className="!text-navy/70">{l.user.email}</span>
-                  </p>
-
-                  <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-sm">
-                    <div>
-                      <p className="eyebrow !text-navy/40">Acciones</p>
-                      <p className="mt-1 text-navy">{fmtInt(l.shareCountRequested)}</p>
+                      <span className="eyebrow shrink-0">{daysAgo}d</span>
                     </div>
-                    {amount !== null && (
+
+                    <p className="mt-1 eyebrow truncate">
+                      <span
+                        className={`inline-flex items-center gap-1.5 ${
+                          isOpen ? "!text-gold" : isCool ? "!text-navy/70" : "!text-navy/50"
+                        }`}
+                      >
+                        <span aria-hidden className="text-base leading-none">
+                          {STATUS_SYMBOL[l.status] ?? "·"}
+                        </span>
+                        {STATUS_LABEL[l.status] ?? l.status}
+                      </span>
+                      {l.supportKind && (
+                        <>
+                          <span className="!text-navy/30"> · </span>
+                          <span className="!text-navy">
+                            {SUPPORT_KIND_LABEL[l.supportKind] ?? l.supportKind}
+                          </span>
+                        </>
+                      )}
+                      <span className="!text-navy/30"> · </span>
+                      <span className="!text-navy/70">{l.user.email}</span>
+                    </p>
+
+                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-sm">
                       <div>
-                        <p className="eyebrow !text-navy/40">Equivalente</p>
-                        <p className="mt-1 text-navy">{fmtMoney(amount)}</p>
+                        <p className="eyebrow !text-navy/40">Acciones</p>
+                        <p className="mt-1 text-navy">{fmtInt(l.shareCountRequested)}</p>
+                      </div>
+                      {amount !== null && (
+                        <div>
+                          <p className="eyebrow !text-navy/40">Equivalente</p>
+                          <p className="mt-1 text-navy">{fmtMoney(amount)}</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="eyebrow !text-navy/40">Recibido</p>
+                        <p className="mt-1 text-navy">{formatDate(l.createdAt)}</p>
+                      </div>
+                    </div>
+
+                    {l.message.trim().length > 0 && (
+                      <p className="mt-3 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
+                        “{l.message}”
+                      </p>
+                    )}
+
+                    {!isClosed && l.pendingAssignments[0] && (
+                      <div className="mt-4 hairline p-3 bg-paper-light">
+                        <p className="eyebrow !text-gold">
+                          Asignación propuesta — esperando validación del admin
+                        </p>
+                        <p className="mt-2 text-sm text-navy/75">
+                          Le propusiste al equipo de AJDUT asignar{" "}
+                          <span className="font-mono text-navy">
+                            {fmtInt(l.pendingAssignments[0].shareCount)}
+                          </span>{" "}
+                          acciones. Cuando lo aprueben, se va a emitir el
+                          certificado y vas a recibir un email.
+                        </p>
                       </div>
                     )}
-                    <div>
-                      <p className="eyebrow !text-navy/40">Recibido</p>
-                      <p className="mt-1 text-navy">{formatDate(l.createdAt)}</p>
-                    </div>
+
+                    {!isClosed && l.pendingAssignments.length === 0 && (
+                      <div className="mt-4">
+                        <LeadActions
+                          leadId={l.id}
+                          status={l.status}
+                          shareCountRequested={l.shareCountRequested}
+                          investorName={l.user.fullName}
+                        />
+                      </div>
+                    )}
                   </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
 
-                  {l.message.trim().length > 0 && (
-                    <p className="mt-3 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
-                      “{l.message}”
-                    </p>
-                  )}
-
-                  {!isClosed && l.pendingAssignments[0] && (
-                    <div className="mt-4 hairline p-3 bg-paper-light">
-                      <p className="eyebrow !text-gold">
-                        Asignación propuesta — esperando validación del admin
-                      </p>
-                      <p className="mt-2 text-sm text-navy/75">
-                        Le propusiste al equipo de AJDUT asignar{" "}
-                        <span className="font-mono text-navy">
-                          {fmtInt(l.pendingAssignments[0].shareCount)}
-                        </span>{" "}
-                        acciones. Cuando lo aprueben, se va a emitir el
-                        certificado y vas a recibir un email.
-                      </p>
-                    </div>
-                  )}
-
-                  {!isClosed && l.pendingAssignments.length === 0 && (
-                    <div className="mt-4">
-                      <LeadActions
-                        leadId={l.id}
-                        status={l.status}
-                        shareCountRequested={l.shareCountRequested}
-                        investorName={l.user.fullName}
-                      />
-                    </div>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+function LeadStat({
+  label,
+  value,
+  hint,
+  urgent,
+}: {
+  label: string;
+  value: number;
+  hint?: string;
+  urgent?: boolean;
+}) {
+  return (
+    <div className="bg-paper p-5">
+      <p className="eyebrow">{label}</p>
+      <p
+        className={`mt-3 font-mono text-kpi leading-none ${
+          urgent && value > 0 ? "text-gold" : "text-navy"
+        }`}
+      >
+        {value}
+      </p>
+      {hint && <p className="mt-2 eyebrow !text-navy/50">{hint}</p>}
     </div>
   );
 }

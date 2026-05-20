@@ -8,11 +8,17 @@ import { getInfoRequest } from "@/lib/services/info-request";
 import { getUserPreferences } from "@/lib/preferences";
 import { getDict, getLocale, localeFor } from "@/lib/i18n";
 import { KpiCard } from "@/components/ui/KpiCard";
-import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { InterestForm } from "./InterestForm";
 import { InfoRequestForm } from "./InfoRequestForm";
 import { AdminApprovalActions } from "./AdminApprovalActions";
 import { ProjectBody } from "./ProjectBody";
+import { ProjectHero } from "@/components/project/ProjectHero";
+import { ProjectVideo } from "@/components/project/ProjectVideo";
+import { FundingBar } from "@/components/project/FundingBar";
+import { ProjectSection } from "@/components/project/ProjectSection";
+import { CapTableViz } from "@/components/project/CapTableViz";
+import { InlineParticipateCta } from "@/components/project/InlineParticipateCta";
+import { ParticipateFooterCta } from "@/components/project/ParticipateFooterCta";
 import { embedUrl } from "@/lib/utils/embed";
 import {
   formatCurrency,
@@ -59,7 +65,7 @@ export default async function ProjectPage({ params }: Params) {
   });
   if (!access.canView) notFound();
 
-  // Preferencias del viewer (MXN dual display + locale)
+  // Preferencias del viewer (MXN dual display + locale).
   const prefs = await getUserPreferences();
   const prefersMxn = prefs.currency === "MXN";
   const projectCurrencyForPrefs =
@@ -73,7 +79,7 @@ export default async function ProjectPage({ params }: Params) {
       : null;
   const partnerHasApprovedInfo = myInfoRequest?.status === "APPROVED";
 
-  // Métricas con visibility según rol
+  // Métricas con visibility según rol.
   const metrics = await prisma.startupMetric.findMany({
     where: {
       startupProfileId: project.startupProfile?.id,
@@ -82,8 +88,7 @@ export default async function ProjectPage({ params }: Params) {
     orderBy: { asOf: "desc" },
   });
 
-  // Reportes publicados por el founder. Visibles para cualquier viewer
-  // del proyecto.
+  // Reportes publicados por el founder.
   const reports = await prisma.report.findMany({
     where: { projectId: project.id },
     orderBy: { publishedAt: "desc" },
@@ -99,7 +104,7 @@ export default async function ProjectPage({ params }: Params) {
     },
   });
 
-  // Snapshot de participaciones
+  // Snapshot de participaciones.
   const totalShares = project.totalShares;
   const platformShares = project.participations
     .filter((p) => p.isPlatformStake)
@@ -111,7 +116,7 @@ export default async function ProjectPage({ params }: Params) {
     .filter((p) => p.status === "AVAILABLE")
     .reduce((s, p) => s + p.shareCount, 0);
 
-  // Cap table agrupado por dueño (solo para roles permitidos)
+  // Cap table agrupado por dueño (solo para roles permitidos).
   type CapRow = { holder: string; isPlatform: boolean; shares: number };
   const capTable: CapRow[] = [];
   if (access.canSeeCapTable) {
@@ -149,7 +154,7 @@ export default async function ProjectPage({ params }: Params) {
     capTable.sort((a, b) => b.shares - a.shares);
   }
 
-  // Métricas: agrupar por kind y mostrar el último valor
+  // Métricas: agrupar por kind y mostrar el último valor.
   type MetricRow = { kind: string; label: string; value: string; unit: string; asOf: Date };
   const latestByKind = new Map<string, MetricRow>();
   for (const m of metrics) {
@@ -157,9 +162,6 @@ export default async function ProjectPage({ params }: Params) {
       latestByKind.set(m.kind, {
         kind: m.kind,
         label: m.customLabel ?? METRIC_LABEL[m.kind] ?? m.kind,
-        // Mantenemos es-MX en raw value para no romper tests existentes que
-        // matchean strings con separadores específicos. El UI render usa
-        // `formatNumber(value, undefined, locale)` directamente en otros lados.
         value: Number(m.value).toLocaleString(locale),
         unit: m.unit,
         asOf: m.asOf,
@@ -169,7 +171,10 @@ export default async function ProjectPage({ params }: Params) {
 
   // ¿Tiene el viewer participaciones en este proyecto?
   const myParticipations =
-    access.role === "PARTNER" || access.role === "ADMIN" || access.role === "OWNER" || access.role === "CO_ADMIN"
+    access.role === "PARTNER" ||
+    access.role === "ADMIN" ||
+    access.role === "OWNER" ||
+    access.role === "CO_ADMIN"
       ? project.participations.filter((p) => p.currentOwnerId === user.id)
       : [];
 
@@ -183,6 +188,15 @@ export default async function ProjectPage({ params }: Params) {
     valuationNum && totalShares > 0 ? valuationNum / totalShares : null;
   const myValue = pricePerShare !== null ? myShares * pricePerShare : null;
   const projectCurrency = project.startupProfile?.valuationCurrency ?? "USD";
+
+  // Fondeo: el bar visible refleja lo que el viewer puede ver.
+  const visibleAssigned = access.canSeeCapTable
+    ? assignedShares
+    : assignedShares - platformShares;
+  const fundedPct =
+    totalShares > 0
+      ? Math.min(100, Math.max(0, (visibleAssigned / totalShares) * 100))
+      : 0;
 
   function humanReportPeriod(period: string, year: number): string {
     if (period === "ANNUAL") return `${t.reports.annual} ${year}`;
@@ -205,153 +219,143 @@ export default async function ProjectPage({ params }: Params) {
     }
   }
 
-  // ─── Opción A: scroll único.
-  const sections: { title?: string; node: React.ReactNode }[] = [];
+  // ───────────── Gating de secciones de letra-chica ──────────────────
+  const isPrivilegedReaderForPolicies =
+    access.role === "OWNER" ||
+    access.role === "CO_ADMIN" ||
+    access.role === "ADMIN";
+  const canSeePoliciesGated =
+    isPrivilegedReaderForPolicies || partnerHasApprovedInfo || myShares > 0;
 
-  const visibleAssigned = access.canSeeCapTable
-    ? assignedShares
-    : assignedShares - platformShares;
-  const fundedPct =
-    totalShares > 0
-      ? Math.min(100, Math.max(0, (visibleAssigned / totalShares) * 100))
-      : 0;
+  const canSeeTeam = access.role !== "PARTNER";
 
-  // Participaciones: los números del proyecto.
-  const hasValuation = !!project.startupProfile?.preMoneyValuation;
-  const hasTargetRaise = !!project.startupProfile?.targetRaiseAmount;
-  const participationsCols = 3 + (hasValuation ? 1 : 0) + (hasTargetRaise ? 1 : 0);
-  const participationsColClass =
-    participationsCols >= 5
-      ? "lg:grid-cols-5"
-      : participationsCols === 4
-      ? "lg:grid-cols-4"
-      : "lg:grid-cols-3";
-  sections.push({
-    title: t.sections.participations,
-    node: (
-      <div
-        className={`grid grid-cols-1 sm:grid-cols-2 gap-px bg-line ${participationsColClass}`}
-      >
-        <KpiCard
-          label={t.participations.total}
-          value={formatNumber(totalShares, undefined, locale)}
-          hint={t.participations.totalHint}
-        />
-        <KpiCard
-          label={t.participations.assigned}
-          value={formatNumber(
-            access.canSeeCapTable ? assignedShares : assignedShares - platformShares,
-            undefined,
-            locale
-          )}
-          hint={`${formatNumber(
-            access.canSeeCapTable ? assignedShares : assignedShares - platformShares,
-            undefined,
-            locale
-          )} ${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
-        />
-        <KpiCard
-          label={t.participations.available}
-          value={formatNumber(availableShares, undefined, locale)}
-          hint={`${formatNumber(availableShares, undefined, locale)} ${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
-        />
-        {project.startupProfile?.preMoneyValuation && (() => {
-          const amt = Number(project.startupProfile.preMoneyValuation);
-          const dual = showMxnDual
-            ? formatDualCurrency(amt, true, 0)
-            : null;
-          return (
-            <KpiCard
-              label={t.participations.valuation}
-              value={formatCurrency(
-                amt,
-                project.startupProfile.valuationCurrency,
-                0,
-                locale
-              )}
-              hint={dual?.secondary ?? t.participations.valuationHint}
-            />
-          );
-        })()}
-        {project.startupProfile?.targetRaiseAmount && (() => {
-          const amt = Number(project.startupProfile.targetRaiseAmount);
-          const dual = showMxnDual
-            ? formatDualCurrency(amt, true, 0)
-            : null;
-          return (
-            <KpiCard
-              label={t.participations.targetRaise}
-              value={formatCurrency(
-                amt,
-                project.startupProfile.valuationCurrency,
-                0,
-                locale
-              )}
-              hint={dual?.secondary ?? t.participations.targetRaiseHint}
-            />
-          );
-        })()}
-      </div>
-    ),
-  });
+  const isPrivilegedReader =
+    access.role === "OWNER" ||
+    access.role === "CO_ADMIN" ||
+    access.role === "ADMIN";
+  const canSeePrivateDocs =
+    isPrivilegedReader || partnerHasApprovedInfo || myShares > 0;
 
-  // Barra de fondeo: cuánto del total ya está colocado.
-  sections.push({
-    title: t.sections.funding,
-    node: (
-      <div>
-        <div className="flex items-baseline justify-between">
-          <p className="eyebrow !text-navy/40">
-            {formatNumber(visibleAssigned, undefined, locale)} {dict.projectList.of}{" "}
-            {formatNumber(totalShares, undefined, locale)} {t.funding.placedOf}
-          </p>
-        </div>
-        <div className="mt-2 h-1.5 w-full bg-line">
-          <div
-            className="h-full bg-navy transition-[width]"
-            style={{ width: `${fundedPct}%` }}
-          />
-        </div>
+  // ───────────── CTA principal: ¿qué pintamos en el hero? ────────────
+  // Logica: la prioridad es PARTNER → InfoRequest → InterestForm; el resto
+  // (admin/owner) entra directo a "Me interesa participar". Si no hay
+  // acciones, el botón no aparece (la sección de cierre lo explica).
+  type HeroCta = { kind: "primary"; label: string; href?: string; asText?: boolean };
+  const heroCtas: HeroCta[] = [];
+  const canCtaShow = access.canManifestInterest && availableShares > 0;
+  if (canCtaShow) {
+    if (access.role === "PARTNER") {
+      if (myInfoRequest?.status === "PENDING") {
+        heroCtas.push({ kind: "primary", label: t.waitingApproval, asText: true });
+      } else if (myInfoRequest?.status === "APPROVED") {
+        heroCtas.push({ kind: "primary", label: t.interest, href: "#comprar" });
+      } else {
+        heroCtas.push({ kind: "primary", label: t.requestInfo, href: "#info-request" });
+      }
+    } else {
+      heroCtas.push({ kind: "primary", label: t.interest, href: "#comprar" });
+    }
+  }
 
-        {pricePerShare !== null && (
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
-            <KpiCard
-              label={t.funding.pricePerShare}
-              value={formatCurrency(pricePerShare, projectCurrency, 2, locale)}
-              hint={
-                showMxnDual
-                  ? (formatDualCurrency(pricePerShare, true).secondary ??
-                    t.funding.pricePerShareHint)
-                  : t.funding.pricePerShareHint
-              }
-            />
-            <KpiCard
-              label={t.funding.annualReturnPerShare}
-              value="—"
-              hint={t.funding.annualReturnPerShareHint}
-            />
-          </div>
-        )}
-      </div>
-    ),
-  });
+  // Acciones satélite (esquinita superior). Editar y chat.
+  type SatAct = { kind: "outline" | "ghost"; label: string; href?: string };
+  const satellite: SatAct[] = [];
+  if (
+    myShares > 0 ||
+    access.role === "OWNER" ||
+    access.role === "CO_ADMIN" ||
+    access.role === "ADMIN"
+  ) {
+    satellite.push({
+      kind: "ghost",
+      label: t.openChat,
+      href: `/proyectos/${project.slug}/chat`,
+    });
+  }
+  if (access.canEdit) {
+    satellite.push({
+      kind: "outline",
+      label: t.editInfo,
+      href: `/founder/${project.slug}/editar`,
+    });
+  }
 
-  // Resumen: problema / solución / modelo + descripción.
+  // ───────────── Stats de la banda unificada ────────────────────────
+  const fundingStats: { label: string; value: string; hint?: string }[] = [
+    {
+      label: t.participations.available,
+      value: formatNumber(availableShares, undefined, locale),
+      hint: `${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`,
+    },
+  ];
+  if (pricePerShare !== null) {
+    fundingStats.push({
+      label: t.funding.pricePerShare,
+      value: formatCurrency(pricePerShare, projectCurrency, 2, locale),
+      hint:
+        showMxnDual
+          ? (formatDualCurrency(pricePerShare, true).secondary ??
+            t.funding.pricePerShareHint)
+          : t.funding.pricePerShareHint,
+    });
+  }
+  if (project.startupProfile?.preMoneyValuation) {
+    const amt = Number(project.startupProfile.preMoneyValuation);
+    const dual = showMxnDual ? formatDualCurrency(amt, true, 0) : null;
+    fundingStats.push({
+      label: t.participations.valuation,
+      value: formatCurrency(amt, projectCurrency, 0, locale),
+      hint: dual?.secondary ?? t.participations.valuationHint,
+    });
+  }
+  if (project.startupProfile?.targetRaiseAmount) {
+    const amt = Number(project.startupProfile.targetRaiseAmount);
+    const dual = showMxnDual ? formatDualCurrency(amt, true, 0) : null;
+    fundingStats.push({
+      label: t.participations.targetRaise,
+      value: formatCurrency(amt, projectCurrency, 0, locale),
+      hint: dual?.secondary ?? t.participations.targetRaiseHint,
+    });
+  }
+
+  // ───────────── Composición de secciones ────────────────────────────
+  // Definimos las secciones como una lista plana con tono. Se renderiza en
+  // orden, con número de orden automático. El tono dicta el peso visual.
+  type SectionDef = {
+    /** `string | undefined` porque `t.sections` es `Record<string, string>` y
+     *  bajo noUncheckedIndexedAccess los lookups devuelven posible undefined. */
+    title: string | undefined;
+    tone: "vitrina" | "ref";
+    /** Pegamos el "próximo paso" inline solo en algunas secciones vitrina. */
+    withInlineCta?: boolean;
+    node: React.ReactNode;
+  };
+  const sections: SectionDef[] = [];
+
+  // — Resumen — la sección que más "vende".
   if (project.startupProfile) {
+    const hasAnySummary =
+      !!project.startupProfile.problemStatement ||
+      !!project.startupProfile.solutionStatement ||
+      !!project.startupProfile.businessModel ||
+      !!project.description;
     sections.push({
       title: t.sections.summary,
+      tone: "vitrina",
+      withInlineCta: hasAnySummary && canCtaShow,
       node: (
         <>
-          <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
-            <Block title={t.summary.problem} body={project.startupProfile.problemStatement} />
-            <Block title={t.summary.solution} body={project.startupProfile.solutionStatement} />
-            <Block
-              title={t.summary.businessModel}
-              body={project.startupProfile.businessModel}
-            />
-          </div>
-          {project.description && (
-            <div className="mt-6">
+          {hasAnySummary ? (
+            <div className="grid grid-cols-1 gap-8 sm:gap-10 md:grid-cols-3">
+              <Block title={t.summary.problem} body={project.startupProfile.problemStatement} />
+              <Block title={t.summary.solution} body={project.startupProfile.solutionStatement} />
+              <Block title={t.summary.businessModel} body={project.startupProfile.businessModel} />
+            </div>
+          ) : (
+            <p className="text-navy/60 leading-relaxed">{t.emptySection}</p>
+          )}
+          {project.description && project.description.trim() !== "" && (
+            <div className="mt-10 hairline-t pt-8 max-w-3xl">
               <p className="eyebrow mb-3">{t.summary.description}</p>
               <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                 {project.description}
@@ -361,13 +365,110 @@ export default async function ProjectPage({ params }: Params) {
         </>
       ),
     });
-    // "Resumen" va primero
-    sections.unshift(sections.pop()!);
   }
 
+  // — Estructura y respaldo (vitrina).
+  if (
+    project.startupProfile?.assetBackingNote ||
+    project.startupProfile?.equityStructureNote
+  ) {
+    sections.push({
+      title: t.sections.structure,
+      tone: "vitrina",
+      withInlineCta: canCtaShow,
+      node: (
+        <div className="grid grid-cols-1 gap-8 sm:gap-10 md:grid-cols-2">
+          {project.startupProfile.assetBackingNote && (
+            <Block
+              title={t.structure.assetBacking}
+              body={project.startupProfile.assetBackingNote}
+            />
+          )}
+          {project.startupProfile.equityStructureNote && (
+            <Block
+              title={t.structure.equityStructure}
+              body={project.startupProfile.equityStructureNote}
+            />
+          )}
+        </div>
+      ),
+    });
+  }
+
+  // — Equipo (vitrina, gated).
+  if (canSeeTeam && (project.startupProfile?.founders.length ?? 0) > 0) {
+    sections.push({
+      title: t.sections.team,
+      tone: "vitrina",
+      node: (
+        <ul className="space-y-10 max-w-3xl">
+          {project.startupProfile!.founders.map((f) => (
+            <li key={f.id} className="space-y-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <span className="text-navy text-lg break-words">{f.fullName}</span>
+                <span className="font-mono text-navy text-sm">
+                  {formatPercent(Number(f.equityPercent), 2, locale)}
+                </span>
+              </div>
+              <p className="eyebrow !text-navy/60">{f.role}</p>
+              {f.bio && (
+                <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                  {f.bio}
+                </p>
+              )}
+              {f.references && (
+                <div className="mt-3 hairline-t pt-3">
+                  {/* TODO i18n: campo libre del founder; mantenemos label en es por scope. */}
+                  <p className="eyebrow mb-1">Referencias</p>
+                  <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                    {f.references}
+                  </p>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      ),
+    });
+  }
+
+  // — Hitos (vitrina).
+  if ((project.startupProfile?.milestones.length ?? 0) > 0) {
+    sections.push({
+      title: t.sections.milestones,
+      tone: "vitrina",
+      node: (
+        <ul className="hairline-t">
+          {project.startupProfile!.milestones.map((m) => (
+            <li
+              key={m.id}
+              className="hairline-b grid grid-cols-12 items-baseline gap-3 py-4"
+            >
+              <span className="col-span-12 sm:col-span-6 text-navy">
+                {m.title}
+              </span>
+              <span className="col-span-6 sm:col-span-3 eyebrow !text-navy">
+                {t.milestoneStatus[m.status] ?? m.status}
+              </span>
+              <span className="col-span-6 sm:col-span-3 eyebrow text-right">
+                {m.achievedAt
+                  ? formatDate(m.achievedAt, locale)
+                  : m.targetDate
+                  ? `${t.milestonesTargetPrefix} ${formatDate(m.targetDate, locale)}`
+                  : "—"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ),
+    });
+  }
+
+  // — Tu participación (ref, solo si tenés acciones).
   if (myShares > 0) {
     sections.push({
       title: t.sections.yourParticipation,
+      tone: "ref",
       node: (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-line">
@@ -406,7 +507,7 @@ export default async function ProjectPage({ params }: Params) {
           </div>
 
           {myParticipations.length > 0 && (
-            <ul className="mt-4 space-y-5">
+            <ul className="mt-6 space-y-5">
               <li className="hidden sm:grid grid-cols-12 gap-3 pb-1">
                 <span className="sm:col-span-5 eyebrow !text-navy/40">
                   {t.yours.colSerial}
@@ -422,10 +523,7 @@ export default async function ProjectPage({ params }: Params) {
                 </span>
               </li>
               {myParticipations.map((p) => (
-                <li
-                  key={p.id}
-                  className="grid grid-cols-12 items-center gap-3"
-                >
+                <li key={p.id} className="grid grid-cols-12 items-center gap-3">
                   <div className="col-span-12 sm:col-span-5 min-w-0">
                     <p className="font-mono text-sm text-navy break-all">
                       {p.serialCode}
@@ -460,7 +558,7 @@ export default async function ProjectPage({ params }: Params) {
           )}
 
           {!access.canSeeCapTable && (
-            <p className="mt-4 eyebrow !text-navy/40">
+            <p className="mt-6 eyebrow !text-navy/40 max-w-2xl">
               {t.yours.partnersOnlyOwnPositionNote}
             </p>
           )}
@@ -469,154 +567,11 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  if (
-    project.startupProfile?.assetBackingNote ||
-    project.startupProfile?.equityStructureNote
-  ) {
-    sections.push({
-      title: t.sections.structure,
-      node: (
-        <div className="space-y-6">
-          {project.startupProfile.assetBackingNote && (
-            <div>
-              <p className="eyebrow mb-3">{t.structure.assetBacking}</p>
-              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
-                {project.startupProfile.assetBackingNote}
-              </p>
-            </div>
-          )}
-          {project.startupProfile.equityStructureNote && (
-            <div>
-              <p className="eyebrow mb-3">{t.structure.equityStructure}</p>
-              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
-                {project.startupProfile.equityStructureNote}
-              </p>
-            </div>
-          )}
-        </div>
-      ),
-    });
-  }
-
-  const isPrivilegedReaderForPolicies =
-    access.role === "OWNER" ||
-    access.role === "CO_ADMIN" ||
-    access.role === "ADMIN";
-  const canSeePoliciesGated =
-    isPrivilegedReaderForPolicies || partnerHasApprovedInfo || myShares > 0;
-  if (
-    canSeePoliciesGated &&
-    (project.startupProfile?.policyShares ||
-      project.startupProfile?.policyDividends ||
-      project.startupProfile?.dividendsFrequency)
-  ) {
-    sections.push({
-      title: t.sections.policies,
-      node: (
-        <div className="space-y-6">
-          {project.startupProfile.policyShares && (
-            <div>
-              <p className="eyebrow mb-3">{t.policies.shares}</p>
-              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
-                {project.startupProfile.policyShares}
-              </p>
-            </div>
-          )}
-          {project.startupProfile.policyDividends && (
-            <div>
-              <p className="eyebrow mb-3">{t.policies.dividends}</p>
-              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
-                {project.startupProfile.policyDividends}
-              </p>
-            </div>
-          )}
-          {project.startupProfile.dividendsFrequency && (
-            <div>
-              <p className="eyebrow mb-3">{t.policies.frequency}</p>
-              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
-                {project.startupProfile.dividendsFrequency}
-              </p>
-            </div>
-          )}
-        </div>
-      ),
-    });
-  }
-
-  const canSeeTeam = access.role !== "PARTNER";
-
-  if (canSeeTeam && (project.startupProfile?.founders.length ?? 0) > 0) {
-    sections.push({
-      title: t.sections.team,
-      node: (
-        <ul className="space-y-6">
-          {project.startupProfile!.founders.map((f) => (
-            <li key={f.id} className="space-y-3">
-              <div className="grid grid-cols-12 items-baseline gap-3">
-                <span className="col-span-12 sm:col-span-6 text-navy break-words">
-                  {f.fullName}
-                </span>
-                <span className="col-span-6 sm:col-span-3 eyebrow">
-                  {f.role}
-                </span>
-                <span className="col-span-6 sm:col-span-3 font-mono text-navy text-right">
-                  {formatPercent(Number(f.equityPercent), 2, locale)}
-                </span>
-              </div>
-              {f.bio && (
-                <p className="text-navy/85 leading-relaxed whitespace-pre-line">
-                  {f.bio}
-                </p>
-              )}
-              {f.references && (
-                <div>
-                  {/* TODO i18n: campo libre del founder; mantenemos label en es por scope. */}
-                  <p className="eyebrow mb-1">Referencias</p>
-                  <p className="text-navy/85 leading-relaxed whitespace-pre-line">
-                    {f.references}
-                  </p>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      ),
-    });
-  }
-
-  if ((project.startupProfile?.milestones.length ?? 0) > 0) {
-    sections.push({
-      title: t.sections.milestones,
-      node: (
-        <ul className="space-y-4">
-          {project.startupProfile!.milestones.map((m) => (
-            <li
-              key={m.id}
-              className="grid grid-cols-12 items-baseline gap-3"
-            >
-              <span className="col-span-12 sm:col-span-6 text-navy">
-                {m.title}
-              </span>
-              <span className="col-span-6 sm:col-span-3 eyebrow !text-navy">
-                {t.milestoneStatus[m.status] ?? m.status}
-              </span>
-              <span className="col-span-6 sm:col-span-3 eyebrow text-right">
-                {m.achievedAt
-                  ? formatDate(m.achievedAt, locale)
-                  : m.targetDate
-                  ? `${t.milestonesTargetPrefix} ${formatDate(m.targetDate, locale)}`
-                  : "—"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ),
-    });
-  }
-
+  // — Métricas (ref).
   if (latestByKind.size > 0) {
     sections.push({
       title: t.sections.metrics,
+      tone: "ref",
       node: (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-4">
           {Array.from(latestByKind.values()).map((m) => (
@@ -632,13 +587,7 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  const isPrivilegedReader =
-    access.role === "OWNER" ||
-    access.role === "CO_ADMIN" ||
-    access.role === "ADMIN";
-  const canSeePrivateDocs =
-    isPrivilegedReader || partnerHasApprovedInfo || myShares > 0;
-
+  // — Documentos (ref, gated).
   if (
     canSeePrivateDocs &&
     (project.startupProfile?.pitchDeckStorageKey ||
@@ -651,8 +600,9 @@ export default async function ProjectPage({ params }: Params) {
   ) {
     sections.push({
       title: t.sections.documents,
+      tone: "ref",
       node: (
-        <ul className="space-y-4">
+        <ul className="hairline-t">
           {project.startupProfile.pitchDeckStorageKey && (
             <DocRow label={t.documents.pitchDeck} href={project.startupProfile.pitchDeckStorageKey} openLabel={t.documents.openLink} />
           )}
@@ -679,13 +629,18 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
+  // — Reportes (ref, gated).
   if (canSeePrivateDocs && reports.length > 0) {
     sections.push({
       title: t.sections.reports,
+      tone: "ref",
       node: (
-        <ul className="space-y-4">
+        <ul className="hairline-t">
           {reports.map((r) => (
-            <li key={r.id} className="grid grid-cols-12 items-baseline gap-x-3 gap-y-1">
+            <li
+              key={r.id}
+              className="hairline-b grid grid-cols-12 items-baseline gap-x-3 gap-y-1 py-4"
+            >
               <span className="col-span-12 sm:col-span-6 text-navy break-words">
                 {r.title}
               </span>
@@ -715,30 +670,60 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  if (access.canSeeCapTable && capTable.length > 0) {
+  // — Políticas (ref, gated).
+  if (
+    canSeePoliciesGated &&
+    (project.startupProfile?.policyShares ||
+      project.startupProfile?.policyDividends ||
+      project.startupProfile?.dividendsFrequency)
+  ) {
     sections.push({
-      title: t.sections.capTable,
+      title: t.sections.policies,
+      tone: "ref",
       node: (
-        <ul className="space-y-4">
-          {capTable.map((r, i) => (
-            <li
-              key={i}
-              className="grid grid-cols-12 items-baseline gap-3"
-            >
-              <span className="col-span-12 sm:col-span-6 text-navy break-words">
-                {r.holder}
-                {r.isPlatform && <span className="ml-2 text-gold">◆</span>}
-              </span>
-              <span className="col-span-12 sm:col-span-6 font-mono text-navy text-right">
-                {formatNumber(r.shares, undefined, locale)} {dict.projectList.of}{" "}
-                {formatNumber(totalShares, undefined, locale)}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 max-w-4xl">
+          {project.startupProfile.policyShares && (
+            <Block title={t.policies.shares} body={project.startupProfile.policyShares} />
+          )}
+          {project.startupProfile.policyDividends && (
+            <Block
+              title={t.policies.dividends}
+              body={project.startupProfile.policyDividends}
+            />
+          )}
+          {project.startupProfile.dividendsFrequency && (
+            <Block
+              title={t.policies.frequency}
+              body={project.startupProfile.dividendsFrequency}
+            />
+          )}
+        </div>
       ),
     });
   }
+
+  // — Cap table (ref, gated). Visualización tipo histograma horizontal.
+  if (access.canSeeCapTable && capTable.length > 0) {
+    sections.push({
+      title: t.sections.capTable,
+      tone: "ref",
+      node: (
+        <CapTableViz
+          rows={capTable}
+          totalShares={totalShares}
+          ofTotalLabel={`${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
+          formatShares={(n) => formatNumber(n, undefined, locale)}
+          formatPct={(p) => formatPercent(p, 2, locale)}
+          othersLabel={t.capTable.others}
+        />
+      ),
+    });
+  }
+
+  // Embed del video — visible para cualquier viewer del proyecto.
+  const videoEmbed = project.startupProfile?.videoUrl
+    ? embedUrl(project.startupProfile.videoUrl)
+    : null;
 
   return (
     <div>
@@ -746,98 +731,47 @@ export default async function ProjectPage({ params }: Params) {
         {t.back}
       </Link>
 
-      <header className="mt-4 hairline-b pb-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-        <div className="max-w-2xl min-w-0">
-          <p className="eyebrow">
-            {t.kind[project.kind] ?? project.kind}
-            {project.startupProfile?.sector ? ` · ${project.startupProfile.sector}` : ""}
-            {project.startupProfile?.stage && (() => {
-              const stageKey = project.startupProfile.stage;
-              const stageLabel = dict.projectList.stage[stageKey] ?? stageKey;
-              const info = t.stageInfo[stageKey];
-              return (
-                <>
-                  {" · "}
-                  {stageLabel}
-                  {info && <InfoTooltip text={info} />}
-                </>
-              );
-            })()}
-            {project.startupProfile?.location ? ` · ${project.startupProfile.location}` : ""}
-          </p>
-          <h1 className="font-sans mt-4 text-h1 text-navy">{project.name}</h1>
-          {project.startupProfile?.oneLiner && (
-            <p className="mt-3 text-navy/75 leading-relaxed text-lg">
-              “{project.startupProfile.oneLiner}”
-            </p>
-          )}
-          <p className="mt-3">
-            <span className="eyebrow !text-navy/40">{t.founderLabel}</span>{" "}
-            <span className="ml-2 text-navy">{project.owner.fullName}</span>
-          </p>
-          {project.startupProfile?.websiteUrl && (
-            <a
-              href={project.startupProfile.websiteUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block eyebrow hover:!text-gold"
-            >
-              {project.startupProfile.websiteUrl
-                .replace(/^https?:\/\//, "")
-                .replace(/\/$/, "")}{" "}
-              ↗
-            </a>
-          )}
-        </div>
-        <div className="flex flex-col gap-3 shrink-0 sm:flex-row sm:items-center">
-          {(myShares > 0 ||
-            access.role === "OWNER" ||
-            access.role === "CO_ADMIN" ||
-            access.role === "ADMIN") && (
-            <Link
-              href={`/proyectos/${project.slug}/chat` as Route}
-              className="eyebrow hover:!text-gold self-end sm:self-center"
-            >
-              {t.openChat}
-            </Link>
-          )}
-          {access.canManifestInterest && availableShares > 0 && (
-            <>
-              {access.role === "PARTNER" ? (
-                myInfoRequest?.status === "PENDING" ? (
-                  <span className="eyebrow !text-navy/60">
-                    {t.waitingApproval}
-                  </span>
-                ) : myInfoRequest?.status === "APPROVED" ? (
-                  <a href="#comprar" className="btn-primary text-center">
-                    {t.interest}
-                  </a>
-                ) : (
-                  <a href="#info-request" className="btn-primary text-center">
-                    {t.requestInfo}
-                  </a>
-                )
-              ) : (
-                <a href="#comprar" className="btn-primary text-center">
-                  {t.interest}
-                </a>
-              )}
-            </>
-          )}
-          {access.canEdit && (
-            <Link
-              href={`/founder/${project.slug}/editar` as Route}
-              className="btn-outline text-center"
-            >
-              {t.editInfo}
-            </Link>
-          )}
-        </div>
-      </header>
+      <div className="mt-4">
+        <ProjectHero
+          contextEyebrow={t.heroContextEyebrow}
+          eyebrow={{
+            kind: t.kind[project.kind] ?? project.kind,
+            sector: project.startupProfile?.sector,
+            stage: project.startupProfile?.stage
+              ? {
+                  key: project.startupProfile.stage,
+                  label:
+                    dict.projectList.stage[project.startupProfile.stage] ??
+                    project.startupProfile.stage,
+                }
+              : null,
+            stageInfo: t.stageInfo,
+            location: project.startupProfile?.location,
+          }}
+          name={project.name}
+          oneLiner={project.startupProfile?.oneLiner}
+          founderName={project.owner.fullName}
+          founderRoleLabel={t.founderLabel}
+          websiteUrl={project.startupProfile?.websiteUrl}
+          actions={heroCtas}
+          satellite={satellite}
+        />
+      </div>
 
-      {/* PARTNER con InfoRequest REJECTED: mensaje visible debajo del header. */}
+      {/* Video como primera impresión, justo bajo el hero — solo si hay URL. */}
+      {project.startupProfile?.videoUrl && (
+        <ProjectVideo
+          embedSrc={videoEmbed}
+          rawUrl={project.startupProfile.videoUrl}
+          titlePrefix={t.videoTitlePrefix}
+          projectName={project.name}
+          openLabel={t.openVideo}
+        />
+      )}
+
+      {/* PARTNER con InfoRequest REJECTED: aviso visible. */}
       {access.role === "PARTNER" && myInfoRequest?.status === "REJECTED" && (
-        <div className="mt-5 hairline p-4 bg-paper-light">
+        <div className="mt-8 hairline p-4 bg-paper-light">
           <p className="eyebrow">{t.requestNotApproved}</p>
           {myInfoRequest.reviewNote && (
             <p className="mt-2 text-navy/75 leading-relaxed whitespace-pre-line text-sm">
@@ -847,46 +781,16 @@ export default async function ProjectPage({ params }: Params) {
         </div>
       )}
 
-      {/* Video del proyecto: visible para cualquier viewer con canView. */}
-      {project.startupProfile?.videoUrl && (() => {
-        const embed = embedUrl(project.startupProfile.videoUrl);
-        if (embed) {
-          return (
-            <div className="mt-6">
-              <div className="hairline relative" style={{ paddingTop: "56.25%" }}>
-                <iframe
-                  src={embed}
-                  title={`${t.videoTitlePrefix} ${project.name}`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
-                />
-              </div>
-            </div>
-          );
-        }
-        return (
-          <p className="mt-6">
-            <a
-              href={project.startupProfile.videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="eyebrow hover:!text-gold"
-            >
-              {t.openVideo}
-            </a>
-          </p>
-        );
-      })()}
-
-      {/* Panel de moderación: admin viendo un proyecto PENDING_APPROVAL */}
+      {/* Panel de moderación: admin sobre un proyecto PENDING_APPROVAL. */}
       {access.role === "ADMIN" && project.status === "PENDING_APPROVAL" && (
-        <div className="mt-5">
-          {/* TODO i18n: panel admin queda en español por scope */}
+        <div className="mt-8">
+          {/* TODO i18n: panel admin queda en español por scope. */}
           <AdminApprovalActions projectSlug={project.slug} />
         </div>
       )}
 
+      {/* Forms — viven antes del cuerpo y, cuando abren su hash, ProjectBody
+          oculta el resto del scroll para foco total. */}
       {access.canManifestInterest && availableShares > 0 && (
         <>
           {access.role === "PARTNER" && !partnerHasApprovedInfo && (
@@ -922,30 +826,71 @@ export default async function ProjectPage({ params }: Params) {
         </>
       )}
 
-      {sections.length > 0 && (
-        <ProjectBody hideOnHash={["#comprar", "#info-request"]}>
-          {sections.map((s, i) => (
-            <section
-              key={i}
-              className={
-                i === 0
-                  ? "pt-6 sm:pt-7"
-                  : "hairline-t mt-7 pt-6 sm:mt-8 sm:pt-7"
-              }
-            >
-              {s.title && (
-                <p className="font-mono text-sm tracking-wider mb-4">
-                  <span className="text-gold">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>{" "}
-                  <span className="text-navy">· {s.title}</span>
-                </p>
-              )}
-              {s.node}
-            </section>
-          ))}
-        </ProjectBody>
-      )}
+      {/* Cuerpo de la ficha — focus mode oculta esto si hay form abierto. */}
+      <ProjectBody hideOnHash={["#comprar", "#info-request"]}>
+        {/* Banda de números: el headline grande, la barra y los KPIs juntos. */}
+        <section className="mt-12 sm:mt-16">
+          <p className="font-mono text-sm tracking-wider mb-5">
+            <span className="text-gold">00</span>
+            <span className="ml-2 text-navy">· {t.sections.funding}</span>
+          </p>
+          <FundingBar
+            headline={{
+              placed: formatNumber(visibleAssigned, undefined, locale),
+              total: formatNumber(totalShares, undefined, locale),
+              suffix: t.funding.placedHeadlineSuffix,
+            }}
+            percent={fundedPct}
+            stats={fundingStats}
+          />
+        </section>
+
+        {sections.map((s, i) => (
+          <ProjectSection
+            key={i}
+            index={i + 1}
+            title={s.title}
+            tone={s.tone}
+            isFirst={false}
+            trailingCta={
+              s.withInlineCta && heroCtas[0]?.href ? (
+                <InlineParticipateCta
+                  label={heroCtas[0].label}
+                  href={heroCtas[0].href}
+                  eyebrow={t.nextStep}
+                />
+              ) : undefined
+            }
+          >
+            {s.node}
+          </ProjectSection>
+        ))}
+
+        {/* Cierre marketing: pregunta + botón grande. */}
+        {canCtaShow ? (
+          <ParticipateFooterCta
+            eyebrow={t.footerCta.eyebrow}
+            question={t.footerCta.question}
+            body={t.footerCta.body}
+            actions={
+              heroCtas[0]?.href
+                ? [
+                    { kind: "primary", label: heroCtas[0].label, href: heroCtas[0].href },
+                  ]
+                : heroCtas[0]?.asText
+                ? [{ kind: "muted", label: heroCtas[0].label }]
+                : []
+            }
+          />
+        ) : (
+          <ParticipateFooterCta
+            eyebrow={t.footerCta.notAvailableEyebrow}
+            question={t.footerCta.notAvailableTitle}
+            body={t.footerCta.notAvailableBody}
+            actions={[]}
+          />
+        )}
+      </ProjectBody>
     </div>
   );
 }
@@ -983,7 +928,7 @@ function Block({ title, body }: { title: string; body: string }) {
 
 function DocRow({ label, href, openLabel }: { label: string; href: string; openLabel: string }) {
   return (
-    <li className="grid grid-cols-12 items-baseline gap-3">
+    <li className="hairline-b grid grid-cols-12 items-baseline gap-3 py-4">
       <span className="col-span-6 sm:col-span-9 text-navy">{label}</span>
       <a
         href={href}

@@ -64,10 +64,12 @@ export function InfoRequestForm({
 
   if (success) {
     return (
-      <div className="mt-4 hairline p-5 bg-paper-light">
+      <div className="mt-10 hairline p-8 sm:p-10 bg-paper-light max-w-3xl">
         <p className="eyebrow">{dict.successEyebrow}</p>
-        <p className="mt-3 font-sans text-h2 text-navy">{dict.successTitle}</p>
-        <p className="mt-3 text-navy/75 leading-relaxed">{dict.successBody}</p>
+        <p className="mt-5 font-sans text-h1 text-navy">{dict.successTitle}</p>
+        <p className="mt-4 text-navy/75 leading-relaxed max-w-xl">
+          {dict.successBody}
+        </p>
       </div>
     );
   }
@@ -75,25 +77,31 @@ export function InfoRequestForm({
   if (!open) return null;
 
   return (
-    <form action={submit} className="mt-4 hairline p-5 bg-paper-light">
-      <div className="flex items-center justify-between gap-3">
-        <p className="eyebrow">{dict.title}</p>
+    <form
+      action={submit}
+      className="mt-10 hairline p-6 sm:p-10 bg-paper-light max-w-3xl"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <div>
+          <p className="eyebrow">{dict.title}</p>
+          <p className="mt-3 font-sans text-h2 text-navy">{projectName}</p>
+        </div>
         <button
           type="button"
           onClick={close}
           disabled={isPending}
-          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
         >
           {dict.backShort}
         </button>
       </div>
 
-      <p className="mt-4 text-navy/75 leading-relaxed text-sm">
+      <p className="mt-6 text-navy/75 leading-relaxed max-w-xl">
         {dict.explainBody}
       </p>
 
-      <div className="mt-4 hairline-t pt-4">
-        <label htmlFor="message" className="eyebrow block mb-1.5">
+      <div className="mt-7 hairline-t pt-6">
+        <label htmlFor="message" className="eyebrow block mb-2">
           {dict.messageLabel}{" "}
           <span className="!text-navy/40">{dict.messageOptional}</span>
         </label>
@@ -105,20 +113,20 @@ export function InfoRequestForm({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder={`${dict.messagePlaceholderPrefix} ${viewerName.trim() || dict.yourNameFallback} ${dict.messagePlaceholderInfix} ${projectName} ${dict.messagePlaceholderSuffix}`}
-          className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
+          className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2.5 font-sans text-sm text-navy focus:outline-none focus:border-navy"
         />
-        <span className="eyebrow mt-1.5 block !text-navy/40">
+        <span className="eyebrow mt-2 block !text-navy/40">
           {message.length} / 2000
         </span>
       </div>
 
       {error && (
-        <p className="eyebrow !text-navy mt-4" role="alert">
+        <p className="eyebrow !text-navy mt-5" role="alert">
           {error}
         </p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-4">
+      <div className="mt-7 flex flex-wrap items-center gap-5">
         <button
           type="submit"
           disabled={isPending}

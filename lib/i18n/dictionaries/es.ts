@@ -287,6 +287,19 @@ export const dict = {
     requestNotApproved: "Solicitud no aprobada",
     editInfo: "Editar información",
     seeProject: "Ver proyecto →",
+    heroContextEyebrow: "— Ficha del proyecto",
+    nextStep: "Próximo paso",
+    emptySection: "El founder aún no completó esta sección.",
+    footerCta: {
+      eyebrow: "— Próximo paso",
+      question: "¿Te interesa participar de este proyecto?",
+      body:
+        "AJDUT no procesa pagos ni custodia fondos. Si avanzás, el founder te contacta al email con el que estás registrado.",
+      notAvailableEyebrow: "— Sin acciones disponibles",
+      notAvailableTitle: "Este proyecto está totalmente colocado.",
+      notAvailableBody:
+        "Por ahora no quedan acciones para asignar. Seguinos en la plataforma — si se libera una participación lo vas a ver acá.",
+    },
     sections: {
       summary: "Resumen",
       participations: "Participaciones",
@@ -319,6 +332,7 @@ export const dict = {
     },
     funding: {
       placedOf: "acciones colocadas",
+      placedHeadlineSuffix: "acciones colocadas hasta hoy",
       pricePerShare: "Valor sugerido por acción",
       pricePerShareHint: "valoración ÷ acciones totales",
       annualReturnPerShare: "Utilidad anual por acción",
@@ -368,6 +382,8 @@ export const dict = {
     capTable: {
       unassigned: "Disponible (sin asignar)",
       platform: "AJDUT Platform",
+      others: "Otros",
+      ofTotal: "del total",
     },
     participationStatus: {
       ASSIGNED: "Asignada",

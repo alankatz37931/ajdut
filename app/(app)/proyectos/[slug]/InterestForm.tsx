@@ -132,10 +132,12 @@ export function InterestForm({
 
   if (success) {
     return (
-      <div className="mt-4 hairline p-5 bg-paper-light">
+      <div className="mt-10 hairline p-8 sm:p-10 bg-paper-light max-w-3xl">
         <p className="eyebrow">{dict.successEyebrow}</p>
-        <p className="mt-3 font-sans text-h2 text-navy">{dict.successTitle}</p>
-        <p className="mt-3 text-navy/75 leading-relaxed">{dict.successBody}</p>
+        <p className="mt-5 font-sans text-h1 text-navy">{dict.successTitle}</p>
+        <p className="mt-4 text-navy/75 leading-relaxed max-w-xl">
+          {dict.successBody}
+        </p>
       </div>
     );
   }
@@ -144,7 +146,10 @@ export function InterestForm({
 
   if (!pricePerShare) {
     return (
-      <div className="mt-4 hairline p-5 bg-paper-light">
+      <form
+        action={() => undefined}
+        className="mt-10 hairline p-8 sm:p-10 bg-paper-light max-w-3xl"
+      >
         <div className="flex items-center justify-between gap-3">
           <p className="eyebrow">{dict.notAvailableYet}</p>
           <button
@@ -155,28 +160,36 @@ export function InterestForm({
             {dict.backShort}
           </button>
         </div>
-        <p className="mt-3 text-navy/75 leading-relaxed">{dict.noValuationBody}</p>
-      </div>
+        <p className="mt-5 text-navy/75 leading-relaxed">
+          {dict.noValuationBody}
+        </p>
+      </form>
     );
   }
 
   return (
-    <form action={submit} className="mt-4 hairline p-5 bg-paper-light">
-      <div className="flex items-center justify-between gap-3">
-        <p className="eyebrow">{dict.title}</p>
+    <form
+      action={submit}
+      className="mt-10 hairline p-6 sm:p-10 bg-paper-light max-w-3xl"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <div>
+          <p className="eyebrow">{dict.title}</p>
+          <p className="mt-3 font-sans text-h2 text-navy">{projectName}</p>
+        </div>
         <button
           type="button"
           onClick={close}
           disabled={isPending}
-          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
         >
           {dict.backShort}
         </button>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-7 space-y-5">
         <div>
-          <label htmlFor="supportKind" className="eyebrow block mb-1.5">
+          <label htmlFor="supportKind" className="eyebrow block mb-2">
             {dict.supportKindLabel}
           </label>
           <select
@@ -193,7 +206,7 @@ export function InterestForm({
                   | "OTHER"
               )
             }
-            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
+            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2.5 font-sans text-sm text-navy focus:outline-none focus:border-navy"
           >
             <option value="CAPITAL">{dict.supportKind.CAPITAL}</option>
             <option value="SPONSOR">{dict.supportKind.SPONSOR}</option>
@@ -204,10 +217,10 @@ export function InterestForm({
         </div>
 
         <div>
-          <label htmlFor="amount" className="eyebrow block mb-1.5">
+          <label htmlFor="amount" className="eyebrow block mb-2">
             {dict.amountLabel}
           </label>
-          <div className="flex items-stretch hairline bg-paper">
+          <div className="flex items-stretch hairline bg-paper transition-colors focus-within:border-navy">
             <span className="self-center px-4 font-mono text-lg text-navy/40">
               {currency}
             </span>
@@ -222,7 +235,7 @@ export function InterestForm({
               required
               autoFocus
               placeholder={dict.amountPlaceholder}
-              className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-2 font-mono text-xl text-navy bg-transparent focus:outline-none"
+              className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-2.5 font-mono text-xl text-navy bg-transparent focus:outline-none"
             />
           </div>
         </div>
@@ -233,10 +246,10 @@ export function InterestForm({
             : `${dict.maxOf} ${fmtInt(maxShares)} ${dict.sharesAvailableSuffix}`}
         </p>
 
-        <div className="grid grid-cols-2 gap-px bg-line">
-          <div className="bg-paper px-3 py-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
+          <div className="bg-paper px-4 py-3">
             <p className="eyebrow !text-navy/40">{dict.equivalentTo}</p>
-            <p className="mt-0.5 font-mono text-base">
+            <p className="mt-1 font-mono text-base">
               {inputValid ? (
                 <span
                   className={
@@ -254,22 +267,22 @@ export function InterestForm({
               )}
             </p>
             {inputValid && !overAvailable && computedAmount > 0 && (
-              <p className="mt-0.5 eyebrow !text-navy/40">
+              <p className="mt-1 eyebrow !text-navy/40">
                 {fmtMoney(computedAmount)} {dict.effectiveSuffix}
               </p>
             )}
           </div>
-          <div className="bg-paper px-3 py-2">
+          <div className="bg-paper px-4 py-3">
             <p className="eyebrow !text-navy/40">{dict.pricePerShare}</p>
-            <p className="mt-0.5 font-mono text-base text-navy">
+            <p className="mt-1 font-mono text-base text-navy">
               {fmtMoney(pricePerShare)}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 hairline-t pt-4">
-        <label htmlFor="message" className="eyebrow block mb-1.5">
+      <div className="mt-7 hairline-t pt-6">
+        <label htmlFor="message" className="eyebrow block mb-2">
           {dict.messageLabel}{" "}
           <span className="!text-navy/40">{dict.messageOptional}</span>
         </label>
@@ -281,20 +294,20 @@ export function InterestForm({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder={`${dict.messagePlaceholderPrefix} ${viewerName.trim() || dict.yourNameFallback} ${dict.messagePlaceholderInfix} ${projectName} ${dict.messagePlaceholderSuffix}`}
-          className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
+          className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2.5 font-sans text-sm text-navy focus:outline-none focus:border-navy"
         />
-        <span className="eyebrow mt-1.5 block !text-navy/40">
+        <span className="eyebrow mt-2 block !text-navy/40">
           {message.length} / 2000
         </span>
       </div>
 
       {error && (
-        <p className="eyebrow !text-navy mt-4" role="alert">
+        <p className="eyebrow !text-navy mt-5" role="alert">
           {error}
         </p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-4">
+      <div className="mt-7 flex flex-wrap items-center gap-5">
         <button
           type="submit"
           disabled={isPending || !inputValid || overAvailable}
@@ -312,7 +325,7 @@ export function InterestForm({
         </button>
       </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-navy/40">
+      <p className="mt-5 text-xs leading-relaxed text-navy/40 max-w-xl">
         {dict.footerNote}
       </p>
     </form>
