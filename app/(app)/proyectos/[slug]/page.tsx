@@ -5,6 +5,7 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
 import { KpiCard } from "@/components/ui/KpiCard";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { InterestForm } from "./InterestForm";
 import { AdminApprovalActions } from "./AdminApprovalActions";
 import { ProjectBody } from "./ProjectBody";
@@ -32,6 +33,17 @@ const STAGE_LABEL: Record<string, string> = {
   SCALE: "Scale",
 };
 
+const STAGE_INFO: Record<string, string> = {
+  IDEA: "Concepto en validación, sin producto en mercado.",
+  PRE_SEED:
+    "Primer capital del fundador / familia / amigos para construir un MVP.",
+  SEED: "Primera ronda formal para validar el modelo de negocio.",
+  EARLY_REVENUE:
+    "El producto ya genera ingresos pero sigue iterando el ajuste con el mercado.",
+  GROWTH: "Modelo validado, foco en escalar.",
+  SCALE: "Operación consolidada, expansión a nuevos mercados.",
+};
+
 export default async function ProjectPage({ params }: Params) {
   const user = await requireSession();
   const { slug } = await params;
@@ -48,7 +60,7 @@ export default async function ProjectPage({ params }: Params) {
       },
       participations: {
         include: {
-          currentOwner: { select: { id: true, fullName: true, role: true } },
+          currentOwner: { select: { id: true, fullName: true, alias: true, role: true } },
         },
       },
     },
@@ -103,7 +115,7 @@ export default async function ProjectPage({ params }: Params) {
     .reduce((s, p) => s + p.shareCount, 0);
 
   // Cap table agrupado por dueño (solo para roles permitidos)
-  type CapRow = { holder: string; isPlatform: boolean; shares: number; pct: number };
+  type CapRow = { holder: string; isPlatform: boolean; shares: number };
   const capTable: CapRow[] = [];
   if (access.canSeeCapTable) {
     const byOwner = new Map<string, { name: string; isPlatform: boolean; shares: number }>();
@@ -113,8 +125,14 @@ export default async function ProjectPage({ params }: Params) {
       if (existing) {
         existing.shares += p.shareCount;
       } else {
+        // Para terceros mostramos el alias si el dueño lo configuró; cae a
+        // fullName cuando no hay alias. La participación institucional se
+        // muestra siempre como "AJDUT Platform".
+        const displayName = p.isPlatformStake
+          ? "AJDUT Platform"
+          : p.currentOwner.alias ?? p.currentOwner.fullName;
         byOwner.set(p.currentOwnerId, {
-          name: p.isPlatformStake ? "AJDUT Platform" : p.currentOwner.fullName,
+          name: displayName,
           isPlatform: p.isPlatformStake,
           shares: p.shareCount,
         });
@@ -125,7 +143,6 @@ export default async function ProjectPage({ params }: Params) {
         holder: v.name,
         isPlatform: v.isPlatform,
         shares: v.shares,
-        pct: (v.shares / totalShares) * 100,
       }))
     );
     if (availableShares > 0) {
@@ -133,7 +150,6 @@ export default async function ProjectPage({ params }: Params) {
         holder: "Disponible (sin asignar)",
         isPlatform: false,
         shares: availableShares,
-        pct: (availableShares / totalShares) * 100,
       });
     }
     capTable.sort((a, b) => b.shares - a.shares);
@@ -161,7 +177,6 @@ export default async function ProjectPage({ params }: Params) {
       : [];
 
   const myShares = myParticipations.reduce((s, p) => s + p.shareCount, 0);
-  const myPct = totalShares > 0 ? (myShares / totalShares) * 100 : 0;
 
   // Valor de la posición del viewer si hay valoración declarada.
   const valuationNum = project.startupProfile?.preMoneyValuation
@@ -255,16 +270,14 @@ export default async function ProjectPage({ params }: Params) {
           value={formatNumber(
             access.canSeeCapTable ? assignedShares : assignedShares - platformShares
           )}
-          hint={formatPercent(
-            ((access.canSeeCapTable ? assignedShares : assignedShares - platformShares) /
-              totalShares) *
-              100
-          )}
+          hint={`${formatNumber(
+            access.canSeeCapTable ? assignedShares : assignedShares - platformShares
+          )} de ${formatNumber(totalShares)}`}
         />
         <KpiCard
           label="Disponibles"
           value={formatNumber(availableShares)}
-          hint={formatPercent((availableShares / totalShares) * 100)}
+          hint={`${formatNumber(availableShares)} de ${formatNumber(totalShares)}`}
         />
         {project.startupProfile?.preMoneyValuation && (
           <KpiCard
@@ -301,9 +314,6 @@ export default async function ProjectPage({ params }: Params) {
           <p className="eyebrow !text-navy/40">
             {formatNumber(visibleAssigned)} de {formatNumber(totalShares)}{" "}
             acciones colocadas
-          </p>
-          <p className="font-mono text-sm text-navy">
-            {formatPercent(fundedPct)}
           </p>
         </div>
         <div className="mt-2 h-1.5 w-full bg-line">
@@ -371,7 +381,7 @@ export default async function ProjectPage({ params }: Params) {
             <KpiCard
               label="Acciones"
               value={formatNumber(myShares)}
-              hint={formatPercent(myPct)}
+              hint={`${formatNumber(myShares)} de ${formatNumber(totalShares)}`}
               highlight
               className="bg-paper-light"
             />
@@ -409,7 +419,7 @@ export default async function ProjectPage({ params }: Params) {
                   Acciones
                 </span>
                 <span className="sm:col-span-2 eyebrow !text-navy/40">
-                  % del total
+                  de {formatNumber(totalShares)}
                 </span>
                 <span className="sm:col-span-2 eyebrow !text-navy/40 text-right">
                   Adquirida
@@ -435,9 +445,9 @@ export default async function ProjectPage({ params }: Params) {
                     </p>
                   </div>
                   <div className="col-span-6 sm:col-span-2">
-                    <p className="eyebrow sm:hidden">% del total</p>
+                    <p className="eyebrow sm:hidden">de {formatNumber(totalShares)}</p>
                     <p className="mt-1 sm:mt-0 font-mono text-navy">
-                      {formatPercent((p.shareCount / totalShares) * 100)}
+                      de {formatNumber(totalShares)}
                     </p>
                   </div>
                   <div className="col-span-12 sm:col-span-2 text-right">
@@ -751,11 +761,8 @@ export default async function ProjectPage({ params }: Params) {
                 {r.holder}
                 {r.isPlatform && <span className="ml-2 text-gold">◆</span>}
               </span>
-              <span className="col-span-6 sm:col-span-3 font-mono text-navy">
-                {formatNumber(r.shares)}
-              </span>
-              <span className="col-span-6 sm:col-span-3 font-mono text-navy text-right">
-                {formatPercent(r.pct)}
+              <span className="col-span-12 sm:col-span-6 font-mono text-navy text-right">
+                {formatNumber(r.shares)} de {formatNumber(totalShares)}
               </span>
             </li>
           ))}
@@ -775,7 +782,17 @@ export default async function ProjectPage({ params }: Params) {
           <p className="eyebrow">
             {KIND_LABEL[project.kind] ?? project.kind}
             {project.startupProfile?.sector ? ` · ${project.startupProfile.sector}` : ""}
-            {project.startupProfile?.stage ? ` · ${STAGE_LABEL[project.startupProfile.stage]}` : ""}
+            {project.startupProfile?.stage && (() => {
+              const stageKey = project.startupProfile.stage;
+              const info = STAGE_INFO[stageKey];
+              return (
+                <>
+                  {" · "}
+                  {STAGE_LABEL[stageKey]}
+                  {info && <InfoTooltip text={info} />}
+                </>
+              );
+            })()}
             {project.startupProfile?.location ? ` · ${project.startupProfile.location}` : ""}
           </p>
           <h1 className="font-sans mt-4 text-h1 text-navy">{project.name}</h1>
@@ -805,7 +822,7 @@ export default async function ProjectPage({ params }: Params) {
         <div className="flex flex-col gap-3 shrink-0 sm:flex-row sm:items-center">
           {access.canManifestInterest && availableShares > 0 && (
             <a href="#comprar" className="btn-primary text-center">
-              Comprar acciones →
+              Me interesa participar →
             </a>
           )}
           {access.canEdit && (

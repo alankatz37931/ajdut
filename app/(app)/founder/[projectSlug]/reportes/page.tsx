@@ -81,8 +81,8 @@ export default async function FounderReportsPage({ params }: Params) {
         <p className="eyebrow">— Founder</p>
         <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Reportes trimestrales</h1>
         <p className="mt-3 text-navy/75 leading-relaxed">
-          Compartí avances financieros y de negocio con tus socios. Publicá el reporte y todos
-          los socios reciben un aviso por email con el link al archivo.
+          Compartí avances financieros y de negocio con tus miembros. Publicá el reporte y todos
+          los miembros reciben un aviso por email con el link al archivo.
         </p>
       </header>
 

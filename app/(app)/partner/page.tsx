@@ -150,7 +150,7 @@ export default async function PartnerDashboardPage() {
           <p className="eyebrow">— Mi cartera</p>
           <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Mis participaciones</h1>
           <p className="mt-4 max-w-xl text-navy/75 leading-relaxed">
-            Acceso exclusivo a los proyectos que respaldas. No verás otros socios ni montos
+            Acceso exclusivo a los proyectos que respaldas. No verás otros miembros ni montos
             agregados de terceros.
           </p>
         </div>

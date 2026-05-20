@@ -76,6 +76,9 @@ model User {
   // hasta que la establecen vía PasswordSetupToken.
   passwordHash    String?
   fullName        String
+  // Alias visible para otros miembros (ej. cap table). Si null, se cae al fullName.
+  // El propio dueño siempre ve su nombre real en /partner y /certificado/[id].
+  alias           String?
   role            UserRole
   isActive        Boolean      @default(true)
   applicationId   String?      @unique

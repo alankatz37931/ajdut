@@ -59,7 +59,7 @@ export function AvisoForm({ projectSlug, memberCount }: Props) {
           maxLength={5000}
           required
           disabled={isPending}
-          placeholder="Escribí el aviso que querés enviar a tus socios…"
+          placeholder="Escribí el aviso que querés enviar a tus miembros…"
           className="w-full resize-y border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy leading-relaxed focus:outline-none focus:border-navy disabled:opacity-50"
         />
       </div>
@@ -71,7 +71,7 @@ export function AvisoForm({ projectSlug, memberCount }: Props) {
       )}
       {success && (
         <p className="eyebrow !text-gold" role="status">
-          Aviso enviado a {memberCount} socio{memberCount === 1 ? "" : "s"}.
+          Aviso enviado a {memberCount} miembro{memberCount === 1 ? "" : "s"}.
         </p>
       )}
 
@@ -79,10 +79,10 @@ export function AvisoForm({ projectSlug, memberCount }: Props) {
         <button type="submit" disabled={isPending} className="btn-primary disabled:opacity-50">
           {isPending
             ? "Enviando…"
-            : `Enviar a ${memberCount} socio${memberCount === 1 ? "" : "s"} →`}
+            : `Enviar a ${memberCount} miembro${memberCount === 1 ? "" : "s"} →`}
         </button>
         <span className="eyebrow !text-navy/40">
-          Se envía por email a todos los socios del proyecto.
+          Se envía por email a todos los miembros del proyecto.
         </span>
       </div>
     </form>

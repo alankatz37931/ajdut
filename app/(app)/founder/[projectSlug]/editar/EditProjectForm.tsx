@@ -355,7 +355,7 @@ export function EditProjectForm({
                 rows={3}
                 maxLength={2000}
                 className="input"
-                placeholder="Cómo está repartida la propiedad: clases de acciones, founders, inversores previos, opciones, etc."
+                placeholder="Cómo está repartida la propiedad: clases de acciones, founders, participaciones previas, opciones, etc."
               />
             </Field>
           </section>
@@ -363,8 +363,8 @@ export function EditProjectForm({
           <section className="space-y-5 hairline-t pt-8">
             <p className="eyebrow">Acciones a la venta</p>
             <p className="text-navy/75 leading-relaxed">
-              Cuántas acciones de tu compañía querés poner disponibles para que inversores
-              compren. Podés ajustarlo en cualquier momento.
+              Cuántas acciones de tu compañía querés poner disponibles para que los miembros
+              participen. Podés ajustarlo en cualquier momento.
             </p>
             <Field label={`Disponibles (máximo ${maxAvailable.toLocaleString("es-MX")})`} htmlFor="availableShares">
               <input

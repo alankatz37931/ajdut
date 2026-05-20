@@ -216,7 +216,7 @@ export function MetricsEditor({
                 defaultValue="PUBLIC_TO_HOLDERS"
                 className="input"
               >
-                <option value="PUBLIC_TO_HOLDERS">Visible para socios</option>
+                <option value="PUBLIC_TO_HOLDERS">Visible para miembros</option>
                 <option value="PRIVATE">Privada (solo vos y admin)</option>
               </select>
             </Field>
@@ -259,7 +259,7 @@ export function MetricsEditor({
             <div className="col-span-12 sm:col-span-4">
               <p className="font-sans text-navy">{labelFor(m)}</p>
               <p className="mt-1 eyebrow">
-                {m.visibility === "PUBLIC_TO_HOLDERS" ? "● Pública a socios" : "○ Privada"}
+                {m.visibility === "PUBLIC_TO_HOLDERS" ? "● Pública a miembros" : "○ Privada"}
               </p>
             </div>
             <div className="col-span-6 sm:col-span-4 font-mono text-navy">{formatValue(m)}</div>

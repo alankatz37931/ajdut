@@ -101,7 +101,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         </Link>
         <span className="eyebrow !text-navy/30">·</span>
         <Link href={`/founder/${project.slug}/avisos` as Route} className="eyebrow hover:!text-gold">
-          Avisos a socios →
+          Avisos a miembros →
         </Link>
         <span className="eyebrow !text-navy/30">·</span>
         <Link href={`/founder/${project.slug}/reportes` as Route} className="eyebrow hover:!text-gold">
@@ -115,17 +115,17 @@ export default async function FounderDashboardPage({ params }: Params) {
           <KpiCard
             label="Distribuidas"
             value={formatNumber(assigned)}
-            hint={formatPercent((assigned / totalShares) * 100)}
+            hint={`${formatNumber(assigned)} de ${formatNumber(totalShares)}`}
           />
           <KpiCard
             label="Disponibles"
             value={formatNumber(available)}
-            hint={formatPercent((available / totalShares) * 100)}
+            hint={`${formatNumber(available)} de ${formatNumber(totalShares)}`}
           />
           <KpiCard
             label="AJDUT plataforma"
             value={formatNumber(platform)}
-            hint={formatPercent((platform / totalShares) * 100)}
+            hint={`${formatNumber(platform)} de ${formatNumber(totalShares)}`}
             highlight
           />
         </div>

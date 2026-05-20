@@ -8,7 +8,7 @@ export type ApplicationApprovedInput = {
 };
 
 const ROLE_LABEL: Record<ApplicationApprovedInput["role"], string> = {
-  PARTNER: "Socio",
+  PARTNER: "Miembro",
   PROJECT_OWNER: "Founder",
   CO_ADMIN: "Co-Admin",
 };

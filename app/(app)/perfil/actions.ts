@@ -16,9 +16,23 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
   if (fullName.length < 2) {
     return { ok: false, error: "El nombre debe tener al menos 2 caracteres.", field: "fullName" };
   }
+
+  // Alias es opcional. String vacío se persiste como null para caer al fullName
+  // en cap tables y vistas de terceros.
+  const aliasRaw = String(formData.get("alias") ?? "").trim();
+  const alias = aliasRaw.length === 0 ? null : aliasRaw;
+  if (alias !== null) {
+    if (alias.length < 2) {
+      return { ok: false, error: "El alias debe tener al menos 2 caracteres (o dejarlo vacío).", field: "alias" };
+    }
+    if (alias.length > 60) {
+      return { ok: false, error: "El alias no puede superar los 60 caracteres.", field: "alias" };
+    }
+  }
+
   await prisma.user.update({
     where: { id: user.id },
-    data: { fullName },
+    data: { fullName, alias },
   });
   revalidatePath("/perfil");
   return { ok: true };

@@ -15,8 +15,6 @@ type Props = {
   currency: string;
 };
 
-type Mode = "amount" | "shares";
-
 export function InterestForm({
   projectSlug,
   projectName,
@@ -28,7 +26,7 @@ export function InterestForm({
 }: Props) {
   const [open, setOpen] = useState(false);
 
-  // El botón "Comprar acciones →" del header es un ancla a #comprar.
+  // El botón "Me interesa participar →" del header es un ancla a #comprar.
   // Al apretarlo (o si se entra con ese hash) abrimos esta sección.
   useEffect(() => {
     const check = () => {
@@ -54,50 +52,33 @@ export function InterestForm({
     }
   }
 
-  const [mode, setMode] = useState<Mode>("amount");
   const [amount, setAmount] = useState("");
-  const [shares, setShares] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Precio por acción derivado de la valoración declarada.
-  // Si no hay valoración, fuerza modo "shares" (no se puede convertir).
+  // Si no hay valoración, este form queda en modo "no disponible".
   const pricePerShare =
     valuation && totalShares > 0 ? valuation / totalShares : null;
-  const canUseAmountMode = pricePerShare !== null;
-  const activeMode: Mode = canUseAmountMode ? mode : "shares";
 
-  // Cálculo según el modo activo
   const amountNumber = Number.parseFloat(amount.replace(/,/g, ""));
-  const sharesNumber = Number.parseInt(shares, 10);
 
   let computedShares = 0;
   let computedAmount = 0;
   let inputValid = false;
 
-  if (activeMode === "amount") {
-    if (Number.isFinite(amountNumber) && amountNumber > 0 && pricePerShare) {
-      computedShares = Math.floor(amountNumber / pricePerShare);
-      computedAmount = computedShares * pricePerShare;
-      inputValid = computedShares >= 1;
-    }
-  } else {
-    if (Number.isFinite(sharesNumber) && sharesNumber >= 1) {
-      computedShares = sharesNumber;
-      computedAmount = pricePerShare ? sharesNumber * pricePerShare : 0;
-      inputValid = true;
-    }
+  if (Number.isFinite(amountNumber) && amountNumber > 0 && pricePerShare) {
+    computedShares = Math.floor(amountNumber / pricePerShare);
+    computedAmount = computedShares * pricePerShare;
+    inputValid = computedShares >= 1;
   }
 
   const overAvailable = computedShares > availableShares;
   const maxShares = availableShares;
   const maxAmount = pricePerShare ? maxShares * pricePerShare : null;
   const minAmount = pricePerShare ? pricePerShare : null;
-
-  // Etiqueta amigable para la moneda
-  const moneyLabel = currency === "MXN" ? "Pesos" : "Dólares";
 
   function fmtMoney(n: number): string {
     return new Intl.NumberFormat("es-MX", {
@@ -113,21 +94,23 @@ export function InterestForm({
   function submit(formData: FormData) {
     setError(null);
 
+    if (!pricePerShare) {
+      setError(
+        "Este proyecto todavía no declaró su valoración — no podés indicar un monto."
+      );
+      return;
+    }
     if (!inputValid) {
-      if (activeMode === "amount") {
-        setError(
-          minAmount
-            ? `Mínimo: ${fmtMoney(minAmount)} (1 acción).`
-            : "Ingresá un monto válido."
-        );
-      } else {
-        setError("Ingresá una cantidad de acciones válida (mínimo 1).");
-      }
+      setError(
+        minAmount
+          ? `Mínimo: ${fmtMoney(minAmount)} (1 acción).`
+          : "Ingresá un monto válido."
+      );
       return;
     }
     if (overAvailable) {
       setError(
-        activeMode === "amount" && maxAmount
+        maxAmount
           ? `El monto excede lo disponible. Máximo: ${fmtMoney(maxAmount)}.`
           : `Máximo disponible: ${fmtInt(maxShares)} acciones.`
       );
@@ -163,10 +146,32 @@ export function InterestForm({
   // Cerrada: no renderiza nada. Se abre con el botón del header (#comprar).
   if (!open) return null;
 
+  // Sin valoración declarada: estado claro y form deshabilitado.
+  if (!pricePerShare) {
+    return (
+      <div className="mt-4 hairline p-5 bg-paper-light">
+        <div className="flex items-center justify-between gap-3">
+          <p className="eyebrow">Participación no disponible aún</p>
+          <button
+            type="button"
+            onClick={close}
+            className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+          >
+            ← Volver
+          </button>
+        </div>
+        <p className="mt-3 text-navy/75 leading-relaxed">
+          Este proyecto todavía no declaró su valoración — no podés indicar un monto.
+          Volvé a revisar más adelante; el founder publicará la valoración cuando esté lista.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <form action={submit} className="mt-4 hairline p-5 bg-paper-light">
       <div className="flex items-center justify-between gap-3">
-        <p className="eyebrow">Manifestar interés</p>
+        <p className="eyebrow">Quiero más información</p>
         <button
           type="button"
           onClick={close}
@@ -179,84 +184,33 @@ export function InterestForm({
 
       {/* Cluster principal: el monto es el foco */}
       <div className="mt-4 space-y-3">
-        {canUseAmountMode && (
-          <div>
-            <p className="eyebrow mb-1.5">Calcular en</p>
-            <div className="inline-flex hairline">
-              <button
-                type="button"
-                onClick={() => setMode("shares")}
-                className={`px-4 py-1.5 eyebrow leading-none transition-colors cursor-pointer ${
-                  activeMode === "shares"
-                    ? "bg-navy !text-paper"
-                    : "bg-transparent hover:!text-navy"
-                }`}
-              >
-                Acciones
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("amount")}
-                className={`px-4 py-1.5 eyebrow leading-none transition-colors border-l-hairline border-navy/30 cursor-pointer ${
-                  activeMode === "amount"
-                    ? "bg-navy !text-paper"
-                    : "bg-transparent hover:!text-navy"
-                }`}
-              >
-                {moneyLabel}
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Input protagonista: número grande */}
-        {activeMode === "amount" ? (
-          <div>
-            <label htmlFor="amount" className="eyebrow block mb-1.5">
-              ¿Cuánto querés invertir?
-            </label>
-            <div className="flex items-stretch hairline bg-paper">
-              <span className="self-center px-4 font-mono text-lg text-navy/40">
-                {currency}
-              </span>
-              <input
-                id="amount"
-                name="amount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-                autoFocus
-                placeholder="0.00"
-                className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-2 font-mono text-xl text-navy bg-transparent focus:outline-none"
-              />
-            </div>
-          </div>
-        ) : (
-          <div>
-            <label htmlFor="shares" className="eyebrow block mb-1.5">
-              ¿Cuántas acciones?
-            </label>
+        <div>
+          <label htmlFor="amount" className="eyebrow block mb-1.5">
+            ¿Con qué monto querés participar?
+          </label>
+          <div className="flex items-stretch hairline bg-paper">
+            <span className="self-center px-4 font-mono text-lg text-navy/40">
+              {currency}
+            </span>
             <input
-              id="shares"
-              name="shares"
+              id="amount"
+              name="amount"
               type="number"
-              min={1}
-              step={1}
-              value={shares}
-              onChange={(e) => setShares(e.target.value)}
+              min="0"
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               required
               autoFocus
-              placeholder="0"
-              className="w-full hairline bg-paper px-4 py-2 font-mono text-xl text-navy focus:outline-none focus:border-navy"
+              placeholder="0.00"
+              className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-2 font-mono text-xl text-navy bg-transparent focus:outline-none"
             />
           </div>
-        )}
+        </div>
 
         <p className="eyebrow !text-navy/40">
-          {activeMode === "amount" && maxAmount !== null
+          {maxAmount !== null
             ? `Máximo ${fmtMoney(maxAmount)} · ${fmtInt(maxShares)} acciones`
             : `Máximo ${fmtInt(maxShares)} acciones disponibles`}
         </p>
@@ -264,9 +218,7 @@ export function InterestForm({
         {/* Equivale / Precio — estilo KPI, consistente con el resto */}
         <div className="grid grid-cols-2 gap-px bg-line">
           <div className="bg-paper px-3 py-2">
-            <p className="eyebrow !text-navy/40">
-              {activeMode === "amount" ? "Equivale a" : "Monto aproximado"}
-            </p>
+            <p className="eyebrow !text-navy/40">Equivale a</p>
             <p className="mt-0.5 font-mono text-base">
               {inputValid ? (
                 <span
@@ -276,23 +228,24 @@ export function InterestForm({
                       : "text-gold"
                   }
                 >
-                  {activeMode === "amount"
-                    ? `${fmtInt(computedShares)} ${
-                        computedShares === 1 ? "acción" : "acciones"
-                      }`
-                    : pricePerShare
-                    ? fmtMoney(computedAmount)
-                    : "—"}
+                  {`${fmtInt(computedShares)} ${
+                    computedShares === 1 ? "acción" : "acciones"
+                  }`}
                 </span>
               ) : (
                 <span className="text-navy/30">—</span>
               )}
             </p>
+            {inputValid && !overAvailable && computedAmount > 0 && (
+              <p className="mt-0.5 eyebrow !text-navy/40">
+                {fmtMoney(computedAmount)} efectivos
+              </p>
+            )}
           </div>
           <div className="bg-paper px-3 py-2">
             <p className="eyebrow !text-navy/40">Precio por acción</p>
             <p className="mt-0.5 font-mono text-base text-navy">
-              {pricePerShare ? fmtMoney(pricePerShare) : "no informado"}
+              {fmtMoney(pricePerShare)}
             </p>
           </div>
         </div>
@@ -310,7 +263,7 @@ export function InterestForm({
           maxLength={2000}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder={`Mi nombre es ${viewerName.trim() || "[tu nombre]"} y me interesa invertir en ${projectName} porque…`}
+          placeholder={`Mi nombre es ${viewerName.trim() || "[tu nombre]"} y me interesa participar en ${projectName} porque…`}
           className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
         />
         <span className="eyebrow mt-1.5 block !text-navy/40">
@@ -330,7 +283,7 @@ export function InterestForm({
           disabled={isPending || !inputValid || overAvailable}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Enviando…" : "Enviar interés"}
+          {isPending ? "Enviando…" : "Enviar solicitud"}
         </button>
         <button
           type="button"

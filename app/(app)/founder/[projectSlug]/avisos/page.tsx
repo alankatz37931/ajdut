@@ -8,7 +8,7 @@ import { AvisoForm } from "./AvisoForm";
 type Params = { params: Promise<{ projectSlug: string }> };
 
 export const metadata = {
-  title: "Avisos a socios · AJDUT",
+  title: "Avisos a miembros · AJDUT",
 };
 
 const ASSIGNED_STATUSES = [
@@ -64,16 +64,16 @@ export default async function FounderAvisosPage({ params }: Params) {
 
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <p className="eyebrow">— Founder</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Avisos a socios</h1>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Avisos a miembros</h1>
         <p className="mt-3 text-navy/75 leading-relaxed">
-          Enviá un email a todos los socios de tu proyecto para avisar reportes, votaciones o
+          Enviá un email a todos los miembros de tu proyecto para avisar reportes, votaciones o
           información relevante.
         </p>
       </header>
 
       {memberCount === 0 ? (
         <p className="mt-10 text-navy/60">
-          Tu proyecto todavía no tiene socios con acciones asignadas. Cuando se distribuyan
+          Tu proyecto todavía no tiene miembros con acciones asignadas. Cuando se distribuyan
           acciones, vas a poder enviarles avisos desde acá.
         </p>
       ) : (

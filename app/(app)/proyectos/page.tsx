@@ -3,7 +3,7 @@ import type { Route } from "next";
 import type { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { formatCurrency, formatNumber, formatPercent } from "@/lib/utils/format";
+import { formatCurrency, formatNumber } from "@/lib/utils/format";
 import { ProjectFilters } from "./ProjectFilters";
 
 const STAGE_LABEL: Record<string, string> = {
@@ -103,8 +103,8 @@ export default async function ProjectsDiscoveryPage({
         ) : (
           <p className="mt-3 max-w-2xl text-navy/75 leading-relaxed">
             Todos los proyectos en AJDUT son aprobados manualmente. Si te interesa una idea y los
-            números cierran para vos, podés manifestar tu interés en comprar acciones desde la
-            página del proyecto.
+            números cierran para vos, podés decir “me interesa participar” desde la página del
+            proyecto.
           </p>
         )}
       </header>
@@ -191,7 +191,7 @@ export default async function ProjectsDiscoveryPage({
                     <p className="mt-0.5 font-mono text-sm text-navy">
                       {formatNumber(available)}{" "}
                       <span className="eyebrow !text-navy/40">
-                        {formatPercent((available / total) * 100)}
+                        de {formatNumber(total)}
                       </span>
                     </p>
                   </div>

@@ -6,7 +6,7 @@ export const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Admin",
   PROJECT_OWNER: "Founder",
   CO_ADMIN: "Co-admin",
-  PARTNER: "Socio",
+  PARTNER: "Miembro",
 };
 
 /**

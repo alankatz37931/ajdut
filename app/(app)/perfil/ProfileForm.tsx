@@ -3,9 +3,17 @@
 import { useState, useTransition } from "react";
 import { updateNameAction, changePasswordAction } from "./actions";
 
-export function ProfileForm({ initialName }: { initialName: string }) {
+export function ProfileForm({
+  initialName,
+  initialAlias = "",
+}: {
+  initialName: string;
+  initialAlias?: string;
+}) {
   const [fullName, setFullName] = useState(initialName);
   const [savedName, setSavedName] = useState(initialName);
+  const [alias, setAlias] = useState(initialAlias);
+  const [savedAlias, setSavedAlias] = useState(initialAlias);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
@@ -15,6 +23,8 @@ export function ProfileForm({ initialName }: { initialName: string }) {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const basicsDirty = fullName !== savedName || alias !== savedAlias;
 
   function onSubmitName(formData: FormData) {
     setNameError(null);
@@ -26,6 +36,7 @@ export function ProfileForm({ initialName }: { initialName: string }) {
         return;
       }
       setSavedName(fullName);
+      setSavedAlias(alias);
       setNameSuccess(true);
       setTimeout(() => setNameSuccess(false), 3000);
     });
@@ -70,6 +81,24 @@ export function ProfileForm({ initialName }: { initialName: string }) {
           />
         </div>
 
+        <div>
+          <label htmlFor="alias" className="eyebrow block mb-1.5">
+            Alias <span className="!text-navy/40">(cómo te ven los demás miembros)</span>
+          </label>
+          <input
+            id="alias"
+            name="alias"
+            value={alias}
+            onChange={(e) => setAlias(e.target.value)}
+            maxLength={60}
+            placeholder="Opcional — si lo dejás vacío, otros miembros ven tu nombre completo."
+            className={inputCls}
+          />
+          <p className="eyebrow !text-navy/40 mt-1.5">
+            Aparece en el cap table de los proyectos. Tu nombre real se sigue usando en tu propio certificado y portafolio.
+          </p>
+        </div>
+
         {nameError && (
           <p className="eyebrow !text-navy" role="alert">
             {nameError}
@@ -79,10 +108,10 @@ export function ProfileForm({ initialName }: { initialName: string }) {
         <div className="flex items-center gap-4">
           <button
             type="submit"
-            disabled={isPending || fullName === savedName}
+            disabled={isPending || !basicsDirty}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Guardando…" : "Guardar nombre"}
+            {isPending ? "Guardando…" : "Guardar"}
           </button>
           {nameSuccess && <span className="eyebrow !text-gold">✓ Guardado</span>}
         </div>

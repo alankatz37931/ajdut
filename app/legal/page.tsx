@@ -43,7 +43,7 @@ export default function LegalPage() {
         <p>
           AJDUT no procesa, custodia ni facilita el pago de distribuciones de
           dividendos. Los fondos se transfieren fuera de la plataforma según los
-          términos acordados entre founder y socio. AJDUT registra la
+          términos acordados entre founder y miembro. AJDUT registra la
           declaración, el envío y la recepción con fines de trazabilidad y
           auditoría. El founder es responsable de las retenciones fiscales
           aplicables.

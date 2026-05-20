@@ -46,7 +46,7 @@ export default async function FounderRootPage() {
           </p>
           <p className="mt-3 text-navy/75 leading-relaxed">
             Creá tu primer proyecto con los datos de tu empresa y la valoración actual. El equipo
-            lo revisa, y una vez aprobado queda visible para inversores.
+            lo revisa, y una vez aprobado queda visible para los miembros.
           </p>
           <Link
             href={"/founder/nuevo-proyecto" as Route}
