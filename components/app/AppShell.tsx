@@ -14,7 +14,7 @@ export async function AppShell({
   navItems,
   children,
 }: {
-  user: { name: string; email: string };
+  user: { name: string; email: string; avatarUrl?: string | null };
   navItems: NavItem[];
   children: React.ReactNode;
 }) {

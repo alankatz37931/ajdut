@@ -2,21 +2,30 @@
 
 import { useState, useTransition } from "react";
 import type { Dict } from "@/lib/i18n";
+import { FileUpload } from "@/components/ui/FileUpload";
 import { updateNameAction, changePasswordAction } from "./actions";
 
 export function ProfileForm({
   initialName,
   initialAlias = "",
+  initialAvatarUrl = "",
+  initialIdPhotoUrl = "",
   dict,
 }: {
   initialName: string;
   initialAlias?: string;
+  initialAvatarUrl?: string;
+  initialIdPhotoUrl?: string;
   dict: Dict["profile"];
 }) {
   const [fullName, setFullName] = useState(initialName);
   const [savedName, setSavedName] = useState(initialName);
   const [alias, setAlias] = useState(initialAlias);
   const [savedAlias, setSavedAlias] = useState(initialAlias);
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const [savedAvatarUrl, setSavedAvatarUrl] = useState(initialAvatarUrl);
+  const [idPhotoUrl, setIdPhotoUrl] = useState(initialIdPhotoUrl);
+  const [savedIdPhotoUrl, setSavedIdPhotoUrl] = useState(initialIdPhotoUrl);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
@@ -27,7 +36,11 @@ export function ProfileForm({
   const [showNew, setShowNew] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const basicsDirty = fullName !== savedName || alias !== savedAlias;
+  const basicsDirty =
+    fullName !== savedName ||
+    alias !== savedAlias ||
+    avatarUrl !== savedAvatarUrl ||
+    idPhotoUrl !== savedIdPhotoUrl;
 
   function onSubmitName(formData: FormData) {
     setNameError(null);
@@ -40,6 +53,8 @@ export function ProfileForm({
       }
       setSavedName(fullName);
       setSavedAlias(alias);
+      setSavedAvatarUrl(avatarUrl);
+      setSavedIdPhotoUrl(idPhotoUrl);
       setNameSuccess(true);
       setTimeout(() => setNameSuccess(false), 3000);
     });
@@ -101,6 +116,35 @@ export function ProfileForm({
           <p className="eyebrow !text-navy/40 mt-1.5">
             {dict.aliasFootnote}
           </p>
+        </div>
+
+        {/* ─── Foto de perfil ─────────────────────────────────────── */}
+        <div className="pt-4 hairline-t">
+          <FileUpload
+            scope="profile-photo"
+            accept="image/png,image/jpeg,image/webp"
+            maxSizeMb={5}
+            currentUrl={avatarUrl || undefined}
+            onUploaded={(url) => setAvatarUrl(url)}
+            label="Foto de perfil"
+            helperText="PNG, JPG o WebP. Máximo 5MB."
+            showImagePreview
+          />
+          <input type="hidden" name="avatarUrl" value={avatarUrl} />
+        </div>
+
+        {/* ─── Foto de identificación ─────────────────────────────── */}
+        <div className="pt-4 hairline-t">
+          <FileUpload
+            scope="id-photo"
+            accept="image/png,image/jpeg,application/pdf"
+            maxSizeMb={5}
+            currentUrl={idPhotoUrl || undefined}
+            onUploaded={(url) => setIdPhotoUrl(url)}
+            label="Foto de identificación"
+            helperText="Documento de identidad. PNG, JPG o PDF. Máximo 5MB. Visible solo para vos y el equipo de AJDUT (KYC)."
+          />
+          <input type="hidden" name="idPhotoUrl" value={idPhotoUrl} />
         </div>
 
         {nameError && (

@@ -28,10 +28,24 @@ export type SideNavLabels = {
 };
 
 type Props = {
-  user: { name: string; email: string };
+  user: { name: string; email: string; avatarUrl?: string | null };
   navItems: NavItem[];
   labels: SideNavLabels;
 };
+
+/** Iniciales en círculo cuando no hay avatarUrl. Usa máximo 2 caracteres. */
+function initialsOf(name: string): string {
+  const cleaned = name.trim();
+  if (cleaned.length === 0) return "?";
+  const parts = cleaned.split(/\s+/).filter((p) => p.length > 0);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) {
+    return (parts[0]?.[0] ?? "?").toUpperCase();
+  }
+  const first = parts[0]?.[0] ?? "";
+  const last = parts[parts.length - 1]?.[0] ?? "";
+  return (first + last).toUpperCase();
+}
 
 export function SideNav({ user, navItems, labels }: Props) {
   const [open, setOpen] = useState(false);
@@ -179,12 +193,29 @@ export function SideNav({ user, navItems, labels }: Props) {
 
         {/* User + logout */}
         <div className="hairline-t px-6 py-4">
-          <p
-            className="text-navy text-sm leading-tight truncate"
-            title={displayName}
-          >
-            {displayName}
-          </p>
+          <div className="flex items-center gap-2.5">
+            {user.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatarUrl}
+                alt=""
+                className="rounded-full w-7 h-7 object-cover border-hairline border-navy/20 shrink-0"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="rounded-full w-7 h-7 shrink-0 bg-paper-dark border-hairline border-navy/20 flex items-center justify-center font-mono text-[10px] text-navy"
+              >
+                {initialsOf(displayName)}
+              </span>
+            )}
+            <p
+              className="text-navy text-sm leading-tight truncate"
+              title={displayName}
+            >
+              {displayName}
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/" })}

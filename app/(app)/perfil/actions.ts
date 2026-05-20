@@ -10,6 +10,25 @@ export type ProfileResult =
   | { ok: true }
   | { ok: false; error: string; field?: string };
 
+/**
+ * Valida que un valor sea URL absoluta http(s) o null. Usado para los
+ * campos avatarUrl / idPhotoUrl que pueden venir de un upload a R2 o de un
+ * link externo pegado por el usuario (fallback cuando R2 no está configurado).
+ */
+function normalizeOptionalUrl(raw: unknown): string | null | "INVALID" {
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim();
+  if (s.length === 0) return null;
+  try {
+    const u = new URL(s);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return "INVALID";
+    if (s.length > 2048) return "INVALID";
+    return s;
+  } catch {
+    return "INVALID";
+  }
+}
+
 export async function updateNameAction(formData: FormData): Promise<ProfileResult> {
   const user = await requireSession();
   const fullName = String(formData.get("fullName") ?? "").trim();
@@ -30,9 +49,25 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
     }
   }
 
+  // avatarUrl + idPhotoUrl son opcionales. Vienen como hidden inputs llenados
+  // por el componente FileUpload (URL pública post-R2 o pegada manualmente).
+  const avatar = normalizeOptionalUrl(formData.get("avatarUrl"));
+  if (avatar === "INVALID") {
+    return { ok: false, error: "La URL de la foto de perfil no es válida.", field: "avatarUrl" };
+  }
+  const idPhoto = normalizeOptionalUrl(formData.get("idPhotoUrl"));
+  if (idPhoto === "INVALID") {
+    return { ok: false, error: "La URL de la foto de identificación no es válida.", field: "idPhotoUrl" };
+  }
+
   await prisma.user.update({
     where: { id: user.id },
-    data: { fullName, alias },
+    data: {
+      fullName,
+      alias,
+      avatarUrl: avatar,
+      idPhotoUrl: idPhoto,
+    },
   });
   revalidatePath("/perfil");
   return { ok: true };

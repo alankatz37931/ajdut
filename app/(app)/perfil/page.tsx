@@ -15,7 +15,14 @@ export default async function ProfilePage() {
   const t = dict.profile;
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: session.id },
-    select: { fullName: true, alias: true, role: true, createdAt: true },
+    select: {
+      fullName: true,
+      alias: true,
+      role: true,
+      createdAt: true,
+      avatarUrl: true,
+      idPhotoUrl: true,
+    },
   });
   const roleLabel = await getRoleLabel(user.role);
 
@@ -38,6 +45,8 @@ export default async function ProfilePage() {
       <ProfileForm
         initialName={user.fullName}
         initialAlias={user.alias ?? ""}
+        initialAvatarUrl={user.avatarUrl ?? ""}
+        initialIdPhotoUrl={user.idPhotoUrl ?? ""}
         dict={t}
       />
     </div>

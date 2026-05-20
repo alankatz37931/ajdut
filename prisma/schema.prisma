@@ -94,6 +94,16 @@ model User {
   // Alias visible para otros miembros (ej. cap table). Si null, se cae al fullName.
   // El propio dueño siempre ve su nombre real en /partner y /certificado/[id].
   alias           String?
+  // ─── Ola 7d — Storage R2 ──────────────────────────────────────────
+  // Avatar visible (sidebar, headers de comentarios, etc.). URL pública.
+  // Si null se cae a iniciales en círculo. La sube el usuario desde /perfil
+  // (FileUpload → presigned R2). En entornos sin R2 configurado, puede ser
+  // una URL externa pegada (Drive, etc.).
+  avatarUrl       String?
+  // Foto/escaneo del documento de identidad. URL pública dentro del bucket
+  // privado (no exponer en feeds; solo se ve desde /perfil del propio dueño
+  // y desde el panel admin para KYC). Mismo fallback URL manual que avatar.
+  idPhotoUrl      String?
   role            UserRole
   isActive        Boolean      @default(true)
   applicationId   String?      @unique
