@@ -52,6 +52,9 @@ const ACTION_LABEL: Record<string, string> = {
   "MILESTONE.UPSERTED": "Hito editado",
   "MILESTONE.REMOVED": "Hito eliminado",
   "METRIC.REMOVED": "Métrica eliminada",
+  "INFO_REQUEST.CREATED": "Solicitud de información",
+  "INFO_REQUEST.APPROVED": "Solicitud de información aprobada",
+  "INFO_REQUEST.REJECTED": "Solicitud de información rechazada",
 };
 
 /**

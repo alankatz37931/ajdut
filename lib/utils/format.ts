@@ -59,3 +59,29 @@ export function formatDateTime(d: Date | string): string {
     minute: "2-digit",
   }).format(date);
 }
+
+/**
+ * Tipo de cambio USD → MXN fijo (hard-coded, configurable).
+ * Lo usamos solo como display secundario cuando la preferencia del viewer es MXN
+ * y el monto original viene en USD. No reemplaza la moneda original.
+ */
+export const USD_TO_MXN = 18;
+
+/**
+ * Devuelve un par {primary, secondary} para mostrar un monto USD con su
+ * equivalente MXN como segunda línea (cuando la preferencia del viewer es MXN).
+ *
+ *  - primary: siempre el monto original ya formateado en USD.
+ *  - secondary: "≈ MXN X" si prefersMxn=true; null si no aplica.
+ */
+export function formatDualCurrency(
+  amountUsd: number,
+  prefersMxn: boolean,
+  fractionDigits = 2
+): { primary: string; secondary: string | null } {
+  const primary = formatCurrency(amountUsd, "USD", fractionDigits);
+  if (!prefersMxn) return { primary, secondary: null };
+  const mxn = amountUsd * USD_TO_MXN;
+  const formattedMxn = formatCurrency(mxn, "MXN", fractionDigits);
+  return { primary, secondary: `≈ ${formattedMxn}` };
+}

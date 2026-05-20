@@ -5,8 +5,15 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { assignSharesFromLead } from "@/lib/services/share-assignment";
+import {
+  approveInfoRequest,
+  rejectInfoRequest,
+} from "@/lib/services/info-request";
 import { DomainError } from "@/lib/services/errors";
-import { notifyInvestorSharesAssigned } from "@/lib/email/notifications";
+import {
+  notifyInvestorSharesAssigned,
+  notifyRequesterInfoRequestResolved,
+} from "@/lib/email/notifications";
 
 export type LeadActionResult =
   | { ok: true }
@@ -134,6 +141,101 @@ export async function acceptLeadAndAssignAction(leadId: string): Promise<LeadAct
       pricePerShareFormatted: pricePerShare !== null ? fmtMoney(pricePerShare) : null,
       serial: result.newSerial,
       certificateSerial: certificate.serialCode,
+    });
+  });
+
+  return { ok: true };
+}
+
+// ─── InfoRequest (etapa 1) ──────────────────────────────────────────
+
+async function loadInfoRequestForOwner(infoRequestId: string, actorId: string) {
+  const req = await prisma.infoRequest.findUnique({
+    where: { id: infoRequestId },
+    include: {
+      project: { select: { ownerId: true, slug: true, name: true } },
+      requester: { select: { email: true, fullName: true } },
+    },
+  });
+  if (!req) return null;
+  if (req.project.ownerId !== actorId) return null;
+  return req;
+}
+
+export async function approveInfoRequestAction(
+  infoRequestId: string,
+  note: string
+): Promise<LeadActionResult> {
+  const user = await requireSession();
+  const req = await loadInfoRequestForOwner(infoRequestId, user.id);
+  if (!req) return { ok: false, error: "Solicitud no encontrada." };
+
+  try {
+    await approveInfoRequest(req.id, user.id, note);
+  } catch (e) {
+    if (e instanceof DomainError) return { ok: false, error: e.message };
+    console.error(e);
+    return { ok: false, error: "Error interno." };
+  }
+
+  revalidatePath(`/founder/${req.project.slug}/leads`);
+  revalidatePath(`/proyectos/${req.project.slug}`);
+
+  after(async () => {
+    const owner = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { fullName: true },
+    });
+    const requesterFirst =
+      req.requester.fullName.split(" ")[0] ?? req.requester.fullName;
+    await notifyRequesterInfoRequestResolved({
+      to: req.requester.email,
+      projectSlug: req.project.slug,
+      requesterFirstName: requesterFirst,
+      projectName: req.project.name,
+      founderName: owner?.fullName ?? "el founder",
+      decision: "APPROVED",
+      note,
+    });
+  });
+
+  return { ok: true };
+}
+
+export async function rejectInfoRequestAction(
+  infoRequestId: string,
+  note: string
+): Promise<LeadActionResult> {
+  const user = await requireSession();
+  const req = await loadInfoRequestForOwner(infoRequestId, user.id);
+  if (!req) return { ok: false, error: "Solicitud no encontrada." };
+
+  try {
+    await rejectInfoRequest(req.id, user.id, note);
+  } catch (e) {
+    if (e instanceof DomainError) return { ok: false, error: e.message };
+    console.error(e);
+    return { ok: false, error: "Error interno." };
+  }
+
+  revalidatePath(`/founder/${req.project.slug}/leads`);
+  revalidatePath(`/proyectos/${req.project.slug}`);
+
+  after(async () => {
+    const owner = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { fullName: true },
+    });
+    const requesterFirst =
+      req.requester.fullName.split(" ")[0] ?? req.requester.fullName;
+    await notifyRequesterInfoRequestResolved({
+      to: req.requester.email,
+      projectSlug: req.project.slug,
+      requesterFirstName: requesterFirst,
+      projectName: req.project.name,
+      founderName: owner?.fullName ?? "el founder",
+      decision: "REJECTED",
+      note,
     });
   });
 

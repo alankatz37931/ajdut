@@ -20,6 +20,7 @@ type Initial = {
   preMoneyValuation: string;
   valuationCurrency: string;
   websiteUrl: string;
+  videoUrl: string;
   pitchDeckUrl: string;
   dataRoomUrl: string;
   assetBackingNote: string;
@@ -213,6 +214,20 @@ export function EditProjectForm({
               Dropbox, Notion u otro servicio donde los tengas hospedados. AJDUT solo guarda los
               links — no hostea los archivos.
             </p>
+            <Field label="URL del video (YouTube / Vimeo)" htmlFor="videoUrl">
+              <input
+                id="videoUrl"
+                name="videoUrl"
+                value={form.videoUrl}
+                onChange={(e) => update("videoUrl", e.target.value)}
+                type="url"
+                className="input"
+                placeholder="https://youtu.be/..."
+              />
+              <p className="mt-2 eyebrow">
+                Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.
+              </p>
+            </Field>
             <Field label="Pitch deck (URL)" htmlFor="pitchDeckUrl">
               <input
                 id="pitchDeckUrl"

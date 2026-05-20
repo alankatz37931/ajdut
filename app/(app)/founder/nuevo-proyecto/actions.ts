@@ -40,6 +40,7 @@ export async function createProjectAction(
   const valuationRaw = get("preMoneyValuation");
   const currency = get("valuationCurrency") || "USD";
   const websiteUrl = get("websiteUrl") || undefined;
+  const videoUrl = get("videoUrl") || undefined;
   const legalName = get("legalName") || name;
   const jurisdiction = get("jurisdiction");
   const assetBackingNote = get("assetBackingNote") || undefined;
@@ -95,6 +96,7 @@ export async function createProjectAction(
       preMoneyValuation: valuation,
       valuationCurrency: currency as "USD" | "MXN",
       websiteUrl,
+      videoUrl,
       legalName,
       jurisdiction,
       assetBackingNote,

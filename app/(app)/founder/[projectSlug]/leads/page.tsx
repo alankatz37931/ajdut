@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { formatDate } from "@/lib/utils/format";
 import { LeadActions } from "./LeadActions";
+import { InfoRequestActions } from "./InfoRequestActions";
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
@@ -24,6 +25,14 @@ const STATUS_SYMBOL: Record<string, string> = {
   EXPIRED: "▪",
 };
 
+const SUPPORT_KIND_LABEL: Record<string, string> = {
+  CAPITAL: "Capital",
+  SPONSOR: "Sponsor",
+  AMBASSADOR: "Embajador",
+  ADVISOR: "Advisor",
+  OTHER: "Otro",
+};
+
 export default async function FounderLeadsPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
   const { projectSlug } = await params;
@@ -39,13 +48,22 @@ export default async function FounderLeadsPage({ params }: Params) {
   if (!project) notFound();
   if (project.ownerId !== user.id) notFound();
 
-  const leads = await prisma.lead.findMany({
-    where: { projectId: project.id },
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-    include: {
-      user: { select: { id: true, fullName: true, email: true } },
-    },
-  });
+  const [leads, infoRequests] = await Promise.all([
+    prisma.lead.findMany({
+      where: { projectId: project.id },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      include: {
+        user: { select: { id: true, fullName: true, email: true } },
+      },
+    }),
+    prisma.infoRequest.findMany({
+      where: { projectId: project.id, status: "PENDING" },
+      orderBy: { createdAt: "desc" },
+      include: {
+        requester: { select: { id: true, fullName: true, email: true } },
+      },
+    }),
+  ]);
 
   const valuation = project.startupProfile?.preMoneyValuation
     ? Number(project.startupProfile.preMoneyValuation)
@@ -94,6 +112,43 @@ export default async function FounderLeadsPage({ params }: Params) {
         )}
       </header>
 
+      {infoRequests.length > 0 && (
+        <section className="mt-10">
+          <p className="eyebrow mb-4">Solicitudes de información ({infoRequests.length})</p>
+          <ul className="space-y-4">
+            {infoRequests.map((r) => {
+              const daysAgo = Math.floor(
+                (Date.now() - r.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+              );
+              return (
+                <li key={r.id} className="flex gap-4">
+                  <span aria-hidden className="shrink-0 w-[3px] self-stretch bg-gold/70" />
+                  <div className="flex-1 min-w-0 py-3 pr-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="font-sans text-navy text-lg leading-tight">
+                        {r.requester.fullName}
+                      </span>
+                      <span className="eyebrow shrink-0">{daysAgo}d</span>
+                    </div>
+                    <p className="mt-1 eyebrow truncate">
+                      <span className="!text-navy/70">{r.requester.email}</span>
+                    </p>
+                    {(r.message ?? "").trim().length > 0 && (
+                      <p className="mt-3 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
+                        “{r.message}”
+                      </p>
+                    )}
+                    <div className="mt-4">
+                      <InfoRequestActions infoRequestId={r.id} />
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {leads.length === 0 ? (
         <p className="mt-10 text-navy/60">
           Cuando alguien diga “me interesa participar” en tu proyecto, va a aparecer acá.
@@ -135,6 +190,14 @@ export default async function FounderLeadsPage({ params }: Params) {
                       </span>
                       {STATUS_LABEL[l.status] ?? l.status}
                     </span>
+                    {l.supportKind && (
+                      <>
+                        <span className="!text-navy/30"> · </span>
+                        <span className="!text-navy">
+                          {SUPPORT_KIND_LABEL[l.supportKind] ?? l.supportKind}
+                        </span>
+                      </>
+                    )}
                     <span className="!text-navy/30"> · </span>
                     <span className="!text-navy/70">{l.user.email}</span>
                   </p>

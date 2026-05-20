@@ -4,7 +4,13 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { Section } from "@/components/ui/Section";
 import { KpiCard } from "@/components/ui/KpiCard";
-import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
+import { getUserPreferences } from "@/lib/preferences";
+import {
+  formatCurrency,
+  formatDate,
+  formatDualCurrency,
+  formatNumber,
+} from "@/lib/utils/format";
 
 const STATUS_LABEL: Record<string, string> = {
   ASSIGNED: "Asignada",
@@ -34,6 +40,8 @@ export default async function PartnerDashboardPage() {
   // Cualquier usuario con sesión puede ver SUS participaciones (la query
   // filtra por currentOwnerId === user.id, no expone nada de terceros).
   const user = await requireSession();
+  const prefs = await getUserPreferences();
+  const prefersMxn = prefs.currency === "MXN";
 
   const [participations, dividendPayments] = await Promise.all([
     prisma.participation.findMany({
@@ -166,11 +174,18 @@ export default async function PartnerDashboardPage() {
             label="Valor total del portafolio"
             value={formatCurrency(primaryTotal, primaryCurrency)}
             hint={
-              otherCurrencies.length > 0
-                ? `+ ${otherCurrencies
-                    .map(([c, v]) => formatCurrency(v, c))
-                    .join(" + ")}`
-                : `${projectsCount} proyecto${projectsCount === 1 ? "" : "s"}`
+              prefersMxn && primaryCurrency === "USD"
+                ? (formatDualCurrency(primaryTotal, true).secondary ??
+                  (otherCurrencies.length > 0
+                    ? `+ ${otherCurrencies
+                        .map(([c, v]) => formatCurrency(v, c))
+                        .join(" + ")}`
+                    : `${projectsCount} proyecto${projectsCount === 1 ? "" : "s"}`))
+                : otherCurrencies.length > 0
+                  ? `+ ${otherCurrencies
+                      .map(([c, v]) => formatCurrency(v, c))
+                      .join(" + ")}`
+                  : `${projectsCount} proyecto${projectsCount === 1 ? "" : "s"}`
             }
             highlight
           />
@@ -242,6 +257,16 @@ export default async function PartnerDashboardPage() {
                             ? formatCurrency(p.valueInProjectCurrency, currency)
                             : "—"}
                         </p>
+                        {prefersMxn &&
+                          currency === "USD" &&
+                          p.valueInProjectCurrency !== null && (
+                            <p className="mt-0.5 font-mono text-xs text-navy/40">
+                              {formatDualCurrency(
+                                p.valueInProjectCurrency,
+                                true
+                              ).secondary}
+                            </p>
+                          )}
                       </div>
                       <div>
                         <p className="eyebrow">Estado</p>

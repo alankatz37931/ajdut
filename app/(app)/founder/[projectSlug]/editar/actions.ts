@@ -63,6 +63,7 @@ export async function updateProjectInfoAction(
       preMoneyValuation: pickOptionalStr("preMoneyValuation"),
       valuationCurrency: pickStr("valuationCurrency"),
       websiteUrl: pickOptionalStr("websiteUrl"),
+      videoUrl: pickOptionalStr("videoUrl"),
       pitchDeckUrl: pickOptionalStr("pitchDeckUrl"),
       dataRoomUrl: pickOptionalStr("dataRoomUrl"),
       assetBackingNote: pickOptionalStr("assetBackingNote"),
