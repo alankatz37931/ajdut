@@ -32,11 +32,8 @@ export async function savePreferencesAction(formData: FormData): Promise<SaveRes
   const langRaw = String(formData.get("language") ?? "es");
   const currencyRaw = String(formData.get("currency") ?? "USD");
 
-  // El inglés todavía no está disponible — forzamos español si nos llega "en"
-  const language: Language = "es";
-  if (langRaw === "en") {
-    // Ignoramos en silencio para no romper el form, pero no aceptamos inglés todavía
-  }
+  // Ola 7c: inglés ya está disponible. Aceptamos "en" además del default "es".
+  const language: Language = langRaw === "en" ? "en" : "es";
 
   const currency: PreferredCurrency = currencyRaw === "MXN" ? "MXN" : "USD";
 

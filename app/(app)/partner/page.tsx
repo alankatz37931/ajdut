@@ -5,28 +5,13 @@ import { prisma } from "@/lib/db/client";
 import { Section } from "@/components/ui/Section";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { getUserPreferences } from "@/lib/preferences";
+import { getDict, getLocale } from "@/lib/i18n";
 import {
   formatCurrency,
   formatDate,
   formatDualCurrency,
   formatNumber,
 } from "@/lib/utils/format";
-
-const STATUS_LABEL: Record<string, string> = {
-  ASSIGNED: "Asignada",
-  IN_RESALE: "En reventa",
-  TRANSFER_PENDING: "Transferencia pendiente",
-  AVAILABLE: "Disponible",
-  IN_NEGOTIATION: "En negociación",
-};
-
-const PAYMENT_STATUS_LABEL: Record<string, string> = {
-  PENDING: "Pendiente",
-  SENT: "Enviado por founder",
-  RECEIVED: "Confirmado",
-  DISPUTED: "En disputa",
-  WAIVED: "Renunciado",
-};
 
 const PAYMENT_STATUS_SYMBOL: Record<string, string> = {
   PENDING: "○",
@@ -40,11 +25,12 @@ const PAYMENT_STATUS_SYMBOL: Record<string, string> = {
 const HISTORY_PAGE_SIZE = 20;
 
 export default async function PartnerDashboardPage() {
-  // Cualquier usuario con sesión puede ver SUS participaciones (la query
-  // filtra por currentOwnerId === user.id, no expone nada de terceros).
   const user = await requireSession();
   const prefs = await getUserPreferences();
   const prefersMxn = prefs.currency === "MXN";
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.partner;
 
   const [participations, dividendPayments] = await Promise.all([
     prisma.participation.findMany({
@@ -97,7 +83,6 @@ export default async function PartnerDashboardPage() {
     }),
   ]);
 
-  // Cálculos del portafolio
   type Row = (typeof participations)[number] & {
     pricePerShare: number | null;
     valueInProjectCurrency: number | null;
@@ -114,7 +99,6 @@ export default async function PartnerDashboardPage() {
     return { ...p, pricePerShare, valueInProjectCurrency };
   });
 
-  // Agrupamos por moneda para no sumar peras con manzanas
   const totalsByCurrency = new Map<string, number>();
   let activeProjectsCount = 0;
   for (const r of rows) {
@@ -137,25 +121,16 @@ export default async function PartnerDashboardPage() {
     ([c]) => c !== primaryCurrency
   );
 
-  // ─── Histórico de dividendos: agregaciones ─────────────────────────
-  //
-  // Filosofía AJDUT: el socio ve sus números reales — lo que cobró, lo que
-  // está pendiente y la traza temporal. Sumamos solo lo confirmado
-  // (RECEIVED) por moneda. Pendiente: PENDING + SENT.
   const now = new Date();
   const days = (n: number) => n * 24 * 60 * 60 * 1000;
   const last30 = new Date(now.getTime() - days(30));
   const last90 = new Date(now.getTime() - days(90));
   const last180 = new Date(now.getTime() - days(180));
 
-  // Fecha de referencia del pago: la confirmada si existe; si no, la enviada
-  // por el founder; si no, recordDate.
   function paymentDate(p: (typeof dividendPayments)[number]): Date {
     return p.receivedAt ?? p.sentAt ?? p.distribution.recordDate;
   }
 
-  // Sumas por período. Solo contamos pagos confirmados (RECEIVED) — la idea
-  // es "cuánto cobré realmente". Por moneda.
   type ByCurrency = Map<string, number>;
   const sumReceivedSince = (since: Date): ByCurrency => {
     const m = new Map<string, number>();
@@ -181,8 +156,6 @@ export default async function PartnerDashboardPage() {
   const totals6m = sumReceivedSince(last180);
   const totalsAll = sumReceivedTotal();
 
-  // Helper de render: convierte ByCurrency en string "USD 123 + MXN 456",
-  // ordenado, eligiendo USD primero. Si vacío devuelve "—".
   function renderByCurrency(m: ByCurrency, fallback = "—"): string {
     if (m.size === 0) return fallback;
     const entries = Array.from(m.entries()).sort((a, b) => {
@@ -190,11 +163,9 @@ export default async function PartnerDashboardPage() {
       if (b[0] === "USD") return 1;
       return a[0].localeCompare(b[0]);
     });
-    return entries.map(([c, v]) => formatCurrency(v, c)).join(" + ");
+    return entries.map(([c, v]) => formatCurrency(v, c, 2, locale)).join(" + ");
   }
 
-  // Hint adicional con equivalente MXN cuando el viewer prefiere MXN
-  // y hay total en USD.
   function dualHint(m: ByCurrency, hint: string): string {
     if (!prefersMxn) return hint;
     const usd = m.get("USD");
@@ -203,7 +174,6 @@ export default async function PartnerDashboardPage() {
     return dual ?? hint;
   }
 
-  // Pendiente / por cobrar (PENDING + SENT)
   const dividendsPendingByCurrency: ByCurrency = new Map();
   for (const p of dividendPayments) {
     if (p.status === "PENDING" || p.status === "SENT") {
@@ -214,7 +184,6 @@ export default async function PartnerDashboardPage() {
     }
   }
 
-  // ─── Breakdown por proyecto (solo confirmados) ─────────────────────
   type ProjectBreakdown = {
     projectId: string;
     projectSlug: string;
@@ -230,10 +199,6 @@ export default async function PartnerDashboardPage() {
 
   const breakdownByProject = new Map<string, ProjectBreakdown>();
 
-  // Sembrar el breakdown con los proyectos en los que el socio tiene
-  // participaciones (así mostramos política aunque todavía no haya cobrado
-  // dividendos). Si tiene pagos de un proyecto que ya no posee, igual lo
-  // sumamos más abajo — el socio puede haber vendido y conserva su histórico.
   for (const p of participations) {
     const proj = p.project;
     if (!breakdownByProject.has(proj.id)) {
@@ -265,8 +230,6 @@ export default async function PartnerDashboardPage() {
         lastPaymentAmount: null,
         lastPaymentCurrency: null,
         paymentsCount: 0,
-        // No traemos startupProfile para proyectos donde el socio ya no posee;
-        // dejamos política en null y se muestra "No declarada".
         policyDividends: null,
         dividendsFrequency: null,
       };
@@ -289,7 +252,6 @@ export default async function PartnerDashboardPage() {
   }
 
   const breakdownList = Array.from(breakdownByProject.values()).sort((a, b) => {
-    // Proyectos con pagos primero, ordenados por último pago descendente.
     if (a.lastPaymentAt && b.lastPaymentAt) {
       return b.lastPaymentAt.getTime() - a.lastPaymentAt.getTime();
     }
@@ -298,8 +260,6 @@ export default async function PartnerDashboardPage() {
     return a.projectName.localeCompare(b.projectName);
   });
 
-  // ─── Stats por participation (para la card de "Participaciones activas")
-  // Necesitamos mostrar "Recibido total: USD X · Último pago: fecha".
   type ParticipationStats = {
     receivedByCurrency: ByCurrency;
     lastPaymentAt: Date | null;
@@ -323,79 +283,77 @@ export default async function PartnerDashboardPage() {
 
   const certificatesCount = rows.reduce((s, r) => s + r.certificates.length, 0);
 
-  // Histórico cronológico (últimos 20). Los pagos ya vienen ordenados por
-  // fecha de recepción / envío descendente.
   const historyRows = dividendPayments.slice(0, HISTORY_PAGE_SIZE);
 
   return (
     <div>
       <div className="pt-5 pb-5 sm:pt-7 sm:pb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="eyebrow">— Mi cartera</p>
-          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Mis participaciones</h1>
+          <p className="eyebrow">{t.eyebrow}</p>
+          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
           <p className="mt-4 max-w-xl text-navy/75 leading-relaxed">
-            Acceso exclusivo a los proyectos que respaldas. No verás otros miembros ni montos
-            agregados de terceros.
+            {t.intro}
           </p>
         </div>
         <Link href={"/proyectos" as Route} className="btn-outline shrink-0">
-          Explorar proyectos →
+          {t.exploreBtn}
         </Link>
       </div>
 
-      {/* KPIs del portafolio */}
       {participations.length > 0 && (
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-4">
           <KpiCard
-            label="Valor total del portafolio"
-            value={formatCurrency(primaryTotal, primaryCurrency)}
+            label={t.portfolioValue}
+            value={formatCurrency(primaryTotal, primaryCurrency, 2, locale)}
             hint={
               prefersMxn && primaryCurrency === "USD"
                 ? (formatDualCurrency(primaryTotal, true).secondary ??
                   (otherCurrencies.length > 0
                     ? `+ ${otherCurrencies
-                        .map(([c, v]) => formatCurrency(v, c))
+                        .map(([c, v]) => formatCurrency(v, c, 2, locale))
                         .join(" + ")}`
-                    : `${projectsCount} proyecto${projectsCount === 1 ? "" : "s"}`))
+                    : projectsCount === 1
+                      ? t.portfolioValueHintOneProject
+                      : `${projectsCount} ${t.portfolioValueHintManyProjectsSuffix}`))
                 : otherCurrencies.length > 0
                   ? `+ ${otherCurrencies
-                      .map(([c, v]) => formatCurrency(v, c))
+                      .map(([c, v]) => formatCurrency(v, c, 2, locale))
                       .join(" + ")}`
-                  : `${projectsCount} proyecto${projectsCount === 1 ? "" : "s"}`
+                  : projectsCount === 1
+                    ? t.portfolioValueHintOneProject
+                    : `${projectsCount} ${t.portfolioValueHintManyProjectsSuffix}`
             }
             highlight
           />
           <KpiCard
-            label="Acciones totales"
-            value={formatNumber(totalShares)}
-            hint="en todos los proyectos"
+            label={t.totalShares}
+            value={formatNumber(totalShares, undefined, locale)}
+            hint={t.totalSharesHint}
           />
           <KpiCard
-            label="Proyectos activos"
+            label={t.activeProjects}
             value={String(projectsCount)}
             hint={
               activeProjectsCount < projectsCount
-                ? `${projectsCount - activeProjectsCount} sin valoración informada`
-                : "con valoración informada"
+                ? `${projectsCount - activeProjectsCount} ${t.activeProjectsHintMissingSuffix}`
+                : t.activeProjectsHintAll
             }
           />
           <KpiCard
-            label="Certificados"
+            label={t.certificates}
             value={String(certificatesCount)}
             hint={
               certificatesCount > 0
-                ? "emitidos a tu nombre"
-                : "se emiten al asignar acciones"
+                ? t.certificatesHintIssued
+                : t.certificatesHintEmpty
             }
           />
         </div>
       )}
 
-      <Section title="Participaciones activas">
+      <Section title={t.activeParticipationsTitle}>
         {rows.length === 0 ? (
-          <p className="text-navy/60">
-            Aún no tienes participaciones asignadas. Cuando AJDUT te las asigne, aparecerán aquí.
-          </p>
+          <p className="text-navy/60">{t.noParticipations}</p>
         ) : (
           <ul className="hairline-t">
             {rows.map((p) => {
@@ -420,7 +378,7 @@ export default async function PartnerDashboardPage() {
                             href={`/proyectos/${p.project.slug}/chat` as Route}
                             className="eyebrow hover:!text-gold shrink-0"
                           >
-                            Chat →
+                            {t.chatShort}
                           </Link>
                         </div>
                         <p className="mt-1 eyebrow">{p.project.shortPitch}</p>
@@ -429,19 +387,21 @@ export default async function PartnerDashboardPage() {
                         href={`/proyectos/${p.project.slug}` as Route}
                         className="eyebrow text-gold shrink-0"
                       >
-                        Ver proyecto →
+                        {t.seeProject}
                       </Link>
                     </div>
                     <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                       <div>
-                        <p className="eyebrow">Acciones</p>
-                        <p className="mt-1 font-mono text-navy">{formatNumber(p.shareCount)}</p>
+                        <p className="eyebrow">{t.colShares}</p>
+                        <p className="mt-1 font-mono text-navy">
+                          {formatNumber(p.shareCount, undefined, locale)}
+                        </p>
                       </div>
                       <div>
-                        <p className="eyebrow">Valor</p>
+                        <p className="eyebrow">{t.colValue}</p>
                         <p className="mt-1 font-mono text-navy">
                           {p.valueInProjectCurrency !== null
-                            ? formatCurrency(p.valueInProjectCurrency, currency)
+                            ? formatCurrency(p.valueInProjectCurrency, currency, 2, locale)
                             : "—"}
                         </p>
                         {prefersMxn &&
@@ -456,32 +416,31 @@ export default async function PartnerDashboardPage() {
                           )}
                       </div>
                       <div>
-                        <p className="eyebrow">Estado</p>
+                        <p className="eyebrow">{t.colStatus}</p>
                         <p className="mt-1 eyebrow !text-navy">
-                          {STATUS_LABEL[p.status] ?? p.status}
+                          {t.participationStatus[p.status] ?? p.status}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="eyebrow">Adquirida</p>
+                        <p className="eyebrow">{t.colAcquired}</p>
                         <p className="mt-1 eyebrow !text-navy">
-                          {p.acquiredAt ? formatDate(p.acquiredAt) : "—"}
+                          {p.acquiredAt ? formatDate(p.acquiredAt, locale) : "—"}
                         </p>
                       </div>
                     </div>
 
-                    {/* Stats compactos de dividendos confirmados para
-                        esta participación. Eyebrow chico, una línea. */}
                     {hasDividendStats && (
                       <p className="mt-3 eyebrow !text-navy/60">
-                        Recibido total:{" "}
+                        {t.receivedTotal}{" "}
                         <span className="text-navy">
                           {renderByCurrency(stats!.receivedByCurrency)}
                         </span>
                         {stats!.lastPaymentAt && (
                           <>
-                            {" · Último pago: "}
+                            {" · "}
+                            {t.lastPayment}{" "}
                             <span className="text-navy">
-                              {formatDate(stats!.lastPaymentAt)}
+                              {formatDate(stats!.lastPaymentAt, locale)}
                             </span>
                           </>
                         )}
@@ -491,14 +450,15 @@ export default async function PartnerDashboardPage() {
                     {cert && (
                       <div className="mt-3 hairline-t pt-3 flex items-center justify-between gap-3 flex-wrap">
                         <div className="font-mono text-xs text-navy/70">
-                          Certificado <span className="text-navy">{cert.serialCode}</span> · Emitido{" "}
-                          {formatDate(cert.issuedAt)}
+                          {t.certificateLabel}{" "}
+                          <span className="text-navy">{cert.serialCode}</span> · {t.issuedAt}{" "}
+                          {formatDate(cert.issuedAt, locale)}
                         </div>
                         <Link
                           href={`/certificado/${cert.id}` as Route}
                           className="eyebrow hover:!text-gold"
                         >
-                          Ver certificado →
+                          {t.seeCertificate}
                         </Link>
                       </div>
                     )}
@@ -510,73 +470,59 @@ export default async function PartnerDashboardPage() {
         )}
       </Section>
 
-      {/* ─── Histórico de dividendos (Ola 6) ──────────────────────────
-          Vista personal del socio: cuánto cobró por período, breakdown por
-          proyecto, política declarada por cada founder, lista cronológica
-          y descarga del CSV. Solo refleja datos del propio user. */}
-      <Section title="Histórico de dividendos">
+      <Section title={t.dividendsHistoryTitle}>
         {dividendPayments.length === 0 && breakdownList.length === 0 ? (
-          <p className="text-navy/60">
-            Aún no hay distribuciones de dividendos sobre tus participaciones. Cuando un founder
-            declare una distribución, aparecerá acá con instrucciones de cobro.
-          </p>
+          <p className="text-navy/60">{t.dividendsEmpty}</p>
         ) : (
           <div className="space-y-8">
-            {/* KPIs por período (cobrado confirmado) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-4">
               <KpiCard
-                label="Último mes"
+                label={t.lastMonth}
                 value={renderByCurrency(totals1m)}
-                hint={dualHint(totals1m, "últimos 30 días")}
+                hint={dualHint(totals1m, t.lastMonthHint)}
               />
               <KpiCard
-                label="Últimos 3 meses"
+                label={t.last3Months}
                 value={renderByCurrency(totals3m)}
-                hint={dualHint(totals3m, "últimos 90 días")}
+                hint={dualHint(totals3m, t.last3MonthsHint)}
               />
               <KpiCard
-                label="Últimos 6 meses"
+                label={t.last6Months}
                 value={renderByCurrency(totals6m)}
-                hint={dualHint(totals6m, "últimos 180 días")}
+                hint={dualHint(totals6m, t.last6MonthsHint)}
               />
               <KpiCard
-                label="Histórico total"
+                label={t.historicTotal}
                 value={renderByCurrency(totalsAll)}
-                hint={dualHint(totalsAll, "confirmado por vos")}
+                hint={dualHint(totalsAll, t.historicTotalHint)}
                 highlight
               />
             </div>
 
-            {/* Por cobrar — destacado aparte */}
             {dividendsPendingByCurrency.size > 0 && (
               <div className="grid grid-cols-1 gap-px bg-line">
                 <KpiCard
-                  label="Por cobrar"
+                  label={t.pending}
                   value={renderByCurrency(dividendsPendingByCurrency)}
-                  hint="enviados por founder o pendientes de envío"
+                  hint={t.pendingHint}
                 />
               </div>
             )}
 
-            {/* Descarga del CSV. <a download> nativo: el endpoint setea
-                Content-Disposition con un filename con fecha. */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="eyebrow !text-navy/60">
-                Tu histórico completo (incluye estado y fecha de confirmación).
-              </p>
+              <p className="eyebrow !text-navy/60">{t.historyDescription}</p>
               <a
                 href="/api/dividends/export"
                 download
                 className="btn-outline shrink-0"
               >
-                Descargar histórico (CSV) ↓
+                {t.downloadCsv}
               </a>
             </div>
 
-            {/* Breakdown por proyecto + política */}
             {breakdownList.length > 0 && (
               <div>
-                <p className="eyebrow mb-4">Por proyecto</p>
+                <p className="eyebrow mb-4">{t.byProject}</p>
                 <ul className="hairline-t">
                   {breakdownList.map((b) => {
                     const hasReceived = b.receivedByCurrency.size > 0;
@@ -592,8 +538,8 @@ export default async function PartnerDashboardPage() {
                             </Link>
                             <p className="mt-1 eyebrow">
                               {b.paymentsCount === 0
-                                ? "Sin distribuciones aún"
-                                : `${b.paymentsCount} pago${b.paymentsCount === 1 ? "" : "s"} registrado${b.paymentsCount === 1 ? "" : "s"}`}
+                                ? t.noDistributionsYet
+                                : `${b.paymentsCount} ${b.paymentsCount === 1 ? t.paymentRegistered : t.paymentsRegistered}`}
                             </p>
                           </div>
                           <a
@@ -601,13 +547,13 @@ export default async function PartnerDashboardPage() {
                             download
                             className="eyebrow hover:!text-gold shrink-0"
                           >
-                            Descargar política (TXT) ↓
+                            {t.downloadPolicy}
                           </a>
                         </div>
 
                         <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                           <div>
-                            <p className="eyebrow">Recibido total</p>
+                            <p className="eyebrow">{t.receivedTotalLabel}</p>
                             <p className="mt-1 font-mono text-navy">
                               {hasReceived
                                 ? renderByCurrency(b.receivedByCurrency)
@@ -625,31 +571,29 @@ export default async function PartnerDashboardPage() {
                             )}
                           </div>
                           <div>
-                            <p className="eyebrow">Último pago</p>
+                            <p className="eyebrow">{t.lastPaymentLabel}</p>
                             <p className="mt-1 eyebrow !text-navy">
-                              {b.lastPaymentAt ? formatDate(b.lastPaymentAt) : "—"}
+                              {b.lastPaymentAt ? formatDate(b.lastPaymentAt, locale) : "—"}
                             </p>
                             {b.lastPaymentAmount !== null && b.lastPaymentCurrency && (
                               <p className="mt-0.5 font-mono text-xs text-navy/60">
-                                {formatCurrency(b.lastPaymentAmount, b.lastPaymentCurrency)}
+                                {formatCurrency(b.lastPaymentAmount, b.lastPaymentCurrency, 2, locale)}
                               </p>
                             )}
                           </div>
                           <div className="sm:text-right">
-                            <p className="eyebrow">Frecuencia</p>
+                            <p className="eyebrow">{t.frequencyLabel}</p>
                             <p className="mt-1 eyebrow !text-navy">
                               {b.dividendsFrequency?.trim()
                                 ? b.dividendsFrequency
-                                : "No declarada"}
+                                : t.notDeclared}
                             </p>
                           </div>
                         </div>
 
-                        {/* Sub-bloque: política declarada por el founder.
-                            Si está vacía, lo decimos explícito. */}
                         <div className="mt-4 hairline-t pt-3">
                           <p className="eyebrow !text-navy/40 mb-1">
-                            Política de dividendos
+                            {t.dividendsPolicyLabel}
                           </p>
                           {b.policyDividends?.trim() ? (
                             <p className="text-sm text-navy/85 leading-relaxed whitespace-pre-line">
@@ -657,7 +601,7 @@ export default async function PartnerDashboardPage() {
                             </p>
                           ) : (
                             <p className="text-sm text-navy/60 italic">
-                              El founder aún no declaró una política de dividendos.
+                              {t.noPolicyDeclared}
                             </p>
                           )}
                         </div>
@@ -668,16 +612,15 @@ export default async function PartnerDashboardPage() {
               </div>
             )}
 
-            {/* Lista cronológica de los últimos N pagos */}
             {historyRows.length > 0 && (
               <div>
                 <div className="flex items-baseline justify-between mb-4">
                   <p className="eyebrow">
-                    Últimos {Math.min(historyRows.length, HISTORY_PAGE_SIZE)} pagos
+                    {t.historyTitlePrefix} {Math.min(historyRows.length, HISTORY_PAGE_SIZE)} {t.historyTitleSuffix}
                   </p>
                   {dividendPayments.length > historyRows.length && (
                     <p className="eyebrow !text-navy/40">
-                      {dividendPayments.length} en total
+                      {dividendPayments.length} {t.historyInTotalSuffix}
                     </p>
                   )}
                 </div>
@@ -701,39 +644,41 @@ export default async function PartnerDashboardPage() {
                           <span aria-hidden className="text-base leading-none">
                             {PAYMENT_STATUS_SYMBOL[dp.status] ?? "·"}
                           </span>
-                          {PAYMENT_STATUS_LABEL[dp.status] ?? dp.status}
+                          {t.paymentStatusLabel[dp.status] ?? dp.status}
                         </span>
                       </div>
                       <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                         <div>
-                          <p className="eyebrow">Monto</p>
+                          <p className="eyebrow">{t.colAmount}</p>
                           <p className="mt-1 font-mono text-navy">
-                            {formatCurrency(Number(dp.amount), dp.currency)}
+                            {formatCurrency(Number(dp.amount), dp.currency, 2, locale)}
                           </p>
                         </div>
                         <div>
-                          <p className="eyebrow">Acciones</p>
-                          <p className="mt-1 font-mono text-navy">{formatNumber(dp.shareCount)}</p>
+                          <p className="eyebrow">{t.colShares}</p>
+                          <p className="mt-1 font-mono text-navy">
+                            {formatNumber(dp.shareCount, undefined, locale)}
+                          </p>
                         </div>
                         <div>
-                          <p className="eyebrow">Fecha de registro</p>
+                          <p className="eyebrow">{t.colRecordDate}</p>
                           <p className="mt-1 eyebrow !text-navy">
-                            {formatDate(dp.distribution.recordDate)}
+                            {formatDate(dp.distribution.recordDate, locale)}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="eyebrow">
                             {dp.status === "RECEIVED"
-                              ? "Cobrado"
+                              ? t.colCollected
                               : dp.status === "SENT"
-                                ? "Enviado"
-                                : "Estado"}
+                                ? t.colSent
+                                : t.colState}
                           </p>
                           <p className="mt-1 eyebrow !text-navy">
                             {dp.receivedAt
-                              ? formatDate(dp.receivedAt)
+                              ? formatDate(dp.receivedAt, locale)
                               : dp.sentAt
-                                ? formatDate(dp.sentAt)
+                                ? formatDate(dp.sentAt, locale)
                                 : "—"}
                           </p>
                         </div>

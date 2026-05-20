@@ -1,7 +1,15 @@
 import type { Route } from "next";
 import { prisma } from "@/lib/db/client";
 import type { NavItem } from "@/components/app/SideNav";
+import { getDict } from "@/lib/i18n";
 
+// Role labels (visible en /perfil, /configuracion, etc.). Las claves del
+// enum quedan en inglés (ADMIN/PROJECT_OWNER/...); las etiquetas humanas
+// son del dict según el idioma activo.
+//
+// TODO i18n: Si llamadores admin nuevos necesitan etiquetas localizadas,
+// usen `getRoleLabel` (async). El export estático `ROLE_LABEL` queda en
+// español por compat con audit / admin que están fuera del scope de Ola 7c.
 export const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Admin",
   PROJECT_OWNER: "Founder",
@@ -9,14 +17,24 @@ export const ROLE_LABEL: Record<string, string> = {
   PARTNER: "Miembro",
 };
 
+export async function getRoleLabel(role: string): Promise<string> {
+  // El dict no tiene roles aún (admin interno); reuso del estático.
+  // TODO i18n: mover a dict.roles cuando se traduzca el área admin.
+  return ROLE_LABEL[role] ?? role;
+}
+
 /**
  * Construye los items del sidebar según rol. Compartido entre el layout
  * de la app y la página /nosotros (que muestra el mismo chrome si hay sesión).
+ *
+ * Los labels respetan la preferencia de idioma del viewer (cookie + dict).
  */
 export async function navItemsFor(
   role: string,
   userId?: string
 ): Promise<NavItem[]> {
+  const dict = await getDict();
+  const n = dict.nav;
   // Cualquier rol que tenga acciones asignadas ve "Mis participaciones",
   // igual que un socio. PARTNER ya lo tiene fijo en su menú.
   const ownsShares =
@@ -25,27 +43,27 @@ export async function navItemsFor(
       where: { currentOwnerId: userId },
     })) > 0;
   const misParticipacionesItem: NavItem = {
-    label: "Mis participaciones",
+    label: n.myParticipations,
     href: "/partner" as Route,
   };
 
   const profileItem: NavItem = {
-    label: "Mi perfil",
+    label: n.profile,
     href: "/perfil" as Route,
     pinBottom: true,
   };
   const settingsItem: NavItem = {
-    label: "Configuración",
+    label: n.settings,
     href: "/configuracion" as Route,
     pinBottom: true,
   };
   const nosotrosItem: NavItem = {
-    label: "Sobre nosotros",
+    label: n.aboutUs,
     href: "/nosotros" as Route,
     pinBottom: true,
   };
   const legalItem: NavItem = {
-    label: "Aviso legal",
+    label: n.legalNotice,
     href: "/legal" as Route,
     pinBottom: true,
   };
@@ -61,27 +79,27 @@ export async function navItemsFor(
       }),
     ]);
     return [
-      { label: "Proyectos", href: "/proyectos" as Route },
+      { label: n.projects, href: "/proyectos" as Route },
       {
-        label: "Aplicaciones",
+        label: n.applications,
         href: "/admin/applications" as Route,
         badge: pendingApps,
         badgeHighlight: true,
       },
       {
-        label: "Asignaciones",
+        label: n.assignments,
         href: "/admin/asignaciones" as Route,
         badge: pendingAssignmentsCount,
         badgeHighlight: true,
       },
       {
-        label: "Herederos",
+        label: n.heirs,
         href: "/admin/herederos" as Route,
         badge: escalatedHeirs,
         badgeHighlight: true,
       },
-      { label: "Auditoría", href: "/admin/auditoria" as Route },
-      { label: "Avisos", href: "/admin/avisos" as Route },
+      { label: n.audit, href: "/admin/auditoria" as Route },
+      { label: n.notices, href: "/admin/avisos" as Route },
       ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,
@@ -91,8 +109,8 @@ export async function navItemsFor(
   }
   if (role === "PROJECT_OWNER") {
     return [
-      { label: "Mi proyecto", href: "/founder" as Route },
-      { label: "Explorar", href: "/proyectos" as Route },
+      { label: n.myProject, href: "/founder" as Route },
+      { label: n.explore, href: "/proyectos" as Route },
       ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,
@@ -102,8 +120,8 @@ export async function navItemsFor(
   }
   if (role === "PARTNER") {
     return [
-      { label: "Explorar", href: "/proyectos" as Route },
-      { label: "Mis participaciones", href: "/partner" as Route },
+      { label: n.explore, href: "/proyectos" as Route },
+      { label: n.myParticipations, href: "/partner" as Route },
       profileItem,
       settingsItem,
       nosotrosItem,
@@ -112,7 +130,7 @@ export async function navItemsFor(
   }
   if (role === "CO_ADMIN") {
     return [
-      { label: "Proyectos", href: "/proyectos" as Route },
+      { label: n.projects, href: "/proyectos" as Route },
       ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,

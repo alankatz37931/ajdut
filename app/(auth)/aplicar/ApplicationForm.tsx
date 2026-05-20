@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import {
   requestEmailVerification,
   verifyAndSubmitApplication,
@@ -21,22 +22,26 @@ type Step =
   | "verify"
   | "submitted";
 
-const BASE_STEPS: Array<{ id: Step; label: string }> = [
-  { id: "kind", label: "Tipo" },
-  { id: "identity", label: "Identidad" },
-  { id: "contact", label: "Contacto" },
-  { id: "motivation", label: "Motivación" },
-  { id: "review", label: "Revisión" },
-  { id: "verify", label: "Verificación" },
-];
+function baseSteps(dict: Dict["apply"]): Array<{ id: Step; label: string }> {
+  return [
+    { id: "kind", label: dict.steps.kind ?? "Tipo" },
+    { id: "identity", label: dict.steps.identity ?? "Identidad" },
+    { id: "contact", label: dict.steps.contact ?? "Contacto" },
+    { id: "motivation", label: dict.steps.motivation ?? "Motivación" },
+    { id: "review", label: dict.steps.review ?? "Revisión" },
+    { id: "verify", label: dict.steps.verify ?? "Verificación" },
+  ];
+}
 
 /** Inserta el paso "Empresa" después de "Contacto" cuando el aplicante es COMPANY. */
-function stepsFor(kind: Kind): Array<{ id: Step; label: string }> {
-  if (kind === "PERSON") return BASE_STEPS;
+function stepsFor(kind: Kind, dict: Dict["apply"]): Array<{ id: Step; label: string }> {
+  const base = baseSteps(dict);
+  if (kind === "PERSON") return base;
   const out: Array<{ id: Step; label: string }> = [];
-  for (const s of BASE_STEPS) {
+  for (const s of base) {
     out.push(s);
-    if (s.id === "contact") out.push({ id: "company", label: "Empresa" });
+    if (s.id === "contact")
+      out.push({ id: "company", label: dict.steps.company ?? "Empresa" });
   }
   return out;
 }
@@ -56,35 +61,6 @@ type Draft = {
   companyKind: CompanyKind;
 };
 
-const MOTIVATION_OPTIONS: string[] = [
-  "Busco diversificar mi portafolio con proyectos reales",
-  "Me interesa apoyar emprendimientos de mi región",
-  "Tengo experiencia en startups / inmobiliario y quiero participar",
-  "Vengo recomendado por un miembro actual",
-  "Conocí AJDUT por redes / medios",
-  "Otro (especificar abajo)",
-];
-
-const COMPANY_KIND_LABEL: Record<CompanyKind, string> = {
-  REAL_ESTATE: "Inmobiliario",
-  MERCHANDISE: "Mercancía",
-  STARTUP: "Otro",
-};
-
-const emptyDraft: Draft = {
-  kind: "PERSON",
-  fullName: "",
-  email: "",
-  phone: "",
-  country: "",
-  motivation: "",
-  motivationOption: MOTIVATION_OPTIONS[0]!,
-  referredBy: "",
-  companyName: "",
-  companyDescription: "",
-  companyKind: "STARTUP",
-};
-
 /**
  * Compone el string que se persiste como `motivation` en la Application:
  * label del select + (si hay) "\n\n" + texto libre. El backend valida
@@ -96,7 +72,37 @@ function composeMotivation(opt: string, freeText: string): string {
   return `${opt}\n\n${trimmed}`;
 }
 
-export function ApplicationForm() {
+export function ApplicationForm({
+  dict,
+  locale,
+}: {
+  dict: Dict["apply"];
+  locale: string;
+}) {
+  // Opciones de motivación traducidas. Default a primera opción del dict.
+  const motivationOptions = dict.motivation.options;
+  const firstOption = motivationOptions[0] ?? "";
+
+  const emptyDraft: Draft = {
+    kind: "PERSON",
+    fullName: "",
+    email: "",
+    phone: "",
+    country: "",
+    motivation: "",
+    motivationOption: firstOption,
+    referredBy: "",
+    companyName: "",
+    companyDescription: "",
+    companyKind: "STARTUP",
+  };
+
+  const COMPANY_KIND_LABEL: Record<CompanyKind, string> = {
+    REAL_ESTATE: dict.company.kindRealEstate,
+    MERCHANDISE: dict.company.kindMerchandise,
+    STARTUP: dict.company.kindStartup,
+  };
+
   const [step, setStep] = useState<Step>("kind");
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +116,7 @@ export function ApplicationForm() {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
 
-  const steps = stepsFor(draft.kind);
+  const steps = stepsFor(draft.kind, dict);
   // stepOrder incluye "submitted" al final para que next() pueda avanzar al
   // estado terminal sin caer fuera del array.
   const stepOrder: Step[] = [...steps.map((s) => s.id), "submitted"];
@@ -147,8 +153,6 @@ export function ApplicationForm() {
 
   function back() {
     if (step === "verify") {
-      // Volver desde verify desarma el código pendiente — pero no lo invalida en backend
-      // (eso lo maneja la rotación cuando se vuelva a solicitar).
       setVerifiedEmail(null);
       setCode("");
       setCodeExpiresAt(null);
@@ -169,8 +173,6 @@ export function ApplicationForm() {
 
   function buildFormData(): FormData {
     const formData = new FormData();
-    // Componemos el campo motivation (label + texto libre) y descartamos el
-    // option interno: el backend solo conoce `motivation`.
     const composed = composeMotivation(draft.motivationOption, draft.motivation);
     const payload: Record<string, string> = {
       kind: draft.kind,
@@ -235,13 +237,12 @@ export function ApplicationForm() {
   if (step === "submitted" && submitResult?.ok) {
     return (
       <div className="space-y-4">
-        <p className="eyebrow">— Aplicación registrada</p>
-        <h2 className="font-sans text-h2 text-navy">Recibimos tu aplicación.</h2>
-        <p className="text-navy/75 leading-relaxed">
-          Tu solicitud queda en revisión manual. Te contactaremos al email proporcionado en cuanto
-          el equipo complete la evaluación. No hay registro automático en AJDUT.
+        <p className="eyebrow">{dict.submitted.eyebrow}</p>
+        <h2 className="font-sans text-h2 text-navy">{dict.submitted.title}</h2>
+        <p className="text-navy/75 leading-relaxed">{dict.submitted.body}</p>
+        <p className="eyebrow">
+          {dict.submitted.reference} {submitResult.applicationId}
         </p>
-        <p className="eyebrow">Referencia: {submitResult.applicationId}</p>
       </div>
     );
   }
@@ -282,7 +283,7 @@ export function ApplicationForm() {
                   type="button"
                   onClick={() => goTo(s.id)}
                   className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
-                  aria-label={`Volver a ${s.label}`}
+                  aria-label={`${dict.backStep}${s.label}`}
                 >
                   {inner}
                 </button>
@@ -300,22 +301,20 @@ export function ApplicationForm() {
       <div className="space-y-3">
         {step === "kind" && (
           <div className="space-y-4">
-            <p className="eyebrow">— ¿Cómo querés sumarte?</p>
-            <p className="text-navy/75 leading-relaxed">
-              Elegí el tipo de aplicación. Podés volver atrás más tarde si te equivocás.
-            </p>
+            <p className="eyebrow">{dict.kind.eyebrow}</p>
+            <p className="text-navy/75 leading-relaxed">{dict.kind.intro}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <KindCard
-                title="Persona"
-                subtitle="Quiero ser miembro de la comunidad"
-                description="Sumate como socio individual: ver proyectos, manifestar interés y participar de la red."
+                title={dict.kind.personTitle}
+                subtitle={dict.kind.personSubtitle}
+                description={dict.kind.personDescription}
                 selected={draft.kind === "PERSON"}
                 onClick={() => chooseKind("PERSON")}
               />
               <KindCard
-                title="Empresa"
-                subtitle="Quiero registrar mi proyecto"
-                description="Vengo a presentar un proyecto (startup, inmobiliario, mercancía u otro) para alojarlo en AJDUT."
+                title={dict.kind.companyTitle}
+                subtitle={dict.kind.companySubtitle}
+                description={dict.kind.companyDescription}
                 selected={draft.kind === "COMPANY"}
                 onClick={() => chooseKind("COMPANY")}
               />
@@ -325,7 +324,7 @@ export function ApplicationForm() {
 
         {step === "identity" && (
           <>
-            <Field label="Nombre completo" htmlFor="fullName">
+            <Field label={dict.identity.fullNameLabel} htmlFor="fullName">
               <input
                 id="fullName"
                 type="text"
@@ -335,7 +334,7 @@ export function ApplicationForm() {
                 autoFocus
               />
             </Field>
-            <Field label="Email" htmlFor="email">
+            <Field label={dict.identity.emailLabel} htmlFor="email">
               <input
                 id="email"
                 type="email"
@@ -349,7 +348,7 @@ export function ApplicationForm() {
 
         {step === "contact" && (
           <>
-            <Field label="Teléfono" htmlFor="phone">
+            <Field label={dict.contact.phoneLabel} htmlFor="phone">
               <input
                 id="phone"
                 type="tel"
@@ -359,7 +358,7 @@ export function ApplicationForm() {
                 autoFocus
               />
             </Field>
-            <Field label="País de residencia" htmlFor="country">
+            <Field label={dict.contact.countryLabel} htmlFor="country">
               <input
                 id="country"
                 type="text"
@@ -368,7 +367,7 @@ export function ApplicationForm() {
                 className="input"
               />
             </Field>
-            <Field label="¿Alguien te recomendó? (opcional)" htmlFor="referredBy">
+            <Field label={dict.contact.referredLabel} htmlFor="referredBy">
               <input
                 id="referredBy"
                 type="text"
@@ -382,7 +381,7 @@ export function ApplicationForm() {
 
         {step === "company" && (
           <>
-            <Field label="Nombre de la empresa o proyecto" htmlFor="companyName">
+            <Field label={dict.company.nameLabel} htmlFor="companyName">
               <input
                 id="companyName"
                 type="text"
@@ -393,7 +392,7 @@ export function ApplicationForm() {
                 maxLength={160}
               />
             </Field>
-            <Field label="Tipo de proyecto" htmlFor="companyKind">
+            <Field label={dict.company.kindLabel} htmlFor="companyKind">
               <select
                 id="companyKind"
                 value={draft.companyKind}
@@ -407,7 +406,7 @@ export function ApplicationForm() {
                 <option value="STARTUP">{COMPANY_KIND_LABEL.STARTUP}</option>
               </select>
             </Field>
-            <Field label="Descripción corta de la propuesta (opcional)" htmlFor="companyDescription">
+            <Field label={dict.company.descriptionLabel} htmlFor="companyDescription">
               <textarea
                 id="companyDescription"
                 rows={4}
@@ -415,10 +414,10 @@ export function ApplicationForm() {
                 value={draft.companyDescription}
                 onChange={(e) => update("companyDescription", e.target.value)}
                 className="input"
-                placeholder="En pocas líneas: qué hace el proyecto, en qué etapa está, qué necesitás de AJDUT."
+                placeholder={dict.company.descriptionPlaceholder}
               />
               <span className="eyebrow mt-2 block">
-                {draft.companyDescription.length} / 1000 caracteres
+                {draft.companyDescription.length} / 1000 {dict.company.charsCounter}
               </span>
             </Field>
           </>
@@ -426,7 +425,7 @@ export function ApplicationForm() {
 
         {step === "motivation" && (
           <>
-            <Field label="¿Qué te motiva?" htmlFor="motivationOption">
+            <Field label={dict.motivation.questionLabel} htmlFor="motivationOption">
               <select
                 id="motivationOption"
                 value={draft.motivationOption}
@@ -434,14 +433,14 @@ export function ApplicationForm() {
                 className="input"
                 autoFocus
               >
-                {MOTIVATION_OPTIONS.map((opt) => (
+                {motivationOptions.map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
                   </option>
                 ))}
               </select>
             </Field>
-            <Field label="Más detalles" htmlFor="motivation">
+            <Field label={dict.motivation.detailsLabel} htmlFor="motivation">
               <textarea
                 id="motivation"
                 rows={4}
@@ -449,10 +448,10 @@ export function ApplicationForm() {
                 value={draft.motivation}
                 onChange={(e) => update("motivation", e.target.value)}
                 className="input"
-                placeholder="Detalles adicionales (opcional)"
+                placeholder={dict.motivation.detailsPlaceholder}
               />
               <span className="eyebrow mt-2 block">
-                {draft.motivation.length} / 2000 caracteres
+                {draft.motivation.length} / 2000 {dict.company.charsCounter}
               </span>
             </Field>
           </>
@@ -461,26 +460,26 @@ export function ApplicationForm() {
         {step === "review" && (
           <div className="space-y-3 text-navy/85">
             <Row
-              label="Tipo"
-              value={draft.kind === "COMPANY" ? "Empresa" : "Persona"}
+              label={dict.review.typeLabel}
+              value={draft.kind === "COMPANY" ? dict.review.typeCompany : dict.review.typePerson}
             />
-            <Row label="Nombre" value={draft.fullName} />
-            <Row label="Email" value={draft.email} />
-            {draft.phone.trim() && <Row label="Teléfono" value={draft.phone} />}
-            {draft.country.trim() && <Row label="País" value={draft.country} />}
+            <Row label={dict.review.nameLabel} value={draft.fullName} />
+            <Row label={dict.review.emailLabel} value={draft.email} />
+            {draft.phone.trim() && <Row label={dict.review.phoneLabel} value={draft.phone} />}
+            {draft.country.trim() && <Row label={dict.review.countryLabel} value={draft.country} />}
             {draft.referredBy.trim() && (
-              <Row label="Referido por" value={draft.referredBy} />
+              <Row label={dict.review.referredLabel} value={draft.referredBy} />
             )}
             {draft.kind === "COMPANY" && (
               <>
-                <Row label="Empresa" value={draft.companyName} />
+                <Row label={dict.review.companyLabel} value={draft.companyName} />
                 <Row
-                  label="Tipo de proyecto"
+                  label={dict.review.companyKindLabel}
                   value={COMPANY_KIND_LABEL[draft.companyKind]}
                 />
                 {draft.companyDescription.trim() && (
                   <Row
-                    label="Descripción"
+                    label={dict.review.descriptionLabel}
                     value={draft.companyDescription}
                     multiline
                   />
@@ -488,38 +487,35 @@ export function ApplicationForm() {
               </>
             )}
             <Row
-              label="Motivación"
+              label={dict.review.motivationLabel}
               value={composeMotivation(draft.motivationOption, draft.motivation)}
               multiline
             />
 
-            <p className="mt-6 eyebrow">
-              Al continuar, te vamos a enviar un código de verificación al email de arriba para
-              confirmar que es tuyo.
-            </p>
+            <p className="mt-6 eyebrow">{dict.review.footnote}</p>
           </div>
         )}
 
         {step === "verify" && verifiedEmail && (
           <div className="space-y-5">
-            <p className="eyebrow">— Verificación de email</p>
-            <h2 className="font-sans text-h2 text-navy">Revisá tu casilla.</h2>
+            <p className="eyebrow">{dict.verify.eyebrow}</p>
+            <h2 className="font-sans text-h2 text-navy">{dict.verify.title}</h2>
             <p className="text-navy/75 leading-relaxed">
-              Te enviamos un código de 6 dígitos a{" "}
-              <span className="font-mono text-navy">{verifiedEmail}</span>. Ingresalo abajo para
-              completar la aplicación.
+              {dict.verify.sentTo}{" "}
+              <span className="font-mono text-navy">{verifiedEmail}</span>
+              {dict.verify.sentSuffix}
             </p>
             {codeExpiresAt && (
               <p className="eyebrow">
-                Válido hasta{" "}
-                {new Date(codeExpiresAt).toLocaleTimeString("es-MX", {
+                {dict.verify.validUntil}{" "}
+                {new Date(codeExpiresAt).toLocaleTimeString(locale, {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
               </p>
             )}
 
-            <Field label="Código de 6 dígitos" htmlFor="code">
+            <Field label={dict.verify.codeLabel} htmlFor="code">
               <input
                 id="code"
                 type="text"
@@ -539,7 +535,7 @@ export function ApplicationForm() {
               disabled={isPending}
               className="eyebrow hover:!text-gold"
             >
-              ¿No te llegó? Reenviar código →
+              {dict.verify.resend}
             </button>
           </div>
         )}
@@ -554,15 +550,13 @@ export function ApplicationForm() {
       <div className="mt-8 flex items-center justify-between">
         {step !== "kind" ? (
           <button type="button" onClick={back} className="eyebrow hover:!text-gold">
-            ← Atrás
+            {dict.backShort}
           </button>
         ) : (
           <span aria-hidden />
         )}
 
         {step === "kind" ? (
-          // En el paso "kind" no hay botón Continuar — al elegir tarjeta
-          // ya avanzamos automáticamente. Reservamos espacio igual.
           <span aria-hidden />
         ) : step === "review" ? (
           <button
@@ -571,7 +565,7 @@ export function ApplicationForm() {
             disabled={isPending}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Enviando código…" : "Enviar código de verificación →"}
+            {isPending ? dict.sendingCode : dict.sendCode}
           </button>
         ) : step === "verify" ? (
           <button
@@ -580,7 +574,7 @@ export function ApplicationForm() {
             disabled={isPending || code.length !== 6}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Verificando…" : "Verificar y enviar"}
+            {isPending ? dict.verifying : dict.verifyAndSubmit}
           </button>
         ) : (
           <button
@@ -589,7 +583,7 @@ export function ApplicationForm() {
             disabled={!canAdvance()}
             className="btn-primary disabled:opacity-50"
           >
-            Continuar →
+            {dict.continue}
           </button>
         )}
       </div>

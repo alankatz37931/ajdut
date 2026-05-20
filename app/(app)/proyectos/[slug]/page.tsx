@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
 import { getInfoRequest } from "@/lib/services/info-request";
 import { getUserPreferences } from "@/lib/preferences";
+import { getDict, getLocale, localeFor } from "@/lib/i18n";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { InterestForm } from "./InterestForm";
@@ -23,35 +24,12 @@ import {
 
 type Params = { params: Promise<{ slug: string }> };
 
-const KIND_LABEL: Record<string, string> = {
-  REAL_ESTATE: "Inmobiliario",
-  MERCHANDISE: "Mercancía",
-  STARTUP: "Otro",
-};
-
-const STAGE_LABEL: Record<string, string> = {
-  IDEA: "Idea",
-  PRE_SEED: "Pre-seed",
-  SEED: "Seed",
-  EARLY_REVENUE: "Early revenue",
-  GROWTH: "Growth",
-  SCALE: "Scale",
-};
-
-const STAGE_INFO: Record<string, string> = {
-  IDEA: "Concepto en validación, sin producto en mercado.",
-  PRE_SEED:
-    "Primer capital del fundador / familia / amigos para construir un MVP.",
-  SEED: "Primera ronda formal para validar el modelo de negocio.",
-  EARLY_REVENUE:
-    "El producto ya genera ingresos pero sigue iterando el ajuste con el mercado.",
-  GROWTH: "Modelo validado, foco en escalar.",
-  SCALE: "Operación consolidada, expansión a nuevos mercados.",
-};
-
 export default async function ProjectPage({ params }: Params) {
   const user = await requireSession();
   const { slug } = await params;
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.projectDetail;
 
   const project = await prisma.project.findUnique({
     where: { slug },
@@ -81,16 +59,14 @@ export default async function ProjectPage({ params }: Params) {
   });
   if (!access.canView) notFound();
 
-  // Preferencias del viewer (MXN dual display)
+  // Preferencias del viewer (MXN dual display + locale)
   const prefs = await getUserPreferences();
   const prefersMxn = prefs.currency === "MXN";
   const projectCurrencyForPrefs =
     project.startupProfile?.valuationCurrency ?? "USD";
-  // Solo mostramos el equivalente MXN cuando el monto original es USD.
   const showMxnDual = prefersMxn && projectCurrencyForPrefs === "USD";
 
   // InfoRequest del viewer para este proyecto (etapa 1 del flujo).
-  // PARTNER usa esto para gating de Documentos / Reportes y para el botón.
   const myInfoRequest =
     access.role === "PARTNER"
       ? await getInfoRequest(project.id, user.id)
@@ -107,7 +83,7 @@ export default async function ProjectPage({ params }: Params) {
   });
 
   // Reportes publicados por el founder. Visibles para cualquier viewer
-  // del proyecto (mismo criterio que Documentos / Hitos).
+  // del proyecto.
   const reports = await prisma.report.findMany({
     where: { projectId: project.id },
     orderBy: { publishedAt: "desc" },
@@ -146,11 +122,8 @@ export default async function ProjectPage({ params }: Params) {
       if (existing) {
         existing.shares += p.shareCount;
       } else {
-        // Para terceros mostramos el alias si el dueño lo configuró; cae a
-        // fullName cuando no hay alias. La participación institucional se
-        // muestra siempre como "AJDUT Platform".
         const displayName = p.isPlatformStake
-          ? "AJDUT Platform"
+          ? t.capTable.platform
           : p.currentOwner.alias ?? p.currentOwner.fullName;
         byOwner.set(p.currentOwnerId, {
           name: displayName,
@@ -168,7 +141,7 @@ export default async function ProjectPage({ params }: Params) {
     );
     if (availableShares > 0) {
       capTable.push({
-        holder: "Disponible (sin asignar)",
+        holder: t.capTable.unassigned,
         isPlatform: false,
         shares: availableShares,
       });
@@ -184,7 +157,10 @@ export default async function ProjectPage({ params }: Params) {
       latestByKind.set(m.kind, {
         kind: m.kind,
         label: m.customLabel ?? METRIC_LABEL[m.kind] ?? m.kind,
-        value: Number(m.value).toLocaleString("es-MX"),
+        // Mantenemos es-MX en raw value para no romper tests existentes que
+        // matchean strings con separadores específicos. El UI render usa
+        // `formatNumber(value, undefined, locale)` directamente en otros lados.
+        value: Number(m.value).toLocaleString(locale),
         unit: m.unit,
         asOf: m.asOf,
       });
@@ -208,51 +184,30 @@ export default async function ProjectPage({ params }: Params) {
   const myValue = pricePerShare !== null ? myShares * pricePerShare : null;
   const projectCurrency = project.startupProfile?.valuationCurrency ?? "USD";
 
-  const PARTICIPATION_STATUS_LABEL: Record<string, string> = {
-    ASSIGNED: "Asignada",
-    IN_RESALE: "En reventa",
-    TRANSFER_PENDING: "Transferencia pendiente",
-    IN_NEGOTIATION: "En negociación",
-    AVAILABLE: "Disponible",
-  };
-
-  const MILESTONE_STATUS_LABEL: Record<string, string> = {
-    PLANNED: "Planeado",
-    IN_PROGRESS: "En curso",
-    ACHIEVED: "Logrado",
-    DELAYED: "Demorado",
-    CANCELLED: "Cancelado",
-  };
-
-  const REPORT_PERIOD_LABEL: Record<string, string> = {
-    Q1: "Q1",
-    Q2: "Q2",
-    Q3: "Q3",
-    Q4: "Q4",
-    ANNUAL: "Anual",
-    EXTRAORDINARY: "Extraordinario",
-  };
-
-  const REPORT_KIND_LABEL: Record<string, string> = {
-    QUARTERLY_FINANCIAL: "Trimestral",
-    INVESTOR_UPDATE: "Update",
-    ANNUAL_AUDIT: "Auditoría anual",
-    EXTRAORDINARY: "Extraordinario",
-  };
-
   function humanReportPeriod(period: string, year: number): string {
-    if (period === "ANNUAL") return `Anual ${year}`;
-    if (period === "EXTRAORDINARY") return `Extraordinario ${year}`;
-    return `${REPORT_PERIOD_LABEL[period] ?? period} ${year}`;
+    if (period === "ANNUAL") return `${t.reports.annual} ${year}`;
+    if (period === "EXTRAORDINARY") return `${t.reports.extraordinary} ${year}`;
+    return `${period} ${year}`;
   }
 
-  // ─── Opción A: scroll único. El cuerpo fluye y la página mide lo que mide
-  //     el contenido — sin marco fijo que llenar. Cada bloque se apila solo
-  //     si tiene info. ───
+  function reportKindLabel(kind: string): string {
+    switch (kind) {
+      case "QUARTERLY_FINANCIAL":
+        return t.reports.kindQuarterly;
+      case "INVESTOR_UPDATE":
+        return t.reports.kindInvestorUpdate;
+      case "ANNUAL_AUDIT":
+        return t.reports.kindAnnualAudit;
+      case "EXTRAORDINARY":
+        return t.reports.kindExtraordinary;
+      default:
+        return kind;
+    }
+  }
+
+  // ─── Opción A: scroll único.
   const sections: { title?: string; node: React.ReactNode }[] = [];
 
-  // Acciones efectivamente colocadas (sin el stake institucional para
-  // quien no ve el cap table) → barra de fondeo.
   const visibleAssigned = access.canSeeCapTable
     ? assignedShares
     : assignedShares - platformShares;
@@ -272,33 +227,33 @@ export default async function ProjectPage({ params }: Params) {
       ? "lg:grid-cols-4"
       : "lg:grid-cols-3";
   sections.push({
-    title: "Participaciones",
+    title: t.sections.participations,
     node: (
-      // Una sola grilla uniforme — mismo patrón que Métricas (gap-px bg-line
-      // + KpiCard). Las celdas opcionales (valoración / monto a levantar) se
-      // agregan solo si el founder las declaró.
       <div
         className={`grid grid-cols-1 sm:grid-cols-2 gap-px bg-line ${participationsColClass}`}
       >
         <KpiCard
-          label="Participaciones totales"
-          value={formatNumber(totalShares)}
-          hint="emitidas"
+          label={t.participations.total}
+          value={formatNumber(totalShares, undefined, locale)}
+          hint={t.participations.totalHint}
         />
-        {/* Para no-admin/owner ocultamos el stake institucional de la cuenta de asignadas */}
         <KpiCard
-          label="Asignadas"
+          label={t.participations.assigned}
           value={formatNumber(
-            access.canSeeCapTable ? assignedShares : assignedShares - platformShares
+            access.canSeeCapTable ? assignedShares : assignedShares - platformShares,
+            undefined,
+            locale
           )}
           hint={`${formatNumber(
-            access.canSeeCapTable ? assignedShares : assignedShares - platformShares
-          )} de ${formatNumber(totalShares)}`}
+            access.canSeeCapTable ? assignedShares : assignedShares - platformShares,
+            undefined,
+            locale
+          )} ${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
         />
         <KpiCard
-          label="Disponibles"
-          value={formatNumber(availableShares)}
-          hint={`${formatNumber(availableShares)} de ${formatNumber(totalShares)}`}
+          label={t.participations.available}
+          value={formatNumber(availableShares, undefined, locale)}
+          hint={`${formatNumber(availableShares, undefined, locale)} ${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
         />
         {project.startupProfile?.preMoneyValuation && (() => {
           const amt = Number(project.startupProfile.preMoneyValuation);
@@ -307,13 +262,14 @@ export default async function ProjectPage({ params }: Params) {
             : null;
           return (
             <KpiCard
-              label="Valoración"
+              label={t.participations.valuation}
               value={formatCurrency(
                 amt,
                 project.startupProfile.valuationCurrency,
-                0
+                0,
+                locale
               )}
-              hint={dual?.secondary ?? "declarada"}
+              hint={dual?.secondary ?? t.participations.valuationHint}
             />
           );
         })()}
@@ -324,13 +280,14 @@ export default async function ProjectPage({ params }: Params) {
             : null;
           return (
             <KpiCard
-              label="Monto a levantar"
+              label={t.participations.targetRaise}
               value={formatCurrency(
                 amt,
                 project.startupProfile.valuationCurrency,
-                0
+                0,
+                locale
               )}
-              hint={dual?.secondary ?? "objetivo de ronda"}
+              hint={dual?.secondary ?? t.participations.targetRaiseHint}
             />
           );
         })()}
@@ -340,13 +297,13 @@ export default async function ProjectPage({ params }: Params) {
 
   // Barra de fondeo: cuánto del total ya está colocado.
   sections.push({
-    title: "Fondeo",
+    title: t.sections.funding,
     node: (
       <div>
         <div className="flex items-baseline justify-between">
           <p className="eyebrow !text-navy/40">
-            {formatNumber(visibleAssigned)} de {formatNumber(totalShares)}{" "}
-            acciones colocadas
+            {formatNumber(visibleAssigned, undefined, locale)} {dict.projectList.of}{" "}
+            {formatNumber(totalShares, undefined, locale)} {t.funding.placedOf}
           </p>
         </div>
         <div className="mt-2 h-1.5 w-full bg-line">
@@ -359,19 +316,19 @@ export default async function ProjectPage({ params }: Params) {
         {pricePerShare !== null && (
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
             <KpiCard
-              label="Valor sugerido por acción"
-              value={formatCurrency(pricePerShare, projectCurrency)}
+              label={t.funding.pricePerShare}
+              value={formatCurrency(pricePerShare, projectCurrency, 2, locale)}
               hint={
                 showMxnDual
                   ? (formatDualCurrency(pricePerShare, true).secondary ??
-                    "valoración ÷ acciones totales")
-                  : "valoración ÷ acciones totales"
+                    t.funding.pricePerShareHint)
+                  : t.funding.pricePerShareHint
               }
             />
             <KpiCard
-              label="Utilidad anual por acción"
+              label={t.funding.annualReturnPerShare}
               value="—"
-              hint="no informada por el founder"
+              hint={t.funding.annualReturnPerShareHint}
             />
           </div>
         )}
@@ -382,20 +339,20 @@ export default async function ProjectPage({ params }: Params) {
   // Resumen: problema / solución / modelo + descripción.
   if (project.startupProfile) {
     sections.push({
-      title: "Resumen",
+      title: t.sections.summary,
       node: (
         <>
           <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-3">
-            <Block title="Problema" body={project.startupProfile.problemStatement} />
-            <Block title="Solución" body={project.startupProfile.solutionStatement} />
+            <Block title={t.summary.problem} body={project.startupProfile.problemStatement} />
+            <Block title={t.summary.solution} body={project.startupProfile.solutionStatement} />
             <Block
-              title="Modelo de negocio"
+              title={t.summary.businessModel}
               body={project.startupProfile.businessModel}
             />
           </div>
           {project.description && (
             <div className="mt-6">
-              <p className="eyebrow mb-3">Descripción</p>
+              <p className="eyebrow mb-3">{t.summary.description}</p>
               <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                 {project.description}
               </p>
@@ -404,47 +361,45 @@ export default async function ProjectPage({ params }: Params) {
         </>
       ),
     });
-    // "Resumen" va primero: el lector entiende el negocio antes que los
-    // números. "Participaciones" quedó en [0]; lo movemos detrás de "Qué hace".
+    // "Resumen" va primero
     sections.unshift(sections.pop()!);
   }
 
-  // Tu participación (si el viewer tiene acciones). Respeta A1.
   if (myShares > 0) {
     sections.push({
-      title: "Tu participación",
+      title: t.sections.yourParticipation,
       node: (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-line">
             <KpiCard
-              label="Acciones"
-              value={formatNumber(myShares)}
-              hint={`${formatNumber(myShares)} de ${formatNumber(totalShares)}`}
+              label={t.yours.shares}
+              value={formatNumber(myShares, undefined, locale)}
+              hint={`${formatNumber(myShares, undefined, locale)} ${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
               highlight
               className="bg-paper-light"
             />
             <KpiCard
-              label="Valor"
-              value={myValue !== null ? formatCurrency(myValue, projectCurrency) : "—"}
+              label={t.yours.value}
+              value={myValue !== null ? formatCurrency(myValue, projectCurrency, 2, locale) : "—"}
               hint={
                 showMxnDual && myValue !== null
                   ? (formatDualCurrency(myValue, true).secondary ??
                     (pricePerShare !== null
-                      ? `a ${formatCurrency(pricePerShare, projectCurrency)} / acción`
-                      : "sin valoración declarada"))
+                      ? `${formatCurrency(pricePerShare, projectCurrency, 2, locale)} ${t.yours.pricePerShareSuffix}`
+                      : t.yours.noValuation))
                   : pricePerShare !== null
-                    ? `a ${formatCurrency(pricePerShare, projectCurrency)} / acción`
-                    : "sin valoración declarada"
+                    ? `${formatCurrency(pricePerShare, projectCurrency, 2, locale)} ${t.yours.pricePerShareSuffix}`
+                    : t.yours.noValuation
               }
               className="bg-paper-light"
             />
             <KpiCard
-              label="Participaciones"
+              label={t.yours.participations}
               value={String(myParticipations.length)}
               hint={
                 myParticipations.length === 1
-                  ? "1 registro"
-                  : `${myParticipations.length} registros`
+                  ? t.yours.oneRecord
+                  : `${myParticipations.length} ${t.yours.manyRecordsSuffix}`
               }
               className="bg-paper-light"
             />
@@ -452,20 +407,18 @@ export default async function ProjectPage({ params }: Params) {
 
           {myParticipations.length > 0 && (
             <ul className="mt-4 space-y-5">
-              {/* Encabezado de columnas: solo desktop, los labels van una
-                  sola vez en vez de repetirse por fila. */}
               <li className="hidden sm:grid grid-cols-12 gap-3 pb-1">
                 <span className="sm:col-span-5 eyebrow !text-navy/40">
-                  Serial
+                  {t.yours.colSerial}
                 </span>
                 <span className="sm:col-span-3 eyebrow !text-navy/40">
-                  Acciones
+                  {t.yours.colShares}
                 </span>
                 <span className="sm:col-span-2 eyebrow !text-navy/40">
-                  de {formatNumber(totalShares)}
+                  {dict.projectList.of} {formatNumber(totalShares, undefined, locale)}
                 </span>
                 <span className="sm:col-span-2 eyebrow !text-navy/40 text-right">
-                  Adquirida
+                  {t.yours.colAcquired}
                 </span>
               </li>
               {myParticipations.map((p) => (
@@ -478,25 +431,27 @@ export default async function ProjectPage({ params }: Params) {
                       {p.serialCode}
                     </p>
                     <p className="mt-1 eyebrow">
-                      {PARTICIPATION_STATUS_LABEL[p.status] ?? p.status}
+                      {t.participationStatus[p.status] ?? p.status}
                     </p>
                   </div>
                   <div className="col-span-6 sm:col-span-3">
-                    <p className="eyebrow sm:hidden">Acciones</p>
+                    <p className="eyebrow sm:hidden">{t.yours.colShares}</p>
                     <p className="mt-1 sm:mt-0 font-mono text-navy">
-                      {formatNumber(p.shareCount)}
+                      {formatNumber(p.shareCount, undefined, locale)}
                     </p>
                   </div>
                   <div className="col-span-6 sm:col-span-2">
-                    <p className="eyebrow sm:hidden">de {formatNumber(totalShares)}</p>
+                    <p className="eyebrow sm:hidden">
+                      {dict.projectList.of} {formatNumber(totalShares, undefined, locale)}
+                    </p>
                     <p className="mt-1 sm:mt-0 font-mono text-navy">
-                      de {formatNumber(totalShares)}
+                      {dict.projectList.of} {formatNumber(totalShares, undefined, locale)}
                     </p>
                   </div>
                   <div className="col-span-12 sm:col-span-2 text-right">
-                    <p className="eyebrow sm:hidden">Adquirida</p>
+                    <p className="eyebrow sm:hidden">{t.yours.colAcquired}</p>
                     <p className="mt-1 sm:mt-0 eyebrow !text-navy">
-                      {p.acquiredAt ? formatDate(p.acquiredAt) : "—"}
+                      {p.acquiredAt ? formatDate(p.acquiredAt, locale) : "—"}
                     </p>
                   </div>
                 </li>
@@ -506,8 +461,7 @@ export default async function ProjectPage({ params }: Params) {
 
           {!access.canSeeCapTable && (
             <p className="mt-4 eyebrow !text-navy/40">
-              Solo ves tu propia posición. El cap table completo es información
-              sensible y queda reservada al founder y al equipo de AJDUT.
+              {t.yours.partnersOnlyOwnPositionNote}
             </p>
           )}
         </>
@@ -520,12 +474,12 @@ export default async function ProjectPage({ params }: Params) {
     project.startupProfile?.equityStructureNote
   ) {
     sections.push({
-      title: "Estructura y respaldo",
+      title: t.sections.structure,
       node: (
         <div className="space-y-6">
           {project.startupProfile.assetBackingNote && (
             <div>
-              <p className="eyebrow mb-3">Activo respaldado</p>
+              <p className="eyebrow mb-3">{t.structure.assetBacking}</p>
               <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                 {project.startupProfile.assetBackingNote}
               </p>
@@ -533,7 +487,7 @@ export default async function ProjectPage({ params }: Params) {
           )}
           {project.startupProfile.equityStructureNote && (
             <div>
-              <p className="eyebrow mb-3">Estructura accionaria</p>
+              <p className="eyebrow mb-3">{t.structure.equityStructure}</p>
               <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                 {project.startupProfile.equityStructureNote}
               </p>
@@ -544,11 +498,6 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  // Políticas (acciones / dividendos / frecuencia). Gating: mismo criterio
-  // que Documentos / Reportes (Ola 2) — owner/co-admin/admin siempre;
-  // partner solo si tiene InfoRequest APPROVED o ya es socio. Calculamos
-  // canSeePrivateDocs más abajo, pero para preservar el orden de "sections"
-  // adelantamos esa decisión acá.
   const isPrivilegedReaderForPolicies =
     access.role === "OWNER" ||
     access.role === "CO_ADMIN" ||
@@ -562,12 +511,12 @@ export default async function ProjectPage({ params }: Params) {
       project.startupProfile?.dividendsFrequency)
   ) {
     sections.push({
-      title: "Políticas",
+      title: t.sections.policies,
       node: (
         <div className="space-y-6">
           {project.startupProfile.policyShares && (
             <div>
-              <p className="eyebrow mb-3">Política de acciones</p>
+              <p className="eyebrow mb-3">{t.policies.shares}</p>
               <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                 {project.startupProfile.policyShares}
               </p>
@@ -575,7 +524,7 @@ export default async function ProjectPage({ params }: Params) {
           )}
           {project.startupProfile.policyDividends && (
             <div>
-              <p className="eyebrow mb-3">Política de dividendos</p>
+              <p className="eyebrow mb-3">{t.policies.dividends}</p>
               <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                 {project.startupProfile.policyDividends}
               </p>
@@ -583,7 +532,7 @@ export default async function ProjectPage({ params }: Params) {
           )}
           {project.startupProfile.dividendsFrequency && (
             <div>
-              <p className="eyebrow mb-3">Frecuencia de dividendos</p>
+              <p className="eyebrow mb-3">{t.policies.frequency}</p>
               <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                 {project.startupProfile.dividendsFrequency}
               </p>
@@ -594,14 +543,11 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  // Equipo: información sensible. Lo ocultamos al rol PARTNER (que no es
-  // owner / co-admin / admin del proyecto). El founder / co-admin / admin
-  // sí lo ven.
   const canSeeTeam = access.role !== "PARTNER";
 
   if (canSeeTeam && (project.startupProfile?.founders.length ?? 0) > 0) {
     sections.push({
-      title: "Equipo",
+      title: t.sections.team,
       node: (
         <ul className="space-y-6">
           {project.startupProfile!.founders.map((f) => (
@@ -614,7 +560,7 @@ export default async function ProjectPage({ params }: Params) {
                   {f.role}
                 </span>
                 <span className="col-span-6 sm:col-span-3 font-mono text-navy text-right">
-                  {formatPercent(Number(f.equityPercent))}
+                  {formatPercent(Number(f.equityPercent), 2, locale)}
                 </span>
               </div>
               {f.bio && (
@@ -624,6 +570,7 @@ export default async function ProjectPage({ params }: Params) {
               )}
               {f.references && (
                 <div>
+                  {/* TODO i18n: campo libre del founder; mantenemos label en es por scope. */}
                   <p className="eyebrow mb-1">Referencias</p>
                   <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                     {f.references}
@@ -639,7 +586,7 @@ export default async function ProjectPage({ params }: Params) {
 
   if ((project.startupProfile?.milestones.length ?? 0) > 0) {
     sections.push({
-      title: "Hitos",
+      title: t.sections.milestones,
       node: (
         <ul className="space-y-4">
           {project.startupProfile!.milestones.map((m) => (
@@ -651,13 +598,13 @@ export default async function ProjectPage({ params }: Params) {
                 {m.title}
               </span>
               <span className="col-span-6 sm:col-span-3 eyebrow !text-navy">
-                {MILESTONE_STATUS_LABEL[m.status] ?? m.status}
+                {t.milestoneStatus[m.status] ?? m.status}
               </span>
               <span className="col-span-6 sm:col-span-3 eyebrow text-right">
                 {m.achievedAt
-                  ? formatDate(m.achievedAt)
+                  ? formatDate(m.achievedAt, locale)
                   : m.targetDate
-                  ? `objetivo ${formatDate(m.targetDate)}`
+                  ? `${t.milestonesTargetPrefix} ${formatDate(m.targetDate, locale)}`
                   : "—"}
               </span>
             </li>
@@ -669,7 +616,7 @@ export default async function ProjectPage({ params }: Params) {
 
   if (latestByKind.size > 0) {
     sections.push({
-      title: "Métricas",
+      title: t.sections.metrics,
       node: (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-4">
           {Array.from(latestByKind.values()).map((m) => (
@@ -677,7 +624,7 @@ export default async function ProjectPage({ params }: Params) {
               key={m.kind}
               label={m.label}
               value={`${m.value} ${m.unit}`}
-              hint={`al ${formatDate(m.asOf)}`}
+              hint={`${dict.partner.lastPayment.replace(":", "")} ${formatDate(m.asOf, locale)}`}
             />
           ))}
         </div>
@@ -685,11 +632,6 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  // Gating de Documentos / Reportes:
-  //  - Owner / Co-admin / Admin: siempre ven.
-  //  - PARTNER: ve solo si tiene InfoRequest APPROVED o ya es socio (myShares > 0).
-  //  - VIEWER (otros roles autenticados sin participación): tratamos como PARTNER
-  //    sin solicitud — no ve. El founder controla el acceso a info sensible.
   const isPrivilegedReader =
     access.role === "OWNER" ||
     access.role === "CO_ADMIN" ||
@@ -708,113 +650,29 @@ export default async function ProjectPage({ params }: Params) {
       project.startupProfile?.estrategiaEmisionUrl)
   ) {
     sections.push({
-      title: "Documentos",
+      title: t.sections.documents,
       node: (
         <ul className="space-y-4">
           {project.startupProfile.pitchDeckStorageKey && (
-            <li className="grid grid-cols-12 items-baseline gap-3">
-              <span className="col-span-6 sm:col-span-9 text-navy">
-                Pitch deck
-              </span>
-              <a
-                href={project.startupProfile.pitchDeckStorageKey}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
-              >
-                Abrir ↗
-              </a>
-            </li>
+            <DocRow label={t.documents.pitchDeck} href={project.startupProfile.pitchDeckStorageKey} openLabel={t.documents.openLink} />
           )}
           {project.startupProfile.dataRoomStorageKey && (
-            <li className="grid grid-cols-12 items-baseline gap-3">
-              <span className="col-span-6 sm:col-span-9 text-navy">
-                Data room
-              </span>
-              <a
-                href={project.startupProfile.dataRoomStorageKey}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
-              >
-                Abrir ↗
-              </a>
-            </li>
+            <DocRow label={t.documents.dataRoom} href={project.startupProfile.dataRoomStorageKey} openLabel={t.documents.openLink} />
           )}
           {project.startupProfile.projectionsUrl && (
-            <li className="grid grid-cols-12 items-baseline gap-3">
-              <span className="col-span-6 sm:col-span-9 text-navy">
-                Proyecciones financieras
-              </span>
-              <a
-                href={project.startupProfile.projectionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
-              >
-                Abrir ↗
-              </a>
-            </li>
+            <DocRow label={t.documents.projections} href={project.startupProfile.projectionsUrl} openLabel={t.documents.openLink} />
           )}
           {project.startupProfile.planNegociosUrl && (
-            <li className="grid grid-cols-12 items-baseline gap-3">
-              <span className="col-span-6 sm:col-span-9 text-navy">
-                Plan de negocios
-              </span>
-              <a
-                href={project.startupProfile.planNegociosUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
-              >
-                Abrir ↗
-              </a>
-            </li>
+            <DocRow label={t.documents.businessPlan} href={project.startupProfile.planNegociosUrl} openLabel={t.documents.openLink} />
           )}
           {project.startupProfile.estrategiasPeriodicasUrl && (
-            <li className="grid grid-cols-12 items-baseline gap-3">
-              <span className="col-span-6 sm:col-span-9 text-navy">
-                Objetivos y estrategias periódicas
-              </span>
-              <a
-                href={project.startupProfile.estrategiasPeriodicasUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
-              >
-                Abrir ↗
-              </a>
-            </li>
+            <DocRow label={t.documents.periodicStrategies} href={project.startupProfile.estrategiasPeriodicasUrl} openLabel={t.documents.openLink} />
           )}
           {project.startupProfile.estadosFinancierosUrl && (
-            <li className="grid grid-cols-12 items-baseline gap-3">
-              <span className="col-span-6 sm:col-span-9 text-navy">
-                Estados financieros trimestrales
-              </span>
-              <a
-                href={project.startupProfile.estadosFinancierosUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
-              >
-                Abrir ↗
-              </a>
-            </li>
+            <DocRow label={t.documents.financials} href={project.startupProfile.estadosFinancierosUrl} openLabel={t.documents.openLink} />
           )}
           {project.startupProfile.estrategiaEmisionUrl && (
-            <li className="grid grid-cols-12 items-baseline gap-3">
-              <span className="col-span-6 sm:col-span-9 text-navy">
-                Estrategia de emisión
-              </span>
-              <a
-                href={project.startupProfile.estrategiaEmisionUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
-              >
-                Abrir ↗
-              </a>
-            </li>
+            <DocRow label={t.documents.issuanceStrategy} href={project.startupProfile.estrategiaEmisionUrl} openLabel={t.documents.openLink} />
           )}
         </ul>
       ),
@@ -823,7 +681,7 @@ export default async function ProjectPage({ params }: Params) {
 
   if (canSeePrivateDocs && reports.length > 0) {
     sections.push({
-      title: "Reportes",
+      title: t.sections.reports,
       node: (
         <ul className="space-y-4">
           {reports.map((r) => (
@@ -832,11 +690,10 @@ export default async function ProjectPage({ params }: Params) {
                 {r.title}
               </span>
               <span className="col-span-6 sm:col-span-3 eyebrow !text-navy">
-                {REPORT_KIND_LABEL[r.kind] ?? r.kind} ·{" "}
-                {humanReportPeriod(r.period, r.fiscalYear)}
+                {reportKindLabel(r.kind)} · {humanReportPeriod(r.period, r.fiscalYear)}
               </span>
               <span className="col-span-6 sm:col-span-2 eyebrow text-right">
-                {formatDate(r.publishedAt)}
+                {formatDate(r.publishedAt, locale)}
               </span>
               <a
                 href={r.storageKey}
@@ -844,7 +701,7 @@ export default async function ProjectPage({ params }: Params) {
                 rel="noopener noreferrer"
                 className="col-span-12 sm:col-span-1 eyebrow hover:!text-gold text-right"
               >
-                Abrir ↗
+                {t.documents.openLink}
               </a>
               {r.summary.trim().length > 0 && (
                 <p className="col-span-12 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
@@ -860,7 +717,7 @@ export default async function ProjectPage({ params }: Params) {
 
   if (access.canSeeCapTable && capTable.length > 0) {
     sections.push({
-      title: "Cap table",
+      title: t.sections.capTable,
       node: (
         <ul className="space-y-4">
           {capTable.map((r, i) => (
@@ -873,7 +730,8 @@ export default async function ProjectPage({ params }: Params) {
                 {r.isPlatform && <span className="ml-2 text-gold">◆</span>}
               </span>
               <span className="col-span-12 sm:col-span-6 font-mono text-navy text-right">
-                {formatNumber(r.shares)} de {formatNumber(totalShares)}
+                {formatNumber(r.shares, undefined, locale)} {dict.projectList.of}{" "}
+                {formatNumber(totalShares, undefined, locale)}
               </span>
             </li>
           ))}
@@ -885,21 +743,22 @@ export default async function ProjectPage({ params }: Params) {
   return (
     <div>
       <Link href={backLinkFor(user.role)} className="eyebrow hover:!text-gold">
-        ← Volver
+        {t.back}
       </Link>
 
       <header className="mt-4 hairline-b pb-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="max-w-2xl min-w-0">
           <p className="eyebrow">
-            {KIND_LABEL[project.kind] ?? project.kind}
+            {t.kind[project.kind] ?? project.kind}
             {project.startupProfile?.sector ? ` · ${project.startupProfile.sector}` : ""}
             {project.startupProfile?.stage && (() => {
               const stageKey = project.startupProfile.stage;
-              const info = STAGE_INFO[stageKey];
+              const stageLabel = dict.projectList.stage[stageKey] ?? stageKey;
+              const info = t.stageInfo[stageKey];
               return (
                 <>
                   {" · "}
-                  {STAGE_LABEL[stageKey]}
+                  {stageLabel}
                   {info && <InfoTooltip text={info} />}
                 </>
               );
@@ -913,7 +772,7 @@ export default async function ProjectPage({ params }: Params) {
             </p>
           )}
           <p className="mt-3">
-            <span className="eyebrow !text-navy/40">Founder</span>{" "}
+            <span className="eyebrow !text-navy/40">{t.founderLabel}</span>{" "}
             <span className="ml-2 text-navy">{project.owner.fullName}</span>
           </p>
           {project.startupProfile?.websiteUrl && (
@@ -931,9 +790,6 @@ export default async function ProjectPage({ params }: Params) {
           )}
         </div>
         <div className="flex flex-col gap-3 shrink-0 sm:flex-row sm:items-center">
-          {/* Chat del proyecto: visible para miembros asignados (myShares > 0)
-              y privilegiados (owner / co-admin / admin). Lo dejamos como link
-              eyebrow para no competir con los CTAs principales del header. */}
           {(myShares > 0 ||
             access.role === "OWNER" ||
             access.role === "CO_ADMIN" ||
@@ -942,32 +798,28 @@ export default async function ProjectPage({ params }: Params) {
               href={`/proyectos/${project.slug}/chat` as Route}
               className="eyebrow hover:!text-gold self-end sm:self-center"
             >
-              Abrir chat →
+              {t.openChat}
             </Link>
           )}
-          {/* Flujo de 2 etapas para rol PARTNER:
-              - sin InfoRequest o REJECTED → "Quiero más información"
-              - APPROVED → "Me interesa participar"
-              Otros roles autenticados (VIEWER) van directo al InterestForm como antes. */}
           {access.canManifestInterest && availableShares > 0 && (
             <>
               {access.role === "PARTNER" ? (
                 myInfoRequest?.status === "PENDING" ? (
                   <span className="eyebrow !text-navy/60">
-                    Solicitud enviada — esperando aprobación
+                    {t.waitingApproval}
                   </span>
                 ) : myInfoRequest?.status === "APPROVED" ? (
                   <a href="#comprar" className="btn-primary text-center">
-                    Me interesa participar →
+                    {t.interest}
                   </a>
                 ) : (
                   <a href="#info-request" className="btn-primary text-center">
-                    Quiero más información →
+                    {t.requestInfo}
                   </a>
                 )
               ) : (
                 <a href="#comprar" className="btn-primary text-center">
-                  Me interesa participar →
+                  {t.interest}
                 </a>
               )}
             </>
@@ -977,7 +829,7 @@ export default async function ProjectPage({ params }: Params) {
               href={`/founder/${project.slug}/editar` as Route}
               className="btn-outline text-center"
             >
-              Editar información
+              {t.editInfo}
             </Link>
           )}
         </div>
@@ -986,7 +838,7 @@ export default async function ProjectPage({ params }: Params) {
       {/* PARTNER con InfoRequest REJECTED: mensaje visible debajo del header. */}
       {access.role === "PARTNER" && myInfoRequest?.status === "REJECTED" && (
         <div className="mt-5 hairline p-4 bg-paper-light">
-          <p className="eyebrow">Solicitud no aprobada</p>
+          <p className="eyebrow">{t.requestNotApproved}</p>
           {myInfoRequest.reviewNote && (
             <p className="mt-2 text-navy/75 leading-relaxed whitespace-pre-line text-sm">
               {myInfoRequest.reviewNote}
@@ -1004,7 +856,7 @@ export default async function ProjectPage({ params }: Params) {
               <div className="hairline relative" style={{ paddingTop: "56.25%" }}>
                 <iframe
                   src={embed}
-                  title={`Video — ${project.name}`}
+                  title={`${t.videoTitlePrefix} ${project.name}`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                   className="absolute inset-0 w-full h-full"
@@ -1021,7 +873,7 @@ export default async function ProjectPage({ params }: Params) {
               rel="noopener noreferrer"
               className="eyebrow hover:!text-gold"
             >
-              Ver video ↗
+              {t.openVideo}
             </a>
           </p>
         );
@@ -1030,29 +882,24 @@ export default async function ProjectPage({ params }: Params) {
       {/* Panel de moderación: admin viendo un proyecto PENDING_APPROVAL */}
       {access.role === "ADMIN" && project.status === "PENDING_APPROVAL" && (
         <div className="mt-5">
+          {/* TODO i18n: panel admin queda en español por scope */}
           <AdminApprovalActions projectSlug={project.slug} />
         </div>
       )}
 
-      {/* Ancla sin padding: si el form está cerrado (null) no deja hueco.
-          El espaciado lo aporta el propio form cuando se abre. */}
       {access.canManifestInterest && availableShares > 0 && (
         <>
-          {/* PARTNER sin InfoRequest aprobada: mini-form de etapa 1. */}
           {access.role === "PARTNER" && !partnerHasApprovedInfo && (
             <div id="info-request">
               <InfoRequestForm
                 projectSlug={project.slug}
                 projectName={project.name}
                 viewerName={user.name}
+                dict={dict.infoRequestForm}
               />
             </div>
           )}
 
-          {/* InterestForm (etapa 2 / flujo directo para VIEWER). Solo se
-              muestra si el rol no es PARTNER, o si el PARTNER ya tiene la
-              InfoRequest APPROVED. Si no, el botón "Me interesa participar"
-              ni siquiera aparece (ver header). */}
           {(access.role !== "PARTNER" || partnerHasApprovedInfo) && (
             <div id="comprar">
               <InterestForm
@@ -1067,15 +914,14 @@ export default async function ProjectPage({ params }: Params) {
                 }
                 totalShares={project.totalShares}
                 currency={project.startupProfile?.valuationCurrency ?? "USD"}
+                dict={dict.interestForm}
+                locale={localeFor(prefs.language)}
               />
             </div>
           )}
         </>
       )}
 
-      {/* Cuerpo del proyecto: scroll único, los bloques fluyen. Se oculta
-          entero en modo foco (#comprar / #info-request) para no distraer al
-          completar el form. */}
       {sections.length > 0 && (
         <ProjectBody hideOnHash={["#comprar", "#info-request"]}>
           {sections.map((s, i) => (
@@ -1105,6 +951,7 @@ export default async function ProjectPage({ params }: Params) {
 }
 
 const METRIC_LABEL: Record<string, string> = {
+  // TODO i18n: nombres de métrica admin/internal; quedan en español por scope.
   MRR: "MRR",
   ARR: "ARR",
   GMV: "GMV",
@@ -1131,5 +978,21 @@ function Block({ title, body }: { title: string; body: string }) {
       <p className="eyebrow mb-3">{title}</p>
       <p className="text-navy/85 leading-relaxed whitespace-pre-line">{body}</p>
     </div>
+  );
+}
+
+function DocRow({ label, href, openLabel }: { label: string; href: string; openLabel: string }) {
+  return (
+    <li className="grid grid-cols-12 items-baseline gap-3">
+      <span className="col-span-6 sm:col-span-9 text-navy">{label}</span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
+      >
+        {openLabel}
+      </a>
+    </li>
   );
 }

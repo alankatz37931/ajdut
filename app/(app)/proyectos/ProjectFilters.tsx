@@ -3,7 +3,13 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
-export function ProjectFilters() {
+type FilterDict = {
+  searchLabel: string;
+  searchClear: string;
+  searchPlaceholder: string;
+};
+
+export function ProjectFilters({ dict }: { dict: FilterDict }) {
   const router = useRouter();
   const params = useSearchParams();
   const [query, setQuery] = useState(params.get("q") ?? "");
@@ -18,7 +24,7 @@ export function ProjectFilters() {
   useEffect(() => {
     const current = params.get("q") ?? "";
     const next = query.trim();
-    if (next === current) return; // sin cambios (también corta el loop con el sync de arriba)
+    if (next === current) return;
     const t = setTimeout(() => {
       router.replace(
         next ? `/proyectos?q=${encodeURIComponent(next)}` : "/proyectos"
@@ -34,7 +40,7 @@ export function ProjectFilters() {
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between gap-3">
         <label htmlFor="q" className="eyebrow">
-          Buscar por nombre
+          {dict.searchLabel}
         </label>
         {query && (
           <button
@@ -42,7 +48,7 @@ export function ProjectFilters() {
             onClick={() => setQuery("")}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Limpiar
+            {dict.searchClear}
           </button>
         )}
       </div>
@@ -51,7 +57,7 @@ export function ProjectFilters() {
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Pushka, Mercurio, ..."
+        placeholder={dict.searchPlaceholder}
         className={inputCls}
         autoComplete="off"
       />

@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import type { Dict } from "@/lib/i18n";
 
-export function LoginForm() {
+export function LoginForm({ dict }: { dict: Dict["login"] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Email o contraseña incorrectos.");
+        setError(dict.invalidCredentials);
         return;
       }
 
@@ -33,7 +34,7 @@ export function LoginForm() {
   return (
     <form action={onSubmit} className="space-y-5">
       <div>
-        <label htmlFor="email" className="eyebrow block mb-2">Email</label>
+        <label htmlFor="email" className="eyebrow block mb-2">{dict.emailLabel}</label>
         <input
           id="email"
           name="email"
@@ -45,7 +46,7 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label htmlFor="password" className="eyebrow block mb-2">Contraseña</label>
+        <label htmlFor="password" className="eyebrow block mb-2">{dict.passwordLabel}</label>
         <input
           id="password"
           name="password"
@@ -67,7 +68,7 @@ export function LoginForm() {
         disabled={isPending}
         className="btn-primary w-full disabled:opacity-50"
       >
-        {isPending ? "Verificando…" : "Acceder"}
+        {isPending ? dict.verifying : dict.submit}
       </button>
     </form>
   );
