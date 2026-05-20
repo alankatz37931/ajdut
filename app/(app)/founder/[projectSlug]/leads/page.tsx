@@ -54,6 +54,12 @@ export default async function FounderLeadsPage({ params }: Params) {
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       include: {
         user: { select: { id: true, fullName: true, email: true } },
+        pendingAssignments: {
+          where: { status: "PENDING" },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { id: true, shareCount: true, createdAt: true },
+        },
       },
     }),
     prisma.infoRequest.findMany({
@@ -225,7 +231,23 @@ export default async function FounderLeadsPage({ params }: Params) {
                     </p>
                   )}
 
-                  {!isClosed && (
+                  {!isClosed && l.pendingAssignments[0] && (
+                    <div className="mt-4 hairline p-3 bg-paper-light">
+                      <p className="eyebrow !text-gold">
+                        Asignación propuesta — esperando validación del admin
+                      </p>
+                      <p className="mt-2 text-sm text-navy/75">
+                        Le propusiste al equipo de AJDUT asignar{" "}
+                        <span className="font-mono text-navy">
+                          {fmtInt(l.pendingAssignments[0].shareCount)}
+                        </span>{" "}
+                        acciones. Cuando lo aprueben, se va a emitir el
+                        certificado y vas a recibir un email.
+                      </p>
+                    </div>
+                  )}
+
+                  {!isClosed && l.pendingAssignments.length === 0 && (
                     <div className="mt-4">
                       <LeadActions
                         leadId={l.id}

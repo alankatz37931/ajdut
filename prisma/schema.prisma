@@ -127,6 +127,9 @@ model User {
   passwordSetupTokens    PasswordSetupToken[]
   infoRequests           InfoRequest[]           @relation("InfoRequester")
   infoRequestsReviewed   InfoRequest[]           @relation("InfoRequestReviewer")
+  pendingProposed        PendingAssignment[]     @relation("PendingAssignmentProposer")
+  pendingTargeted        PendingAssignment[]     @relation("PendingAssignmentTarget")
+  pendingReviewed        PendingAssignment[]     @relation("PendingAssignmentReviewer")
 
   @@index([role, isActive])
 }
@@ -207,6 +210,7 @@ model Project {
   distributions   DividendDistribution[]
   auditEntries    AuditLog[]
   infoRequests    InfoRequest[]
+  pendingAssignments PendingAssignment[]
 
   @@index([status, kind])
 }
@@ -483,6 +487,8 @@ model Lead {
   createdAt            DateTime         @default(now())
   expiresAt            DateTime         // 30 días desde createdAt
   resolvedAt           DateTime?
+
+  pendingAssignments   PendingAssignment[]
 
   @@index([projectId, status])
   @@index([expiresAt, status])
@@ -774,4 +780,60 @@ model Notification {
   createdAt DateTime  @default(now())
 
   @@index([userId, readAt])
+}
+
+// ─── PROPUESTAS DE ASIGNACIÓN (Ola 5) ───────────────────────────────
+//
+// Toda asignación de acciones (sea desde un lead aceptado por el founder, sea
+// desde una invitación directa del founder a un email) queda primero como
+// PendingAssignment con status PENDING. Recién cuando un ADMIN la aprueba se
+// ejecuta la asignación real (assignSharesFromLead / assignSharesToInvestor).
+// Esto le da al equipo de AJDUT control de gatekeeping sobre toda emisión de
+// participaciones, sin que el founder pueda quemarse acciones por error.
+
+enum PendingAssignmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PendingAssignmentSource {
+  LEAD
+  INVITE
+}
+
+model PendingAssignment {
+  id              String                    @id @default(cuid())
+  projectId       String
+  project         Project                   @relation(fields: [projectId], references: [id])
+  proposedById    String
+  proposedBy      User                      @relation("PendingAssignmentProposer", fields: [proposedById], references: [id])
+  source          PendingAssignmentSource
+
+  // Si viene de un lead existente:
+  leadId          String?
+  lead            Lead?                     @relation(fields: [leadId], references: [id])
+
+  // Si viene de invitación directa (founder propone invitar a email):
+  inviteEmail     String?
+  inviteFullName  String?
+  inviteMessage   String?
+
+  // Destinatario: usuario existente (si lo hay)
+  targetUserId    String?
+  targetUser      User?                     @relation("PendingAssignmentTarget", fields: [targetUserId], references: [id])
+
+  shareCount      Int
+  reason          String?
+
+  status          PendingAssignmentStatus   @default(PENDING)
+  reviewedAt      DateTime?
+  reviewedById    String?
+  reviewedBy      User?                     @relation("PendingAssignmentReviewer", fields: [reviewedById], references: [id])
+  reviewNote      String?
+
+  createdAt       DateTime                  @default(now())
+
+  @@index([projectId, status])
+  @@index([status])
 }

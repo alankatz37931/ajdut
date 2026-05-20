@@ -51,15 +51,24 @@ export async function navItemsFor(
   };
 
   if (role === "ADMIN") {
-    const pendingApps = await prisma.application.count({
-      where: { status: { in: ["PENDING", "UNDER_REVIEW"] } },
-    });
+    const [pendingApps, pendingAssignmentsCount] = await Promise.all([
+      prisma.application.count({
+        where: { status: { in: ["PENDING", "UNDER_REVIEW"] } },
+      }),
+      prisma.pendingAssignment.count({ where: { status: "PENDING" } }),
+    ]);
     return [
       { label: "Proyectos", href: "/proyectos" as Route },
       {
         label: "Aplicaciones",
         href: "/admin/applications" as Route,
         badge: pendingApps,
+        badgeHighlight: true,
+      },
+      {
+        label: "Asignaciones",
+        href: "/admin/asignaciones" as Route,
+        badge: pendingAssignmentsCount,
         badgeHighlight: true,
       },
       { label: "Auditoría", href: "/admin/auditoria" as Route },
