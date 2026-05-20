@@ -409,12 +409,20 @@ export default async function PartnerDashboardPage() {
                   <div className="block py-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <Link
-                          href={`/proyectos/${p.project.slug}` as Route}
-                          className="font-sans text-navy hover:!text-gold"
-                        >
-                          {p.project.name}
-                        </Link>
+                        <div className="flex items-baseline gap-3 flex-wrap">
+                          <Link
+                            href={`/proyectos/${p.project.slug}` as Route}
+                            className="font-sans text-navy hover:!text-gold"
+                          >
+                            {p.project.name}
+                          </Link>
+                          <Link
+                            href={`/proyectos/${p.project.slug}/chat` as Route}
+                            className="eyebrow hover:!text-gold shrink-0"
+                          >
+                            Chat →
+                          </Link>
+                        </div>
                         <p className="mt-1 eyebrow">{p.project.shortPitch}</p>
                       </div>
                       <Link
