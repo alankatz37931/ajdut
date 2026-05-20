@@ -11,6 +11,7 @@ type Params = { params: Promise<{ projectSlug: string }> };
 const STATUS_LABEL: Record<string, string> = {
   OPEN: "Sin contactar",
   CONTACTED: "Contactado",
+  INTERVIEWING: "En entrevista",
   CONVERTED: "Convertido",
   DISMISSED: "Descartado",
   EXPIRED: "Expirado",
@@ -19,6 +20,7 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_SYMBOL: Record<string, string> = {
   OPEN: "○",
   CONTACTED: "◐",
+  INTERVIEWING: "◑",
   CONVERTED: "●",
   DISMISSED: "✕",
   EXPIRED: "▪",

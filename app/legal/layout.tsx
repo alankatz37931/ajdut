@@ -31,6 +31,7 @@ export default async function LegalLayout({
           name: user.name ?? user.email,
           email: user.email,
           avatarUrl: dbUser?.avatarUrl ?? null,
+          role: user.role,
         }}
         navItems={navItems}
       >

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getDict, getLanguage } from "@/lib/i18n";
 import { BackLink } from "@/components/app/BackLink";
+import { getOptionalSession } from "@/lib/auth/session";
 
 // Metadata estática: el dict no llega acá. El metaTitle/metaDescription
 // traducibles vienen del dict y se aplican en el JSX para SEO de la página.
@@ -14,12 +15,18 @@ export const metadata: Metadata = {
 export default async function NosotrosPage() {
   const dict = await getDict();
   const language = await getLanguage();
+  const user = await getOptionalSession();
   const t = dict.nosotros;
   return (
     <div className="mx-auto max-w-6xl px-6 sm:px-8 pb-4 sm:pb-6">
-      {/* Hero — el eyebrow es el back action interactivo (BackLink trae arrow + animación por default) */}
+      {/* Hero — sin sesión, el eyebrow es el back-link; con sesión, el viewer
+          ya tiene el sidebar como nav, así que un "volver" no aporta. */}
       <section className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <BackLink fallback="/">{t.eyebrow.replace(/^—\s*/, "")}</BackLink>
+        {user ? (
+          <p className="eyebrow !text-navy/40">{t.eyebrow.replace(/^—\s*/, "")}</p>
+        ) : (
+          <BackLink fallback="/">{t.eyebrow.replace(/^—\s*/, "")}</BackLink>
+        )}
 
         <h1 className="font-sans mt-2 sm:mt-3 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] text-navy !leading-[1.1] font-bold">
           {t.title}

@@ -45,6 +45,9 @@ export const dict = {
     heirs: "Herederos",
     audit: "Auditoría",
     notices: "Avisos",
+    sectionAdministration: "Administración",
+    sectionPortfolio: "Portafolio",
+    sectionAccount: "Cuenta",
   },
 
   home: {
@@ -243,6 +246,7 @@ export const dict = {
     noneAdmin: "Aún no hay proyectos creados en AJDUT.",
     noneMember: "Aún no hay proyectos activos en AJDUT.",
     colValuation: "Valoración",
+    colTargetRaise: "A levantar",
     colAvailable: "Disponibles",
     of: "de",
     review: "Revisar →",

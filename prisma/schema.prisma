@@ -104,6 +104,10 @@ model User {
   // privado (no exponer en feeds; solo se ve desde /perfil del propio dueño
   // y desde el panel admin para KYC). Mismo fallback URL manual que avatar.
   idPhotoUrl      String?
+  // Contacto editable post-aplicación. Heredados de la Application al
+  // aprobar; el miembro puede actualizarlos desde /perfil cuando cambien.
+  country         String?
+  phone           String?
   role            UserRole
   isActive        Boolean      @default(true)
   applicationId   String?      @unique
@@ -527,6 +531,7 @@ model OwnershipHistory {
 enum LeadStatus {
   OPEN
   CONTACTED
+  INTERVIEWING
   CONVERTED
   DISMISSED
   EXPIRED

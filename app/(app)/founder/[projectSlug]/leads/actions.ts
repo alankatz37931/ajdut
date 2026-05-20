@@ -13,6 +13,7 @@ import { DomainError } from "@/lib/services/errors";
 import {
   notifyAdminsPendingAssignment,
   notifyRequesterInfoRequestResolved,
+  notifyLeadMoreInfoRequest,
 } from "@/lib/email/notifications";
 
 export type LeadActionResult =
@@ -44,11 +45,101 @@ export async function markLeadContactedAction(leadId: string): Promise<LeadActio
   return { ok: true };
 }
 
-export async function dismissLeadAction(leadId: string): Promise<LeadActionResult> {
+/**
+ * Marca el lead como "En entrevista" — etapa intermedia entre haberlo
+ * contactado y haber decidido aceptar/descartar. Acepta transición desde
+ * OPEN o CONTACTED.
+ */
+export async function markLeadInterviewingAction(
+  leadId: string
+): Promise<LeadActionResult> {
   const user = await requireSession();
   const lead = await loadLeadForOwner(leadId, user.id);
   if (!lead) return { ok: false, error: "Lead no encontrado." };
   if (lead.status !== "OPEN" && lead.status !== "CONTACTED") {
+    return { ok: false, error: "Este lead ya está resuelto." };
+  }
+  await prisma.lead.update({
+    where: { id: lead.id },
+    data: { status: "INTERVIEWING" },
+  });
+  revalidatePath(`/founder/${lead.project.slug}/leads`);
+  return { ok: true };
+}
+
+/**
+ * El founder pide más información al lead antes de decidir aceptar/descartar.
+ * Envía un email al lead con la pregunta del founder y mueve el lead a
+ * INTERVIEWING para que quede registrado el estado "en conversación".
+ */
+export async function requestMoreInfoAction(
+  leadId: string,
+  question: string
+): Promise<LeadActionResult> {
+  const user = await requireSession();
+  const lead = await loadLeadForOwner(leadId, user.id);
+  if (!lead) return { ok: false, error: "Lead no encontrado." };
+  if (
+    lead.status !== "OPEN" &&
+    lead.status !== "CONTACTED" &&
+    lead.status !== "INTERVIEWING"
+  ) {
+    return { ok: false, error: "Este lead ya está resuelto." };
+  }
+  const trimmed = question.trim();
+  if (trimmed.length < 5) {
+    return { ok: false, error: "Escribí al menos 5 caracteres de pregunta." };
+  }
+
+  // Cargar datos necesarios para el email antes de la transacción.
+  const [project, target, founder] = await Promise.all([
+    prisma.project.findUnique({
+      where: { id: lead.projectId },
+      select: { name: true, slug: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: lead.userId },
+      select: { email: true, fullName: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { fullName: true, alias: true },
+    }),
+  ]);
+  if (!project || !target) {
+    return { ok: false, error: "Datos del lead incompletos." };
+  }
+
+  await prisma.lead.update({
+    where: { id: lead.id },
+    data: { status: "INTERVIEWING" },
+  });
+  revalidatePath(`/founder/${lead.project.slug}/leads`);
+
+  after(async () => {
+    if (!founder) return;
+    await notifyLeadMoreInfoRequest({
+      to: target.email,
+      requesterFirstName: target.fullName.split(" ")[0] ?? target.fullName,
+      projectName: project.name,
+      projectSlug: project.slug,
+      founderName: founder.alias ?? founder.fullName,
+      question: trimmed,
+    });
+  });
+
+  return { ok: true };
+}
+
+export async function dismissLeadAction(leadId: string): Promise<LeadActionResult> {
+  const user = await requireSession();
+  const lead = await loadLeadForOwner(leadId, user.id);
+  if (!lead) return { ok: false, error: "Lead no encontrado." };
+  if (
+    lead.status !== "OPEN" &&
+    lead.status !== "CONTACTED" &&
+    lead.status !== "INTERVIEWING"
+  ) {
     return { ok: false, error: "Este lead ya está resuelto." };
   }
   await prisma.lead.update({

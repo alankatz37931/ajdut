@@ -19,6 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         name: user.name ?? user.email,
         email: user.email,
         avatarUrl: dbUser?.avatarUrl ?? null,
+        role: user.role,
       }}
       navItems={navItems}
     >

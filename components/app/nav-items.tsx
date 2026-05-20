@@ -2,6 +2,20 @@ import type { Route } from "next";
 import { prisma } from "@/lib/db/client";
 import type { NavItem } from "@/components/app/SideNav";
 import { getDict } from "@/lib/i18n";
+import {
+  ProjectsIcon,
+  MyProjectIcon,
+  ParticipationsIcon,
+  ApplicationsIcon,
+  AssignmentsIcon,
+  HeirsIcon,
+  AuditIcon,
+  NoticesIcon,
+  ProfileIcon,
+  SettingsIcon,
+  AboutIcon,
+  LegalIcon,
+} from "@/components/app/nav-icons";
 
 // Role labels (visible en /perfil, /configuracion, etc.). Las claves del
 // enum quedan en inglés (ADMIN/PROJECT_OWNER/...); las etiquetas humanas
@@ -35,6 +49,10 @@ export async function navItemsFor(
 ): Promise<NavItem[]> {
   const dict = await getDict();
   const n = dict.nav;
+  const SEC_ADMIN = n.sectionAdministration;
+  const SEC_PORTFOLIO = n.sectionPortfolio;
+  const SEC_ACCOUNT = n.sectionAccount;
+
   // Cualquier rol que tenga acciones asignadas ve "Mis participaciones",
   // igual que un socio. PARTNER ya lo tiene fijo en su menú.
   const ownsShares =
@@ -42,30 +60,41 @@ export async function navItemsFor(
     (await prisma.participation.count({
       where: { currentOwnerId: userId },
     })) > 0;
+
   const misParticipacionesItem: NavItem = {
     label: n.myParticipations,
     href: "/partner" as Route,
+    group: SEC_PORTFOLIO,
+    icon: <ParticipationsIcon />,
   };
 
+  // CUENTA — perfil + configuración. Quedan agrupados bajo su sección.
   const profileItem: NavItem = {
     label: n.profile,
     href: "/perfil" as Route,
-    pinBottom: true,
+    group: SEC_ACCOUNT,
+    icon: <ProfileIcon />,
   };
   const settingsItem: NavItem = {
     label: n.settings,
     href: "/configuracion" as Route,
-    pinBottom: true,
+    group: SEC_ACCOUNT,
+    icon: <SettingsIcon />,
   };
+
+  // INSTITUCIONAL — sobre nosotros + aviso legal. Van pinBottom, sin
+  // section header, con peso visual reducido (lo aplica SideNav).
   const nosotrosItem: NavItem = {
     label: n.aboutUs,
     href: "/nosotros" as Route,
     pinBottom: true,
+    icon: <AboutIcon />,
   };
   const legalItem: NavItem = {
     label: n.legalNotice,
     href: "/legal" as Route,
     pinBottom: true,
+    icon: <LegalIcon />,
   };
 
   if (role === "ADMIN") {
@@ -79,38 +108,48 @@ export async function navItemsFor(
       }),
     ]);
     return [
-      { label: n.projects, href: "/proyectos" as Route },
+      // PORTAFOLIO
+      { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
+      ...(ownsShares ? [misParticipacionesItem] : []),
+      // ADMINISTRACIÓN
       {
         label: n.applications,
         href: "/admin/applications" as Route,
         badge: pendingApps,
         badgeHighlight: true,
+        group: SEC_ADMIN,
+        icon: <ApplicationsIcon />,
       },
       {
         label: n.assignments,
         href: "/admin/asignaciones" as Route,
         badge: pendingAssignmentsCount,
         badgeHighlight: true,
+        group: SEC_ADMIN,
+        icon: <AssignmentsIcon />,
       },
       {
         label: n.heirs,
         href: "/admin/herederos" as Route,
         badge: escalatedHeirs,
         badgeHighlight: true,
+        group: SEC_ADMIN,
+        icon: <HeirsIcon />,
       },
-      { label: n.audit, href: "/admin/auditoria" as Route },
-      { label: n.notices, href: "/admin/avisos" as Route },
-      ...(ownsShares ? [misParticipacionesItem] : []),
+      { label: n.audit, href: "/admin/auditoria" as Route, group: SEC_ADMIN, icon: <AuditIcon /> },
+      { label: n.notices, href: "/admin/avisos" as Route, group: SEC_ADMIN, icon: <NoticesIcon /> },
+      // CUENTA
       profileItem,
       settingsItem,
+      // INSTITUCIONAL
       nosotrosItem,
       legalItem,
     ];
   }
   if (role === "PROJECT_OWNER") {
     return [
-      { label: n.myProject, href: "/founder" as Route },
-      { label: n.explore, href: "/proyectos" as Route },
+      { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
+      { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
       ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,
@@ -120,8 +159,8 @@ export async function navItemsFor(
   }
   if (role === "PARTNER") {
     return [
-      { label: n.explore, href: "/proyectos" as Route },
-      { label: n.myParticipations, href: "/partner" as Route },
+      { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
+      { label: n.myParticipations, href: "/partner" as Route, group: SEC_PORTFOLIO, icon: <ParticipationsIcon /> },
       profileItem,
       settingsItem,
       nosotrosItem,
@@ -130,7 +169,7 @@ export async function navItemsFor(
   }
   if (role === "CO_ADMIN") {
     return [
-      { label: n.projects, href: "/proyectos" as Route },
+      { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
       ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,

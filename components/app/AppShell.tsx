@@ -1,5 +1,6 @@
 import { SideNav, type NavItem } from "@/components/app/SideNav";
 import { getDict } from "@/lib/i18n";
+import { getRoleLabel } from "@/components/app/nav-items";
 
 /**
  * Chrome de la app autenticada: sidebar + main. Compartido entre el layout
@@ -14,15 +15,29 @@ export async function AppShell({
   navItems,
   children,
 }: {
-  user: { name: string; email: string; avatarUrl?: string | null };
+  user: {
+    name: string;
+    email: string;
+    avatarUrl?: string | null;
+    /** Rol del viewer — para mostrar la etiqueta humanizada bajo el logo. */
+    role: string;
+  };
   navItems: NavItem[];
   children: React.ReactNode;
 }) {
-  const dict = await getDict();
+  const [dict, roleLabel] = await Promise.all([
+    getDict(),
+    getRoleLabel(user.role),
+  ]);
   return (
     <div className="min-h-screen">
       <SideNav
-        user={user}
+        user={{
+          name: user.name,
+          email: user.email,
+          avatarUrl: user.avatarUrl,
+          roleLabel,
+        }}
         navItems={navItems}
         labels={{
           openMenu: dict.nav.openMenu,

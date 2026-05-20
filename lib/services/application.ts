@@ -61,6 +61,10 @@ export async function approveApplication(input: ApproveApplicationInput): Promis
         role: input.role,
         passwordHash: null,
         applicationId: app.id,
+        // Heredo contacto de la Application — el miembro lo puede editar
+        // después desde /perfil cuando cambie.
+        country: app.country || null,
+        phone: app.phone || null,
       },
     });
 

@@ -22,6 +22,8 @@ export default async function ProfilePage() {
       createdAt: true,
       avatarUrl: true,
       idPhotoUrl: true,
+      country: true,
+      phone: true,
     },
   });
   const roleLabel = await getRoleLabel(user.role);
@@ -47,6 +49,8 @@ export default async function ProfilePage() {
         initialAlias={user.alias ?? ""}
         initialAvatarUrl={user.avatarUrl ?? ""}
         initialIdPhotoUrl={user.idPhotoUrl ?? ""}
+        initialCountry={user.country ?? ""}
+        initialPhone={user.phone ?? ""}
         dict={t}
       />
     </div>

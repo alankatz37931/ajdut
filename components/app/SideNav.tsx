@@ -10,13 +10,15 @@ import { BrandMark } from "@/components/landing/BrandMark";
 export type NavItem = {
   label: string;
   href: Route;
+  /** Icono opcional a la izquierda del label (SVG 16px, currentColor). */
+  icon?: React.ReactNode;
   /** Número opcional a mostrar a la derecha (ej. pendientes) */
   badge?: number;
-  /** Si true, el badge se pinta en oro para llamar la atención */
+  /** Si true, el badge se pinta como cápsula gold para llamar la atención */
   badgeHighlight?: boolean;
-  /** Etiqueta de grupo opcional, para separar visualmente cuando crezca el menú */
+  /** Etiqueta de sección. Se renderiza como header arriba del grupo. */
   group?: string;
-  /** Si true, el item se ancla al fondo del nav (arriba del bloque de usuario) */
+  /** Si true, el item se ancla al fondo del nav (institucional, sin section header) */
   pinBottom?: boolean;
 };
 
@@ -28,7 +30,14 @@ export type SideNavLabels = {
 };
 
 type Props = {
-  user: { name: string; email: string; avatarUrl?: string | null };
+  user: {
+    name: string;
+    email: string;
+    avatarUrl?: string | null;
+    /** Etiqueta visible del rol (ej. "Admin", "Project owner"). Se muestra
+     *  bajo el logo como contexto del viewer. */
+    roleLabel?: string;
+  };
   navItems: NavItem[];
   labels: SideNavLabels;
 };
@@ -86,19 +95,26 @@ export function SideNav({ user, navItems, labels }: Props) {
     grouped.get(key)!.push(item);
   }
 
-  function renderItem(item: NavItem) {
+  function renderItem(item: NavItem, opts?: { faded?: boolean }) {
     const active = isActive(item.href);
+    const faded = opts?.faded ?? false;
+
+    // Color del label: inactivo neutro / hover más claro / activo paper bright.
+    // Items "faded" (institucional) parten de un tono más bajo.
+    const idleClass = faded
+      ? "!text-paper/35 hover:!text-paper/70"
+      : "!text-paper/55 hover:!text-paper/85";
+    const stateClass = active
+      ? "!text-paper font-medium bg-paper/5"
+      : idleClass;
+
     return (
       <li key={item.href}>
         <Link
           href={item.href}
           onClick={close}
           aria-current={active ? "page" : undefined}
-          className={`relative flex items-center justify-between gap-3 pl-6 pr-6 py-3 eyebrow leading-none transition-colors ${
-            active
-              ? "!text-navy bg-paper-dark"
-              : "hover:!text-navy hover:bg-paper-light"
-          }`}
+          className={`relative flex items-center justify-between gap-3 pl-6 pr-4 py-2.5 eyebrow leading-none transition-colors ${stateClass}`}
         >
           <span
             aria-hidden
@@ -106,15 +122,25 @@ export function SideNav({ user, navItems, labels }: Props) {
               active ? "opacity-100" : "opacity-0"
             }`}
           />
-          <span className="truncate">{item.label}</span>
+          <span className="flex items-center gap-2.5 min-w-0">
+            {item.icon && (
+              <span aria-hidden className="shrink-0 inline-flex">
+                {item.icon}
+              </span>
+            )}
+            <span className="truncate">{item.label}</span>
+          </span>
           {typeof item.badge === "number" && item.badge > 0 && (
-            <span
-              className={`font-mono text-xs shrink-0 ${
-                item.badgeHighlight ? "text-gold" : "!text-navy/40"
-              }`}
-            >
-              {item.badge}
-            </span>
+            item.badgeHighlight ? (
+              // Cápsula gold — llama la atención (pendientes admin).
+              <span className="shrink-0 inline-flex items-center justify-center min-w-[1.5rem] px-2 py-0.5 rounded-full bg-gold/15 text-gold font-mono text-[11px] leading-none">
+                {item.badge}
+              </span>
+            ) : (
+              <span className="shrink-0 font-mono text-xs !text-paper/40">
+                {item.badge}
+              </span>
+            )
           )}
         </Link>
       </li>
@@ -150,78 +176,100 @@ export function SideNav({ user, navItems, labels }: Props) {
 
       {/* ─── Sidebar ─────────────────────────────────────────────── */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 surface-paper flex flex-col transition-transform duration-200 ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-navy flex flex-col transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
-        style={{ borderRight: "0.5px solid var(--ajdut-line, #E8E3D9)" }}
       >
-        {/* Logo + close (mobile) */}
-        <div className="flex items-baseline justify-between gap-3 px-6 py-5 hairline-b">
-          <BrandMark />
-          <button
-            type="button"
-            onClick={close}
-            aria-label={labels.closeMenu}
-            className="md:hidden text-navy text-lg leading-none p-0 m-0 border-0 bg-transparent cursor-pointer"
-          >
-            ✕
-          </button>
+        {/* Logo + close (mobile). Variant paper porque el fondo es navy.
+            Bajo el logo va el roleLabel como eyebrow para que el viewer
+            tenga claro desde qué rol está navegando. */}
+        <div className="px-6 py-5 border-b border-paper/10">
+          <div className="flex items-baseline justify-between gap-3">
+            <BrandMark variant="paper" />
+            <button
+              type="button"
+              onClick={close}
+              aria-label={labels.closeMenu}
+              className="md:hidden text-paper text-lg leading-none p-0 m-0 border-0 bg-transparent cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          {user.roleLabel && (
+            <p className="mt-3 eyebrow !text-paper/40">{user.roleLabel}</p>
+          )}
         </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 overflow-y-auto py-2 flex flex-col">
-          <div>
+        {/* Nav items.
+            Estructura visual:
+              [SECCIÓN A]
+                · item
+                · item
+              [SECCIÓN B]
+                · item
+            (mt-auto empuja el bloque institucional al fondo del nav scroll)
+              · sobre nosotros  (faded)
+              · aviso legal     (faded)
+            El bloque de usuario queda fuera de <nav>, fijo abajo. */}
+        <nav className="flex-1 overflow-y-auto pt-4 pb-2 flex flex-col">
+          <div className="space-y-6">
             {Array.from(grouped.entries()).map(([groupName, items], idx) => (
-              <div
-                key={groupName || `g-${idx}`}
-                className={idx > 0 ? "mt-4 pt-4 hairline-t" : ""}
-              >
+              <div key={groupName || `g-${idx}`}>
                 {groupName && (
-                  <p className="eyebrow px-6 mb-2 !text-navy/40">{groupName}</p>
+                  <p className="font-sans font-bold text-[10px] tracking-[0.2em] uppercase !text-paper/40 px-6 mb-2">
+                    {groupName}
+                  </p>
                 )}
-                <ul>{items.map(renderItem)}</ul>
+                <ul>{items.map((item) => renderItem(item))}</ul>
               </div>
             ))}
           </div>
 
           {bottomItems.length > 0 && (
-            <div className="mt-2 pt-4 hairline-t">
-              <ul>{bottomItems.map(renderItem)}</ul>
+            <div className="mt-auto pt-6">
+              <ul>
+                {bottomItems.map((item) => renderItem(item, { faded: true }))}
+              </ul>
             </div>
           )}
         </nav>
 
-        {/* User + logout */}
-        <div className="hairline-t px-6 py-4">
-          <div className="flex items-center gap-2.5">
+        {/* User + logout — clickeable al perfil */}
+        <div className="border-t border-paper/10 px-6 py-4">
+          <Link
+            href={"/perfil" as Route}
+            onClick={close}
+            className="flex items-center gap-2.5 group cursor-pointer"
+            aria-label={user.name ? `Ir al perfil de ${user.name}` : "Ir al perfil"}
+          >
             {user.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={user.avatarUrl}
                 alt=""
-                className="rounded-full w-7 h-7 object-cover border-hairline border-navy/20 shrink-0"
+                className="rounded-full w-7 h-7 object-cover border-hairline border-paper/20 shrink-0"
               />
             ) : (
               <span
                 aria-hidden
-                className="rounded-full w-7 h-7 shrink-0 bg-paper-dark border-hairline border-navy/20 flex items-center justify-center font-mono text-[10px] text-navy"
+                className="rounded-full w-7 h-7 shrink-0 bg-paper/10 border-hairline border-paper/20 flex items-center justify-center font-mono text-[10px] text-paper"
               >
                 {initialsOf(displayName)}
               </span>
             )}
             <p
-              className="text-navy text-sm leading-tight truncate"
+              className="text-paper text-sm leading-tight truncate group-hover:text-gold transition-colors"
               title={displayName}
             >
               {displayName}
             </p>
-          </div>
+          </Link>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="mt-2 eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer leading-none"
+            className="mt-2 font-sans text-xs text-paper/40 hover:text-paper/70 p-0 m-0 border-0 bg-transparent cursor-pointer leading-none transition-colors"
           >
-            {labels.logout}
+            {labels.logout.toLocaleLowerCase()}
           </button>
         </div>
       </aside>

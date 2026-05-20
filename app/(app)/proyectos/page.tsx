@@ -58,6 +58,7 @@ export default async function ProjectsDiscoveryPage({
           stage: true,
           preMoneyValuation: true,
           valuationCurrency: true,
+          targetRaiseAmount: true,
         },
       },
       participations: { select: { status: true, shareCount: true } },
@@ -131,7 +132,7 @@ export default async function ProjectsDiscoveryPage({
                   href={`/proyectos/${p.slug}` as Route}
                   className="group grid grid-cols-12 items-baseline gap-x-4 gap-y-2 px-2 py-4 hover:bg-paper-light transition-colors"
                 >
-                  <div className="col-span-12 sm:col-span-6 min-w-0">
+                  <div className="col-span-12 sm:col-span-5 min-w-0">
                     <p className="eyebrow">
                       {p.startupProfile?.sector ?? p.kind}
                       {p.startupProfile?.stage &&
@@ -162,7 +163,7 @@ export default async function ProjectsDiscoveryPage({
                     )}
                   </div>
 
-                  <div className="col-span-5 sm:col-span-3">
+                  <div className="col-span-4 sm:col-span-2">
                     <p className="eyebrow !text-navy/40">{t.colValuation}</p>
                     <p className="mt-0.5 font-mono text-sm text-navy">
                       {p.startupProfile?.preMoneyValuation
@@ -176,7 +177,24 @@ export default async function ProjectsDiscoveryPage({
                     </p>
                   </div>
 
-                  <div className="col-span-5 sm:col-span-2">
+                  {/* Monto a levantar — declarado por el founder al cargar
+                      el proyecto. Sirve para que el miembro dimensione el
+                      tamaño de la ronda antes de entrar a la ficha. */}
+                  <div className="col-span-4 sm:col-span-2">
+                    <p className="eyebrow !text-navy/40">{t.colTargetRaise}</p>
+                    <p className="mt-0.5 font-mono text-sm text-navy">
+                      {p.startupProfile?.targetRaiseAmount
+                        ? formatCurrency(
+                            Number(p.startupProfile.targetRaiseAmount),
+                            p.startupProfile.valuationCurrency,
+                            0,
+                            locale
+                          )
+                        : "—"}
+                    </p>
+                  </div>
+
+                  <div className="col-span-4 sm:col-span-2">
                     <p className="eyebrow !text-navy/40">{t.colAvailable}</p>
                     <p className="mt-0.5 font-mono text-sm text-navy">
                       {formatNumber(available, undefined, locale)}{" "}
@@ -186,7 +204,7 @@ export default async function ProjectsDiscoveryPage({
                     </p>
                   </div>
 
-                  <div className="col-span-2 sm:col-span-1 self-center text-right">
+                  <div className="col-span-12 sm:col-span-1 self-center text-right">
                     <span className="eyebrow !text-gold">
                       {isPending ? t.review : "→"}
                     </span>

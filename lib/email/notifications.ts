@@ -83,6 +83,10 @@ import {
   type ChatNewMessageInput,
 } from "./templates/chat-new-message";
 import {
+  leadMoreInfoRequestEmail,
+  type LeadMoreInfoRequestInput,
+} from "./templates/lead-more-info-request";
+import {
   validationCheckEmail,
 } from "./templates/validation-check";
 
@@ -379,6 +383,32 @@ export async function notifyPasswordReset(input: {
 }
 
 // ─── Interés (compra de acciones) ──────────────────────────────────
+
+/**
+ * Notifica al lead que el project owner pidió más información antes de
+ * decidir sobre su interés. Email "conversacional" — el lead responde
+ * por fuera de la plataforma.
+ */
+export async function notifyLeadMoreInfoRequest(input: {
+  to: string;
+  projectSlug: string;
+} & Omit<LeadMoreInfoRequestInput, "projectUrl">) {
+  const projectUrl = `${appUrl()}/proyectos/${input.projectSlug}`;
+  const { subject, html } = leadMoreInfoRequestEmail({
+    requesterFirstName: input.requesterFirstName,
+    projectName: input.projectName,
+    founderName: input.founderName,
+    question: input.question,
+    projectUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "lead.more-info",
+  });
+}
 
 export async function notifyFounderNewInterest(input: {
   to: string;

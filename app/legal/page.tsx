@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getDict } from "@/lib/i18n";
 import { BackLink } from "@/components/app/BackLink";
+import { getOptionalSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
   title: "Aviso legal · AJDUT",
@@ -8,12 +9,18 @@ export const metadata: Metadata = {
 
 export default async function LegalPage() {
   const dict = await getDict();
+  const user = await getOptionalSession();
   const t = dict.legal;
   return (
     <div className="mx-auto max-w-6xl px-6 sm:px-8">
-      {/* Eyebrow + back: el título de sección doble como retorno dinámico. */}
+      {/* Eyebrow: sin sesión es BackLink (volver al landing). Con sesión queda
+          como label estático — el viewer navega con el sidebar. */}
       <section className="pt-5 pb-8 sm:pt-7 sm:pb-12">
-        <BackLink fallback="/">{t.eyebrow.replace(/^—\s*/, "")}</BackLink>
+        {user ? (
+          <p className="eyebrow !text-navy/40">{t.eyebrow.replace(/^—\s*/, "")}</p>
+        ) : (
+          <BackLink fallback="/">{t.eyebrow.replace(/^—\s*/, "")}</BackLink>
+        )}
         <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
       </section>
 

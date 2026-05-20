@@ -10,12 +10,16 @@ export function ProfileForm({
   initialAlias = "",
   initialAvatarUrl = "",
   initialIdPhotoUrl = "",
+  initialCountry = "",
+  initialPhone = "",
   dict,
 }: {
   initialName: string;
   initialAlias?: string;
   initialAvatarUrl?: string;
   initialIdPhotoUrl?: string;
+  initialCountry?: string;
+  initialPhone?: string;
   dict: Dict["profile"];
 }) {
   const [fullName, setFullName] = useState(initialName);
@@ -26,6 +30,10 @@ export function ProfileForm({
   const [savedAvatarUrl, setSavedAvatarUrl] = useState(initialAvatarUrl);
   const [idPhotoUrl, setIdPhotoUrl] = useState(initialIdPhotoUrl);
   const [savedIdPhotoUrl, setSavedIdPhotoUrl] = useState(initialIdPhotoUrl);
+  const [country, setCountry] = useState(initialCountry);
+  const [savedCountry, setSavedCountry] = useState(initialCountry);
+  const [phone, setPhone] = useState(initialPhone);
+  const [savedPhone, setSavedPhone] = useState(initialPhone);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
@@ -40,7 +48,9 @@ export function ProfileForm({
     fullName !== savedName ||
     alias !== savedAlias ||
     avatarUrl !== savedAvatarUrl ||
-    idPhotoUrl !== savedIdPhotoUrl;
+    idPhotoUrl !== savedIdPhotoUrl ||
+    country !== savedCountry ||
+    phone !== savedPhone;
 
   function onSubmitName(formData: FormData) {
     setNameError(null);
@@ -55,6 +65,8 @@ export function ProfileForm({
       setSavedAlias(alias);
       setSavedAvatarUrl(avatarUrl);
       setSavedIdPhotoUrl(idPhotoUrl);
+      setSavedCountry(country);
+      setSavedPhone(phone);
       setNameSuccess(true);
       setTimeout(() => setNameSuccess(false), 3000);
     });
@@ -116,6 +128,41 @@ export function ProfileForm({
           <p className="eyebrow !text-navy/40 mt-1.5">
             {dict.aliasFootnote}
           </p>
+        </div>
+
+        {/* ─── Contacto (país + teléfono) ───────────────────────────
+            Heredados de la Application al aprobar, editables en cualquier
+            momento por el dueño. Visibles solo para vos y el equipo de AJDUT. */}
+        <div className="pt-4 hairline-t grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="country" className="eyebrow block mb-1.5">
+              País
+            </label>
+            <input
+              id="country"
+              name="country"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              maxLength={60}
+              placeholder="Ej: Argentina"
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <label htmlFor="phone" className="eyebrow block mb-1.5">
+              Teléfono
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              maxLength={40}
+              placeholder="+54 9 11 ..."
+              className={inputCls}
+            />
+          </div>
         </div>
 
         {/* ─── Foto de perfil ─────────────────────────────────────── */}

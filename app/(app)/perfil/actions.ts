@@ -60,6 +60,19 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
     return { ok: false, error: "La URL de la foto de identificación no es válida.", field: "idPhotoUrl" };
   }
 
+  // Contacto: país + teléfono — campos editables post-aplicación.
+  // Vacío se persiste como null para que la UI muestre "—" en vez de "".
+  const countryRaw = String(formData.get("country") ?? "").trim();
+  const country = countryRaw.length === 0 ? null : countryRaw;
+  if (country !== null && country.length > 60) {
+    return { ok: false, error: "El país no puede superar los 60 caracteres.", field: "country" };
+  }
+  const phoneRaw = String(formData.get("phone") ?? "").trim();
+  const phone = phoneRaw.length === 0 ? null : phoneRaw;
+  if (phone !== null && phone.length > 40) {
+    return { ok: false, error: "El teléfono no puede superar los 40 caracteres.", field: "phone" };
+  }
+
   await prisma.user.update({
     where: { id: user.id },
     data: {
@@ -67,6 +80,8 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
       alias,
       avatarUrl: avatar,
       idPhotoUrl: idPhoto,
+      country,
+      phone,
     },
   });
   revalidatePath("/perfil");

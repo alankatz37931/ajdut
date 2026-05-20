@@ -41,6 +41,9 @@ export const dict: Dict = {
     heirs: "Heirs",
     audit: "Audit",
     notices: "Announcements",
+    sectionAdministration: "Administration",
+    sectionPortfolio: "Portfolio",
+    sectionAccount: "Account",
   },
 
   home: {
@@ -239,6 +242,7 @@ export const dict: Dict = {
     noneAdmin: "There are no projects on AJDUT yet.",
     noneMember: "There are no active projects on AJDUT yet.",
     colValuation: "Valuation",
+    colTargetRaise: "Target raise",
     colAvailable: "Available",
     of: "of",
     review: "Review →",
