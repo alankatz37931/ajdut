@@ -3,6 +3,7 @@ import { AppShell } from "@/components/app/AppShell";
 import { navItemsFor } from "@/components/app/nav-items";
 import { PublicNav } from "@/components/landing/PublicNav";
 import { PublicFooter } from "@/components/landing/PublicFooter";
+import { prisma } from "@/lib/db/client";
 
 /**
  * /nosotros es accesible con o sin sesión:
@@ -17,10 +18,20 @@ export default async function NosotrosLayout({
   const user = await getOptionalSession();
 
   if (user) {
-    const navItems = await navItemsFor(user.role, user.id);
+    const [navItems, dbUser] = await Promise.all([
+      navItemsFor(user.role, user.id),
+      prisma.user.findUnique({
+        where: { id: user.id },
+        select: { avatarUrl: true },
+      }),
+    ]);
     return (
       <AppShell
-        user={{ name: user.name ?? user.email, email: user.email }}
+        user={{
+          name: user.name ?? user.email,
+          email: user.email,
+          avatarUrl: dbUser?.avatarUrl ?? null,
+        }}
         navItems={navItems}
       >
         {children}

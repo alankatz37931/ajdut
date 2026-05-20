@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { FileUpload } from "@/components/ui/FileUpload";
 import { publishReportAction } from "./actions";
 
 type Props = {
@@ -28,6 +29,7 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [url, setUrl] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -42,6 +44,7 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
         return;
       }
       setSuccess(true);
+      setUrl("");
       formRef.current?.reset();
     });
   }
@@ -144,6 +147,18 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
       </div>
 
       <div>
+        <label className="eyebrow block mb-1.5">Subir archivo</label>
+        <FileUpload
+          scope="report-attachment"
+          accept=".pdf,.xlsx,.xls,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+          maxSizeMb={25}
+          currentUrl={url || undefined}
+          onUploaded={(publicUrl) => setUrl(publicUrl)}
+          helperText="PDF, Excel o Word. Máximo 25MB. Si tu storage no está configurado, podés pegar el link directo abajo."
+        />
+      </div>
+
+      <div>
         <label htmlFor="url" className="eyebrow block mb-1.5">
           URL del archivo
         </label>
@@ -153,11 +168,14 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
           type="url"
           required
           disabled={isPending}
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
           placeholder="https://drive.google.com/file/d/…"
           className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
         />
         <p className="mt-1.5 eyebrow !text-navy/40">
-          Pegá el link público al PDF (Google Drive, Dropbox, etc.).
+          Se autocompleta tras subir un archivo, o pegá un link público (Google
+          Drive, Dropbox, etc.).
         </p>
       </div>
 
