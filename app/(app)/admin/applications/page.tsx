@@ -153,8 +153,18 @@ export default async function ApplicationsListPage({
                         </span>
                       </div>
 
-                      {/* Línea 2: status + email + país */}
+                      {/* Línea 2: tipo + status + email + país.
+                          El tipo (Empresa / Persona) va al inicio en gold para
+                          que sea identificable de un vistazo en la bandeja. */}
                       <p className="mt-1 eyebrow truncate">
+                        <span
+                          className={`${
+                            a.kind === "COMPANY" ? "!text-gold" : "!text-navy/50"
+                          }`}
+                        >
+                          {a.kind === "COMPANY" ? "Empresa" : "Persona"}
+                        </span>
+                        <span className="!text-navy/30"> · </span>
                         <span
                           className={`inline-flex items-center gap-1.5 ${
                             isOpen ? "!text-gold" : "!text-navy/50"

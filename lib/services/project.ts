@@ -147,6 +147,10 @@ export type UpdateProjectInfoInput = {
   estrategiasPeriodicasUrl?: string | null;
   estadosFinancierosUrl?: string | null;
   estrategiaEmisionUrl?: string | null;
+  // Políticas (texto libre informativo). Acciones y dividendos.
+  policyShares?: string | null;
+  policyDividends?: string | null;
+  dividendsFrequency?: string | null;
 };
 
 /**
@@ -232,6 +236,18 @@ export async function updateProjectInfo(input: UpdateProjectInfoInput) {
         profileUpdates.estadosFinancierosUrl = input.estadosFinancierosUrl || null;
       if (input.estrategiaEmisionUrl !== undefined)
         profileUpdates.estrategiaEmisionUrl = input.estrategiaEmisionUrl || null;
+      if (input.policyShares !== undefined)
+        profileUpdates.policyShares = input.policyShares
+          ? input.policyShares.trim() || null
+          : null;
+      if (input.policyDividends !== undefined)
+        profileUpdates.policyDividends = input.policyDividends
+          ? input.policyDividends.trim() || null
+          : null;
+      if (input.dividendsFrequency !== undefined)
+        profileUpdates.dividendsFrequency = input.dividendsFrequency
+          ? input.dividendsFrequency.trim() || null
+          : null;
 
       if (Object.keys(profileUpdates).length > 0) {
         await tx.startupProfile.update({
@@ -286,6 +302,10 @@ export type CreateProjectInput = {
   estrategiasPeriodicasUrl?: string | null;
   estadosFinancierosUrl?: string | null;
   estrategiaEmisionUrl?: string | null;
+  // Políticas (texto libre informativo). Acciones y dividendos.
+  policyShares?: string | null;
+  policyDividends?: string | null;
+  dividendsFrequency?: string | null;
 };
 
 function slugify(text: string): string {
@@ -383,6 +403,9 @@ export async function createProject(input: CreateProjectInput) {
         estrategiasPeriodicasUrl: input.estrategiasPeriodicasUrl?.trim() || null,
         estadosFinancierosUrl: input.estadosFinancierosUrl?.trim() || null,
         estrategiaEmisionUrl: input.estrategiaEmisionUrl?.trim() || null,
+        policyShares: input.policyShares?.trim() || null,
+        policyDividends: input.policyDividends?.trim() || null,
+        dividendsFrequency: input.dividendsFrequency?.trim() || null,
       },
     });
 

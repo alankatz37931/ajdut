@@ -73,6 +73,9 @@ export async function updateProjectInfoAction(
       estrategiasPeriodicasUrl: pickOptionalStr("estrategiasPeriodicasUrl"),
       estadosFinancierosUrl: pickOptionalStr("estadosFinancierosUrl"),
       estrategiaEmisionUrl: pickOptionalStr("estrategiaEmisionUrl"),
+      policyShares: pickOptionalStr("policyShares"),
+      policyDividends: pickOptionalStr("policyDividends"),
+      dividendsFrequency: pickOptionalStr("dividendsFrequency"),
     });
 
     // Acciones disponibles (opcional — solo si el founder cambia el valor)

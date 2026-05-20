@@ -8,9 +8,21 @@ import {
   type SubmitResult,
 } from "./actions";
 
-type Step = "identity" | "contact" | "motivation" | "review" | "verify" | "submitted";
+type Kind = "PERSON" | "COMPANY";
+type CompanyKind = "REAL_ESTATE" | "MERCHANDISE" | "STARTUP";
 
-const steps: Array<{ id: Step; label: string }> = [
+type Step =
+  | "kind"
+  | "identity"
+  | "contact"
+  | "company"
+  | "motivation"
+  | "review"
+  | "verify"
+  | "submitted";
+
+const BASE_STEPS: Array<{ id: Step; label: string }> = [
+  { id: "kind", label: "Tipo" },
   { id: "identity", label: "Identidad" },
   { id: "contact", label: "Contacto" },
   { id: "motivation", label: "Motivación" },
@@ -18,14 +30,30 @@ const steps: Array<{ id: Step; label: string }> = [
   { id: "verify", label: "Verificación" },
 ];
 
+/** Inserta el paso "Empresa" después de "Contacto" cuando el aplicante es COMPANY. */
+function stepsFor(kind: Kind): Array<{ id: Step; label: string }> {
+  if (kind === "PERSON") return BASE_STEPS;
+  const out: Array<{ id: Step; label: string }> = [];
+  for (const s of BASE_STEPS) {
+    out.push(s);
+    if (s.id === "contact") out.push({ id: "company", label: "Empresa" });
+  }
+  return out;
+}
+
 type Draft = {
+  kind: Kind;
   fullName: string;
   email: string;
   phone: string;
   country: string;
-  motivation: string;          // Texto libre (detalles adicionales, opcional)
-  motivationOption: string;    // Label del select elegido
+  motivation: string; // Texto libre (detalles adicionales, opcional)
+  motivationOption: string; // Label del select elegido
   referredBy: string;
+  // Solo COMPANY
+  companyName: string;
+  companyDescription: string;
+  companyKind: CompanyKind;
 };
 
 const MOTIVATION_OPTIONS: string[] = [
@@ -37,7 +65,14 @@ const MOTIVATION_OPTIONS: string[] = [
   "Otro (especificar abajo)",
 ];
 
+const COMPANY_KIND_LABEL: Record<CompanyKind, string> = {
+  REAL_ESTATE: "Inmobiliario",
+  MERCHANDISE: "Mercancía",
+  STARTUP: "Otro",
+};
+
 const emptyDraft: Draft = {
+  kind: "PERSON",
   fullName: "",
   email: "",
   phone: "",
@@ -45,6 +80,9 @@ const emptyDraft: Draft = {
   motivation: "",
   motivationOption: MOTIVATION_OPTIONS[0]!,
   referredBy: "",
+  companyName: "",
+  companyDescription: "",
+  companyKind: "STARTUP",
 };
 
 /**
@@ -59,7 +97,7 @@ function composeMotivation(opt: string, freeText: string): string {
 }
 
 export function ApplicationForm() {
-  const [step, setStep] = useState<Step>("identity");
+  const [step, setStep] = useState<Step>("kind");
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -72,20 +110,18 @@ export function ApplicationForm() {
     setDraft((prev) => ({ ...prev, [key]: value }));
   }
 
+  const steps = stepsFor(draft.kind);
+  // stepOrder incluye "submitted" al final para que next() pueda avanzar al
+  // estado terminal sin caer fuera del array.
+  const stepOrder: Step[] = [...steps.map((s) => s.id), "submitted"];
+
   function canAdvance(): boolean {
     if (step === "identity")
       return draft.fullName.length >= 2 && draft.email.includes("@");
+    if (step === "company")
+      return draft.companyName.trim().length >= 2;
     return true;
   }
-
-  const stepOrder: Step[] = [
-    "identity",
-    "contact",
-    "motivation",
-    "review",
-    "verify",
-    "submitted",
-  ];
 
   /** Saltar a un paso ANTERIOR tocándolo en el indicador (no hacia adelante). */
   function goTo(target: Step) {
@@ -102,10 +138,9 @@ export function ApplicationForm() {
   }
 
   function next() {
-    const order: Step[] = ["identity", "contact", "motivation", "review", "verify", "submitted"];
-    const idx = order.indexOf(step);
-    if (idx >= 0 && idx < order.length - 1) {
-      const target = order[idx + 1];
+    const idx = stepOrder.indexOf(step);
+    if (idx >= 0 && idx < stepOrder.length - 1) {
+      const target = stepOrder[idx + 1];
       if (target) setStep(target);
     }
   }
@@ -118,12 +153,18 @@ export function ApplicationForm() {
       setCode("");
       setCodeExpiresAt(null);
     }
-    const order: Step[] = ["identity", "contact", "motivation", "review", "verify", "submitted"];
-    const idx = order.indexOf(step);
+    const idx = stepOrder.indexOf(step);
     if (idx > 0) {
-      const target = order[idx - 1];
+      const target = stepOrder[idx - 1];
       if (target) setStep(target);
     }
+  }
+
+  /** El usuario eligió tipo en el paso 0 — guardamos y avanzamos a Identity. */
+  function chooseKind(kind: Kind) {
+    setError(null);
+    setDraft((p) => ({ ...p, kind }));
+    setStep("identity");
   }
 
   function buildFormData(): FormData {
@@ -132,6 +173,7 @@ export function ApplicationForm() {
     // option interno: el backend solo conoce `motivation`.
     const composed = composeMotivation(draft.motivationOption, draft.motivation);
     const payload: Record<string, string> = {
+      kind: draft.kind,
       fullName: draft.fullName,
       email: draft.email,
       phone: draft.phone,
@@ -139,6 +181,11 @@ export function ApplicationForm() {
       motivation: composed,
       referredBy: draft.referredBy,
     };
+    if (draft.kind === "COMPANY") {
+      payload.companyName = draft.companyName;
+      payload.companyDescription = draft.companyDescription;
+      payload.companyKind = draft.companyKind;
+    }
     Object.entries(payload).forEach(([k, v]) => formData.append(k, v));
     return formData;
   }
@@ -251,6 +298,31 @@ export function ApplicationForm() {
       </ol>
 
       <div className="space-y-3">
+        {step === "kind" && (
+          <div className="space-y-4">
+            <p className="eyebrow">— ¿Cómo querés sumarte?</p>
+            <p className="text-navy/75 leading-relaxed">
+              Elegí el tipo de aplicación. Podés volver atrás más tarde si te equivocás.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <KindCard
+                title="Persona"
+                subtitle="Quiero ser miembro de la comunidad"
+                description="Sumate como socio individual: ver proyectos, manifestar interés y participar de la red."
+                selected={draft.kind === "PERSON"}
+                onClick={() => chooseKind("PERSON")}
+              />
+              <KindCard
+                title="Empresa"
+                subtitle="Quiero registrar mi proyecto"
+                description="Vengo a presentar un proyecto (startup, inmobiliario, mercancía u otro) para alojarlo en AJDUT."
+                selected={draft.kind === "COMPANY"}
+                onClick={() => chooseKind("COMPANY")}
+              />
+            </div>
+          </div>
+        )}
+
         {step === "identity" && (
           <>
             <Field label="Nombre completo" htmlFor="fullName">
@@ -308,6 +380,50 @@ export function ApplicationForm() {
           </>
         )}
 
+        {step === "company" && (
+          <>
+            <Field label="Nombre de la empresa o proyecto" htmlFor="companyName">
+              <input
+                id="companyName"
+                type="text"
+                value={draft.companyName}
+                onChange={(e) => update("companyName", e.target.value)}
+                className="input"
+                autoFocus
+                maxLength={160}
+              />
+            </Field>
+            <Field label="Tipo de proyecto" htmlFor="companyKind">
+              <select
+                id="companyKind"
+                value={draft.companyKind}
+                onChange={(e) =>
+                  update("companyKind", e.target.value as CompanyKind)
+                }
+                className="input"
+              >
+                <option value="REAL_ESTATE">{COMPANY_KIND_LABEL.REAL_ESTATE}</option>
+                <option value="MERCHANDISE">{COMPANY_KIND_LABEL.MERCHANDISE}</option>
+                <option value="STARTUP">{COMPANY_KIND_LABEL.STARTUP}</option>
+              </select>
+            </Field>
+            <Field label="Descripción corta de la propuesta (opcional)" htmlFor="companyDescription">
+              <textarea
+                id="companyDescription"
+                rows={4}
+                maxLength={1000}
+                value={draft.companyDescription}
+                onChange={(e) => update("companyDescription", e.target.value)}
+                className="input"
+                placeholder="En pocas líneas: qué hace el proyecto, en qué etapa está, qué necesitás de AJDUT."
+              />
+              <span className="eyebrow mt-2 block">
+                {draft.companyDescription.length} / 1000 caracteres
+              </span>
+            </Field>
+          </>
+        )}
+
         {step === "motivation" && (
           <>
             <Field label="¿Qué te motiva?" htmlFor="motivationOption">
@@ -344,12 +460,32 @@ export function ApplicationForm() {
 
         {step === "review" && (
           <div className="space-y-3 text-navy/85">
+            <Row
+              label="Tipo"
+              value={draft.kind === "COMPANY" ? "Empresa" : "Persona"}
+            />
             <Row label="Nombre" value={draft.fullName} />
             <Row label="Email" value={draft.email} />
             {draft.phone.trim() && <Row label="Teléfono" value={draft.phone} />}
             {draft.country.trim() && <Row label="País" value={draft.country} />}
             {draft.referredBy.trim() && (
               <Row label="Referido por" value={draft.referredBy} />
+            )}
+            {draft.kind === "COMPANY" && (
+              <>
+                <Row label="Empresa" value={draft.companyName} />
+                <Row
+                  label="Tipo de proyecto"
+                  value={COMPANY_KIND_LABEL[draft.companyKind]}
+                />
+                {draft.companyDescription.trim() && (
+                  <Row
+                    label="Descripción"
+                    value={draft.companyDescription}
+                    multiline
+                  />
+                )}
+              </>
             )}
             <Row
               label="Motivación"
@@ -416,7 +552,7 @@ export function ApplicationForm() {
       )}
 
       <div className="mt-8 flex items-center justify-between">
-        {step !== "identity" ? (
+        {step !== "kind" ? (
           <button type="button" onClick={back} className="eyebrow hover:!text-gold">
             ← Atrás
           </button>
@@ -424,7 +560,11 @@ export function ApplicationForm() {
           <span aria-hidden />
         )}
 
-        {step === "review" ? (
+        {step === "kind" ? (
+          // En el paso "kind" no hay botón Continuar — al elegir tarjeta
+          // ya avanzamos automáticamente. Reservamos espacio igual.
+          <span aria-hidden />
+        ) : step === "review" ? (
           <button
             type="button"
             onClick={requestCode}
@@ -469,6 +609,34 @@ export function ApplicationForm() {
         }
       `}</style>
     </div>
+  );
+}
+
+function KindCard({
+  title,
+  subtitle,
+  description,
+  selected,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  description: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`hairline p-5 text-left transition-colors hover:bg-paper-light ${
+        selected ? "bg-paper-light" : ""
+      }`}
+    >
+      <p className="eyebrow">{title}</p>
+      <p className="font-sans text-navy text-lg mt-2 leading-tight">{subtitle}</p>
+      <p className="mt-3 text-navy/75 leading-relaxed text-sm">{description}</p>
+    </button>
   );
 }
 

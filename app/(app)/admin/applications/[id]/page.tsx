@@ -8,6 +8,14 @@ import { ApplicationReviewActions } from "./ReviewActions";
 
 type Params = { params: Promise<{ id: string }> };
 
+// Labels para el tipo de proyecto declarado por aplicantes COMPANY.
+// Mirror del enum ProjectKind — mantener sincronizado con NewProjectForm.
+const COMPANY_KIND_LABEL: Record<string, string> = {
+  REAL_ESTATE: "Inmobiliario",
+  MERCHANDISE: "Mercancía",
+  STARTUP: "Otro",
+};
+
 export default async function ApplicationDetailPage({ params }: Params) {
   await requireRole(["ADMIN"]);
   const { id } = await params;
@@ -20,6 +28,7 @@ export default async function ApplicationDetailPage({ params }: Params) {
 
   const daysOld = Math.floor((Date.now() - app.createdAt.getTime()) / (1000 * 60 * 60 * 24));
   const canAct = app.status === "PENDING" || app.status === "UNDER_REVIEW";
+  const isCompany = app.kind === "COMPANY";
 
   return (
     <div>
@@ -29,7 +38,17 @@ export default async function ApplicationDetailPage({ params }: Params) {
 
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <p className="eyebrow">— Admin</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{app.fullName}</h1>
+        <div className="mt-3 sm:mt-4 flex items-center gap-3 flex-wrap">
+          {/* Badge del tipo de aplicante: Empresa (proyect owner) vs Persona. */}
+          <span
+            className={`eyebrow hairline px-2.5 py-1 ${
+              isCompany ? "!text-gold" : "!text-navy/60"
+            }`}
+          >
+            {isCompany ? "Empresa" : "Persona"}
+          </span>
+          <h1 className="font-sans text-h1 text-navy">{app.fullName}</h1>
+        </div>
         <p className="mt-2 eyebrow">
           {app.status} · enviada hace {daysOld}d
         </p>
@@ -48,6 +67,23 @@ export default async function ApplicationDetailPage({ params }: Params) {
         </dl>
       </Section>
 
+      {isCompany && (app.companyName || app.companyKind || app.companyDescription) && (
+        <Section title="Empresa / proyecto">
+          <dl className="grid grid-cols-12 gap-4">
+            {app.companyName && <Row label="Nombre" value={app.companyName} />}
+            {app.companyKind && (
+              <Row
+                label="Tipo de proyecto"
+                value={COMPANY_KIND_LABEL[app.companyKind] ?? app.companyKind}
+              />
+            )}
+            {app.companyDescription && (
+              <Row label="Descripción" value={app.companyDescription} />
+            )}
+          </dl>
+        </Section>
+      )}
+
       <Section title="Motivación">
         <p className="whitespace-pre-line text-navy/85 leading-relaxed">{app.motivation}</p>
       </Section>
@@ -60,7 +96,13 @@ export default async function ApplicationDetailPage({ params }: Params) {
 
       {canAct && (
         <Section title="Acciones">
-          <ApplicationReviewActions applicationId={app.id} />
+          {/* Pre-seleccionamos PROJECT_OWNER si la aplicación es de Empresa,
+              PARTNER si es Persona. El admin puede cambiar el rol antes de
+              confirmar. */}
+          <ApplicationReviewActions
+            applicationId={app.id}
+            defaultRole={isCompany ? "PROJECT_OWNER" : "PARTNER"}
+          />
         </Section>
       )}
     </div>

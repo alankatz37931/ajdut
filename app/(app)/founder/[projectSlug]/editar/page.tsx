@@ -97,6 +97,9 @@ export default async function EditProjectPage({ params }: Params) {
           estrategiasPeriodicasUrl: project.startupProfile?.estrategiasPeriodicasUrl ?? "",
           estadosFinancierosUrl: project.startupProfile?.estadosFinancierosUrl ?? "",
           estrategiaEmisionUrl: project.startupProfile?.estrategiaEmisionUrl ?? "",
+          policyShares: project.startupProfile?.policyShares ?? "",
+          policyDividends: project.startupProfile?.policyDividends ?? "",
+          dividendsFrequency: project.startupProfile?.dividendsFrequency ?? "",
           availableShares: currentAvailable,
         }}
         hasStartupProfile={!!project.startupProfile}
