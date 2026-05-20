@@ -48,7 +48,7 @@ export function newProjectPendingAdminEmail(input: NewProjectPendingAdminInput) 
           <td style="padding:8px 0;color:#1A1A2E;">${escapeText(input.sector)} · ${escapeText(stageLabel)}</td>
         </tr>
         <tr>
-          <td style="padding:8px 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">Founder</td>
+          <td style="padding:8px 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">Project owner</td>
           <td style="padding:8px 0;color:#1A1A2E;">${escapeText(input.founderName)} · ${escapeText(input.founderEmail)}</td>
         </tr>
         <tr>

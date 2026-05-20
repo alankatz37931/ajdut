@@ -346,7 +346,7 @@ export async function softDeleteMessage(input: SoftDeleteMessageInput) {
   );
   if (!allowed) {
     throw new ForbiddenError(
-      "Solo el founder, co-admin o admin pueden borrar mensajes."
+      "Solo el project owner, co-admin o admin pueden borrar mensajes."
     );
   }
 

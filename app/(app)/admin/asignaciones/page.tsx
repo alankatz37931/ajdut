@@ -186,7 +186,7 @@ export default async function AdminPendingAssignmentsPage({
 
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-sm">
                       <div className="sm:col-span-1">
-                        <p className="eyebrow !text-navy/40">Founder</p>
+                        <p className="eyebrow !text-navy/40">Project owner</p>
                         <p className="mt-1 text-navy">{proposerName}</p>
                         <p className="text-navy/60 text-xs">
                           {p.proposedBy.email}

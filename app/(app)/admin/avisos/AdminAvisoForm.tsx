@@ -11,7 +11,7 @@ type Props = {
 
 const ROLES = [
   { value: "ADMIN", label: "Admin" },
-  { value: "PROJECT_OWNER", label: "Founder" },
+  { value: "PROJECT_OWNER", label: "Project owner" },
   { value: "CO_ADMIN", label: "Co-admin" },
   { value: "PARTNER", label: "Miembro" },
 ] as const;

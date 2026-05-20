@@ -19,6 +19,7 @@ import { ProjectSection } from "@/components/project/ProjectSection";
 import { CapTableViz } from "@/components/project/CapTableViz";
 import { InlineParticipateCta } from "@/components/project/InlineParticipateCta";
 import { ParticipateFooterCta } from "@/components/project/ParticipateFooterCta";
+import { BackLink } from "@/components/app/BackLink";
 import { embedUrl } from "@/lib/utils/embed";
 import {
   formatCurrency,
@@ -727,13 +728,13 @@ export default async function ProjectPage({ params }: Params) {
 
   return (
     <div>
-      <Link href={backLinkFor(user.role)} className="eyebrow hover:!text-gold">
-        {t.back}
-      </Link>
-
       <div className="mt-4">
         <ProjectHero
-          contextEyebrow={t.heroContextEyebrow}
+          contextEyebrow={
+            <BackLink fallback={backLinkFor(user.role)}>
+              {t.heroContextEyebrow.replace(/^—\s*/, "")}
+            </BackLink>
+          }
           eyebrow={{
             kind: t.kind[project.kind] ?? project.kind,
             sector: project.startupProfile?.sector,

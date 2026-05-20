@@ -32,11 +32,11 @@ export function ProjectHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <header className="pb-8 sm:pb-10 hairline-b">
-      <BackLink fallback={`/founder/${projectSlug}`}>← {projectName}</BackLink>
-
-      <div className="mt-5 sm:mt-7 flex flex-wrap items-center gap-3">
-        <p className="eyebrow">— Founder · {projectName}</p>
+    <header className="pt-5 sm:pt-7 pb-8 sm:pb-10 hairline-b">
+      <div className="flex flex-wrap items-center gap-3">
+        <BackLink fallback={`/founder/${projectSlug}`}>
+          Project owner · {projectName}
+        </BackLink>
         {projectStatus && <StatusBadge status={projectStatus} />}
       </div>
 

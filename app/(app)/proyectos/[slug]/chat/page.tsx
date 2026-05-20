@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
+import { BackLink } from "@/components/app/BackLink";
 import {
   ensureChannelForProject,
   listChannelFeed,
@@ -60,18 +61,14 @@ export default async function ProjectChatPage({ params }: Params) {
 
   return (
     <div>
-      <Link href={`/proyectos/${slug}` as Route} className="eyebrow hover:!text-gold">
-        ← Volver al proyecto
-      </Link>
-
-      <header className="mt-4 hairline-b pb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <header className="pt-1 hairline-b pb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl min-w-0">
-          <p className="eyebrow">Chat del proyecto</p>
+          <BackLink fallback={`/proyectos/${slug}`}>Chat del proyecto</BackLink>
           <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
             {project.name}
           </h1>
           <p className="mt-3 text-navy/60 text-sm leading-relaxed">
-            Conversación interna entre el founder, los co-admins y los socios.
+            Conversación interna entre el project owner, los co-admins y los socios.
             Los miembros se ven con alias cuando lo configuraron. Sin tiempo real:
             actualizá la página para ver mensajes nuevos.
           </p>

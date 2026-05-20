@@ -40,8 +40,12 @@ type Props = {
   actions: Action[];
   /** Acciones "satélite" en la esquina superior derecha (editar, abrir chat). */
   satellite?: Action[];
-  /** Eyebrow opcional al tope: "01 · Ficha del proyecto" o similar. */
-  contextEyebrow?: string;
+  /**
+   * Eyebrow opcional al tope: "Ficha del proyecto" o similar.
+   * Acepta string (se envuelve en <p className="eyebrow">) o ReactNode
+   * (ej. <BackLink>) para que el eyebrow doble como botón de retorno.
+   */
+  contextEyebrow?: React.ReactNode;
 };
 
 function initialsOf(name: string): string {
@@ -123,7 +127,11 @@ export function ProjectHero({
 
       <div className="hairline-t hairline-b py-10 sm:py-14 px-1 sm:px-2">
         {contextEyebrow && (
-          <p className="eyebrow !text-navy/40 mb-6">{contextEyebrow}</p>
+          typeof contextEyebrow === "string" ? (
+            <p className="eyebrow !text-navy/40 mb-6">{contextEyebrow}</p>
+          ) : (
+            <div className="mb-6">{contextEyebrow}</div>
+          )
         )}
         {eyebrowParts.length > 0 && (
           <p className="eyebrow flex flex-wrap items-center gap-x-3 gap-y-1">

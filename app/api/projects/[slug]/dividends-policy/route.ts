@@ -91,18 +91,18 @@ export async function GET(_req: Request, { params }: Params) {
   lines.push("");
   lines.push(`FRECUENCIA`);
   lines.push("");
-  lines.push(frequency || "El founder aún no declaró una frecuencia de dividendos.");
+  lines.push(frequency || "El project owner aún no declaró una frecuencia de dividendos.");
   lines.push("");
   lines.push("─".repeat(60));
   lines.push("");
   lines.push(`POLÍTICA`);
   lines.push("");
-  lines.push(policy || "El founder aún no declaró una política de dividendos.");
+  lines.push(policy || "El project owner aún no declaró una política de dividendos.");
   lines.push("");
   lines.push("─".repeat(60));
   lines.push("");
   lines.push(
-    "AJDUT registra esta política a título informativo. La política la declara el founder y puede actualizarse en la ficha del proyecto."
+    "AJDUT registra esta política a título informativo. La política la declara el project owner y puede actualizarse en la ficha del proyecto."
   );
   lines.push("");
 

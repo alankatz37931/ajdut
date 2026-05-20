@@ -11,10 +11,8 @@ export default async function NewProjectPage() {
 
   return (
     <div className="max-w-4xl">
-      <header className="pb-8 sm:pb-10 hairline-b">
-        <BackLink fallback="/founder">← Mis proyectos</BackLink>
-
-        <p className="eyebrow mt-5 sm:mt-7">— Founder · Nuevo proyecto</p>
+      <header className="pt-5 sm:pt-7 pb-8 sm:pb-10 hairline-b">
+        <BackLink fallback="/founder">Project owner · Nuevo proyecto</BackLink>
         <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
           Registrá tu empresa
         </h1>

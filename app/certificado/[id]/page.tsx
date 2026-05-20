@@ -42,7 +42,7 @@ export default async function CertificatePage({ params }: Params) {
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       {/* Barra de acciones — no se imprime */}
       <div className="flex items-center justify-between gap-4 print:hidden">
-        <BackLink fallback="/partner">← Volver</BackLink>
+        <BackLink fallback="/partner">Certificado</BackLink>
         <PrintButton />
       </div>
 

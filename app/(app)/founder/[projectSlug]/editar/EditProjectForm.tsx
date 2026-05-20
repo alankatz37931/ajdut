@@ -8,7 +8,7 @@ type Initial = {
   name: string;
   shortPitch: string;
   description: string;
-  kind: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE";
+  kind: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER";
   sector: string;
   stage: "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
   location: string;

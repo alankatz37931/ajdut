@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { requestPasswordResetAction } from "./actions";
+import { FloatingInput } from "@/components/ui/Floating";
 
 export function RecoveryForm() {
   const [email, setEmail] = useState("");
@@ -9,8 +10,11 @@ export function RecoveryForm() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function onSubmit(formData: FormData) {
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setError(null);
+    const formData = new FormData();
+    formData.append("email", email);
     startTransition(async () => {
       const r = await requestPasswordResetAction(formData);
       if (!r.ok) {
@@ -39,23 +43,17 @@ export function RecoveryForm() {
   }
 
   return (
-    <form action={onSubmit} className="space-y-5">
-      <div>
-        <label htmlFor="email" className="eyebrow block mb-2">
-          Email de tu cuenta
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-          autoFocus
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy focus:outline-none focus:border-navy"
-        />
-      </div>
+    <form onSubmit={onSubmit} className="space-y-5">
+      <FloatingInput
+        id="email"
+        type="email"
+        label="Email de tu cuenta"
+        value={email}
+        onChange={setEmail}
+        autoComplete="email"
+        autoFocus
+        required
+      />
 
       {error && (
         <p className="eyebrow !text-navy" role="alert">

@@ -29,7 +29,7 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: "AJDUT",
   description:
-    "Comunidad cerrada de proyectos validados. AJDUT no procesa pagos ni custodia fondos. Herramienta de gestión, comunicación y certificación.",
+    "Donde proyectos reales encuentran a su comunidad. AJDUT conecta emprendedores con miembros que quieren aportar a proyectos reales — startups, inmobiliarios o de mercancía.",
   robots: "noindex,nofollow",
 };
 

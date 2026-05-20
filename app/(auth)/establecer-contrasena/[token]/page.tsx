@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { inspectToken } from "@/lib/services/password-setup";
 import { SetPasswordForm } from "./SetPasswordForm";
+import { BackLink } from "@/components/app/BackLink";
 
 type Params = { params: Promise<{ token: string }> };
 
@@ -18,16 +18,7 @@ export default async function SetPasswordPage({ params }: Params) {
 
   return (
     <div className="mx-auto w-full max-w-md px-4 sm:px-6 pb-section">
-      <div className="flex items-center gap-3 -ml-2">
-        <Link
-          href="/"
-          aria-label="Volver al inicio"
-          className="inline-flex h-8 w-8 items-center justify-center text-navy hover:text-gold transition-colors text-lg"
-        >
-          ←
-        </Link>
-        <p className="eyebrow">Acceso aprobado</p>
-      </div>
+      <BackLink fallback="/">Acceso aprobado</BackLink>
 
       <h1 className="font-sans mt-6 text-h1 text-navy">
         Hola, {inspection.user.fullName.split(" ")[0]}.
@@ -74,16 +65,7 @@ function InvalidTokenView({
   const c = COPY[reason];
   return (
     <div className="mx-auto w-full max-w-md px-4 sm:px-6 pb-section">
-      <div className="flex items-center gap-3 -ml-2">
-        <Link
-          href="/"
-          aria-label="Volver al inicio"
-          className="inline-flex h-8 w-8 items-center justify-center text-navy hover:text-gold transition-colors text-lg"
-        >
-          ←
-        </Link>
-        <p className="eyebrow">Link inválido</p>
-      </div>
+      <BackLink fallback="/">Link inválido</BackLink>
       <h1 className="font-sans mt-6 text-h1 text-navy">{c.title}</h1>
       <p className="mt-4 text-navy/75 leading-relaxed">{c.body}</p>
     </div>

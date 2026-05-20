@@ -46,8 +46,8 @@ export async function updateProjectInfoAction(
       shortPitch: pickStr("shortPitch"),
       description: pickStr("description"),
       kind:
-        kind && ["STARTUP", "REAL_ESTATE", "MERCHANDISE"].includes(kind)
-          ? (kind as "STARTUP" | "REAL_ESTATE" | "MERCHANDISE")
+        kind && ["STARTUP", "REAL_ESTATE", "MERCHANDISE", "OTHER"].includes(kind)
+          ? (kind as "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER")
           : undefined,
       sector: pickStr("sector"),
       stage:

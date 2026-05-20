@@ -127,7 +127,7 @@ async function reviewInfoRequest(
   // Solo el owner del proyecto puede aprobar/rechazar.
   if (req.project.ownerId !== reviewerId) {
     throw new ForbiddenError(
-      "Solo el founder del proyecto puede aprobar o rechazar solicitudes de información."
+      "Solo el project owner del proyecto puede aprobar o rechazar solicitudes de información."
     );
   }
   if (req.status !== "PENDING") {

@@ -24,7 +24,7 @@ export function infoRequestResolvedEmail(input: InfoRequestResolvedInput) {
     input.note.trim().length > 0
       ? `
         <p style="margin:24px 0 8px 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">
-          Nota del founder
+          Nota del project owner
         </p>
         <p style="margin:0 0 16px 0;white-space:pre-line;">${escapeText(input.note)}</p>
       `

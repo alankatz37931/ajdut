@@ -44,23 +44,24 @@ export const dict: Dict = {
   },
 
   home: {
-    eyebrow: "— Closed community of vetted projects",
-    titleLine1: "Coordinating",
-    titleLine2: "business communities.",
+    eyebrow: "— Where projects build their community",
+    titleLine1: "Connecting capital, projects and",
+    titleLine2: "high-impact communities.",
     pillarsEyebrow: "Transparency · Unity · Value",
     description:
-      "AJDUT does not process payments or hold funds. It is the management, communication and certification tool that backs real projects — startups, real estate and merchandise — for their members.",
+      "AJDUT brings together visionary project owners and members who want to back high-value initiatives: from tech startups to real-estate developments and commerce. Fully backed, certified and transparent.",
     ctaSignIn: "Sign in",
-    ctaApply: "Apply to be part →",
-    pillarLegacyTitle: "Legacy traceability",
+    ctaApply: "Apply to be part",
+    pillarsHeading: "Why members choose AJDUT",
+    pillarLegacyTitle: "Immutable Ownership",
     pillarLegacyBody:
-      "Every change of ownership of a participation is recorded in an immutable chain. It is not erased: it is succeeded.",
-    pillarReportsTitle: "Quarterly reports",
+      "Your ownership and legacy are recorded under the highest digital security standards.",
+    pillarReportsTitle: "Exclusive Information",
     pillarReportsBody:
-      "Signed documents delivered via private URL with dynamic watermark. Access is restricted to members of the project.",
-    pillarResaleTitle: "Communicative resale",
+      "Regular delivery of detailed reports and quarterly progress updates.",
+    pillarResaleTitle: "Liquidity and Transfer",
     pillarResaleBody:
-      "The deal closes off-platform. The record is ours: AJDUT facilitates the conversation and certifies the change.",
+      "We facilitate the transfer of participations and the contact between members, certifying every change swiftly and safely.",
   },
 
   publicNav: {
@@ -69,7 +70,7 @@ export const dict: Dict = {
   },
 
   publicFooter: {
-    legal: "Legal notice",
+    legal: "LEGAL NOTICE",
     copy: "AJDUT · 2026",
   },
 
@@ -92,16 +93,14 @@ export const dict: Dict = {
     metaTitle: "Apply · AJDUT",
     eyebrow: "Access application",
     backToHome: "Back to home",
-    title: "Apply to be part",
+    title: "I want to be part of AJDUT",
     intro:
-      "AJDUT is a closed community. Your application will be reviewed manually by the team. There is no automatic registration; access is granted after evaluation.",
+      "We believe in real connections and in the value of every member. Fill in your details and let's start building together.",
     backStep: "Back to ",
     backShort: "← Back",
     continue: "Continue →",
-    sendCode: "Send verification code →",
-    sendingCode: "Sending code…",
-    verifyAndSubmit: "Verify and submit",
-    verifying: "Verifying…",
+    sendApplication: "Send application →",
+    sendingApplication: "Sending…",
     steps: {
       kind: "Type",
       identity: "Identity",
@@ -109,12 +108,11 @@ export const dict: Dict = {
       company: "Company",
       motivation: "Motivation",
       review: "Review",
-      verify: "Verification",
     },
     kind: {
       eyebrow: "— How would you like to join?",
-      intro: "Choose the type of application. You can go back later if you change your mind.",
-      personTitle: "Person",
+      intro: "Choose the type of application.",
+      personTitle: "Partner",
       personSubtitle: "I want to be a member of the community",
       personDescription:
         "Join as an individual partner: explore projects, express interest and take part in the network.",
@@ -137,8 +135,9 @@ export const dict: Dict = {
       kindLabel: "Project type",
       kindRealEstate: "Real estate",
       kindMerchandise: "Merchandise",
-      kindStartup: "Other",
-      descriptionLabel: "Short description of the proposal (optional)",
+      kindStartup: "Startup",
+      kindOther: "Other",
+      descriptionLabel: "Short description of the proposal",
       descriptionPlaceholder:
         "In a few lines: what the project does, what stage it is at, what you need from AJDUT.",
       charsCounter: "characters",
@@ -151,14 +150,14 @@ export const dict: Dict = {
         "I want to diversify my portfolio with real projects",
         "I want to support ventures from my region",
         "I have experience in startups / real estate and want to participate",
+        "I have a company and want to be part of the network",
         "I was recommended by a current member",
         "I learned about AJDUT through media / social networks",
-        "Other (specify below)",
       ],
     },
     review: {
       typeLabel: "Type",
-      typePerson: "Person",
+      typePerson: "Partner",
       typeCompany: "Company",
       nameLabel: "Name",
       emailLabel: "Email",
@@ -169,17 +168,6 @@ export const dict: Dict = {
       companyKindLabel: "Project type",
       descriptionLabel: "Description",
       motivationLabel: "Motivation",
-      footnote:
-        "When you continue, we'll send a verification code to the email above to confirm it's yours.",
-    },
-    verify: {
-      eyebrow: "— Email verification",
-      title: "Check your inbox.",
-      sentTo: "We sent a 6-digit code to",
-      sentSuffix: ". Enter it below to complete your application.",
-      validUntil: "Valid until",
-      codeLabel: "6-digit code",
-      resend: "Didn't get it? Resend code →",
     },
     submitted: {
       eyebrow: "— Application received",
@@ -273,8 +261,8 @@ export const dict: Dict = {
   },
 
   projectDetail: {
-    back: "← Back",
-    founderLabel: "Founder",
+    back: "Project file",
+    founderLabel: "Project owner",
     openChat: "Open chat →",
     chatShort: "Chat →",
     interest: "I'm interested in participating →",
@@ -285,12 +273,12 @@ export const dict: Dict = {
     seeProject: "View project →",
     heroContextEyebrow: "— Project file",
     nextStep: "Next step",
-    emptySection: "The founder has not completed this section yet.",
+    emptySection: "The project owner has not completed this section yet.",
     footerCta: {
       eyebrow: "— Next step",
       question: "Would you like to take part in this project?",
       body:
-        "AJDUT does not process payments or hold funds. If you move forward, the founder will reach out via the email you registered with.",
+        "AJDUT does not process payments or hold funds. If you move forward, the project owner will reach out via the email you registered with.",
       notAvailableEyebrow: "— No shares available",
       notAvailableTitle: "This project is fully placed.",
       notAvailableBody:
@@ -332,7 +320,7 @@ export const dict: Dict = {
       pricePerShare: "Suggested price per share",
       pricePerShareHint: "valuation ÷ total shares",
       annualReturnPerShare: "Annual return per share",
-      annualReturnPerShareHint: "not provided by the founder",
+      annualReturnPerShareHint: "not provided by the project owner",
     },
     yours: {
       shares: "Shares",
@@ -343,7 +331,7 @@ export const dict: Dict = {
       noValuation: "no declared valuation",
       pricePerShareSuffix: "/ share",
       partnersOnlyOwnPositionNote:
-        "You only see your own position. The full cap table is sensitive information and is reserved for the founder and the AJDUT team.",
+        "You only see your own position. The full cap table is sensitive information and is reserved for the project owner and the AJDUT team.",
       colSerial: "Serial",
       colShares: "Shares",
       colAcquired: "Acquired",
@@ -421,7 +409,7 @@ export const dict: Dict = {
     cancel: "Cancel",
     notAvailableYet: "Participation not yet available",
     noValuationBody:
-      "This project has not yet declared its valuation — you cannot specify an amount. Check back later; the founder will publish the valuation when ready.",
+      "This project has not yet declared its valuation — you cannot specify an amount. Check back later; the project owner will publish the valuation when ready.",
     supportKindLabel: "Type of support",
     supportKind: {
       CAPITAL: "Capital",
@@ -440,7 +428,7 @@ export const dict: Dict = {
     effectiveSuffix: "effective",
     sharesSingular: "share",
     sharesPlural: "shares",
-    messageLabel: "Message to the founder",
+    messageLabel: "Message to the project owner",
     messageOptional: "(optional)",
     messagePlaceholderPrefix: "My name is",
     messagePlaceholderInfix: "and I'd like to participate in",
@@ -456,11 +444,11 @@ export const dict: Dict = {
     errorOverMax: "The amount exceeds availability. Maximum:",
     errorMaxShares: "Maximum available:",
     footerNote:
-      "AJDUT does not process payments. The deal closes off-platform under the terms you agree with the founder.",
+      "AJDUT does not process payments. The deal closes off-platform under the terms you agree with the project owner.",
     successTitle: "Thank you.",
     successEyebrow: "Interest registered",
     successBody:
-      "The project's founder received your interest. If it moves forward, they will reach out via the email you registered with AJDUT.",
+      "The project's project owner received your interest. If it moves forward, they will reach out via the email you registered with AJDUT.",
   },
 
   infoRequestForm: {
@@ -469,7 +457,7 @@ export const dict: Dict = {
     cancel: "Cancel",
     explainBody:
       "Ask the project lead to unlock extended information (documents, reports). If they approve, you'll then be able to specify a concrete amount to participate.",
-    messageLabel: "Message to the founder",
+    messageLabel: "Message to the project owner",
     messageOptional: "(optional)",
     messagePlaceholderPrefix: "My name is",
     messagePlaceholderInfix: "and I'd like to know more about",
@@ -480,7 +468,7 @@ export const dict: Dict = {
     successEyebrow: "Request sent",
     successTitle: "Thank you.",
     successBody:
-      "The project's founder received your request. Once approved, you'll be able to see the documents and reports and move on to the next step.",
+      "The project's project owner received your request. Once approved, you'll be able to see the documents and reports and move on to the next step.",
   },
 
   partner: {
@@ -516,7 +504,7 @@ export const dict: Dict = {
     seeCertificate: "View certificate →",
     dividendsHistoryTitle: "Dividend history",
     dividendsEmpty:
-      "There are no dividend distributions on your participations yet. When a founder declares one, it will appear here with payout instructions.",
+      "There are no dividend distributions on your participations yet. When a project owner declares one, it will appear here with payout instructions.",
     lastMonth: "Last month",
     lastMonthHint: "last 30 days",
     last3Months: "Last 3 months",
@@ -526,7 +514,7 @@ export const dict: Dict = {
     historicTotal: "All-time total",
     historicTotalHint: "confirmed by you",
     pending: "Pending",
-    pendingHint: "sent by founder or awaiting transfer",
+    pendingHint: "sent by project owner or awaiting transfer",
     historyDescription:
       "Your full history (includes status and confirmation date).",
     downloadCsv: "Download history (CSV) ↓",
@@ -540,10 +528,10 @@ export const dict: Dict = {
     frequencyLabel: "Frequency",
     notDeclared: "Not declared",
     dividendsPolicyLabel: "Dividend policy",
-    noPolicyDeclared: "The founder has not declared a dividend policy yet.",
+    noPolicyDeclared: "The project owner has not declared a dividend policy yet.",
     paymentStatusLabel: {
       PENDING: "Pending",
-      SENT: "Sent by founder",
+      SENT: "Sent by project owner",
       RECEIVED: "Confirmed",
       DISPUTED: "Disputed",
       WAIVED: "Waived",
@@ -573,27 +561,27 @@ export const dict: Dict = {
       nature: {
         title: "Nature of the platform",
         body:
-          "AJDUT is a management, communication and certification tool. It does not process payments, does not hold funds and is not a financial market. All economic transactions between parties occur off-platform.",
+          "AJDUT is an ecosystem dedicated exclusively to the management, communication and certification of projects. To guarantee the full independence and decentralization of agreements, every economic transaction is executed directly between the parties and outside the platform.",
       },
       gatekeeping: {
-        title: "Gatekeeping",
+        title: "Admission process",
         body:
-          "Access to AJDUT requires a prior application and manual approval by the team. There is no open registration.",
+          "Access to AJDUT is coordinated through an admission request and the individual validation of each profile. This personalized process ensures that every member shares the integrity standards and the value vision of our ecosystem.",
       },
       stake: {
         title: "Institutional stake",
         body:
-          "AJDUT holds a 10% economic participation in every active project. This proportion is documented in the Platform Equity Agreement signed between AJDUT and the founder at approval time.",
+          "AJDUT supports the growth of the community by maintaining a 10% economic participation in every active project. This mutual commitment is formalized transparently in the Platform Equity Agreement entered into with the project owner at the start of the collaboration.",
       },
       distributions: {
-        title: "Distributions",
+        title: "Distributions and Governance",
         body:
-          "AJDUT does not process, hold or facilitate the payment of dividend distributions. Funds are transferred off-platform under the terms agreed between founder and member. AJDUT records the declaration, the transfer and the receipt for traceability and audit purposes. The founder is responsible for any applicable tax withholding.",
+          "Compliance and payment of distributions are managed directly and sovereignly between the project owner and the member, under the terms agreed off-platform. To support transparency, AJDUT provides tools to record the declaration, the transfer and the receipt for audit and traceability purposes. Applicable tax obligations and withholdings correspond exclusively to the project owner.",
       },
       resale: {
-        title: "Resale of participations",
+        title: "Transfer of participations",
         body:
-          "Resales are communicative. The deal closes off-platform. The change of ownership is executed only after the Admin's validation, with dual signature when applicable.",
+          "The free transfer or resale of participations is managed through prior notification to the platform. For the safety of the entire community, the official change of ownership is consolidated in the registry once validated by the Administrator through the corresponding dual-signature system.",
       },
     },
   },

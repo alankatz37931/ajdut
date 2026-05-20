@@ -53,7 +53,7 @@ export function interestReceivedConfirmationEmail(input: InterestReceivedConfirm
 
       <p style="margin:24px 0 0 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">
         AJDUT no procesa pagos. El cierre se realiza por fuera de la plataforma según los términos
-        que acuerdes con el founder.
+        que acuerdes con el project owner.
       </p>
     `,
     ctaLabel: "Ver el proyecto",

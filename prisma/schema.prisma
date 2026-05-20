@@ -233,6 +233,7 @@ enum ProjectKind {
   STARTUP
   REAL_ESTATE
   MERCHANDISE
+  OTHER
 }
 
 enum ProjectStatus {

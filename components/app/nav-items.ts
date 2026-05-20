@@ -12,7 +12,7 @@ import { getDict } from "@/lib/i18n";
 // español por compat con audit / admin que están fuera del scope de Ola 7c.
 export const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Admin",
-  PROJECT_OWNER: "Founder",
+  PROJECT_OWNER: "Project owner",
   CO_ADMIN: "Co-admin",
   PARTNER: "Miembro",
 };

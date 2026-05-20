@@ -62,7 +62,7 @@ export function PendingAssignmentActions({
   if (mode === "done-rejected") {
     return (
       <p className="eyebrow !text-navy/60" role="status">
-        Asignación rechazada. El founder recibió la nota.
+        Asignación rechazada. El project owner recibió la nota.
       </p>
     );
   }
@@ -114,7 +114,7 @@ export function PendingAssignmentActions({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy"
-          placeholder="Explicale al founder por qué se rechaza esta asignación…"
+          placeholder="Explicale al project owner por qué se rechaza esta asignación…"
         />
         {error && (
           <p className="eyebrow !text-navy" role="alert">

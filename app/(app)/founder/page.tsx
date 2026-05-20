@@ -32,7 +32,7 @@ export default async function FounderRootPage() {
     <div>
       <header className="pb-8 sm:pb-10 hairline-b flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="eyebrow">— Founder</p>
+          <p className="eyebrow">— Project owner</p>
           <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Tus proyectos</h1>
           {projects.length > 0 && (
             <p className="mt-3 text-navy/75 leading-relaxed">

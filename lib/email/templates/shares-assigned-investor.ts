@@ -38,7 +38,7 @@ export function sharesAssignedInvestorEmail(input: SharesAssignedInvestorInput) 
     heading: `Felicitaciones, ${escapeText(input.investorFirstName)}.`,
     bodyHtml: `
       <p style="margin:0 0 16px 0;">
-        El founder de <strong>${escapeText(input.projectName)}</strong> confirmó la asignación
+        El project owner de <strong>${escapeText(input.projectName)}</strong> confirmó la asignación
         de tus acciones. Ya quedaron registradas a tu nombre en AJDUT con trazabilidad
         inmutable.
       </p>
@@ -62,7 +62,7 @@ export function sharesAssignedInvestorEmail(input: SharesAssignedInvestorInput) 
 
       <p style="margin:24px 0 0 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">
         AJDUT no procesa pagos. El cierre económico se realiza por fuera de la plataforma según
-        los términos acordados con el founder.
+        los términos acordados con el project owner.
       </p>
     `,
     ctaLabel: "Ver mi portafolio →",

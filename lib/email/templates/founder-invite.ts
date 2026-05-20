@@ -61,7 +61,7 @@ export function founderInviteEmail(input: FounderInviteInput) {
         <td style="padding:8px 0;color:#1A1A2E;">${fmtInt(input.shareCount)}</td>
       </tr>
       <tr>
-        <td style="padding:8px 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">Founder</td>
+        <td style="padding:8px 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">Project owner</td>
         <td style="padding:8px 0;color:#1A1A2E;">${escapeText(input.founderName)}</td>
       </tr>
     </table>
@@ -90,7 +90,7 @@ export function founderInviteEmail(input: FounderInviteInput) {
         ${messageBlock}
         ${expiryNote}
         <p style="margin:24px 0 0 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">
-          AJDUT no procesa pagos. El cierre económico se acuerda directamente con el founder.
+          AJDUT no procesa pagos. El cierre económico se acuerda directamente con el project owner.
         </p>
       `,
       ctaLabel: "Establecer contraseña →",
@@ -113,7 +113,7 @@ export function founderInviteEmail(input: FounderInviteInput) {
       ${summaryTable}
       ${messageBlock}
       <p style="margin:24px 0 0 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">
-        AJDUT no procesa pagos. El cierre económico se acuerda directamente con el founder.
+        AJDUT no procesa pagos. El cierre económico se acuerda directamente con el project owner.
       </p>
     `,
     ctaLabel: "Ver mi portafolio →",

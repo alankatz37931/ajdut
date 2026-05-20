@@ -7,6 +7,7 @@ import { Section } from "@/components/ui/Section";
 import { StatusBadge } from "@/components/founder/StatusBadge";
 import { ModuleCard } from "@/components/founder/ModuleCard";
 import { ProjectChecklist } from "@/components/founder/ProjectChecklist";
+import { BackLink } from "@/components/app/BackLink";
 import { formatNumber, formatPercent, formatCurrency, formatDate } from "@/lib/utils/format";
 
 type Params = { params: Promise<{ projectSlug: string }> };
@@ -126,12 +127,12 @@ export default async function FounderDashboardPage({ params }: Params) {
   return (
     <div>
       {/* ─── HERO COMPACTO ─────────────────────────────────────────── */}
-      <header className="flex flex-col gap-6 hairline-b pb-8 sm:pb-10 sm:flex-row sm:items-start sm:justify-between">
+      <header className="pt-5 sm:pt-7 flex flex-col gap-6 hairline-b pb-8 sm:pb-10 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 sm:max-w-2xl">
-          <p className="eyebrow">
-            — Founder · {sp?.sector ?? project.kind}
+          <BackLink fallback="/founder">
+            Project owner · {sp?.sector ?? project.kind}
             {sp?.stage ? ` · ${sp.stage}` : ""}
-          </p>
+          </BackLink>
           <h1 className="font-sans mt-4 sm:mt-6 text-h1 text-navy">{project.name}</h1>
           {sp?.oneLiner || project.shortPitch ? (
             <p className="mt-3 sm:mt-4 text-navy/75 leading-relaxed">

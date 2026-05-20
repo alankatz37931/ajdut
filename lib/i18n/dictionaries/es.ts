@@ -48,23 +48,24 @@ export const dict = {
   },
 
   home: {
-    eyebrow: "— Comunidad cerrada de proyectos validados",
-    titleLine1: "Coordinamos",
-    titleLine2: "comunidades de negocios.",
+    eyebrow: "— Donde los proyectos construyen su comunidad",
+    titleLine1: "Conectamos capital, proyectos y",
+    titleLine2: "comunidades de alto impacto.",
     pillarsEyebrow: "Transparencia · Unidad · Valor",
     description:
-      "AJDUT no procesa pagos ni custodia fondos. Es la herramienta de gestión, comunicación y certificación que respalda proyectos reales — startups, inmobiliarios y de mercancía — para sus miembros.",
+      "AJDUT une a emprendedores visionarios con miembros que buscan respaldar iniciativas de alto valor: desde startups tecnológicas hasta desarrollos inmobiliarios y comercio. Todo respaldado, certificado y transparente.",
     ctaSignIn: "Acceder",
-    ctaApply: "Aplica para ser parte →",
-    pillarLegacyTitle: "Trazabilidad de legado",
+    ctaApply: "Aplica para ser parte",
+    pillarsHeading: "Por qué los miembros eligen AJDUT",
+    pillarLegacyTitle: "Propiedad Inmutable",
     pillarLegacyBody:
-      "Cada cambio de propiedad de una participación queda registrado en una cadena inmutable. No se borra: se sucede.",
-    pillarReportsTitle: "Reportes trimestrales",
+      "Tu propiedad y legado quedan registrados bajo los más altos estándares de seguridad digital.",
+    pillarReportsTitle: "Información Exclusiva",
     pillarReportsBody:
-      "Documentos firmados con URL privada y marca de agua dinámica. Acceso solo para miembros del proyecto.",
-    pillarResaleTitle: "Reventa comunicativa",
+      "Entrega periódica de reportes detallados y balances de evolución cada trimestre.",
+    pillarResaleTitle: "Liquidez y Traspaso",
     pillarResaleBody:
-      "El cierre es externo a la plataforma. El registro es nuestro: AJDUT facilita la conversación y certifica el cambio.",
+      "Facilitamos la transferencia de participaciones y el contacto entre miembros, certificando cada cambio de manera ágil y segura.",
   },
 
   publicNav: {
@@ -73,7 +74,7 @@ export const dict = {
   },
 
   publicFooter: {
-    legal: "Aviso legal",
+    legal: "AVISO LEGAL",
     copy: "AJDUT · 2026",
   },
 
@@ -96,16 +97,14 @@ export const dict = {
     metaTitle: "Aplicar · AJDUT",
     eyebrow: "Aplicación de acceso",
     backToHome: "Volver al inicio",
-    title: "Aplica para ser parte",
+    title: "Quiero formar parte de AJDUT",
     intro:
-      "AJDUT es una comunidad cerrada. Tu aplicación será revisada manualmente por el equipo. No hay registro automático; el acceso se concede tras evaluación.",
+      "Creemos en las conexiones reales y en el valor de cada miembro. Completa tus datos y comencemos a construir juntos.",
     backStep: "Volver a ",
     backShort: "← Atrás",
     continue: "Continuar →",
-    sendCode: "Enviar código de verificación →",
-    sendingCode: "Enviando código…",
-    verifyAndSubmit: "Verificar y enviar",
-    verifying: "Verificando…",
+    sendApplication: "Enviar aplicación →",
+    sendingApplication: "Enviando…",
     steps: {
       kind: "Tipo",
       identity: "Identidad",
@@ -113,12 +112,11 @@ export const dict = {
       company: "Empresa",
       motivation: "Motivación",
       review: "Revisión",
-      verify: "Verificación",
     } as Record<string, string>,
     kind: {
       eyebrow: "— ¿Cómo querés sumarte?",
-      intro: "Elegí el tipo de aplicación. Podés volver atrás más tarde si te equivocás.",
-      personTitle: "Persona",
+      intro: "Elegí el tipo de aplicación.",
+      personTitle: "Socio",
       personSubtitle: "Quiero ser miembro de la comunidad",
       personDescription:
         "Sumate como socio individual: ver proyectos, manifestar interés y participar de la red.",
@@ -141,8 +139,9 @@ export const dict = {
       kindLabel: "Tipo de proyecto",
       kindRealEstate: "Inmobiliario",
       kindMerchandise: "Mercancía",
-      kindStartup: "Otro",
-      descriptionLabel: "Descripción corta de la propuesta (opcional)",
+      kindStartup: "Startup",
+      kindOther: "Otro",
+      descriptionLabel: "Descripción corta de la propuesta",
       descriptionPlaceholder:
         "En pocas líneas: qué hace el proyecto, en qué etapa está, qué necesitás de AJDUT.",
       charsCounter: "caracteres",
@@ -155,14 +154,14 @@ export const dict = {
         "Busco diversificar mi portafolio con proyectos reales",
         "Me interesa apoyar emprendimientos de mi región",
         "Tengo experiencia en startups / inmobiliario y quiero participar",
+        "Tengo una empresa y quiero formar parte de la red",
         "Vengo recomendado por un miembro actual",
         "Conocí AJDUT por redes / medios",
-        "Otro (especificar abajo)",
       ],
     },
     review: {
       typeLabel: "Tipo",
-      typePerson: "Persona",
+      typePerson: "Socio",
       typeCompany: "Empresa",
       nameLabel: "Nombre",
       emailLabel: "Email",
@@ -173,17 +172,6 @@ export const dict = {
       companyKindLabel: "Tipo de proyecto",
       descriptionLabel: "Descripción",
       motivationLabel: "Motivación",
-      footnote:
-        "Al continuar, te vamos a enviar un código de verificación al email de arriba para confirmar que es tuyo.",
-    },
-    verify: {
-      eyebrow: "— Verificación de email",
-      title: "Revisá tu casilla.",
-      sentTo: "Te enviamos un código de 6 dígitos a",
-      sentSuffix: ". Ingresalo abajo para completar la aplicación.",
-      validUntil: "Válido hasta",
-      codeLabel: "Código de 6 dígitos",
-      resend: "¿No te llegó? Reenviar código →",
     },
     submitted: {
       eyebrow: "— Aplicación registrada",
@@ -277,8 +265,8 @@ export const dict = {
   },
 
   projectDetail: {
-    back: "← Volver",
-    founderLabel: "Founder",
+    back: "Ficha del proyecto",
+    founderLabel: "Project owner",
     openChat: "Abrir chat →",
     chatShort: "Chat →",
     interest: "Me interesa participar →",
@@ -289,12 +277,12 @@ export const dict = {
     seeProject: "Ver proyecto →",
     heroContextEyebrow: "— Ficha del proyecto",
     nextStep: "Próximo paso",
-    emptySection: "El founder aún no completó esta sección.",
+    emptySection: "El project owner aún no completó esta sección.",
     footerCta: {
       eyebrow: "— Próximo paso",
       question: "¿Te interesa participar de este proyecto?",
       body:
-        "AJDUT no procesa pagos ni custodia fondos. Si avanzás, el founder te contacta al email con el que estás registrado.",
+        "AJDUT no procesa pagos ni custodia fondos. Si avanzás, el project owner te contacta al email con el que estás registrado.",
       notAvailableEyebrow: "— Sin acciones disponibles",
       notAvailableTitle: "Este proyecto está totalmente colocado.",
       notAvailableBody:
@@ -336,7 +324,7 @@ export const dict = {
       pricePerShare: "Valor sugerido por acción",
       pricePerShareHint: "valoración ÷ acciones totales",
       annualReturnPerShare: "Utilidad anual por acción",
-      annualReturnPerShareHint: "no informada por el founder",
+      annualReturnPerShareHint: "no informada por el project owner",
     },
     yours: {
       shares: "Acciones",
@@ -347,7 +335,7 @@ export const dict = {
       noValuation: "sin valoración declarada",
       pricePerShareSuffix: "/ acción",
       partnersOnlyOwnPositionNote:
-        "Solo ves tu propia posición. El cap table completo es información sensible y queda reservada al founder y al equipo de AJDUT.",
+        "Solo ves tu propia posición. El cap table completo es información sensible y queda reservada al project owner y al equipo de AJDUT.",
       colSerial: "Serial",
       colShares: "Acciones",
       colAcquired: "Adquirida",
@@ -425,7 +413,7 @@ export const dict = {
     cancel: "Cancelar",
     notAvailableYet: "Participación no disponible aún",
     noValuationBody:
-      "Este proyecto todavía no declaró su valoración — no podés indicar un monto. Volvé a revisar más adelante; el founder publicará la valoración cuando esté lista.",
+      "Este proyecto todavía no declaró su valoración — no podés indicar un monto. Volvé a revisar más adelante; el project owner publicará la valoración cuando esté lista.",
     supportKindLabel: "Tipo de apoyo",
     supportKind: {
       CAPITAL: "Capital",
@@ -444,7 +432,7 @@ export const dict = {
     effectiveSuffix: "efectivos",
     sharesSingular: "acción",
     sharesPlural: "acciones",
-    messageLabel: "Mensaje al founder",
+    messageLabel: "Mensaje al project owner",
     messageOptional: "(opcional)",
     messagePlaceholderPrefix: "Mi nombre es",
     messagePlaceholderInfix: "y me interesa participar en",
@@ -460,11 +448,11 @@ export const dict = {
     errorOverMax: "El monto excede lo disponible. Máximo:",
     errorMaxShares: "Máximo disponible:",
     footerNote:
-      "AJDUT no procesa pagos. El cierre se realiza por fuera de la plataforma según los términos que acuerdes con el founder.",
+      "AJDUT no procesa pagos. El cierre se realiza por fuera de la plataforma según los términos que acuerdes con el project owner.",
     successTitle: "Gracias.",
     successEyebrow: "Interés registrado",
     successBody:
-      "El founder del proyecto recibió tu interés. Si avanza, te va a contactar al email con el que estás registrado en AJDUT.",
+      "El project owner del proyecto recibió tu interés. Si avanza, te va a contactar al email con el que estás registrado en AJDUT.",
   },
 
   infoRequestForm: {
@@ -473,7 +461,7 @@ export const dict = {
     cancel: "Cancelar",
     explainBody:
       "Pedile al responsable del proyecto que te desbloquee la información ampliada (documentos, reportes). Si aprueba, después vas a poder indicar un monto concreto de participación.",
-    messageLabel: "Mensaje al founder",
+    messageLabel: "Mensaje al project owner",
     messageOptional: "(opcional)",
     messagePlaceholderPrefix: "Mi nombre es",
     messagePlaceholderInfix: "y quiero conocer más sobre",
@@ -484,7 +472,7 @@ export const dict = {
     successEyebrow: "Solicitud enviada",
     successTitle: "Gracias.",
     successBody:
-      "El founder del proyecto recibió tu solicitud. Cuando la apruebe vas a poder ver los documentos y reportes, y avanzar al siguiente paso.",
+      "El project owner del proyecto recibió tu solicitud. Cuando la apruebe vas a poder ver los documentos y reportes, y avanzar al siguiente paso.",
   },
 
   partner: {
@@ -520,7 +508,7 @@ export const dict = {
     seeCertificate: "Ver certificado →",
     dividendsHistoryTitle: "Histórico de dividendos",
     dividendsEmpty:
-      "Aún no hay distribuciones de dividendos sobre tus participaciones. Cuando un founder declare una distribución, aparecerá acá con instrucciones de cobro.",
+      "Aún no hay distribuciones de dividendos sobre tus participaciones. Cuando un project owner declare una distribución, aparecerá acá con instrucciones de cobro.",
     lastMonth: "Último mes",
     lastMonthHint: "últimos 30 días",
     last3Months: "Últimos 3 meses",
@@ -530,7 +518,7 @@ export const dict = {
     historicTotal: "Histórico total",
     historicTotalHint: "confirmado por vos",
     pending: "Por cobrar",
-    pendingHint: "enviados por founder o pendientes de envío",
+    pendingHint: "enviados por project owner o pendientes de envío",
     historyDescription:
       "Tu histórico completo (incluye estado y fecha de confirmación).",
     downloadCsv: "Descargar histórico (CSV) ↓",
@@ -544,10 +532,10 @@ export const dict = {
     frequencyLabel: "Frecuencia",
     notDeclared: "No declarada",
     dividendsPolicyLabel: "Política de dividendos",
-    noPolicyDeclared: "El founder aún no declaró una política de dividendos.",
+    noPolicyDeclared: "El project owner aún no declaró una política de dividendos.",
     paymentStatusLabel: {
       PENDING: "Pendiente",
-      SENT: "Enviado por founder",
+      SENT: "Enviado por project owner",
       RECEIVED: "Confirmado",
       DISPUTED: "En disputa",
       WAIVED: "Renunciado",
@@ -577,27 +565,27 @@ export const dict = {
       nature: {
         title: "Naturaleza de la plataforma",
         body:
-          "AJDUT es una herramienta de gestión, comunicación y certificación. No procesa pagos, no custodia fondos y no es un mercado financiero. Toda transacción económica entre las partes ocurre por fuera de la plataforma.",
+          "AJDUT es un ecosistema dedicado exclusivamente a la gestión, comunicación y certificación de proyectos. Para garantizar la total independencia y descentralización de los acuerdos, toda transacción económica se ejecuta directamente entre las partes y de forma externa a la plataforma.",
       },
       gatekeeping: {
-        title: "Gatekeeping",
+        title: "Proceso de admisión",
         body:
-          "El acceso a AJDUT requiere aplicación previa y aprobación manual del equipo. No existe registro abierto.",
+          "El acceso a AJDUT se coordina mediante una solicitud de ingreso y la validación individual de cada perfil. Este proceso personalizado asegura que cada miembro comparta los estándares de integridad y la visión de valor de nuestro ecosistema.",
       },
       stake: {
         title: "Stake institucional",
         body:
-          "AJDUT mantiene una participación económica del 10% en cada proyecto activo. Esta proporción queda documentada en el Platform Equity Agreement firmado entre AJDUT y el founder al momento de aprobación.",
+          "AJDUT acompaña el crecimiento de la comunidad manteniendo una participación económica del 10% en cada proyecto activo. Este compromiso mutuo se formaliza de manera transparente en el Platform Equity Agreement celebrado con el project owner al iniciar la colaboración.",
       },
       distributions: {
-        title: "Distribuciones",
+        title: "Distribuciones y Gobernanza",
         body:
-          "AJDUT no procesa, custodia ni facilita el pago de distribuciones de dividendos. Los fondos se transfieren fuera de la plataforma según los términos acordados entre founder y miembro. AJDUT registra la declaración, el envío y la recepción con fines de trazabilidad y auditoría. El founder es responsable de las retenciones fiscales aplicables.",
+          "El cumplimiento y pago de las distribuciones se gestiona de manera directa y soberana entre el project owner y el miembro, bajo los términos pactados por fuera de la plataforma. Para respaldar la transparencia, AJDUT provee herramientas de registro de declaración, envío y recepción con fines de auditoría y trazabilidad. Las obligaciones fiscales y retenciones aplicables corresponden de forma exclusiva al project owner.",
       },
       resale: {
-        title: "Reventa de participaciones",
+        title: "Transferencia de participaciones",
         body:
-          "Las reventas son comunicativas. El cierre se realiza fuera de la plataforma. El cambio de titularidad se ejecuta únicamente tras validación del Admin con doble firma cuando corresponda.",
+          "La libre transferencia o reventa de participaciones se gestiona mediante una notificación previa a la plataforma. Para la seguridad de toda la comunidad, el cambio oficial de titularidad se consolida en el registro una vez validado por el Administrador a través del sistema de doble firma correspondiente.",
       },
     },
   },

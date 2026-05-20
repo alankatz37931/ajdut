@@ -2,15 +2,15 @@
 
 import { useState, useTransition } from "react";
 import type { Dict } from "@/lib/i18n";
+import { submitApplication, type SubmitResult } from "./actions";
 import {
-  requestEmailVerification,
-  verifyAndSubmitApplication,
-  type RequestCodeResult,
-  type SubmitResult,
-} from "./actions";
+  FloatingInput,
+  FloatingSelect,
+  FloatingTextarea,
+} from "@/components/ui/Floating";
 
 type Kind = "PERSON" | "COMPANY";
-type CompanyKind = "REAL_ESTATE" | "MERCHANDISE" | "STARTUP";
+type CompanyKind = "REAL_ESTATE" | "MERCHANDISE" | "STARTUP" | "OTHER";
 
 type Step =
   | "kind"
@@ -19,7 +19,6 @@ type Step =
   | "company"
   | "motivation"
   | "review"
-  | "verify"
   | "submitted";
 
 function baseSteps(dict: Dict["apply"]): Array<{ id: Step; label: string }> {
@@ -29,7 +28,6 @@ function baseSteps(dict: Dict["apply"]): Array<{ id: Step; label: string }> {
     { id: "contact", label: dict.steps.contact ?? "Contacto" },
     { id: "motivation", label: dict.steps.motivation ?? "Motivación" },
     { id: "review", label: dict.steps.review ?? "Revisión" },
-    { id: "verify", label: dict.steps.verify ?? "Verificación" },
   ];
 }
 
@@ -74,7 +72,6 @@ function composeMotivation(opt: string, freeText: string): string {
 
 export function ApplicationForm({
   dict,
-  locale,
 }: {
   dict: Dict["apply"];
   locale: string;
@@ -98,9 +95,10 @@ export function ApplicationForm({
   };
 
   const COMPANY_KIND_LABEL: Record<CompanyKind, string> = {
+    STARTUP: dict.company.kindStartup,
     REAL_ESTATE: dict.company.kindRealEstate,
     MERCHANDISE: dict.company.kindMerchandise,
-    STARTUP: dict.company.kindStartup,
+    OTHER: dict.company.kindOther,
   };
 
   const [step, setStep] = useState<Step>("kind");
@@ -108,9 +106,6 @@ export function ApplicationForm({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
-  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
-  const [code, setCode] = useState("");
-  const [codeExpiresAt, setCodeExpiresAt] = useState<string | null>(null);
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -134,11 +129,6 @@ export function ApplicationForm({
     const cur = stepOrder.indexOf(step);
     const tgt = stepOrder.indexOf(target);
     if (tgt < 0 || tgt >= cur) return;
-    if (step === "verify") {
-      setVerifiedEmail(null);
-      setCode("");
-      setCodeExpiresAt(null);
-    }
     setError(null);
     setStep(target);
   }
@@ -152,11 +142,6 @@ export function ApplicationForm({
   }
 
   function back() {
-    if (step === "verify") {
-      setVerifiedEmail(null);
-      setCode("");
-      setCodeExpiresAt(null);
-    }
     const idx = stepOrder.indexOf(step);
     if (idx > 0) {
       const target = stepOrder[idx - 1];
@@ -192,42 +177,13 @@ export function ApplicationForm({
     return formData;
   }
 
-  function requestCode() {
+  function submit() {
     setError(null);
     startTransition(async () => {
-      const res: RequestCodeResult = await requestEmailVerification(buildFormData());
-      if (res.ok) {
-        setVerifiedEmail(res.email);
-        setCodeExpiresAt(res.expiresAt);
-        setStep("verify");
-      } else {
-        setError(res.error);
-      }
-    });
-  }
-
-  function submitCode() {
-    if (!verifiedEmail) return;
-    setError(null);
-    startTransition(async () => {
-      const res = await verifyAndSubmitApplication(verifiedEmail, code);
+      const res = await submitApplication(buildFormData());
       setSubmitResult(res);
       if (res.ok) {
         setStep("submitted");
-      } else {
-        setError(res.error);
-      }
-    });
-  }
-
-  function resendCode() {
-    setError(null);
-    setCode("");
-    startTransition(async () => {
-      const res = await requestEmailVerification(buildFormData());
-      if (res.ok) {
-        setVerifiedEmail(res.email);
-        setCodeExpiresAt(res.expiresAt);
       } else {
         setError(res.error);
       }
@@ -247,62 +203,109 @@ export function ApplicationForm({
     );
   }
 
+  const currentIdx = stepOrder.indexOf(step);
+
   return (
-    <div>
-      <ol className="mb-5 flex w-full items-center gap-1.5">
-        {steps.map((s, i) => {
-          const isPast =
-            stepOrder.indexOf(s.id) < stepOrder.indexOf(step);
-          const isCurrent = step === s.id;
-          const numCls = `font-mono text-xs shrink-0 ${
-            isCurrent ? "text-gold" : "text-navy/40"
-          }`;
-          const lblCls = `eyebrow tracking-wide shrink-0 ${
-            isCurrent ? "!text-navy" : "!text-navy/40"
-          }`;
-          const inner = (
-            <>
-              <span className={numCls}>
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className={`${lblCls} hidden sm:inline`}>{s.label}</span>
-              {isCurrent && (
-                <span className={`${lblCls} sm:hidden`}>{s.label}</span>
-              )}
-            </>
-          );
-          return (
-            <li
-              key={s.id}
-              className={`flex items-center gap-2 whitespace-nowrap ${
-                i < steps.length - 1 ? "flex-1" : "shrink-0"
-              }`}
-            >
-              {isPast ? (
-                <button
-                  type="button"
-                  onClick={() => goTo(s.id)}
-                  className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity"
-                  aria-label={`${dict.backStep}${s.label}`}
-                >
-                  {inner}
-                </button>
-              ) : (
-                <span className="flex items-center gap-2">{inner}</span>
-              )}
-              {i < steps.length - 1 && (
-                <span className="ml-2 h-px flex-1 bg-line" aria-hidden />
-              )}
-            </li>
-          );
-        })}
-      </ol>
+    <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] lg:gap-x-14 gap-y-6">
+      {/* ─── Sidebar vertical sticky (desktop) ────────────────────────
+          En desktop vive a la izquierda como tabla de contenidos del
+          documento. Cada paso es un dot + label en una columna.
+          ● gold filled     = completado, clickeable, vuelve a ese paso
+          ◉ gold ring + bg  = paso actual
+          ○ hairline        = paso por venir (no clickeable) */}
+      <aside className="hidden lg:block">
+        <ol className="sticky top-8 space-y-0">
+          {steps.map((s, i) => {
+            const idxOfThis = stepOrder.indexOf(s.id);
+            const isPast = idxOfThis < currentIdx;
+            const isCurrent = step === s.id;
+            const isLast = i === steps.length - 1;
+
+            const dotCls = isPast
+              ? "h-2.5 w-2.5 rounded-full bg-gold shrink-0"
+              : isCurrent
+              ? "h-2.5 w-2.5 rounded-full ring-1 ring-gold ring-offset-2 ring-offset-paper bg-gold/15 shrink-0"
+              : "h-2.5 w-2.5 rounded-full border-[0.5px] border-navy/30 bg-transparent shrink-0";
+
+            const numCls = `font-mono text-xs shrink-0 w-6 ${
+              isCurrent ? "text-gold" : isPast ? "text-navy/60" : "text-navy/30"
+            }`;
+            const lblCls = `eyebrow tracking-wide whitespace-nowrap ${
+              isCurrent
+                ? "!text-navy"
+                : isPast
+                ? "!text-navy/60"
+                : "!text-navy/30"
+            }`;
+
+            const Row = (
+              <div className="flex items-center gap-3">
+                <span className={numCls}>{String(i + 1).padStart(2, "0")}</span>
+                <span className={dotCls} aria-hidden />
+                <span className={lblCls}>{s.label}</span>
+              </div>
+            );
+
+            return (
+              <li key={s.id} className="relative">
+                {isPast ? (
+                  <button
+                    type="button"
+                    onClick={() => goTo(s.id)}
+                    aria-label={`${dict.backStep}${s.label}`}
+                    className="block w-full text-left py-2.5 cursor-pointer hover:opacity-70 transition-opacity"
+                  >
+                    {Row}
+                  </button>
+                ) : (
+                  <div className="py-2.5">{Row}</div>
+                )}
+                {/* Conector vertical entre dots: gold si ya pasaste por acá,
+                    line si todavía no. Alineado con el centro del dot. */}
+                {!isLast && (
+                  <span
+                    aria-hidden
+                    className={`absolute left-[2.625rem] top-[2.4rem] bottom-0 w-px ${
+                      isPast ? "bg-gold/40" : "bg-line"
+                    }`}
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </aside>
+
+      {/* ─── Step indicator compacto (mobile) ───────────────────────── */}
+      <div className="lg:hidden">
+        <div className="h-px bg-line w-full overflow-hidden">
+          <div
+            className="h-px bg-gold transition-all duration-300"
+            style={{
+              width: `${((currentIdx + 1) / steps.length) * 100}%`,
+            }}
+            aria-hidden
+          />
+        </div>
+        <p className="mt-3 font-mono text-xs tracking-[0.18em] uppercase text-navy/60">
+          <span className="text-gold">
+            {String(currentIdx + 1).padStart(2, "0")}
+          </span>{" "}
+          / {String(steps.length).padStart(2, "0")}{" "}
+          <span className="text-navy/30">·</span>{" "}
+          <span className="!text-navy">
+            {steps.find((s) => s.id === step)?.label ?? ""}
+          </span>
+        </p>
+      </div>
+
+      {/* ─── Columna derecha: contenido del paso + acciones ────────── */}
+      <div>
 
       <div className="space-y-3">
         {step === "kind" && (
           <div className="space-y-4">
-            <p className="eyebrow">{dict.kind.eyebrow}</p>
-            <p className="text-navy/75 leading-relaxed">{dict.kind.intro}</p>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <KindCard
                 title={dict.kind.personTitle}
@@ -323,220 +326,156 @@ export function ApplicationForm({
         )}
 
         {step === "identity" && (
-          <>
-            <Field label={dict.identity.fullNameLabel} htmlFor="fullName">
-              <input
-                id="fullName"
-                type="text"
-                value={draft.fullName}
-                onChange={(e) => update("fullName", e.target.value)}
-                className="input"
-                autoFocus
-              />
-            </Field>
-            <Field label={dict.identity.emailLabel} htmlFor="email">
-              <input
-                id="email"
-                type="email"
-                value={draft.email}
-                onChange={(e) => update("email", e.target.value)}
-                className="input"
-              />
-            </Field>
-          </>
-        )}
-
-        {step === "contact" && (
-          <>
-            <Field label={dict.contact.phoneLabel} htmlFor="phone">
-              <input
-                id="phone"
-                type="tel"
-                value={draft.phone}
-                onChange={(e) => update("phone", e.target.value)}
-                className="input"
-                autoFocus
-              />
-            </Field>
-            <Field label={dict.contact.countryLabel} htmlFor="country">
-              <input
-                id="country"
-                type="text"
-                value={draft.country}
-                onChange={(e) => update("country", e.target.value)}
-                className="input"
-              />
-            </Field>
-            <Field label={dict.contact.referredLabel} htmlFor="referredBy">
-              <input
-                id="referredBy"
-                type="text"
-                value={draft.referredBy}
-                onChange={(e) => update("referredBy", e.target.value)}
-                className="input"
-              />
-            </Field>
-          </>
-        )}
-
-        {step === "company" && (
-          <>
-            <Field label={dict.company.nameLabel} htmlFor="companyName">
-              <input
-                id="companyName"
-                type="text"
-                value={draft.companyName}
-                onChange={(e) => update("companyName", e.target.value)}
-                className="input"
-                autoFocus
-                maxLength={160}
-              />
-            </Field>
-            <Field label={dict.company.kindLabel} htmlFor="companyKind">
-              <select
-                id="companyKind"
-                value={draft.companyKind}
-                onChange={(e) =>
-                  update("companyKind", e.target.value as CompanyKind)
-                }
-                className="input"
-              >
-                <option value="REAL_ESTATE">{COMPANY_KIND_LABEL.REAL_ESTATE}</option>
-                <option value="MERCHANDISE">{COMPANY_KIND_LABEL.MERCHANDISE}</option>
-                <option value="STARTUP">{COMPANY_KIND_LABEL.STARTUP}</option>
-              </select>
-            </Field>
-            <Field label={dict.company.descriptionLabel} htmlFor="companyDescription">
-              <textarea
-                id="companyDescription"
-                rows={4}
-                maxLength={1000}
-                value={draft.companyDescription}
-                onChange={(e) => update("companyDescription", e.target.value)}
-                className="input"
-                placeholder={dict.company.descriptionPlaceholder}
-              />
-              <span className="eyebrow mt-2 block">
-                {draft.companyDescription.length} / 1000 {dict.company.charsCounter}
-              </span>
-            </Field>
-          </>
-        )}
-
-        {step === "motivation" && (
-          <>
-            <Field label={dict.motivation.questionLabel} htmlFor="motivationOption">
-              <select
-                id="motivationOption"
-                value={draft.motivationOption}
-                onChange={(e) => update("motivationOption", e.target.value)}
-                className="input"
-                autoFocus
-              >
-                {motivationOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label={dict.motivation.detailsLabel} htmlFor="motivation">
-              <textarea
-                id="motivation"
-                rows={4}
-                maxLength={2000}
-                value={draft.motivation}
-                onChange={(e) => update("motivation", e.target.value)}
-                className="input"
-                placeholder={dict.motivation.detailsPlaceholder}
-              />
-              <span className="eyebrow mt-2 block">
-                {draft.motivation.length} / 2000 {dict.company.charsCounter}
-              </span>
-            </Field>
-          </>
-        )}
-
-        {step === "review" && (
-          <div className="space-y-3 text-navy/85">
-            <Row
-              label={dict.review.typeLabel}
-              value={draft.kind === "COMPANY" ? dict.review.typeCompany : dict.review.typePerson}
+          <div className="space-y-5">
+            <FloatingInput
+              id="fullName"
+              type="text"
+              label={dict.identity.fullNameLabel}
+              value={draft.fullName}
+              onChange={(v) => update("fullName", v)}
+              autoFocus
             />
-            <Row label={dict.review.nameLabel} value={draft.fullName} />
-            <Row label={dict.review.emailLabel} value={draft.email} />
-            {draft.phone.trim() && <Row label={dict.review.phoneLabel} value={draft.phone} />}
-            {draft.country.trim() && <Row label={dict.review.countryLabel} value={draft.country} />}
-            {draft.referredBy.trim() && (
-              <Row label={dict.review.referredLabel} value={draft.referredBy} />
-            )}
-            {draft.kind === "COMPANY" && (
-              <>
-                <Row label={dict.review.companyLabel} value={draft.companyName} />
-                <Row
-                  label={dict.review.companyKindLabel}
-                  value={COMPANY_KIND_LABEL[draft.companyKind]}
-                />
-                {draft.companyDescription.trim() && (
-                  <Row
-                    label={dict.review.descriptionLabel}
-                    value={draft.companyDescription}
-                    multiline
-                  />
-                )}
-              </>
-            )}
-            <Row
-              label={dict.review.motivationLabel}
-              value={composeMotivation(draft.motivationOption, draft.motivation)}
-              multiline
+            <FloatingInput
+              id="email"
+              type="email"
+              label={dict.identity.emailLabel}
+              value={draft.email}
+              onChange={(v) => update("email", v)}
             />
-
-            <p className="mt-6 eyebrow">{dict.review.footnote}</p>
           </div>
         )}
 
-        {step === "verify" && verifiedEmail && (
+        {step === "contact" && (
           <div className="space-y-5">
-            <p className="eyebrow">{dict.verify.eyebrow}</p>
-            <h2 className="font-sans text-h2 text-navy">{dict.verify.title}</h2>
-            <p className="text-navy/75 leading-relaxed">
-              {dict.verify.sentTo}{" "}
-              <span className="font-mono text-navy">{verifiedEmail}</span>
-              {dict.verify.sentSuffix}
-            </p>
-            {codeExpiresAt && (
-              <p className="eyebrow">
-                {dict.verify.validUntil}{" "}
-                {new Date(codeExpiresAt).toLocaleTimeString(locale, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            )}
+            <FloatingInput
+              id="phone"
+              type="tel"
+              label={dict.contact.phoneLabel}
+              value={draft.phone}
+              onChange={(v) => update("phone", v)}
+              autoFocus
+            />
+            <FloatingInput
+              id="country"
+              type="text"
+              label={dict.contact.countryLabel}
+              value={draft.country}
+              onChange={(v) => update("country", v)}
+            />
+          </div>
+        )}
 
-            <Field label={dict.verify.codeLabel} htmlFor="code">
-              <input
-                id="code"
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="input font-mono text-center text-lg tracking-[0.4em]"
-                autoFocus
-                autoComplete="one-time-code"
+        {step === "company" && (
+          <div className="space-y-5">
+            <FloatingInput
+              id="companyName"
+              type="text"
+              label={dict.company.nameLabel}
+              value={draft.companyName}
+              onChange={(v) => update("companyName", v)}
+              autoFocus
+              maxLength={160}
+            />
+            <FloatingSelect
+              id="companyKind"
+              label={dict.company.kindLabel}
+              value={draft.companyKind}
+              onChange={(v) => update("companyKind", v as CompanyKind)}
+              options={[
+                { value: "STARTUP", label: COMPANY_KIND_LABEL.STARTUP },
+                { value: "REAL_ESTATE", label: COMPANY_KIND_LABEL.REAL_ESTATE },
+                { value: "MERCHANDISE", label: COMPANY_KIND_LABEL.MERCHANDISE },
+                { value: "OTHER", label: COMPANY_KIND_LABEL.OTHER },
+              ]}
+            />
+            <FloatingTextarea
+              id="companyDescription"
+              label={dict.company.descriptionLabel}
+              value={draft.companyDescription}
+              onChange={(v) => update("companyDescription", v)}
+              rows={4}
+              maxLength={1000}
+              counterSuffix={dict.company.charsCounter}
+            />
+          </div>
+        )}
+
+        {step === "motivation" && (
+          <div className="space-y-5">
+            <FloatingSelect
+              id="motivationOption"
+              label={dict.motivation.questionLabel}
+              value={draft.motivationOption}
+              onChange={(v) => update("motivationOption", v)}
+              options={motivationOptions.map((opt) => ({ value: opt, label: opt }))}
+              autoFocus
+            />
+            <FloatingInput
+              id="referredBy"
+              type="text"
+              label={dict.contact.referredLabel}
+              value={draft.referredBy}
+              onChange={(v) => update("referredBy", v)}
+            />
+          </div>
+        )}
+
+        {step === "review" && (
+          <div className="text-navy/85">
+            {/* Grid 2 columnas para campos cortos: label eyebrow arriba +
+                value debajo. Mucho más compacto que filas horizontales. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
+              <Cell
+                label={dict.review.typeLabel}
+                value={
+                  draft.kind === "COMPANY"
+                    ? dict.review.typeCompany
+                    : dict.review.typePerson
+                }
               />
-            </Field>
+              <Cell label={dict.review.nameLabel} value={draft.fullName} />
+              <Cell label={dict.review.emailLabel} value={draft.email} />
+              {draft.phone.trim() && (
+                <Cell label={dict.review.phoneLabel} value={draft.phone} />
+              )}
+              {draft.country.trim() && (
+                <Cell label={dict.review.countryLabel} value={draft.country} />
+              )}
+              {draft.referredBy.trim() && (
+                <Cell
+                  label={dict.review.referredLabel}
+                  value={draft.referredBy}
+                />
+              )}
+              {draft.kind === "COMPANY" && (
+                <>
+                  <Cell
+                    label={dict.review.companyLabel}
+                    value={draft.companyName}
+                  />
+                  <Cell
+                    label={dict.review.companyKindLabel}
+                    value={COMPANY_KIND_LABEL[draft.companyKind]}
+                  />
+                </>
+              )}
+            </div>
 
-            <button
-              type="button"
-              onClick={resendCode}
-              disabled={isPending}
-              className="eyebrow hover:!text-gold"
-            >
-              {dict.verify.resend}
-            </button>
+            {/* Textos largos a fila completa, separados por hairline. */}
+            <div className="mt-6 hairline-t pt-5 space-y-5">
+              {draft.kind === "COMPANY" && draft.companyDescription.trim() && (
+                <Cell
+                  label={dict.review.descriptionLabel}
+                  value={draft.companyDescription}
+                  multiline
+                />
+              )}
+              <Cell
+                label={dict.review.motivationLabel}
+                value={composeMotivation(draft.motivationOption, draft.motivation)}
+                multiline
+              />
+            </div>
           </div>
         )}
       </div>
@@ -561,20 +500,11 @@ export function ApplicationForm({
         ) : step === "review" ? (
           <button
             type="button"
-            onClick={requestCode}
+            onClick={submit}
             disabled={isPending}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? dict.sendingCode : dict.sendCode}
-          </button>
-        ) : step === "verify" ? (
-          <button
-            type="button"
-            onClick={submitCode}
-            disabled={isPending || code.length !== 6}
-            className="btn-primary disabled:opacity-50"
-          >
-            {isPending ? dict.verifying : dict.verifyAndSubmit}
+            {isPending ? dict.sendingApplication : dict.sendApplication}
           </button>
         ) : (
           <button
@@ -587,21 +517,7 @@ export function ApplicationForm({
           </button>
         )}
       </div>
-
-      <style jsx>{`
-        :global(.input) {
-          width: 100%;
-          border: 0.5px solid rgba(26, 26, 46, 0.4);
-          background: #f5f3ee;
-          padding: 0.4rem 0.7rem;
-          font-family: var(--font-inter);
-          color: #1a1a2e;
-        }
-        :global(.input:focus) {
-          outline: none;
-          border-color: #1a1a2e;
-        }
-      `}</style>
+      </div>
     </div>
   );
 }
@@ -634,26 +550,9 @@ function KindCard({
   );
 }
 
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={htmlFor} className="eyebrow block mb-1.5">
-        {label}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function Row({
+// Cell para el Review: label como eyebrow arriba + value debajo. Stacked,
+// más denso que el Row horizontal. Multiline solo para textos largos.
+function Cell({
   label,
   value,
   multiline,
@@ -663,15 +562,15 @@ function Row({
   multiline?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 hairline-b py-3 sm:items-baseline">
-      <span className="eyebrow">{label}</span>
-      <span
-        className={`sm:col-span-2 min-w-0 break-words [overflow-wrap:anywhere] ${
+    <div className="min-w-0">
+      <p className="eyebrow !text-navy/40 mb-1">{label}</p>
+      <p
+        className={`text-navy break-words [overflow-wrap:anywhere] leading-relaxed ${
           multiline ? "whitespace-pre-line" : ""
         }`}
       >
         {value}
-      </span>
+      </p>
     </div>
   );
 }

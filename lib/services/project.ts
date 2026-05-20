@@ -121,7 +121,7 @@ export type UpdateProjectInfoInput = {
   name?: string;
   shortPitch?: string;
   description?: string;
-  kind?: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE";
+  kind?: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER";
   // Startup-specific
   sector?: string;
   stage?: "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
@@ -281,7 +281,7 @@ export type CreateProjectInput = {
   description: string;
   sector: string;
   stage: "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
-  kind?: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE";
+  kind?: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER";
   location?: string;
   targetRaiseAmount?: number;
   problemStatement: string;

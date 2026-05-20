@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { Section } from "@/components/ui/Section";
@@ -11,9 +10,10 @@ type Params = { params: Promise<{ id: string }> };
 // Labels para el tipo de proyecto declarado por aplicantes COMPANY.
 // Mirror del enum ProjectKind — mantener sincronizado con NewProjectForm.
 const COMPANY_KIND_LABEL: Record<string, string> = {
+  STARTUP: "Startup",
   REAL_ESTATE: "Inmobiliario",
   MERCHANDISE: "Mercancía",
-  STARTUP: "Otro",
+  OTHER: "Otro",
 };
 
 export default async function ApplicationDetailPage({ params }: Params) {
@@ -32,10 +32,6 @@ export default async function ApplicationDetailPage({ params }: Params) {
 
   return (
     <div>
-      <Link href="/admin/applications" className="eyebrow hover:!text-gold">
-        ← Aplicaciones
-      </Link>
-
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <p className="eyebrow">— Admin</p>
         <div className="mt-3 sm:mt-4 flex items-center gap-3 flex-wrap">

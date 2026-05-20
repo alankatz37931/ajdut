@@ -4,8 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { setPasswordAction } from "./actions";
+import { FloatingInput } from "@/components/ui/Floating";
 
-export function SetPasswordForm({ token, email }: { token: string; email: string }) {
+export function SetPasswordForm({ token }: { token: string; email: string }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -19,9 +20,14 @@ export function SetPasswordForm({ token, email }: { token: string; email: string
     return { lengthOk, match, allOk: lengthOk && match };
   }
 
-  function onSubmit(formData: FormData) {
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setError(null);
     setStage("submitting");
+
+    const formData = new FormData();
+    formData.append("password", password);
+    formData.append("passwordConfirm", passwordConfirm);
 
     startTransition(async () => {
       const r = await setPasswordAction(token, formData);
@@ -51,21 +57,17 @@ export function SetPasswordForm({ token, email }: { token: string; email: string
   const busy = stage !== "form";
 
   return (
-    <form action={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       <div>
-        <label htmlFor="password" className="eyebrow block mb-2">
-          Contraseña
-        </label>
-        <input
+        <FloatingInput
           id="password"
-          name="password"
           type="password"
+          label="Contraseña"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={setPassword}
           autoComplete="new-password"
           autoFocus
           required
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy focus:outline-none focus:border-navy"
         />
         <p className={`mt-2 eyebrow ${checks.lengthOk ? "!text-navy" : ""}`}>
           {checks.lengthOk ? "✓ " : ""}Mínimo 10 caracteres
@@ -73,18 +75,14 @@ export function SetPasswordForm({ token, email }: { token: string; email: string
       </div>
 
       <div>
-        <label htmlFor="passwordConfirm" className="eyebrow block mb-2">
-          Repetir contraseña
-        </label>
-        <input
+        <FloatingInput
           id="passwordConfirm"
-          name="passwordConfirm"
           type="password"
+          label="Repetir contraseña"
           value={passwordConfirm}
-          onChange={(e) => setPasswordConfirm(e.target.value)}
+          onChange={setPasswordConfirm}
           autoComplete="new-password"
           required
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy focus:outline-none focus:border-navy"
         />
         {passwordConfirm.length > 0 && (
           <p className={`mt-2 eyebrow ${checks.match ? "!text-navy" : ""}`}>

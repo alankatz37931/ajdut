@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { prisma } from "@/lib/db/client";
 import { ConfirmButton } from "./ConfirmButton";
+import { BackLink } from "@/components/app/BackLink";
 
 export const metadata = {
   title: "Verificación de vida · AJDUT",
@@ -43,16 +43,7 @@ export default async function ConfirmarVidaPage({ params }: Params) {
 
   return (
     <div className="mx-auto w-full max-w-md px-4 sm:px-6 pb-section">
-      <div className="flex items-center gap-3 -ml-2">
-        <Link
-          href="/"
-          aria-label="Volver al inicio"
-          className="inline-flex h-8 w-8 items-center justify-center text-navy hover:text-gold transition-colors text-lg"
-        >
-          ←
-        </Link>
-        <p className="eyebrow">Verificación de vida</p>
-      </div>
+      <BackLink fallback="/">Verificación de vida</BackLink>
 
       <h1 className="font-sans mt-6 text-h1 text-navy">
         Hola, {greetingName}. ¿Seguís todo bien?
@@ -71,16 +62,7 @@ export default async function ConfirmarVidaPage({ params }: Params) {
 function NeutralView({ title, body }: { title: string; body: string }) {
   return (
     <div className="mx-auto w-full max-w-md px-4 sm:px-6 pb-section">
-      <div className="flex items-center gap-3 -ml-2">
-        <Link
-          href="/"
-          aria-label="Volver al inicio"
-          className="inline-flex h-8 w-8 items-center justify-center text-navy hover:text-gold transition-colors text-lg"
-        >
-          ←
-        </Link>
-        <p className="eyebrow">Verificación de vida</p>
-      </div>
+      <BackLink fallback="/">Verificación de vida</BackLink>
       <h1 className="font-sans mt-6 text-h1 text-navy">{title}</h1>
       <p className="mt-4 text-navy/75 leading-relaxed">{body}</p>
     </div>

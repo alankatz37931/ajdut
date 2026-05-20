@@ -11,7 +11,7 @@ import {
 
 const ROLE_LABEL: Record<"PARTNER" | "PROJECT_OWNER" | "CO_ADMIN", string> = {
   PARTNER: "Miembro",
-  PROJECT_OWNER: "Founder",
+  PROJECT_OWNER: "Project owner",
   CO_ADMIN: "Co-admin",
 };
 

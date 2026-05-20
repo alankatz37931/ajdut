@@ -37,7 +37,7 @@ export async function declareDistribution(input: DeclareDistributionInput) {
     const project = await tx.project.findUnique({ where: { id: input.projectId } });
     if (!project) throw new NotFoundError("Project", input.projectId);
     if (project.ownerId !== input.declaredById) {
-      throw new ForbiddenError("Solo el founder del proyecto puede declarar distribuciones.");
+      throw new ForbiddenError("Solo el project owner del proyecto puede declarar distribuciones.");
     }
     if (project.status !== "ACTIVE") {
       throw new InvariantViolation(
@@ -252,7 +252,7 @@ export async function markPaymentSent(input: MarkPaymentSentInput) {
       throw new IllegalTransition(payment.status, "MARK_SENT");
     }
     if (payment.distribution.declaredById !== input.actorId) {
-      throw new ForbiddenError("Solo el founder declarante puede marcar pagos como enviados.");
+      throw new ForbiddenError("Solo el project owner declarante puede marcar pagos como enviados.");
     }
     if (input.sentChannel.trim().length < 2 || input.sentReference.trim().length < 2) {
       throw new ValidationError("sentReference", "Canal y referencia de envío son obligatorios.");

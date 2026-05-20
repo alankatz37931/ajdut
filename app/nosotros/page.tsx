@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getDict, getLanguage } from "@/lib/i18n";
+import { BackLink } from "@/components/app/BackLink";
 
 // Metadata estática: el dict no llega acá. El metaTitle/metaDescription
 // traducibles vienen del dict y se aplican en el JSX para SEO de la página.
@@ -15,118 +16,137 @@ export default async function NosotrosPage() {
   const language = await getLanguage();
   const t = dict.nosotros;
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      {/* Hero */}
+    <div className="mx-auto max-w-6xl px-6 sm:px-8 pb-4 sm:pb-6">
+      {/* Hero — el eyebrow es el back action interactivo (BackLink trae arrow + animación por default) */}
       <section className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">{t.eyebrow}</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
-        <p className="mt-4 sm:mt-5 text-base sm:text-lg text-navy/80 leading-relaxed">
+        <BackLink fallback="/">{t.eyebrow.replace(/^—\s*/, "")}</BackLink>
+
+        <h1 className="font-sans mt-2 sm:mt-3 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] text-navy !leading-[1.1] font-bold">
+          {t.title}
+        </h1>
+
+        <p className="mt-3 sm:mt-4 text-lg sm:text-xl text-navy/80 leading-relaxed">
           {t.intro}
         </p>
-        <p className="mt-3 eyebrow !text-navy/50">{t.values}</p>
+
+        <p className="mt-3 sm:mt-4 eyebrow !text-navy/50">{t.values}</p>
       </section>
 
-      {/* Origen — traducido. */}
-      <Section n="01" title={t.origin.title}>
-        <p>{t.origin.body1}</p>
-        <p className="mt-4">{t.origin.body2}</p>
-      </Section>
-
-      {/* Resto del contenido: piezas largas y de manual de marca. Para Ola 7c
-          quedan en español; los headings se sirven igual en ambos idiomas
-          ("Propósito", "Lo que somos", "Valores", "Lenguaje de participaciones")
-          porque son palabras cortas que ya están en el cuerpo del manual.
-          TODO i18n: traducir cards / values / términos cuando se localice
-          el contenido del manual de marca. */}
+      {/* Aviso EN sobre el contenido aún no traducido del manual */}
       {language === "en" && (
-        <p className="hairline-t py-3 sm:py-4 text-sm text-navy/60 italic">
-          {/* Aviso visible solo en inglés: el resto del contenido aún no está
-              traducido del manual de marca. */}
+        <p className="border-t border-navy/10 py-6 mt-6 sm:py-4 text-sm text-navy/60 italic">
           The sections below are presented in the original Spanish from our brand manual.
         </p>
       )}
 
-      {/* Misión / Visión / Propuesta */}
-      <Section n="02" title="Propósito">
-        <div className="grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-3">
-          <Card label="Misión">
-            Coordinar comunidades de negocio donde la confianza, la comunicación
-            y el valor compartido son la base de cada participación.
-          </Card>
-          <Card label="Visión">
-            Ser la plataforma de referencia en Latinoamérica para comunidades de
-            negocio donde el valor se construye colectivamente —y se hereda.
-          </Card>
-          <Card label="Propuesta">
-            Convertimos proyectos en comunidades. Cada participación es una
-            membresía activa: acceso a información, reportes y comunicación
-            directa con quienes operan el negocio.
-          </Card>
-        </div>
-      </Section>
+      {/* 01 Origen · 02 Propósito — dos columnas en desktop */}
+      <section className="border-t border-navy/10 py-3 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-12 lg:gap-x-16">
+          {/* 01 · Origen — separa la columna del divisor superior */}
+          <div className="pt-4">
+            <p className="font-mono text-sm tracking-wider text-navy mb-3">
+              <span className="text-gold">01</span> · {t.origin.title}
+            </p>
+            <p className="text-navy/85 leading-relaxed">{t.origin.body1}</p>
+            <p className="mt-3 text-navy/85 leading-relaxed">{t.origin.body2}</p>
+          </div>
 
-      {/* Qué somos / qué no somos */}
-      <Section n="03" title="Lo que somos">
-        <div className="grid grid-cols-1 gap-x-10 gap-y-6 md:grid-cols-2">
+          {/* 02 · Propósito — idem */}
+          <div className="pt-4">
+            <p className="font-mono text-sm tracking-wider text-navy mb-3">
+              <span className="text-gold">02</span> · Propósito
+            </p>
+            <div className="space-y-4">
+              <PurposeItem
+                label="Misión"
+                body="Coordinar comunidades de negocio donde la confianza, la comunicación y el valor compartido son la base de cada participación."
+              />
+              <PurposeItem
+                label="Visión"
+                body="Ser la plataforma de referencia en Latinoamérica para comunidades de negocio donde el valor se construye colectivamente —y se hereda."
+              />
+              <PurposeItem
+                label="Propuesta"
+                body="Convertimos proyectos en comunidades. Cada participación es una membresía activa: acceso a información, reportes y comunicación directa con quienes operan el negocio."
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 03 · Lo que somos / lo que no somos */}
+      <section className="border-t border-navy/10 py-6 mt-6">
+        <p className="font-mono text-sm tracking-wider text-navy mb-3 sm:mb-4">
+          <span className="text-gold">03</span> · Lo que somos
+        </p>
+
+        {/* Bloque binario: gap ajustado, ancho completo */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           <div>
-            <p className="eyebrow !text-navy/50">Lo que SÍ somos</p>
-            <ul className="mt-4 space-y-3 text-navy/85 leading-relaxed">
-              <li>— Una comunidad de negocios con acceso aprobado.</li>
-              <li>— Un espacio de comunicación e información.</li>
-              <li>— Un validador de participaciones accionarias.</li>
-              <li>— Un puente entre proyectos y comunidad.</li>
+            <p className="eyebrow !text-navy/50 mb-2">Lo que SÍ somos</p>
+            <ul className="space-y-2">
+              <YesItem>Una comunidad de negocios con acceso aprobado.</YesItem>
+              <YesItem>Un espacio de comunicación e información.</YesItem>
+              <YesItem>Un validador de participaciones accionarias.</YesItem>
+              <YesItem>Un puente entre proyectos y comunidad.</YesItem>
             </ul>
           </div>
           <div>
-            <p className="eyebrow !text-navy/50">Lo que NO somos</p>
-            <ul className="mt-4 space-y-3 text-navy/85 leading-relaxed">
-              <li>✕ Un fondo de participación.</li>
-              <li>✕ Un procesador de pagos o custodia de dinero.</li>
-              <li>✕ Asesoría legal o financiera.</li>
-              <li>✕ Un exchange ni plataforma de trading.</li>
+            <p className="eyebrow !text-navy/50 mb-2">Lo que NO somos</p>
+            <ul className="space-y-2">
+              <NoItem>Un fondo de participación.</NoItem>
+              <NoItem>Un procesador de pagos o custodia de dinero.</NoItem>
+              <NoItem>Asesoría legal o financiera.</NoItem>
+              <NoItem>Un exchange ni plataforma de trading.</NoItem>
             </ul>
           </div>
         </div>
-      </Section>
+      </section>
 
-      {/* Valores */}
-      <Section n="04" title="Valores">
-        <p className="mb-5 text-navy/75 leading-relaxed">
+      {/* 04 · Valores — grilla 4 columnas en desktop, mismas tarjetas del landing */}
+      <section className="border-t border-navy/10 py-6 mt-6">
+        <p className="font-mono text-sm tracking-wider text-navy mb-3">
+          <span className="text-gold">04</span> · Valores
+        </p>
+        <p className="mb-4 text-navy/75 leading-relaxed">
           No son aspiracionales. Son criterios de entrada. Quien entra a la
           plataforma —como responsable o como miembro— los asume como parte del
           acuerdo.
         </p>
-        <div className="grid grid-cols-1 gap-x-10 gap-y-6 sm:grid-cols-2">
-          <Value
-            n="01"
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-stretch gap-6">
+          <ValueCard
             title="Transparencia"
-            body="Reportes periódicos para todos los miembros. Comunicación directa, sin intermediarios. Liderazgo que rinde cuentas: lo bueno, lo difícil y lo que viene."
+            body="Reportes periódicos para todos los miembros. Comunicación directa, sin intermediarios. Liderazgo que rinde cuentas."
+            icon={<TransparencyIcon />}
           />
-          <Value
-            n="02"
+          <ValueCard
             title="Unidad"
-            body="Para personas que comparten visión, no solo capital. Cada miembro es parte activa, no espectador. No buscamos miembros pasivos: buscamos comunidad comprometida."
+            body="Para personas que comparten visión, no solo capital. Cada miembro es parte activa, no espectador."
+            icon={<UnityIcon />}
           />
-          <Value
-            n="03"
+          <ValueCard
             title="Valor"
-            body="Tangible o intangible: activo, marca, sistema, comunidad, tracción. Real, verificable y con responsables detrás. Innovamos en la forma, no en el fondo."
+            body="Tangible o intangible: activo, marca, sistema, comunidad, tracción. Real, verificable y con responsables detrás."
+            icon={<ValueIcon />}
           />
-          <Value
-            n="04"
+          <ValueCard
             title="Legado"
-            body="Lo que se construye acá es para lo que viene después. Una participación bien administrada puede ser el patrimonio de la siguiente generación."
+            body="Lo que se construye acá es para lo que viene después. Una participación bien administrada se puede heredar."
+            icon={<LegacyIcon />}
           />
         </div>
-      </Section>
+      </section>
 
-      {/* Glosario */}
-      <Section n="05" title="Lenguaje de participaciones">
-        <p className="mb-5 text-navy/75 leading-relaxed">
+      {/* 05 · Glosario — lista limpia: término izquierda, definición derecha */}
+      <section className="border-t border-navy/10 py-6 mt-6">
+        <p className="font-mono text-sm tracking-wider text-navy mb-3">
+          <span className="text-gold">05</span> · Lenguaje de participaciones
+        </p>
+        <p className="mb-4 text-navy/75 leading-relaxed">
           Activos reales, lenguaje accesible. Familiar para quien conoce
           fintech, sin excluir a quien nunca operó en esos mercados.
         </p>
-        <dl className="hairline-t">
+        <dl className="border-t border-navy/10">
           <Term name="Participación">
             Una fracción del proyecto. No es una acción bursátil ni un token: es
             tu lugar en la comunidad y en el valor del negocio.
@@ -149,64 +169,170 @@ export default async function NosotrosPage() {
             quien viene después. Construimos valor que trasciende.
           </Term>
         </dl>
-      </Section>
+      </section>
     </div>
   );
 }
 
-function Section({
-  n,
-  title,
-  children,
-}: {
-  n: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="hairline-t py-5 sm:py-6">
-      <p className="font-mono text-sm tracking-wider text-navy">
-        <span className="text-gold">{n}</span> · {title}
-      </p>
-      <div className="mt-4 sm:mt-5 text-navy/85 leading-relaxed">{children}</div>
-    </section>
-  );
-}
+/* ── Subcomponentes ── */
 
-function Card({ label, children }: { label: string; children: React.ReactNode }) {
+function PurposeItem({ label, body }: { label: string; body: string }) {
   return (
     <div>
       <p className="eyebrow !text-navy/50">{label}</p>
-      <p className="mt-3 text-navy/85 leading-relaxed">{children}</p>
+      <p className="mt-2 text-navy/85 leading-relaxed">{body}</p>
     </div>
   );
 }
 
-function Value({
-  n,
+function YesItem({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex gap-3 text-navy/85 leading-relaxed">
+      <span aria-hidden className="text-gold shrink-0 mt-1 text-sm">+</span>
+      <span>{children}</span>
+    </li>
+  );
+}
+
+function NoItem({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex gap-3 text-navy/85 leading-relaxed">
+      <span
+        aria-hidden
+        className="text-navy/35 shrink-0 mt-1 text-sm font-light"
+      >
+        ×
+      </span>
+      <span>{children}</span>
+    </li>
+  );
+}
+
+function ValueCard({
   title,
   body,
+  icon,
 }: {
-  n: string;
   title: string;
   body: string;
+  icon?: React.ReactNode;
 }) {
+  // Layout: title arriba (uppercase tracked), body en el medio, icono
+  // centrado al pie. `flex flex-col` + `mt-auto` empuja el icono al bottom
+  // cuando los cuerpos de las cards tienen alturas distintas, manteniendo
+  // los iconos alineados horizontalmente entre las 4 cards.
   return (
-    <div>
-      <p className="font-mono text-sm tracking-wider">
-        <span className="text-gold">{n}</span>{" "}
-        <span className="text-navy">{title}</span>
+    <article className="select-none cursor-default h-full flex flex-col rounded-xl border border-line/80 bg-gradient-to-br from-paper-light to-paper-light/40 p-5 shadow-sm shadow-navy/5 transition-all duration-300 hover:border-gold/60 hover:shadow-md hover:shadow-navy/10 hover:-translate-y-0.5">
+      <p className="font-sans font-semibold text-navy text-base uppercase tracking-wide text-center">
+        {title}
       </p>
-      <p className="mt-3 text-navy/75 leading-relaxed">{body}</p>
-    </div>
+      <p className="mt-3 text-navy/75 leading-[1.5] text-[13.5px] sm:text-sm text-center">
+        {body}
+      </p>
+      {icon && (
+        <div className="mt-auto pt-6 flex justify-center text-gold">
+          {icon}
+        </div>
+      )}
+    </article>
+  );
+}
+
+/* ── Íconos de los valores fundacionales (mismos del landing público) ── */
+
+function TransparencyIcon() {
+  // Cadena / link — vínculos visibles, transparencia de conexiones.
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
+function UnityIcon() {
+  // Persona dentro de un círculo — unidad / comunidad.
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="10" r="3" />
+      <path d="M6.168 18.849A4 4 0 0 1 10 16h4a4 4 0 0 1 3.834 2.855" />
+    </svg>
+  );
+}
+
+function ValueIcon() {
+  // Gema facetada — activo durable, valor de cara.
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M6 3h12l4 6-10 13L2 9z" />
+      <path d="M11 3 8 9l4 13 4-13-3-6" />
+      <path d="M2 9h20" />
+    </svg>
+  );
+}
+
+function LegacyIcon() {
+  // Templo clásico / columnas — patrimonio, herencia, lo que trasciende.
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <line x1="3" x2="21" y1="22" y2="22" />
+      <line x1="6" x2="6" y1="18" y2="11" />
+      <line x1="10" x2="10" y1="18" y2="11" />
+      <line x1="14" x2="14" y1="18" y2="11" />
+      <line x1="18" x2="18" y1="18" y2="11" />
+      <polygon points="12 2 20 7 4 7" />
+    </svg>
   );
 }
 
 function Term({ name, children }: { name: string; children: React.ReactNode }) {
   return (
-    <div className="hairline-b grid grid-cols-1 gap-2 py-4 sm:grid-cols-4 sm:gap-6">
-      <dt className="font-sans text-navy sm:col-span-1">{name}</dt>
-      <dd className="text-navy/75 leading-relaxed sm:col-span-3">{children}</dd>
+    <div className="border-b border-navy/10 grid grid-cols-1 md:grid-cols-[30%_70%] md:gap-x-4 py-3">
+      <dt className="font-sans font-semibold text-navy leading-tight">{name}</dt>
+      <dd className="text-navy/75 leading-relaxed mt-1.5 md:mt-0">
+        {children}
+      </dd>
     </div>
   );
 }

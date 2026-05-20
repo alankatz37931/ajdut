@@ -74,7 +74,7 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
       <div className="hairline p-6 bg-paper-light space-y-4">
         <p className="eyebrow">Rechazar proyecto</p>
         <p className="text-navy/75 leading-relaxed">
-          El founder recibirá esta nota explicando por qué no avanzamos.
+          El project owner recibirá esta nota explicando por qué no avanzamos.
         </p>
         <textarea
           rows={4}
@@ -108,7 +108,7 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
     <div className="hairline p-6 bg-paper-light space-y-4">
       <p className="eyebrow">Moderación · proyecto pendiente</p>
       <p className="text-navy/75 leading-relaxed">
-        Este proyecto fue creado por el founder y espera tu aprobación. Al aprobar, AJDUT emite
+        Este proyecto fue creado por el project owner y espera tu aprobación. Al aprobar, AJDUT emite
         automáticamente el 10% institucional y crea el pool de acciones disponibles para los
         miembros.
       </p>
