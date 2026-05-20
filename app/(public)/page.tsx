@@ -37,6 +37,11 @@ export default async function HomePage() {
               <ValueIcon />
               Valor
             </span>
+            <span className="text-gold">·</span>
+            <span className="inline-flex items-center gap-1.5">
+              <LegacyIcon />
+              Legado
+            </span>
           </div>
 
           <p className="mt-4 sm:mt-5 text-base sm:text-lg text-navy/80 leading-relaxed">
@@ -240,6 +245,31 @@ function ValueIcon() {
       <path d="M6 3h12l4 6-10 13L2 9z" />
       <path d="M11 3 8 9l4 13 4-13-3-6" />
       <path d="M2 9h20" />
+    </svg>
+  );
+}
+
+function LegacyIcon() {
+  // Templo clásico / columnas — patrimonio, herencia, lo que trasciende.
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-navy/40 shrink-0"
+      aria-hidden
+    >
+      <line x1="3" x2="21" y1="22" y2="22" />
+      <line x1="6" x2="6" y1="18" y2="11" />
+      <line x1="10" x2="10" y1="18" y2="11" />
+      <line x1="14" x2="14" y1="18" y2="11" />
+      <line x1="18" x2="18" y1="18" y2="11" />
+      <polygon points="12 2 20 7 4 7" />
     </svg>
   );
 }
