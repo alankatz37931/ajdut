@@ -1,8 +1,7 @@
-import Link from "next/link";
-import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { MilestonesEditor } from "./MilestonesEditor";
 
 type Params = { params: Promise<{ projectSlug: string }> };
@@ -39,18 +38,14 @@ export default async function FounderMilestonesPage({ params }: Params) {
   }));
 
   return (
-    <div className="max-w-3xl">
-      <Link href={`/founder/${projectSlug}` as Route} className="eyebrow hover:!text-gold">
-        ← {project.name}
-      </Link>
-      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Founder</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Hitos</h1>
-        <p className="mt-3 text-navy/75 leading-relaxed">
-          Lo que prometiste cumplir y lo que ya cumpliste. Los hitos se muestran en la página
-          pública del proyecto a quienes tengan acceso.
-        </p>
-      </header>
+    <div className="max-w-4xl">
+      <ProjectHeader
+        projectName={project.name}
+        projectSlug={project.slug}
+        projectStatus={project.status}
+        section="Hitos del roadmap"
+        description="Lo que prometiste cumplir y lo que ya cumpliste. Los hitos se muestran en la ficha pública a quienes tengan acceso."
+      />
 
       <MilestonesEditor projectSlug={projectSlug} initial={milestones} />
     </div>

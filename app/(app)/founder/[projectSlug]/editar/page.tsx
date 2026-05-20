@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
-import { BackLink } from "@/components/app/BackLink";
+import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { EditProjectForm } from "./EditProjectForm";
+import Link from "next/link";
+import type { Route } from "next";
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
@@ -51,19 +53,22 @@ export default async function EditProjectPage({ params }: Params) {
   if (!access.canEdit) notFound();
 
   return (
-    <div className="max-w-3xl">
-      <BackLink fallback={`/founder/${projectSlug}`}>
-        ← {project.name}
-      </BackLink>
-
-      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Founder</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Editar información</h1>
-        <p className="mt-3 text-navy/75 leading-relaxed">
-          La información que actualices acá se muestra en la página pública del proyecto a quien
-          tenga acceso.
-        </p>
-      </header>
+    <div className="max-w-4xl">
+      <ProjectHeader
+        projectName={project.name}
+        projectSlug={project.slug}
+        projectStatus={project.status}
+        section="Editar información"
+        description="La información que actualices acá se muestra en la ficha pública del proyecto a quien tenga acceso."
+        action={
+          <Link
+            href={`/proyectos/${project.slug}` as Route}
+            className="btn-outline"
+          >
+            Ver ficha pública →
+          </Link>
+        }
+      />
 
       <EditProjectForm
         projectSlug={project.slug}
@@ -94,7 +99,8 @@ export default async function EditProjectPage({ params }: Params) {
           equityStructureNote: project.startupProfile?.equityStructureNote ?? "",
           projectionsUrl: project.startupProfile?.projectionsUrl ?? "",
           planNegociosUrl: project.startupProfile?.planNegociosUrl ?? "",
-          estrategiasPeriodicasUrl: project.startupProfile?.estrategiasPeriodicasUrl ?? "",
+          estrategiasPeriodicasUrl:
+            project.startupProfile?.estrategiasPeriodicasUrl ?? "",
           estadosFinancierosUrl: project.startupProfile?.estadosFinancierosUrl ?? "",
           estrategiaEmisionUrl: project.startupProfile?.estrategiaEmisionUrl ?? "",
           policyShares: project.startupProfile?.policyShares ?? "",

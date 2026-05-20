@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
 import { getAvailableSharesForProposal } from "@/lib/services/pending-assignment";
-import { BackLink } from "@/components/app/BackLink";
+import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { InvitarForm } from "./InvitarForm";
 
 type Params = { params: Promise<{ projectSlug: string }> };
@@ -34,26 +34,25 @@ export default async function InvitarMiembroPage({ params }: Params) {
   }
 
   // Disponibles para proponer = pool AVAILABLE − propuestas PENDING ya hechas.
-  // Así evitamos que el founder doble-asigne el mismo pool mientras el admin
-  // todavía no validó propuestas previas.
   const availableShares = await getAvailableSharesForProposal(project.id);
 
   return (
-    <div className="max-w-3xl">
-      <BackLink fallback={`/founder/${projectSlug}`}>
-        ← {project.name}
-      </BackLink>
+    <div className="max-w-4xl">
+      <ProjectHeader
+        projectName={project.name}
+        projectSlug={project.slug}
+        projectStatus={project.status}
+        section="Invitar miembro"
+        description="Proponé agregar un socio a tu proyecto. La propuesta queda pendiente de validación por el equipo de AJDUT. Cuando un admin la apruebe se crea la cuenta (si hace falta), se asignan las acciones desde el pool y se le envía el email al invitado."
+      />
 
-      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Founder</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Invitar miembro</h1>
-        <p className="mt-3 text-navy/75 leading-relaxed">
-          Proponé agregar un socio a tu proyecto. La propuesta queda pendiente de
-          validación por el equipo de AJDUT. Cuando un admin la apruebe se crea
-          la cuenta (si hace falta), se asignan las acciones desde el pool y se
-          le envía el email al invitado.
+      {/* KPI compacto del pool disponible — el dato más importante acá. */}
+      <div className="mt-8 hairline bg-paper p-5 flex flex-wrap items-baseline justify-between gap-4">
+        <p className="eyebrow">— Pool disponible para proponer</p>
+        <p className="font-mono text-h2 text-navy leading-none">
+          {availableShares.toLocaleString("es-MX")}
         </p>
-      </header>
+      </div>
 
       <InvitarForm projectSlug={project.slug} availableShares={availableShares} />
     </div>
