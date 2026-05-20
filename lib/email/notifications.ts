@@ -82,6 +82,9 @@ import {
   chatNewMessageEmail,
   type ChatNewMessageInput,
 } from "./templates/chat-new-message";
+import {
+  validationCheckEmail,
+} from "./templates/validation-check";
 
 function appUrl(): string {
   return (
@@ -608,6 +611,92 @@ export async function notifyChannelNewMessage(
     fireAndForget: true,
     kind: "chat.new-message",
   });
+}
+
+// ─── Verificación de vida (Ola 7b) ────────────────────────────────
+
+/**
+ * Manda al miembro un email para que confirme que sigue activo. El link
+ * lleva el checkId como token simple — la ruta /confirmar-vida/[id] lo
+ * valida y marca la ValidationCheck como CONFIRMED.
+ */
+export async function notifyUserValidationCheck(input: {
+  to: string;
+  fullName: string;
+  checkId: string;
+  windowDays: number;
+}) {
+  const confirmUrl = `${appUrl()}/confirmar-vida/${input.checkId}`;
+  const { subject, html } = validationCheckEmail({
+    fullName: input.fullName,
+    confirmUrl,
+    windowDays: input.windowDays,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "validation.check",
+  });
+}
+
+/**
+ * Alerta al equipo de admins: este miembro acumuló suficientes verificaciones
+ * sin responder y hay que contactar a sus herederos manualmente.
+ */
+export async function notifyAdminsHeirsEscalation(input: {
+  userFullName: string;
+  userEmail: string;
+  missedCount: number;
+}) {
+  const admins = getAdminNotifyEmails();
+  if (admins.length === 0) {
+    console.warn(
+      "ADMIN_NOTIFY_EMAILS no configurado. Saltando alerta de herederos."
+    );
+    return { ok: false as const, error: "no admin recipients", via: "console" as const };
+  }
+  const reviewUrl = `${appUrl()}/admin/herederos`;
+  const { subject, html } = validationCheckEmail({
+    fullName: "equipo",
+    confirmUrl: reviewUrl,
+    windowDays: 0,
+  });
+  // Reusamos el shell visual pero pisamos subject con texto operativo.
+  const operSubject = `[AJDUT] Contactar herederos de ${input.userFullName}`;
+  return sendEmail({
+    to: admins,
+    subject: operSubject,
+    html: html
+      .replace(
+        "Verificación de vida",
+        "Alerta — contactar herederos"
+      )
+      .replace(
+        "Hola, equipo.",
+        `Hola, equipo.`
+      )
+      .replace(
+        /<p style="margin:0 0 16px 0;">[\s\S]*?<\/p>\s*<p style="margin:0 0 16px 0;">[\s\S]*?<\/p>/,
+        `<p style="margin:0 0 16px 0;">
+           <strong>${escapeHtml(input.userFullName)}</strong>
+           (${escapeHtml(input.userEmail)}) acumuló ${input.missedCount}
+           verificaciones de vida sin responder. Hay que ponerse en contacto
+           con los herederos cargados en su cuenta.
+         </p>
+         <p style="margin:0 0 16px 0;">
+           Entrá al panel para ver el listado de herederos y contactarlos
+           uno por uno.
+         </p>`
+      ),
+    fireAndForget: true,
+    kind: "validation.escalated",
+  });
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export async function notifyRequesterInfoRequestResolved(input: {
