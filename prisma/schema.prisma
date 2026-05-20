@@ -108,6 +108,19 @@ model User {
   updatedAt       DateTime     @updatedAt
   deletedAt       DateTime?
 
+  // ─── Ola 7b — Herederos y validación de vida ──────────────────────
+  // Cada cuántos meses AJDUT le pide al miembro que confirme que sigue activo.
+  // Valores permitidos: 0 (deshabilitado), 1, 3 (default), 6, 12.
+  validationFrequencyMonths Int          @default(3)
+  // Última vez que el miembro confirmó manualmente. Si null nunca confirmó.
+  lastValidationConfirmedAt DateTime?
+  // Contador de checks PENDING que vencieron sin respuesta. Se resetea al
+  // confirmar. Cuando llega a 3 disparamos heirsEscalated.
+  missedValidationCount     Int          @default(0)
+  // True cuando el admin ya recibió el alerta para contactar a los herederos.
+  // Evita re-disparar el alerta en cada cron-pass.
+  heirsEscalated            Boolean      @default(false)
+
   // Relaciones inversas
   ownedProjects          Project[]               @relation("ProjectOwner")
   coAdminAssignments     ProjectCoAdmin[]
@@ -133,8 +146,49 @@ model User {
   pendingProposed        PendingAssignment[]     @relation("PendingAssignmentProposer")
   pendingTargeted        PendingAssignment[]     @relation("PendingAssignmentTarget")
   pendingReviewed        PendingAssignment[]     @relation("PendingAssignmentReviewer")
+  heirs                  Heir[]                  @relation("HeirOwner")
+  validationChecks       ValidationCheck[]       @relation("ValidationUser")
 
   @@index([role, isActive])
+}
+
+// ─── HEREDEROS Y VALIDACIÓN DE VIDA (Ola 7b) ────────────────────────
+//
+// Cada miembro declara herederos con un % de reparto (suma <= 100). Si el
+// miembro deja de responder N verificaciones consecutivas, el admin recibe
+// alerta para contactarlos. AJDUT no ejecuta transferencias automáticas —
+// solo notifica al equipo para que actúe humanamente.
+
+model Heir {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation("HeirOwner", fields: [userId], references: [id])
+  fullName      String
+  email         String?
+  relationship  String?  // "hermana", "cónyuge", "hijo", texto libre
+  sharePercent  Decimal  @db.Decimal(5, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum ValidationCheckStatus {
+  PENDING
+  CONFIRMED
+  MISSED
+}
+
+model ValidationCheck {
+  id            String                @id @default(cuid())
+  userId        String
+  user          User                  @relation("ValidationUser", fields: [userId], references: [id])
+  sentAt        DateTime              @default(now())
+  respondedAt   DateTime?
+  status        ValidationCheckStatus @default(PENDING)
+  escalatedAt   DateTime?
+
+  @@index([userId, sentAt])
 }
 
 // ─── TOKENS DE SETEO DE CONTRASEÑA ──────────────────────────────────

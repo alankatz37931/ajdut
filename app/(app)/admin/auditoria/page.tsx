@@ -65,6 +65,14 @@ const ACTION_LABEL: Record<string, string> = {
   "CHAT.POLL_CREATED": "Encuesta creada",
   "CHAT.POLL_VOTED": "Voto en encuesta",
   "CHAT.POLL_CLOSED": "Encuesta cerrada",
+  "HEIR.ADDED": "Heredero agregado",
+  "HEIR.UPDATED": "Heredero editado",
+  "HEIR.REMOVED": "Heredero eliminado",
+  "VALIDATION.FREQUENCY_UPDATED": "Frecuencia de validación actualizada",
+  "VALIDATION.SCHEDULED": "Verificación de vida programada",
+  "VALIDATION.CONFIRMED": "Verificación de vida confirmada",
+  "VALIDATION.MISSED": "Verificación de vida sin respuesta",
+  "VALIDATION.ESCALATED": "Alerta: contactar a herederos",
 };
 
 /**
