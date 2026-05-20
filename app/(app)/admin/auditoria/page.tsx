@@ -57,6 +57,9 @@ const ACTION_LABEL: Record<string, string> = {
   "INFO_REQUEST.REJECTED": "Solicitud de información rechazada",
   "ADMIN_BROADCAST.SENT": "Aviso de admin enviado",
   "PARTICIPATION.INVITED": "Miembro invitado a proyecto",
+  "PARTICIPATION.ASSIGN_PROPOSED": "Asignación propuesta (esperando admin)",
+  "PARTICIPATION.ASSIGN_APPROVED": "Asignación aprobada por admin",
+  "PARTICIPATION.ASSIGN_REJECTED": "Asignación rechazada por admin",
 };
 
 /**
@@ -122,6 +125,35 @@ function describePayload(
       if (shares && email) return `${shares} acciones a ${email}`;
       if (shares) return `${shares} acciones`;
       return email;
+    }
+    case "PARTICIPATION.ASSIGN_PROPOSED": {
+      const shares = n("shareCount");
+      const source = s("source");
+      const email = s("inviteEmail");
+      const srcLabel =
+        source === "INVITE" ? "invitación" : source === "LEAD" ? "lead" : null;
+      if (shares && srcLabel && email) {
+        return `${shares} acciones (${srcLabel}) — ${email}`;
+      }
+      if (shares && srcLabel) return `${shares} acciones (${srcLabel})`;
+      if (shares) return `${shares} acciones`;
+      return null;
+    }
+    case "PARTICIPATION.ASSIGN_APPROVED": {
+      const shares = n("shareCount");
+      const source = s("source");
+      const srcLabel =
+        source === "INVITE" ? "invitación" : source === "LEAD" ? "lead" : null;
+      if (shares && srcLabel) return `${shares} acciones (${srcLabel})`;
+      if (shares) return `${shares} acciones`;
+      return null;
+    }
+    case "PARTICIPATION.ASSIGN_REJECTED": {
+      const shares = n("shareCount");
+      const note = s("note");
+      if (shares && note) return `${shares} acciones — “${note}”`;
+      if (shares) return `${shares} acciones`;
+      return note ? `“${note}”` : null;
     }
     default:
       return null;

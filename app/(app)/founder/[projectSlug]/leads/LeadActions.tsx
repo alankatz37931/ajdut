@@ -51,12 +51,14 @@ export function LeadActions({ leadId, status, shareCountRequested, investorName 
   if (mode === "confirming-accept") {
     return (
       <div className="hairline p-4 bg-paper-light space-y-3">
-        <p className="eyebrow !text-gold">Confirmar asignación</p>
+        <p className="eyebrow !text-gold">Proponer asignación al admin</p>
         <p className="text-navy/85 text-sm leading-relaxed">
-          Vas a asignar <span className="font-mono text-navy">{shareCountRequested.toLocaleString("es-MX")}</span> acciones
-          a <span className="text-navy">{investorName}</span>. Esta acción es{" "}
-          <strong>irreversible</strong>: queda registrada en la cadena inmutable y se genera un
-          certificado. Asegurate de haber cerrado el pago por fuera antes de confirmar.
+          Vas a proponer la asignación de{" "}
+          <span className="font-mono text-navy">{shareCountRequested.toLocaleString("es-MX")}</span>{" "}
+          acciones a <span className="text-navy">{investorName}</span>. La propuesta
+          queda <strong>pendiente de validación por el equipo de AJDUT</strong> —
+          recién cuando un admin la apruebe se decrementa el pool y se emite el
+          certificado. Asegurate de haber cerrado el pago por fuera antes.
         </p>
         {error && (
           <p className="eyebrow !text-navy" role="alert">
@@ -69,7 +71,7 @@ export function LeadActions({ leadId, status, shareCountRequested, investorName 
             disabled={isPending}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Asignando…" : "Sí, asignar acciones"}
+            {isPending ? "Proponiendo…" : "Sí, enviar propuesta al admin"}
           </button>
           <button
             onClick={() => setMode("idle")}
@@ -90,7 +92,7 @@ export function LeadActions({ leadId, status, shareCountRequested, investorName 
         disabled={isPending}
         className="btn-primary disabled:opacity-50"
       >
-        Aceptar y asignar acciones →
+        Aceptar y proponer al admin →
       </button>
       {status === "OPEN" && (
         <button

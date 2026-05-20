@@ -68,6 +68,16 @@ import {
   infoRequestResolvedEmail,
   type InfoRequestResolvedInput,
 } from "./templates/info-request-resolved";
+import {
+  pendingAssignmentToAdminEmail,
+  type PendingAssignmentToAdminInput,
+} from "./templates/pending-assignment-to-admin";
+import {
+  pendingAssignmentApprovedToFounderEmail,
+} from "./templates/pending-assignment-approved-to-founder";
+import {
+  pendingAssignmentRejectedToFounderEmail,
+} from "./templates/pending-assignment-rejected-to-founder";
 
 function appUrl(): string {
   return (
@@ -463,6 +473,96 @@ export async function notifyFounderInfoRequest(input: {
     html,
     fireAndForget: true,
     kind: "info-request.founder",
+  });
+}
+
+// ─── Asignaciones pendientes (Ola 5) ──────────────────────────────
+
+/**
+ * Notifica a todos los admins de AJDUT que llegó una nueva propuesta de
+ * asignación que requiere validación.
+ */
+export async function notifyAdminsPendingAssignment(
+  input: Omit<PendingAssignmentToAdminInput, "reviewUrl"> & {
+    pendingId: string;
+  }
+) {
+  const admins = getAdminNotifyEmails();
+  if (admins.length === 0) {
+    console.warn(
+      "ADMIN_NOTIFY_EMAILS no configurado. Saltando notificación de asignación pendiente."
+    );
+    return { ok: false as const, error: "no admin recipients", via: "console" as const };
+  }
+  const reviewUrl = `${appUrl()}/admin/asignaciones`;
+  const { subject, html } = pendingAssignmentToAdminEmail({
+    projectName: input.projectName,
+    proposedByName: input.proposedByName,
+    proposedByEmail: input.proposedByEmail,
+    source: input.source,
+    recipientLabel: input.recipientLabel,
+    shareCount: input.shareCount,
+    message: input.message,
+    reviewUrl,
+  });
+  return sendEmail({
+    to: admins,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "pending-assignment.admin-notice",
+  });
+}
+
+export async function notifyFounderPendingAssignmentApproved(input: {
+  to: string;
+  founderFirstName: string;
+  projectName: string;
+  projectSlug: string;
+  recipientLabel: string;
+  shareCount: number;
+}) {
+  const projectUrl = `${appUrl()}/founder/${input.projectSlug}`;
+  const { subject, html } = pendingAssignmentApprovedToFounderEmail({
+    founderFirstName: input.founderFirstName,
+    projectName: input.projectName,
+    recipientLabel: input.recipientLabel,
+    shareCount: input.shareCount,
+    projectUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "pending-assignment.approved",
+  });
+}
+
+export async function notifyFounderPendingAssignmentRejected(input: {
+  to: string;
+  founderFirstName: string;
+  projectName: string;
+  projectSlug: string;
+  recipientLabel: string;
+  shareCount: number;
+  note: string;
+}) {
+  const projectUrl = `${appUrl()}/founder/${input.projectSlug}`;
+  const { subject, html } = pendingAssignmentRejectedToFounderEmail({
+    founderFirstName: input.founderFirstName,
+    projectName: input.projectName,
+    recipientLabel: input.recipientLabel,
+    shareCount: input.shareCount,
+    note: input.note,
+    projectUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "pending-assignment.rejected",
   });
 }
 

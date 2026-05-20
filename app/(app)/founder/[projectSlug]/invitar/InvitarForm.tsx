@@ -9,9 +9,10 @@ type Props = {
 };
 
 type SuccessState = {
-  wasNew: boolean;
+  pending: true;
   shareCount: number;
   email: string;
+  fullName: string;
 };
 
 export function InvitarForm({ projectSlug, availableShares }: Props) {
@@ -118,11 +119,21 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
         </p>
       )}
       {success && (
-        <p className="eyebrow !text-gold" role="status">
-          {success.wasNew
-            ? `Invitación enviada a ${success.email} con ${success.shareCount.toLocaleString("es-MX")} acciones. Recibirá un link para establecer su contraseña.`
-            : `Acciones asignadas: ${success.shareCount.toLocaleString("es-MX")} a ${success.email}. Le avisamos por email.`}
-        </p>
+        <div className="hairline p-3 bg-paper-light" role="status">
+          <p className="eyebrow !text-gold">
+            Invitación propuesta — esperando validación del admin
+          </p>
+          <p className="mt-2 text-sm text-navy/75">
+            Propusiste asignar{" "}
+            <span className="font-mono text-navy">
+              {success.shareCount.toLocaleString("es-MX")}
+            </span>{" "}
+            acciones a <span className="text-navy">{success.fullName}</span> ({success.email}).
+            El equipo de AJDUT recibió el aviso. Cuando lo aprueben, se va a crear
+            la cuenta (si hace falta), se va a emitir el certificado y vamos a
+            avisarle al invitado por email.
+          </p>
+        </div>
       )}
 
       {availableShares === 0 && (
@@ -138,10 +149,11 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
           disabled={isPending || availableShares === 0}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Enviando…" : "Invitar y asignar →"}
+          {isPending ? "Enviando…" : "Proponer al admin →"}
         </button>
         <span className="eyebrow !text-navy/40">
-          Crea/usa al usuario, asigna acciones del pool y envía el email en un solo paso.
+          La propuesta queda pendiente. Recién cuando el admin la valida se crea
+          la cuenta, se asignan las acciones y se le avisa al invitado.
         </span>
       </div>
     </form>
