@@ -78,6 +78,10 @@ import {
 import {
   pendingAssignmentRejectedToFounderEmail,
 } from "./templates/pending-assignment-rejected-to-founder";
+import {
+  chatNewMessageEmail,
+  type ChatNewMessageInput,
+} from "./templates/chat-new-message";
 
 function appUrl(): string {
   return (
@@ -563,6 +567,46 @@ export async function notifyFounderPendingAssignmentRejected(input: {
     html,
     fireAndForget: true,
     kind: "pending-assignment.rejected",
+  });
+}
+
+// ─── Chat por proyecto (Ola 7a) ───────────────────────────────────
+
+/**
+ * Notifica a los miembros del canal (excluyendo al autor) que llegó un
+ * mensaje nuevo. fireAndForget: si Resend está caído no rompe el post.
+ *
+ * En entornos no-producción NO emitimos para evitar spam durante el dev —
+ * el AuditLog (CHAT.MESSAGE_POSTED) deja la traza para inspección manual.
+ */
+export async function notifyChannelNewMessage(
+  input: { to: string[]; projectSlug: string } & Omit<ChatNewMessageInput, "chatUrl">
+) {
+  if (input.to.length === 0) {
+    return { ok: true as const, id: null, via: "console" as const };
+  }
+  if (process.env.NODE_ENV !== "production") {
+    // En dev/test la notificación es ruido — la dejamos visible en logs por si
+    // alguien quiere verificar el flujo, sin tocar Resend.
+    console.log(
+      `[chat] (skip email en NODE_ENV=${process.env.NODE_ENV}) ${input.authorName} → ${input.to.length} miembro(s) en ${input.projectName}`
+    );
+    return { ok: true as const, id: null, via: "console" as const };
+  }
+  const chatUrl = `${appUrl()}/proyectos/${input.projectSlug}/chat`;
+  const { subject, html } = chatNewMessageEmail({
+    projectName: input.projectName,
+    authorName: input.authorName,
+    bodyPreview: input.bodyPreview,
+    attachmentUrl: input.attachmentUrl,
+    chatUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "chat.new-message",
   });
 }
 

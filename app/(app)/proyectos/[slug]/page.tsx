@@ -931,6 +931,20 @@ export default async function ProjectPage({ params }: Params) {
           )}
         </div>
         <div className="flex flex-col gap-3 shrink-0 sm:flex-row sm:items-center">
+          {/* Chat del proyecto: visible para miembros asignados (myShares > 0)
+              y privilegiados (owner / co-admin / admin). Lo dejamos como link
+              eyebrow para no competir con los CTAs principales del header. */}
+          {(myShares > 0 ||
+            access.role === "OWNER" ||
+            access.role === "CO_ADMIN" ||
+            access.role === "ADMIN") && (
+            <Link
+              href={`/proyectos/${project.slug}/chat` as Route}
+              className="eyebrow hover:!text-gold self-end sm:self-center"
+            >
+              Abrir chat →
+            </Link>
+          )}
           {/* Flujo de 2 etapas para rol PARTNER:
               - sin InfoRequest o REJECTED → "Quiero más información"
               - APPROVED → "Me interesa participar"

@@ -119,6 +119,9 @@ model User {
   leads                  Lead[]
   resaleListings         ResaleListing[]
   messages               Message[]
+  messagesDeleted        Message[]               @relation("MessageDeleter")
+  pollsCreated           Poll[]                  @relation("PollCreator")
+  pollVotes              PollVote[]              @relation("PollVoter")
   applicationsReviewed   Application[]           @relation("ApplicationReviewer")
   auditEntries           AuditLog[]
   notifications          Notification[]
@@ -627,6 +630,7 @@ model ChatChannel {
   createdAt DateTime  @default(now())
 
   messages  Message[]
+  polls     Poll[]
 }
 
 model Message {
@@ -637,12 +641,63 @@ model Message {
   author        User        @relation(fields: [authorId], references: [id])
   body          String
   attachmentKey String?
+  // URL externa opcional para "adjuntar" un archivo sin storage físico. Mismo
+  // patrón pragmático que documentos del proyecto: el founder/socio pega un
+  // link a Drive/Dropbox/Notion/etc.
+  attachmentUrl String?
   pinnedAt      DateTime?
   createdAt     DateTime    @default(now())
   editedAt      DateTime?
+  // Soft delete por moderación: el owner/co-admin/admin "borra" el mensaje
+  // (en realidad lo oculta). Queda visible para roles privilegiados.
   deletedAt     DateTime?
+  deletedById   String?
+  deletedBy     User?       @relation("MessageDeleter", fields: [deletedById], references: [id])
 
   @@index([channelId, createdAt])
+}
+
+// ─── Votaciones / encuestas dentro del chat del proyecto ───────────
+// Modelo simple: pregunta + opciones + votos por usuario. Sin pesos por
+// participación (1 socio = 1 voto). El founder decide si permite múltiples
+// respuestas por usuario y si fija una fecha de cierre.
+
+model Poll {
+  id          String      @id @default(cuid())
+  channelId   String
+  channel     ChatChannel @relation(fields: [channelId], references: [id])
+  createdById String
+  createdBy   User        @relation("PollCreator", fields: [createdById], references: [id])
+  question    String
+  multiple    Boolean     @default(false)
+  closesAt    DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime    @default(now())
+
+  options     PollOption[]
+
+  @@index([channelId, createdAt])
+}
+
+model PollOption {
+  id      String     @id @default(cuid())
+  pollId  String
+  poll    Poll       @relation(fields: [pollId], references: [id])
+  label   String
+  order   Int        @default(0)
+  votes   PollVote[]
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  optionId  String
+  option    PollOption @relation(fields: [optionId], references: [id])
+  voterId   String
+  voter     User       @relation("PollVoter", fields: [voterId], references: [id])
+  createdAt DateTime   @default(now())
+
+  @@unique([optionId, voterId])
+  @@index([optionId])
 }
 
 // ─── DIVIDENDOS ─────────────────────────────────────────────────────

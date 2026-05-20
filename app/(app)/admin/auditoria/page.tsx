@@ -60,6 +60,11 @@ const ACTION_LABEL: Record<string, string> = {
   "PARTICIPATION.ASSIGN_PROPOSED": "Asignación propuesta (esperando admin)",
   "PARTICIPATION.ASSIGN_APPROVED": "Asignación aprobada por admin",
   "PARTICIPATION.ASSIGN_REJECTED": "Asignación rechazada por admin",
+  "CHAT.MESSAGE_POSTED": "Mensaje publicado en chat",
+  "CHAT.MESSAGE_DELETED": "Mensaje ocultado por moderación",
+  "CHAT.POLL_CREATED": "Encuesta creada",
+  "CHAT.POLL_VOTED": "Voto en encuesta",
+  "CHAT.POLL_CLOSED": "Encuesta cerrada",
 };
 
 /**
@@ -154,6 +159,16 @@ function describePayload(
       if (shares && note) return `${shares} acciones — “${note}”`;
       if (shares) return `${shares} acciones`;
       return note ? `“${note}”` : null;
+    }
+    case "CHAT.POLL_CREATED": {
+      const q = s("question");
+      const cnt = n("optionsCount");
+      if (q && cnt) return `“${q}” · ${cnt} opciones`;
+      return q ? `“${q}”` : null;
+    }
+    case "CHAT.MESSAGE_POSTED": {
+      const has = payload.hasAttachment === true;
+      return has ? "Con archivo adjunto" : null;
     }
     default:
       return null;
