@@ -55,6 +55,8 @@ const ACTION_LABEL: Record<string, string> = {
   "INFO_REQUEST.CREATED": "Solicitud de información",
   "INFO_REQUEST.APPROVED": "Solicitud de información aprobada",
   "INFO_REQUEST.REJECTED": "Solicitud de información rechazada",
+  "ADMIN_BROADCAST.SENT": "Aviso de admin enviado",
+  "PARTICIPATION.INVITED": "Miembro invitado a proyecto",
 };
 
 /**
@@ -107,6 +109,20 @@ function describePayload(
       return s("reason") ? `Límite por ${s("reason")}` : null;
     case "EMAIL.FAILED":
       return s("subject") ? `Falló: ${s("subject")}` : null;
+    case "ADMIN_BROADCAST.SENT": {
+      const count = n("recipientCount");
+      const subj = s("subject");
+      if (count && subj) return `${count} destinatarios — “${subj}”`;
+      if (count) return `${count} destinatarios`;
+      return subj ? `“${subj}”` : null;
+    }
+    case "PARTICIPATION.INVITED": {
+      const shares = n("shareCount");
+      const email = s("inviteeEmail");
+      if (shares && email) return `${shares} acciones a ${email}`;
+      if (shares) return `${shares} acciones`;
+      return email;
+    }
     default:
       return null;
   }

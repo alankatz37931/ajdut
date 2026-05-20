@@ -107,6 +107,10 @@ export default async function FounderDashboardPage({ params }: Params) {
         <Link href={`/founder/${project.slug}/reportes` as Route} className="eyebrow hover:!text-gold">
           Reportes trimestrales →
         </Link>
+        <span className="eyebrow !text-navy/30">·</span>
+        <Link href={`/founder/${project.slug}/invitar` as Route} className="eyebrow hover:!text-gold">
+          Invitar miembro →
+        </Link>
       </div>
 
       <Section title="Instantánea">

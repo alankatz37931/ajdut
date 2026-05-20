@@ -63,6 +63,7 @@ export async function navItemsFor(
         badgeHighlight: true,
       },
       { label: "Auditoría", href: "/admin/auditoria" as Route },
+      { label: "Avisos", href: "/admin/avisos" as Route },
       ...(ownsShares ? [misParticipacionesItem] : []),
       profileItem,
       settingsItem,

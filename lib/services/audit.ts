@@ -46,7 +46,9 @@ export type AuditAction =
   | "METRIC.REMOVED"
   | "INFO_REQUEST.CREATED"
   | "INFO_REQUEST.APPROVED"
-  | "INFO_REQUEST.REJECTED";
+  | "INFO_REQUEST.REJECTED"
+  | "ADMIN_BROADCAST.SENT"
+  | "PARTICIPATION.INVITED";
 
 export type AuditEntry = {
   actorId: string | null;

@@ -49,6 +49,14 @@ import {
   type FounderBroadcastInput,
 } from "./templates/founder-broadcast";
 import {
+  adminBroadcastEmail,
+  type AdminBroadcastInput,
+} from "./templates/admin-broadcast";
+import {
+  founderInviteEmail,
+  type FounderInviteInput,
+} from "./templates/founder-invite";
+import {
   reportPublishedEmail,
   type ReportPublishedInput,
 } from "./templates/report-published";
@@ -234,6 +242,61 @@ export async function notifyProjectMembersBroadcast(
     html,
     fireAndForget: true,
     kind: "founder.broadcast",
+  });
+}
+
+// ─── Aviso del admin a usuarios filtrados ──────────────────────────
+
+/**
+ * Envía un aviso del equipo de AJDUT a un conjunto de usuarios filtrado
+ * (por rol, actividad, o miembros de un proyecto). fireAndForget: si Resend
+ * está caído no rompe la respuesta al admin; el AuditLog tiene la lista.
+ */
+export async function notifyAdminBroadcast(
+  input: { to: string[] } & AdminBroadcastInput
+) {
+  const { subject, html } = adminBroadcastEmail({
+    subject: input.subject,
+    body: input.body,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "admin.broadcast",
+  });
+}
+
+// ─── Invitación directa del founder a un nuevo miembro ─────────────
+
+/**
+ * Envía la invitación a un miembro recién agregado por el founder. Si el
+ * usuario es nuevo (recién creado), `input.setupUrl` debe estar presente y
+ * el email muestra el link de "establecer contraseña". Si ya existía,
+ * `setupUrl` viene null y se muestra el link de login.
+ */
+export async function notifyFounderInvite(
+  input: { to: string } & Omit<FounderInviteInput, "loginUrl"> & { loginUrl?: string }
+) {
+  const loginUrl = input.loginUrl ?? `${appUrl()}/acceder`;
+  const { subject, html } = founderInviteEmail({
+    inviteeFirstName: input.inviteeFirstName,
+    founderName: input.founderName,
+    projectName: input.projectName,
+    shareCount: input.shareCount,
+    message: input.message,
+    setupUrl: input.setupUrl,
+    expiresAt: input.expiresAt,
+    loginUrl,
+    isNew: input.isNew,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "founder.invite",
   });
 }
 

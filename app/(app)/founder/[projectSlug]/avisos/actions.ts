@@ -40,6 +40,27 @@ async function loadMemberEmails(projectId: string): Promise<string[]> {
   return [...emails];
 }
 
+/**
+ * Resuelve el email de un único miembro, validando que sea efectivamente
+ * miembro del proyecto. Devuelve null si no califica — el caller lo trata
+ * como input inválido.
+ */
+async function loadOneMemberEmail(
+  projectId: string,
+  userId: string
+): Promise<string | null> {
+  const member = await prisma.participation.findFirst({
+    where: {
+      projectId,
+      isPlatformStake: false,
+      currentOwnerId: userId,
+      status: { in: [...ASSIGNED_STATUSES] },
+    },
+    select: { currentOwner: { select: { email: true } } },
+  });
+  return member?.currentOwner?.email ?? null;
+}
+
 export async function sendBroadcastAction(
   projectSlug: string,
   formData: FormData
@@ -66,15 +87,29 @@ export async function sendBroadcastAction(
 
   const subject = String(formData.get("subject") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
+  const recipientUserIdRaw = String(formData.get("recipientUserId") ?? "").trim();
+  const recipientUserId = recipientUserIdRaw.length > 0 ? recipientUserIdRaw : null;
 
   if (subject.length === 0) return { ok: false, error: "El asunto no puede estar vacío." };
   if (subject.length > 160) return { ok: false, error: "El asunto no puede superar los 160 caracteres." };
   if (body.length === 0) return { ok: false, error: "El mensaje no puede estar vacío." };
   if (body.length > 5000) return { ok: false, error: "El mensaje no puede superar los 5000 caracteres." };
 
-  const emails = await loadMemberEmails(project.id);
-  if (emails.length === 0) {
-    return { ok: false, error: "Este proyecto todavía no tiene miembros a quienes avisar." };
+  let emails: string[];
+  if (recipientUserId) {
+    const oneEmail = await loadOneMemberEmail(project.id, recipientUserId);
+    if (!oneEmail) {
+      return {
+        ok: false,
+        error: "El destinatario seleccionado no es miembro de este proyecto.",
+      };
+    }
+    emails = [oneEmail];
+  } else {
+    emails = await loadMemberEmails(project.id);
+    if (emails.length === 0) {
+      return { ok: false, error: "Este proyecto todavía no tiene miembros a quienes avisar." };
+    }
   }
 
   const founderName = user.name ?? project.name;
