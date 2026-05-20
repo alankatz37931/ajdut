@@ -544,6 +544,56 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
+  // Políticas (acciones / dividendos / frecuencia). Gating: mismo criterio
+  // que Documentos / Reportes (Ola 2) — owner/co-admin/admin siempre;
+  // partner solo si tiene InfoRequest APPROVED o ya es socio. Calculamos
+  // canSeePrivateDocs más abajo, pero para preservar el orden de "sections"
+  // adelantamos esa decisión acá.
+  const isPrivilegedReaderForPolicies =
+    access.role === "OWNER" ||
+    access.role === "CO_ADMIN" ||
+    access.role === "ADMIN";
+  const canSeePoliciesGated =
+    isPrivilegedReaderForPolicies || partnerHasApprovedInfo || myShares > 0;
+  if (
+    canSeePoliciesGated &&
+    (project.startupProfile?.policyShares ||
+      project.startupProfile?.policyDividends ||
+      project.startupProfile?.dividendsFrequency)
+  ) {
+    sections.push({
+      title: "Políticas",
+      node: (
+        <div className="space-y-6">
+          {project.startupProfile.policyShares && (
+            <div>
+              <p className="eyebrow mb-3">Política de acciones</p>
+              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                {project.startupProfile.policyShares}
+              </p>
+            </div>
+          )}
+          {project.startupProfile.policyDividends && (
+            <div>
+              <p className="eyebrow mb-3">Política de dividendos</p>
+              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                {project.startupProfile.policyDividends}
+              </p>
+            </div>
+          )}
+          {project.startupProfile.dividendsFrequency && (
+            <div>
+              <p className="eyebrow mb-3">Frecuencia de dividendos</p>
+              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
+                {project.startupProfile.dividendsFrequency}
+              </p>
+            </div>
+          )}
+        </div>
+      ),
+    });
+  }
+
   // Equipo: información sensible. Lo ocultamos al rol PARTNER (que no es
   // owner / co-admin / admin del proyecto). El founder / co-admin / admin
   // sí lo ven.

@@ -50,6 +50,9 @@ export async function createProjectAction(
   const estrategiasPeriodicasUrl = get("estrategiasPeriodicasUrl") || undefined;
   const estadosFinancierosUrl = get("estadosFinancierosUrl") || undefined;
   const estrategiaEmisionUrl = get("estrategiaEmisionUrl") || undefined;
+  const policyShares = get("policyShares") || undefined;
+  const policyDividends = get("policyDividends") || undefined;
+  const dividendsFrequency = get("dividendsFrequency") || undefined;
 
   if (name.length < 2) return { ok: false, error: "Falta el nombre del proyecto." };
   if (oneLiner.length < 10) return { ok: false, error: "Escribí un one-liner descriptivo." };
@@ -106,6 +109,9 @@ export async function createProjectAction(
       estrategiasPeriodicasUrl,
       estadosFinancierosUrl,
       estrategiaEmisionUrl,
+      policyShares,
+      policyDividends,
+      dividendsFrequency,
     });
   } catch (e) {
     if (e instanceof DomainError) {

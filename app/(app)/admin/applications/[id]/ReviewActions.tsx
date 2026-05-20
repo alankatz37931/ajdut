@@ -17,13 +17,23 @@ const ROLE_LABEL: Record<"PARTNER" | "PROJECT_OWNER" | "CO_ADMIN", string> = {
 
 export function ApplicationReviewActions({
   applicationId,
+  defaultRole = "PARTNER",
 }: {
   applicationId: string;
+  /**
+   * Rol pre-seleccionado en el radio al abrir el formulario de aprobación.
+   * Lo decide el caller en función del tipo de aplicación:
+   *   - COMPANY → PROJECT_OWNER (responsable de un proyecto)
+   *   - PERSON  → PARTNER (miembro de la comunidad)
+   * El admin puede cambiarlo manualmente antes de confirmar.
+   */
+  defaultRole?: "PARTNER" | "PROJECT_OWNER" | "CO_ADMIN";
 }) {
   const [mode, setMode] = useState<
     "idle" | "approving" | "rejecting" | "approved" | "rejected"
   >("idle");
-  const [approvedRole, setApprovedRole] = useState<"PARTNER" | "PROJECT_OWNER" | "CO_ADMIN">("PARTNER");
+  const [approvedRole, setApprovedRole] =
+    useState<"PARTNER" | "PROJECT_OWNER" | "CO_ADMIN">(defaultRole);
   const [rejectionNote, setRejectionNote] = useState("");
   const [result, setResult] = useState<ApproveResult | null>(null);
   const [error, setError] = useState<string | null>(null);

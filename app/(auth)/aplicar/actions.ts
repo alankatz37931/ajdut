@@ -14,14 +14,33 @@ import { consumeRateLimit } from "@/lib/utils/rate-limit";
 
 // ─── Schemas ─────────────────────────────────────────────────────────
 
-const applicationSchema = z.object({
+const PROJECT_KINDS = ["STARTUP", "REAL_ESTATE", "MERCHANDISE"] as const;
+
+const baseFields = {
   fullName: z.string().min(2).max(120),
   email: z.string().email().max(180),
   phone: z.string().max(40),
   country: z.string().max(60),
   motivation: z.string().max(2000),
   referredBy: z.string().max(120).optional().or(z.literal("")),
-});
+};
+
+// Schema discriminado por `kind`: PERSON no usa companyXxx; COMPANY exige
+// companyName y companyKind, deja companyDescription opcional pero acotada.
+const applicationSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("PERSON"),
+    ...baseFields,
+    // Campos COMPANY se ignoran si vienen — Zod los corta.
+  }),
+  z.object({
+    kind: z.literal("COMPANY"),
+    ...baseFields,
+    companyName: z.string().min(2).max(160),
+    companyDescription: z.string().max(1000).optional().or(z.literal("")),
+    companyKind: z.enum(PROJECT_KINDS),
+  }),
+]);
 
 type ApplicationDraft = z.infer<typeof applicationSchema>;
 
@@ -74,7 +93,10 @@ function hashCode(code: string, email: string): string {
 export async function requestEmailVerification(
   formData: FormData
 ): Promise<RequestCodeResult> {
-  const raw = {
+  // El form puede no incluir `kind` por compatibilidad legacy: caemos a PERSON.
+  const kindRaw = String(formData.get("kind") ?? "PERSON").trim().toUpperCase();
+  const kind = kindRaw === "COMPANY" ? "COMPANY" : "PERSON";
+  const baseRaw = {
     fullName: String(formData.get("fullName") ?? "").trim(),
     email: String(formData.get("email") ?? "").trim().toLowerCase(),
     phone: String(formData.get("phone") ?? "").trim(),
@@ -82,6 +104,16 @@ export async function requestEmailVerification(
     motivation: String(formData.get("motivation") ?? "").trim(),
     referredBy: String(formData.get("referredBy") ?? "").trim(),
   };
+  const raw =
+    kind === "COMPANY"
+      ? {
+          kind: "COMPANY" as const,
+          ...baseRaw,
+          companyName: String(formData.get("companyName") ?? "").trim(),
+          companyDescription: String(formData.get("companyDescription") ?? "").trim(),
+          companyKind: String(formData.get("companyKind") ?? "STARTUP").trim().toUpperCase(),
+        }
+      : { kind: "PERSON" as const, ...baseRaw };
 
   const ip = await getClientIp();
   const userAgent = (await headers()).get("user-agent") ?? null;
@@ -316,6 +348,14 @@ export async function verifyAndSubmitApplication(
         country: data.country,
         motivation: data.motivation,
         referredBy: data.referredBy || null,
+        kind: data.kind,
+        // Solo COMPANY: persistimos los 3 campos extra. PERSON los deja null.
+        companyName: data.kind === "COMPANY" ? data.companyName : null,
+        companyDescription:
+          data.kind === "COMPANY"
+            ? (data.companyDescription?.toString().trim() || null)
+            : null,
+        companyKind: data.kind === "COMPANY" ? data.companyKind : null,
         emailVerifiedAt: new Date(),
       },
     });
@@ -351,6 +391,9 @@ export async function verifyAndSubmitApplication(
             email: application.email,
             country: application.country,
             emailVerified: true,
+            kind: application.kind,
+            companyName: application.companyName,
+            companyKind: application.companyKind,
           },
           ipAddress: ip,
           userAgent,

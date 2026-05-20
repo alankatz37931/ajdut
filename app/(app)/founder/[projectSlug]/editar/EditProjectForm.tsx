@@ -30,6 +30,9 @@ type Initial = {
   estrategiasPeriodicasUrl: string;
   estadosFinancierosUrl: string;
   estrategiaEmisionUrl: string;
+  policyShares: string;
+  policyDividends: string;
+  dividendsFrequency: string;
   availableShares: number;
 };
 
@@ -371,6 +374,50 @@ export function EditProjectForm({
                 maxLength={2000}
                 className="input"
                 placeholder="Cómo está repartida la propiedad: clases de acciones, founders, participaciones previas, opciones, etc."
+              />
+            </Field>
+          </section>
+
+          <section className="space-y-5 hairline-t pt-8">
+            <p className="eyebrow">Políticas</p>
+            <p className="text-navy/75 leading-relaxed">
+              Texto informativo que verán los miembros con acceso a la información del proyecto.
+              Todos los campos son opcionales.
+            </p>
+            <Field label="Política de acciones (opcional)" htmlFor="policyShares">
+              <textarea
+                id="policyShares"
+                name="policyShares"
+                rows={3}
+                maxLength={2000}
+                value={form.policyShares}
+                onChange={(e) => update("policyShares", e.target.value)}
+                placeholder="Cómo se emiten, transfieren o recompran las acciones. Restricciones, derechos de tag-along, etc."
+                className="input"
+              />
+            </Field>
+            <Field label="Política de dividendos (opcional)" htmlFor="policyDividends">
+              <textarea
+                id="policyDividends"
+                name="policyDividends"
+                rows={3}
+                maxLength={2000}
+                value={form.policyDividends}
+                onChange={(e) => update("policyDividends", e.target.value)}
+                placeholder="Cómo se calculan y distribuyen los dividendos. Reservas, reinversión, prioridades, etc."
+                className="input"
+              />
+            </Field>
+            <Field label="Frecuencia de dividendos (opcional)" htmlFor="dividendsFrequency">
+              <input
+                id="dividendsFrequency"
+                name="dividendsFrequency"
+                type="text"
+                maxLength={120}
+                value={form.dividendsFrequency}
+                onChange={(e) => update("dividendsFrequency", e.target.value)}
+                placeholder="Ej. Trimestral · Semestral · Anual · A definir según resultados"
+                className="input"
               />
             </Field>
           </section>
