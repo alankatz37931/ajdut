@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, DM_Mono } from "next/font/google";
 import "../styles/globals.css";
+// NOTE: i18n cookie no se lee acá. El root layout debe permanecer estático
+// para no romper la prerenderización (mismo motivo por el que el tema se
+// inyecta vía script bloqueante en el body). El `lang` queda en "es" — el
+// contenido inglés se sirve correctamente igual; un futuro Ola 7d puede
+// promover esto a dinámico vía generateMetadata / route handler dedicado.
 
 // Script bloqueante en <head>: lee la cookie `ajdut-theme` y aplica la clase
 // `dark` antes del primer paint. Patrón estándar de dark mode — sin FOUC y

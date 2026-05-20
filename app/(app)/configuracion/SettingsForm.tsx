@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import type { Dict } from "@/lib/i18n";
 import { savePreferencesAction } from "./actions";
 import type { Language, PreferredCurrency, Theme } from "@/lib/preferences";
 
@@ -9,6 +11,7 @@ type Props = {
   initialCurrency: PreferredCurrency;
   initialTheme: Theme;
   roleLabel: string;
+  dict: Dict["settings"];
 };
 
 export function SettingsForm({
@@ -16,7 +19,10 @@ export function SettingsForm({
   initialCurrency,
   initialTheme,
   roleLabel,
+  dict,
 }: Props) {
+  const router = useRouter();
+  const [language, setLanguage] = useState<Language>(initialLanguage);
   const [currency, setCurrency] = useState<PreferredCurrency>(initialCurrency);
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const [saved, setSaved] = useState(false);
@@ -24,9 +30,13 @@ export function SettingsForm({
 
   // Guardado instantáneo: cada cambio persiste solo (sin botón). Mismo
   // patrón que el resto de AJDUT (acciones inmediatas, sin "Guardar").
-  function persist(next: { currency?: PreferredCurrency; theme?: Theme }) {
+  function persist(next: {
+    currency?: PreferredCurrency;
+    theme?: Theme;
+    language?: Language;
+  }) {
     const fd = new FormData();
-    fd.set("language", initialLanguage);
+    fd.set("language", next.language ?? language);
     fd.set("currency", next.currency ?? currency);
     fd.set("theme", next.theme ?? theme);
     startTransition(async () => {
@@ -34,6 +44,12 @@ export function SettingsForm({
       if (r.ok) {
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
+        // Si cambió el idioma, refresheamos el server tree para que los
+        // diccionarios cargados en server components se recalculen con la
+        // nueva cookie.
+        if (next.language) {
+          router.refresh();
+        }
       }
     });
   }
@@ -49,42 +65,54 @@ export function SettingsForm({
     persist({ currency: next });
   }
 
+  function pickLanguage(next: Language) {
+    setLanguage(next);
+    persist({ language: next });
+  }
+
   return (
     <div className="mt-2">
       <div className="hairline-t">
-        <Row label="Rol">
+        <Row label={dict.roleLabel}>
           <span className="eyebrow !text-navy/40">{roleLabel}</span>
         </Row>
 
-        <Row label="Tema">
+        <Row label={dict.themeLabel}>
           <Segmented
             value={theme}
             options={[
-              { value: "light", content: <SunIcon />, aria: "Tema claro" },
-              { value: "dark", content: <MoonIcon />, aria: "Tema oscuro" },
+              { value: "light", content: <SunIcon />, aria: dict.themeLightAria },
+              { value: "dark", content: <MoonIcon />, aria: dict.themeDarkAria },
             ]}
             onChange={(v) => pickTheme(v as Theme)}
           />
         </Row>
 
-        <Row label="Moneda">
+        <Row label={dict.currencyLabel}>
           <Segmented
             value={currency}
             options={[
-              { value: "USD", content: "USD", aria: "Dólares" },
-              { value: "MXN", content: "MXN", aria: "Pesos" },
+              { value: "USD", content: "USD", aria: dict.currencyUsdAria },
+              { value: "MXN", content: "MXN", aria: dict.currencyMxnAria },
             ]}
             onChange={(v) => pickCurrency(v as PreferredCurrency)}
           />
         </Row>
 
-        <Row label="Idioma">
-          <span className="eyebrow !text-navy/40">Español</span>
+        <Row label={dict.languageLabel}>
+          <Segmented
+            value={language}
+            options={[
+              { value: "es", content: "ES", aria: dict.languageEsAria },
+              { value: "en", content: "EN", aria: dict.languageEnAria },
+            ]}
+            onChange={(v) => pickLanguage(v as Language)}
+          />
         </Row>
       </div>
 
       <div className="mt-4 h-4">
-        {saved && <span className="eyebrow !text-gold">✓ Guardado</span>}
+        {saved && <span className="eyebrow !text-gold">{dict.saved}</span>}
       </div>
     </div>
   );

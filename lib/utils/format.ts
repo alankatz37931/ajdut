@@ -4,25 +4,44 @@
  * - Deltas direccionales con caracteres monoespaciados (▲ ▼ −), no color emoji.
  */
 
-export function formatNumber(n: number | string | bigint, options?: Intl.NumberFormatOptions): string {
+// Locale por defecto para formato de números, moneda y fechas. Los call
+// sites más nuevos pueden pasar "en-US" (o cualquier BCP-47) cuando la
+// preferencia del viewer es inglés. Los call sites históricos siguen sin
+// pasar locale y respetan "es-MX" para no romper layouts existentes.
+const DEFAULT_LOCALE = "es-MX";
+
+export function formatNumber(
+  n: number | string | bigint,
+  options?: Intl.NumberFormatOptions,
+  locale: string = DEFAULT_LOCALE
+): string {
   const value = typeof n === "bigint" ? Number(n) : typeof n === "string" ? Number(n) : n;
-  return new Intl.NumberFormat("es-MX", {
+  return new Intl.NumberFormat(locale, {
     maximumFractionDigits: 2,
     ...options,
   }).format(value);
 }
 
-export function formatPercent(n: number, fractionDigits = 2): string {
-  return `${formatNumber(n, { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits })}%`;
+export function formatPercent(
+  n: number,
+  fractionDigits = 2,
+  locale: string = DEFAULT_LOCALE
+): string {
+  return `${formatNumber(
+    n,
+    { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits },
+    locale
+  )}%`;
 }
 
 export function formatCurrency(
   amount: number | string,
   currency = "USD",
-  fractionDigits = 2
+  fractionDigits = 2,
+  locale: string = DEFAULT_LOCALE
 ): string {
   const value = typeof amount === "string" ? Number(amount) : amount;
-  return new Intl.NumberFormat("es-MX", {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     minimumFractionDigits: fractionDigits,
@@ -40,18 +59,24 @@ export function formatDeltaSymbol(delta: number | null | undefined): "▲" | "�
   return delta > 0 ? "▲" : "▼";
 }
 
-export function formatDate(d: Date | string): string {
+export function formatDate(
+  d: Date | string,
+  locale: string = DEFAULT_LOCALE
+): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  return new Intl.DateTimeFormat("es-MX", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(date);
 }
 
-export function formatDateTime(d: Date | string): string {
+export function formatDateTime(
+  d: Date | string,
+  locale: string = DEFAULT_LOCALE
+): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  return new Intl.DateTimeFormat("es-MX", {
+  return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { updateNameAction, changePasswordAction } from "./actions";
 
 export function ProfileForm({
   initialName,
   initialAlias = "",
+  dict,
 }: {
   initialName: string;
   initialAlias?: string;
+  dict: Dict["profile"];
 }) {
   const [fullName, setFullName] = useState(initialName);
   const [savedName, setSavedName] = useState(initialName);
@@ -65,11 +68,11 @@ export function ProfileForm({
     <div className="hairline bg-paper-light p-5 sm:p-6 mt-2">
       {/* Datos básicos */}
       <form action={onSubmitName} className="space-y-3">
-        <p className="eyebrow">Datos básicos</p>
+        <p className="eyebrow">{dict.basicsTitle}</p>
 
         <div>
           <label htmlFor="fullName" className="eyebrow block mb-1.5">
-            Nombre completo
+            {dict.fullNameLabel}
           </label>
           <input
             id="fullName"
@@ -83,7 +86,8 @@ export function ProfileForm({
 
         <div>
           <label htmlFor="alias" className="eyebrow block mb-1.5">
-            Alias <span className="!text-navy/40">(cómo te ven los demás miembros)</span>
+            {dict.aliasLabel}{" "}
+            <span className="!text-navy/40">{dict.aliasHint}</span>
           </label>
           <input
             id="alias"
@@ -91,11 +95,11 @@ export function ProfileForm({
             value={alias}
             onChange={(e) => setAlias(e.target.value)}
             maxLength={60}
-            placeholder="Opcional — si lo dejás vacío, otros miembros ven tu nombre completo."
+            placeholder={dict.aliasPlaceholder}
             className={inputCls}
           />
           <p className="eyebrow !text-navy/40 mt-1.5">
-            Aparece en el cap table de los proyectos. Tu nombre real se sigue usando en tu propio certificado y portafolio.
+            {dict.aliasFootnote}
           </p>
         </div>
 
@@ -111,9 +115,9 @@ export function ProfileForm({
             disabled={isPending || !basicsDirty}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Guardando…" : "Guardar"}
+            {isPending ? dict.savingBtn : dict.saveBtn}
           </button>
-          {nameSuccess && <span className="eyebrow !text-gold">✓ Guardado</span>}
+          {nameSuccess && <span className="eyebrow !text-gold">{dict.savedFlag}</span>}
         </div>
       </form>
 
@@ -122,12 +126,12 @@ export function ProfileForm({
         action={onSubmitPassword}
         className="mt-6 hairline-t pt-6 space-y-3"
       >
-        <p className="eyebrow">Cambiar contraseña</p>
+        <p className="eyebrow">{dict.changePasswordTitle}</p>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="currentPassword" className="eyebrow block mb-1.5">
-              Actual
+              {dict.currentLabel}
             </label>
             <div className="relative">
               <input
@@ -143,13 +147,15 @@ export function ProfileForm({
               <EyeBtn
                 shown={showCurrent}
                 onToggle={() => setShowCurrent((v) => !v)}
+                showLabel={dict.showPasswordAria}
+                hideLabel={dict.hidePasswordAria}
               />
             </div>
           </div>
 
           <div>
             <label htmlFor="newPassword" className="eyebrow block mb-1.5">
-              Nueva
+              {dict.newLabel}
             </label>
             <div className="relative">
               <input
@@ -162,13 +168,18 @@ export function ProfileForm({
                 autoComplete="new-password"
                 className={`${inputCls} pr-9`}
               />
-              <EyeBtn shown={showNew} onToggle={() => setShowNew((v) => !v)} />
+              <EyeBtn
+                shown={showNew}
+                onToggle={() => setShowNew((v) => !v)}
+                showLabel={dict.showPasswordAria}
+                hideLabel={dict.hidePasswordAria}
+              />
             </div>
           </div>
 
         </div>
 
-        <p className="eyebrow !text-navy/40">Mínimo 10 caracteres.</p>
+        <p className="eyebrow !text-navy/40">{dict.pwHint}</p>
 
         {pwError && (
           <p className="eyebrow !text-navy" role="alert">
@@ -178,9 +189,9 @@ export function ProfileForm({
 
         <div className="flex items-center gap-4">
           <button type="submit" disabled={isPending} className="btn-primary disabled:opacity-50">
-            {isPending ? "Cambiando…" : "Cambiar contraseña"}
+            {isPending ? dict.changingBtn : dict.changePasswordBtn}
           </button>
-          {pwSuccess && <span className="eyebrow !text-gold">✓ Contraseña cambiada</span>}
+          {pwSuccess && <span className="eyebrow !text-gold">{dict.pwChangedFlag}</span>}
         </div>
       </form>
     </div>
@@ -188,12 +199,22 @@ export function ProfileForm({
 }
 
 /** Botón de ojo dentro del input (a la derecha) para ver/ocultar la clave. */
-function EyeBtn({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+function EyeBtn({
+  shown,
+  onToggle,
+  showLabel,
+  hideLabel,
+}: {
+  shown: boolean;
+  onToggle: () => void;
+  showLabel: string;
+  hideLabel: string;
+}) {
   return (
     <button
       type="button"
       onClick={onToggle}
-      aria-label={shown ? "Ocultar contraseña" : "Mostrar contraseña"}
+      aria-label={shown ? hideLabel : showLabel}
       aria-pressed={shown}
       tabIndex={-1}
       className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-navy/40 hover:text-navy transition-colors"

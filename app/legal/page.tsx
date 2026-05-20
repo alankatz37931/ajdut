@@ -1,61 +1,39 @@
 import type { Metadata } from "next";
+import { getDict } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Aviso legal · AJDUT",
 };
 
-export default function LegalPage() {
+export default async function LegalPage() {
+  const dict = await getDict();
+  const t = dict.legal;
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       {/* Hero */}
       <section className="pt-4 pb-3 sm:pt-5 sm:pb-4">
-        <p className="eyebrow">— Aviso legal</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
-          Términos y condiciones de uso
-        </h1>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
       </section>
 
-      <Section n="01" title="Naturaleza de la plataforma">
-        <p>
-          AJDUT es una herramienta de gestión, comunicación y certificación. No
-          procesa pagos, no custodia fondos y no es un mercado financiero. Toda
-          transacción económica entre las partes ocurre por fuera de la
-          plataforma.
-        </p>
+      <Section n="01" title={t.sections.nature.title}>
+        <p>{t.sections.nature.body}</p>
       </Section>
 
-      <Section n="02" title="Gatekeeping">
-        <p>
-          El acceso a AJDUT requiere aplicación previa y aprobación manual del
-          equipo. No existe registro abierto.
-        </p>
+      <Section n="02" title={t.sections.gatekeeping.title}>
+        <p>{t.sections.gatekeeping.body}</p>
       </Section>
 
-      <Section n="03" title="Stake institucional">
-        <p>
-          AJDUT mantiene una participación económica del 10% en cada proyecto
-          activo. Esta proporción queda documentada en el Platform Equity
-          Agreement firmado entre AJDUT y el founder al momento de aprobación.
-        </p>
+      <Section n="03" title={t.sections.stake.title}>
+        <p>{t.sections.stake.body}</p>
       </Section>
 
-      <Section n="04" title="Distribuciones">
-        <p>
-          AJDUT no procesa, custodia ni facilita el pago de distribuciones de
-          dividendos. Los fondos se transfieren fuera de la plataforma según los
-          términos acordados entre founder y miembro. AJDUT registra la
-          declaración, el envío y la recepción con fines de trazabilidad y
-          auditoría. El founder es responsable de las retenciones fiscales
-          aplicables.
-        </p>
+      <Section n="04" title={t.sections.distributions.title}>
+        <p>{t.sections.distributions.body}</p>
       </Section>
 
-      <Section n="05" title="Reventa de participaciones">
-        <p>
-          Las reventas son comunicativas. El cierre se realiza fuera de la
-          plataforma. El cambio de titularidad se ejecuta únicamente tras
-          validación del Admin con doble firma cuando corresponda.
-        </p>
+      <Section n="05" title={t.sections.resale.title}>
+        <p>{t.sections.resale.body}</p>
       </Section>
     </div>
   );

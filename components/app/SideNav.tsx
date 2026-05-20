@@ -20,17 +20,23 @@ export type NavItem = {
   pinBottom?: boolean;
 };
 
+/** Sub-dict que el server component padre (AppShell) pasa como prop. */
+export type SideNavLabels = {
+  openMenu: string;
+  closeMenu: string;
+  logout: string;
+};
+
 type Props = {
   user: { name: string; email: string };
   navItems: NavItem[];
+  labels: SideNavLabels;
 };
 
-export function SideNav({ user, navItems }: Props) {
+export function SideNav({ user, navItems, labels }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? "";
 
-  // Lock del scroll del body cuando el drawer mobile está abierto: sin esto,
-  // el contenido detrás del overlay sigue scrolleando.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -40,8 +46,6 @@ export function SideNav({ user, navItems }: Props) {
     };
   }, [open]);
 
-  // Si cambia la ruta con el drawer abierto, lo cerramos para no dejarlo abierto sobre la
-  // página nueva. (Los Link ya llaman close(), pero esto cubre nav externa.)
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
@@ -58,11 +62,9 @@ export function SideNav({ user, navItems }: Props) {
   const displayName = user.name ?? user.email;
   const compactName = displayName.split("@")[0] ?? displayName;
 
-  // Separar items que van arriba vs. anclados al fondo del nav
   const topItems = navItems.filter((i) => !i.pinBottom);
   const bottomItems = navItems.filter((i) => i.pinBottom);
 
-  // Agrupar los top items si tienen `group`
   const grouped = new Map<string, NavItem[]>();
   for (const item of topItems) {
     const key = item.group ?? "";
@@ -113,7 +115,7 @@ export function SideNav({ user, navItems }: Props) {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            aria-label="Abrir menú"
+            aria-label={labels.openMenu}
             className="text-navy text-xl leading-none p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
             ☰
@@ -145,7 +147,7 @@ export function SideNav({ user, navItems }: Props) {
           <button
             type="button"
             onClick={close}
-            aria-label="Cerrar menú"
+            aria-label={labels.closeMenu}
             className="md:hidden text-navy text-lg leading-none p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
             ✕
@@ -188,7 +190,7 @@ export function SideNav({ user, navItems }: Props) {
             onClick={() => signOut({ callbackUrl: "/" })}
             className="mt-2 eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer leading-none"
           >
-            Cerrar sesión
+            {labels.logout}
           </button>
         </div>
       </aside>

@@ -1,47 +1,50 @@
 import type { Metadata } from "next";
+import { getDict, getLanguage } from "@/lib/i18n";
 
+// Metadata estática: el dict no llega acá. El metaTitle/metaDescription
+// traducibles vienen del dict y se aplican en el JSX para SEO de la página.
+// TODO i18n: promover a generateMetadata cuando se ajuste la prerender policy.
 export const metadata: Metadata = {
   title: "Sobre nosotros · AJDUT",
   description:
     "Ajdut coordina comunidades de negocio donde personas reales construyen valor real, juntos. Transparencia, unidad, valor y legado.",
 };
 
-export default function NosotrosPage() {
+export default async function NosotrosPage() {
+  const dict = await getDict();
+  const language = await getLanguage();
+  const t = dict.nosotros;
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       {/* Hero */}
       <section className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Sobre nosotros</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
-          Coordinamos comunidades de negocios.
-        </h1>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
         <p className="mt-4 sm:mt-5 text-base sm:text-lg text-navy/80 leading-relaxed">
-          “Ajdut” proviene del hebreo antiguo y significa unidad, hermandad,
-          acuerdo. Es un espacio donde proyectos con visión —respaldados por su
-          tracción, su comunidad, sus sistemas, su marca o sus activos—
-          encuentran a las personas correctas para crecer.
+          {t.intro}
         </p>
-        <p className="mt-3 eyebrow !text-navy/50">
-          Transparencia · Unidad · Valor
-        </p>
+        <p className="mt-3 eyebrow !text-navy/50">{t.values}</p>
       </section>
 
-      {/* Origen */}
-      <Section n="01" title="Origen">
-        <p>
-          Ajdut no es un fondo, no es un banco, no es un exchange. Es una
-          plataforma de comunidades de negocio donde el valor —tangible o
-          intangible— es real, tiene respaldo genuino y personas responsables
-          detrás.
-        </p>
-        <p className="mt-4">
-          Tomamos el lenguaje intuitivo de los activos digitales
-          —participaciones, portafolio, rendimiento— y lo aterrizamos en
-          negocios con propósito, personas que comparten visión y una comunidad
-          que se conoce, se comunica y rinde cuentas. No prometemos magia.
-          Prometemos orden, transparencia y comunidad.
-        </p>
+      {/* Origen — traducido. */}
+      <Section n="01" title={t.origin.title}>
+        <p>{t.origin.body1}</p>
+        <p className="mt-4">{t.origin.body2}</p>
       </Section>
+
+      {/* Resto del contenido: piezas largas y de manual de marca. Para Ola 7c
+          quedan en español; los headings se sirven igual en ambos idiomas
+          ("Propósito", "Lo que somos", "Valores", "Lenguaje de participaciones")
+          porque son palabras cortas que ya están en el cuerpo del manual.
+          TODO i18n: traducir cards / values / términos cuando se localice
+          el contenido del manual de marca. */}
+      {language === "en" && (
+        <p className="hairline-t py-3 sm:py-4 text-sm text-navy/60 italic">
+          {/* Aviso visible solo en inglés: el resto del contenido aún no está
+              traducido del manual de marca. */}
+          The sections below are presented in the original Spanish from our brand manual.
+        </p>
+      )}
 
       {/* Misión / Visión / Propuesta */}
       <Section n="02" title="Propósito">

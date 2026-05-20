@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import type { Dict } from "@/lib/i18n";
 import { manifestInterestAction } from "./actions";
 
 type Props = {
@@ -13,6 +14,9 @@ type Props = {
   valuation: number | null;
   totalShares: number;
   currency: string;
+  dict: Dict["interestForm"];
+  /** BCP-47 locale para formatear el monto/cantidades acorde al idioma del viewer. */
+  locale: string;
 };
 
 export function InterestForm({
@@ -23,11 +27,11 @@ export function InterestForm({
   valuation,
   totalShares,
   currency,
+  dict,
+  locale,
 }: Props) {
   const [open, setOpen] = useState(false);
 
-  // El botón "Me interesa participar →" del header es un ancla a #comprar.
-  // Al apretarlo (o si se entra con ese hash) abrimos esta sección.
   useEffect(() => {
     const check = () => {
       if (window.location.hash === "#comprar") setOpen(true);
@@ -37,9 +41,6 @@ export function InterestForm({
     return () => window.removeEventListener("hashchange", check);
   }, []);
 
-  // Al cerrar limpiamos el hash para que (a) volver a apretar el botón del
-  // header dispare otro `hashchange` y reabra, y (b) los tabs reaparezcan.
-  // `replaceState` NO emite `hashchange`, así que lo despachamos a mano.
   function close() {
     setOpen(false);
     if (window.location.hash === "#comprar") {
@@ -60,8 +61,6 @@ export function InterestForm({
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Precio por acción derivado de la valoración declarada.
-  // Si no hay valoración, este form queda en modo "no disponible".
   const pricePerShare =
     valuation && totalShares > 0 ? valuation / totalShares : null;
 
@@ -83,38 +82,36 @@ export function InterestForm({
   const minAmount = pricePerShare ? pricePerShare : null;
 
   function fmtMoney(n: number): string {
-    return new Intl.NumberFormat("es-MX", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       maximumFractionDigits: 2,
     }).format(n);
   }
   function fmtInt(n: number): string {
-    return n.toLocaleString("es-MX");
+    return n.toLocaleString(locale);
   }
 
   function submit(formData: FormData) {
     setError(null);
 
     if (!pricePerShare) {
-      setError(
-        "Este proyecto todavía no declaró su valoración — no podés indicar un monto."
-      );
+      setError(dict.errorNoValuation);
       return;
     }
     if (!inputValid) {
       setError(
         minAmount
-          ? `Mínimo: ${fmtMoney(minAmount)} (1 acción).`
-          : "Ingresá un monto válido."
+          ? `${dict.errorMinAmount} ${fmtMoney(minAmount)} ${dict.errorOneShare}.`
+          : dict.errorEnterValid
       );
       return;
     }
     if (overAvailable) {
       setError(
         maxAmount
-          ? `El monto excede lo disponible. Máximo: ${fmtMoney(maxAmount)}.`
-          : `Máximo disponible: ${fmtInt(maxShares)} acciones.`
+          ? `${dict.errorOverMax} ${fmtMoney(maxAmount)}.`
+          : `${dict.errorMaxShares} ${fmtInt(maxShares)} ${dict.sharesShort}.`
       );
       return;
     }
@@ -136,37 +133,29 @@ export function InterestForm({
   if (success) {
     return (
       <div className="mt-4 hairline p-5 bg-paper-light">
-        <p className="eyebrow">Interés registrado</p>
-        <p className="mt-3 font-sans text-h2 text-navy">Gracias.</p>
-        <p className="mt-3 text-navy/75 leading-relaxed">
-          El founder del proyecto recibió tu interés. Si avanza, te va a contactar al email con el
-          que estás registrado en AJDUT.
-        </p>
+        <p className="eyebrow">{dict.successEyebrow}</p>
+        <p className="mt-3 font-sans text-h2 text-navy">{dict.successTitle}</p>
+        <p className="mt-3 text-navy/75 leading-relaxed">{dict.successBody}</p>
       </div>
     );
   }
 
-  // Cerrada: no renderiza nada. Se abre con el botón del header (#comprar).
   if (!open) return null;
 
-  // Sin valoración declarada: estado claro y form deshabilitado.
   if (!pricePerShare) {
     return (
       <div className="mt-4 hairline p-5 bg-paper-light">
         <div className="flex items-center justify-between gap-3">
-          <p className="eyebrow">Participación no disponible aún</p>
+          <p className="eyebrow">{dict.notAvailableYet}</p>
           <button
             type="button"
             onClick={close}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            ← Volver
+            {dict.backShort}
           </button>
         </div>
-        <p className="mt-3 text-navy/75 leading-relaxed">
-          Este proyecto todavía no declaró su valoración — no podés indicar un monto.
-          Volvé a revisar más adelante; el founder publicará la valoración cuando esté lista.
-        </p>
+        <p className="mt-3 text-navy/75 leading-relaxed">{dict.noValuationBody}</p>
       </div>
     );
   }
@@ -174,23 +163,21 @@ export function InterestForm({
   return (
     <form action={submit} className="mt-4 hairline p-5 bg-paper-light">
       <div className="flex items-center justify-between gap-3">
-        <p className="eyebrow">Quiero más información</p>
+        <p className="eyebrow">{dict.title}</p>
         <button
           type="button"
           onClick={close}
           disabled={isPending}
           className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
         >
-          ← Volver
+          {dict.backShort}
         </button>
       </div>
 
-      {/* Cluster principal: el monto es el foco */}
       <div className="mt-4 space-y-3">
-        {/* Tipo de apoyo */}
         <div>
           <label htmlFor="supportKind" className="eyebrow block mb-1.5">
-            Tipo de apoyo
+            {dict.supportKindLabel}
           </label>
           <select
             id="supportKind"
@@ -208,18 +195,17 @@ export function InterestForm({
             }
             className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
           >
-            <option value="CAPITAL">Capital</option>
-            <option value="SPONSOR">Sponsor</option>
-            <option value="AMBASSADOR">Embajador</option>
-            <option value="ADVISOR">Advisor</option>
-            <option value="OTHER">Otro</option>
+            <option value="CAPITAL">{dict.supportKind.CAPITAL}</option>
+            <option value="SPONSOR">{dict.supportKind.SPONSOR}</option>
+            <option value="AMBASSADOR">{dict.supportKind.AMBASSADOR}</option>
+            <option value="ADVISOR">{dict.supportKind.ADVISOR}</option>
+            <option value="OTHER">{dict.supportKind.OTHER}</option>
           </select>
         </div>
 
-        {/* Input protagonista: número grande */}
         <div>
           <label htmlFor="amount" className="eyebrow block mb-1.5">
-            ¿Con qué monto querés participar?
+            {dict.amountLabel}
           </label>
           <div className="flex items-stretch hairline bg-paper">
             <span className="self-center px-4 font-mono text-lg text-navy/40">
@@ -235,7 +221,7 @@ export function InterestForm({
               onChange={(e) => setAmount(e.target.value)}
               required
               autoFocus
-              placeholder="0.00"
+              placeholder={dict.amountPlaceholder}
               className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-2 font-mono text-xl text-navy bg-transparent focus:outline-none"
             />
           </div>
@@ -243,14 +229,13 @@ export function InterestForm({
 
         <p className="eyebrow !text-navy/40">
           {maxAmount !== null
-            ? `Máximo ${fmtMoney(maxAmount)} · ${fmtInt(maxShares)} acciones`
-            : `Máximo ${fmtInt(maxShares)} acciones disponibles`}
+            ? `${dict.maxOf} ${fmtMoney(maxAmount)} · ${fmtInt(maxShares)} ${dict.sharesShort}`
+            : `${dict.maxOf} ${fmtInt(maxShares)} ${dict.sharesAvailableSuffix}`}
         </p>
 
-        {/* Equivale / Precio — estilo KPI, consistente con el resto */}
         <div className="grid grid-cols-2 gap-px bg-line">
           <div className="bg-paper px-3 py-2">
-            <p className="eyebrow !text-navy/40">Equivale a</p>
+            <p className="eyebrow !text-navy/40">{dict.equivalentTo}</p>
             <p className="mt-0.5 font-mono text-base">
               {inputValid ? (
                 <span
@@ -261,7 +246,7 @@ export function InterestForm({
                   }
                 >
                   {`${fmtInt(computedShares)} ${
-                    computedShares === 1 ? "acción" : "acciones"
+                    computedShares === 1 ? dict.sharesSingular : dict.sharesPlural
                   }`}
                 </span>
               ) : (
@@ -270,12 +255,12 @@ export function InterestForm({
             </p>
             {inputValid && !overAvailable && computedAmount > 0 && (
               <p className="mt-0.5 eyebrow !text-navy/40">
-                {fmtMoney(computedAmount)} efectivos
+                {fmtMoney(computedAmount)} {dict.effectiveSuffix}
               </p>
             )}
           </div>
           <div className="bg-paper px-3 py-2">
-            <p className="eyebrow !text-navy/40">Precio por acción</p>
+            <p className="eyebrow !text-navy/40">{dict.pricePerShare}</p>
             <p className="mt-0.5 font-mono text-base text-navy">
               {fmtMoney(pricePerShare)}
             </p>
@@ -283,10 +268,10 @@ export function InterestForm({
         </div>
       </div>
 
-      {/* Mensaje (secundario) */}
       <div className="mt-4 hairline-t pt-4">
         <label htmlFor="message" className="eyebrow block mb-1.5">
-          Mensaje al founder <span className="!text-navy/40">(opcional)</span>
+          {dict.messageLabel}{" "}
+          <span className="!text-navy/40">{dict.messageOptional}</span>
         </label>
         <textarea
           id="message"
@@ -295,7 +280,7 @@ export function InterestForm({
           maxLength={2000}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder={`Mi nombre es ${viewerName.trim() || "[tu nombre]"} y me interesa participar en ${projectName} porque…`}
+          placeholder={`${dict.messagePlaceholderPrefix} ${viewerName.trim() || dict.yourNameFallback} ${dict.messagePlaceholderInfix} ${projectName} ${dict.messagePlaceholderSuffix}`}
           className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
         />
         <span className="eyebrow mt-1.5 block !text-navy/40">
@@ -315,7 +300,7 @@ export function InterestForm({
           disabled={isPending || !inputValid || overAvailable}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Enviando…" : "Enviar solicitud"}
+          {isPending ? dict.sending : dict.send}
         </button>
         <button
           type="button"
@@ -323,13 +308,12 @@ export function InterestForm({
           disabled={isPending}
           className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
         >
-          Cancelar
+          {dict.cancel}
         </button>
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-navy/40">
-        AJDUT no procesa pagos. El cierre se realiza por fuera de la plataforma
-        según los términos que acuerdes con el founder.
+        {dict.footerNote}
       </p>
     </form>
   );

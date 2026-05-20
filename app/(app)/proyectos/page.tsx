@@ -4,25 +4,8 @@ import type { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { formatCurrency, formatNumber } from "@/lib/utils/format";
+import { getDict, getLocale } from "@/lib/i18n";
 import { ProjectFilters } from "./ProjectFilters";
-
-const STAGE_LABEL: Record<string, string> = {
-  IDEA: "Idea",
-  PRE_SEED: "Pre-seed",
-  SEED: "Seed",
-  EARLY_REVENUE: "Early revenue",
-  GROWTH: "Growth",
-  SCALE: "Scale",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  DRAFT: "Borrador",
-  PENDING_APPROVAL: "Pendiente",
-  ACTIVE: "Activo",
-  SUSPENDED: "Suspendido",
-  CLOSED: "Cerrado",
-  ARCHIVED: "Archivado",
-};
 
 // Orden de visualización para la lista (admin ve todos los estados).
 const STATUS_RANK: Record<string, number> = {
@@ -46,6 +29,9 @@ export default async function ProjectsDiscoveryPage({
   const user = await requireSession();
   const isAdmin = user.role === "ADMIN";
   const sp = await searchParams;
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.projectList;
 
   const q = (sp.q ?? "").trim();
 
@@ -92,34 +78,37 @@ export default async function ProjectsDiscoveryPage({
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— AJDUT</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Proyectos</h1>
+        <p className="eyebrow">{t.eyebrowMember}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
         {isAdmin ? (
           pendingCount > 0 && (
             <p className="mt-3 font-mono text-sm text-navy/75">
-              {pendingCount} pendiente{pendingCount === 1 ? "" : "s"} de aprobación
+              {pendingCount}{" "}
+              {pendingCount === 1 ? t.pendingApprovalSingular : t.pendingApproval}
             </p>
           )
         ) : (
-          <p className="mt-3 max-w-2xl text-navy/75 leading-relaxed">
-            Todos los proyectos en AJDUT son aprobados manualmente. Si te interesa una idea y los
-            números cierran para vos, podés decir “me interesa participar” desde la página del
-            proyecto.
-          </p>
+          <p className="mt-3 max-w-2xl text-navy/75 leading-relaxed">{t.intro}</p>
         )}
       </header>
 
       <div className="mt-2">
-        <ProjectFilters />
+        <ProjectFilters
+          dict={{
+            searchLabel: t.searchLabel,
+            searchClear: t.searchClear,
+            searchPlaceholder: t.searchPlaceholder,
+          }}
+        />
       </div>
 
       {projects.length === 0 ? (
         <p className="mt-6 text-navy/60">
           {hasFilters
-            ? "Ningún proyecto coincide con los filtros aplicados."
+            ? t.noneFiltered
             : isAdmin
-              ? "Aún no hay proyectos creados en AJDUT."
-              : "Aún no hay proyectos activos en AJDUT."}
+              ? t.noneAdmin
+              : t.noneMember}
         </p>
       ) : (
         <ul className="mt-6 hairline-t">
@@ -146,13 +135,13 @@ export default async function ProjectsDiscoveryPage({
                     <p className="eyebrow">
                       {p.startupProfile?.sector ?? p.kind}
                       {p.startupProfile?.stage &&
-                        ` · ${STAGE_LABEL[p.startupProfile.stage]}`}
+                        ` · ${t.stage[p.startupProfile.stage] ?? p.startupProfile.stage}`}
                       {isAdmin && p.status !== "ACTIVE" && (
                         <span
                           className={isPending ? "!text-gold" : "!text-navy/50"}
                         >
                           {" · "}
-                          {STATUS_LABEL[p.status]}
+                          {t.status[p.status] ?? p.status}
                         </span>
                       )}
                     </p>
@@ -174,31 +163,32 @@ export default async function ProjectsDiscoveryPage({
                   </div>
 
                   <div className="col-span-5 sm:col-span-3">
-                    <p className="eyebrow !text-navy/40">Valoración</p>
+                    <p className="eyebrow !text-navy/40">{t.colValuation}</p>
                     <p className="mt-0.5 font-mono text-sm text-navy">
                       {p.startupProfile?.preMoneyValuation
                         ? formatCurrency(
                             Number(p.startupProfile.preMoneyValuation),
                             p.startupProfile.valuationCurrency,
-                            0
+                            0,
+                            locale
                           )
                         : "—"}
                     </p>
                   </div>
 
                   <div className="col-span-5 sm:col-span-2">
-                    <p className="eyebrow !text-navy/40">Disponibles</p>
+                    <p className="eyebrow !text-navy/40">{t.colAvailable}</p>
                     <p className="mt-0.5 font-mono text-sm text-navy">
-                      {formatNumber(available)}{" "}
+                      {formatNumber(available, undefined, locale)}{" "}
                       <span className="eyebrow !text-navy/40">
-                        de {formatNumber(total)}
+                        {t.of} {formatNumber(total, undefined, locale)}
                       </span>
                     </p>
                   </div>
 
                   <div className="col-span-2 sm:col-span-1 self-center text-right">
                     <span className="eyebrow !text-gold">
-                      {isPending ? "Revisar →" : "→"}
+                      {isPending ? t.review : "→"}
                     </span>
                   </div>
 
