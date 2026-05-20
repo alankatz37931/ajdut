@@ -47,14 +47,34 @@ export default async function FounderAvisosPage({ params }: Params) {
       currentOwnerId: { not: null },
       status: { in: [...ASSIGNED_STATUSES] },
     },
-    select: { currentOwner: { select: { email: true } } },
+    select: {
+      currentOwner: {
+        select: { id: true, email: true, fullName: true, alias: true },
+      },
+    },
   });
-  const memberEmails = new Set<string>();
+
+  // Agrupamos por userId — un mismo socio puede tener varias participations.
+  // El label muestra alias si está; sino fullName. El email solo se usa para
+  // info en el form (la action resuelve email desde el userId).
+  const memberMap = new Map<
+    string,
+    { userId: string; label: string; email: string }
+  >();
   for (const p of memberParts) {
-    const email = p.currentOwner?.email;
-    if (email) memberEmails.add(email);
+    const o = p.currentOwner;
+    if (!o || !o.email) continue;
+    if (memberMap.has(o.id)) continue;
+    memberMap.set(o.id, {
+      userId: o.id,
+      label: o.alias ?? o.fullName,
+      email: o.email,
+    });
   }
-  const memberCount = memberEmails.size;
+  const members = [...memberMap.values()].sort((a, b) =>
+    a.label.localeCompare(b.label, "es")
+  );
+  const memberCount = members.length;
 
   return (
     <div className="max-w-3xl">
@@ -66,8 +86,8 @@ export default async function FounderAvisosPage({ params }: Params) {
         <p className="eyebrow">— Founder</p>
         <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Avisos a miembros</h1>
         <p className="mt-3 text-navy/75 leading-relaxed">
-          Enviá un email a todos los miembros de tu proyecto para avisar reportes, votaciones o
-          información relevante.
+          Enviá un email a todos los miembros de tu proyecto, o a uno en particular, para
+          avisar reportes, votaciones o información relevante.
         </p>
       </header>
 
@@ -77,7 +97,11 @@ export default async function FounderAvisosPage({ params }: Params) {
           acciones, vas a poder enviarles avisos desde acá.
         </p>
       ) : (
-        <AvisoForm projectSlug={project.slug} memberCount={memberCount} />
+        <AvisoForm
+          projectSlug={project.slug}
+          memberCount={memberCount}
+          members={members}
+        />
       )}
     </div>
   );

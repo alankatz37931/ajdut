@@ -10,6 +10,8 @@ import {
   ValidationError,
 } from "./errors";
 
+type Tx = Prisma.TransactionClient;
+
 export type AssignFromLeadInput = {
   leadId: string;
   actorId: string;          // founder dueño del proyecto
@@ -208,4 +210,189 @@ export async function assignSharesFromLead(
       certificateId: certificate.id,
     };
   });
+}
+
+// ─── Asignación directa (founder invita y asigna en un solo paso) ──
+
+export type AssignSharesToInvestorInput = {
+  tx: Tx;                  // operación encadenada con la creación del User en la invitación
+  projectId: string;
+  projectSlug: string;
+  actorId: string;         // founder dueño del proyecto (o admin actuando en nombre)
+  toUserId: string;        // destinatario de las acciones
+  shareCount: number;
+  reason?: string;
+  effectiveAt?: Date;
+};
+
+export type AssignSharesToInvestorResult = {
+  participationId: string;
+  newSerial: string;
+  shareCount: number;
+  certificateId: string;
+  certificateSerial: string;
+};
+
+/**
+ * Asigna `shareCount` acciones desde el pool AVAILABLE de un proyecto a un
+ * inversor. Operación atómica dentro de la transacción `tx` provista. Se usa
+ * desde el flujo de invitación directa del founder (no pasa por Lead).
+ *
+ * No valida que el actor sea el founder — la decisión de autorización vive
+ * en el caller (la action lo verifica vía getProjectAccess). Acá nos
+ * concentramos en mantener la consistencia del pool + emitir certificate +
+ * registrar OwnershipHistory + auditoría.
+ */
+export async function assignSharesToInvestor(
+  input: AssignSharesToInvestorInput
+): Promise<AssignSharesToInvestorResult> {
+  const { tx } = input;
+  if (input.shareCount < 1) {
+    throw new ValidationError("shareCount", "Cantidad inválida.");
+  }
+
+  const project = await tx.project.findUnique({
+    where: { id: input.projectId },
+    select: { id: true, slug: true, status: true },
+  });
+  if (!project) throw new NotFoundError("Project", input.projectId);
+  if (project.status !== "ACTIVE") {
+    throw new InvariantViolation(
+      "PR_05_PROJECT_INACTIVE",
+      "El proyecto no está activo; no se pueden asignar acciones."
+    );
+  }
+
+  const pool = await tx.participation.findFirst({
+    where: { projectId: project.id, status: "AVAILABLE" },
+  });
+  if (!pool) {
+    throw new InvariantViolation(
+      "PA_01_NO_POOL",
+      "Este proyecto no tiene pool de acciones disponibles."
+    );
+  }
+  if (pool.shareCount < input.shareCount) {
+    throw new ValidationError(
+      "shareCount",
+      `Solo hay ${pool.shareCount} acciones disponibles (pedido: ${input.shareCount}).`
+    );
+  }
+
+  const investor = await tx.user.findUnique({
+    where: { id: input.toUserId },
+    select: { id: true, isActive: true, deletedAt: true },
+  });
+  if (!investor) throw new NotFoundError("User", input.toUserId);
+  if (!investor.isActive || investor.deletedAt) {
+    throw new ForbiddenError("El usuario destinatario no tiene cuenta activa.");
+  }
+
+  const effectiveAt = input.effectiveAt ?? new Date();
+
+  // 1. Decrementar el pool
+  const remaining = pool.shareCount - input.shareCount;
+  if (remaining === 0) {
+    await tx.participation.delete({ where: { id: pool.id } });
+  } else {
+    await tx.participation.update({
+      where: { id: pool.id },
+      data: { shareCount: remaining },
+    });
+  }
+
+  // 2. Crear participation asignada
+  const serial = `AJDUT-${project.slug.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+  const participation = await tx.participation.create({
+    data: {
+      projectId: project.id,
+      serialCode: serial,
+      shareCount: input.shareCount,
+      status: "ASSIGNED",
+      currentOwnerId: investor.id,
+      isPlatformStake: false,
+      acquiredAt: effectiveAt,
+    },
+  });
+
+  // 3. OwnershipHistory inmutable
+  const reason =
+    input.reason ??
+    `Asignación directa por invitación del founder — ${input.shareCount} acciones.`;
+  const payload = {
+    participationId: participation.id,
+    fromUserId: null,
+    toUserId: investor.id,
+    authorizedById: input.actorId,
+    coAuthorizedById: null,
+    reason,
+    resaleListingId: null,
+    effectiveAt: effectiveAt.toISOString(),
+  };
+  const blockHash = computeBlockHash(payload, null);
+
+  await tx.ownershipHistory.create({
+    data: {
+      participationId: participation.id,
+      fromUserId: null,
+      toUserId: investor.id,
+      authorizedById: input.actorId,
+      coAuthorizedById: null,
+      reason,
+      resaleListingId: null,
+      effectiveAt,
+      blockHash,
+      prevHash: null,
+    },
+  });
+
+  // 4. Certificate básico
+  const certSerial = `CERT-${serial}`;
+  const watermarkSeed = createHash("sha256")
+    .update(participation.id + effectiveAt.toISOString())
+    .digest("hex")
+    .slice(0, 16);
+  const disclaimerHash = "v1:certificate-default";
+
+  const certificate = await tx.certificate.create({
+    data: {
+      participationId: participation.id,
+      issuedToUserId: investor.id,
+      serialCode: certSerial,
+      pdfStorageKey: "",
+      watermarkSeed,
+      disclaimerHash,
+    },
+  });
+
+  // 5. Auditoría
+  await recordAudit(tx, {
+    actorId: input.actorId,
+    projectId: project.id,
+    action: "PARTICIPATION.ASSIGNED",
+    entityType: "Participation",
+    entityId: participation.id,
+    payload: {
+      source: "INVITE",
+      toUserId: investor.id,
+      shareCount: input.shareCount,
+      serial,
+    },
+  });
+  await recordAudit(tx, {
+    actorId: input.actorId,
+    projectId: project.id,
+    action: "CERTIFICATE.ISSUED",
+    entityType: "Certificate",
+    entityId: certificate.id,
+    payload: { participationId: participation.id, serial: certSerial },
+  });
+
+  return {
+    participationId: participation.id,
+    newSerial: serial,
+    shareCount: input.shareCount,
+    certificateId: certificate.id,
+    certificateSerial: certSerial,
+  };
 }
