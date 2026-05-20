@@ -45,7 +45,7 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
         <p className="eyebrow !text-gold">Confirmar aprobación</p>
         <p className="text-navy/85 leading-relaxed">
           Al aprobar, AJDUT emite automáticamente el <strong>10%</strong> institucional y el resto
-          queda como pool de acciones disponibles para inversores. Esta acción no se puede revertir
+          queda como pool de acciones disponibles para los miembros. Esta acción no se puede revertir
           desde la UI.
         </p>
         {error && (
@@ -109,8 +109,8 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
       <p className="eyebrow">Moderación · proyecto pendiente</p>
       <p className="text-navy/75 leading-relaxed">
         Este proyecto fue creado por el founder y espera tu aprobación. Al aprobar, AJDUT emite
-        automáticamente el 10% institucional y crea el pool de acciones disponibles para
-        inversores.
+        automáticamente el 10% institucional y crea el pool de acciones disponibles para los
+        miembros.
       </p>
       <div className="flex flex-wrap gap-3">
         <button

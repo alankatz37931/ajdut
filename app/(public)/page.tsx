@@ -21,7 +21,7 @@ export default function HomePage() {
           <p className="mt-3 sm:mt-4 max-w-2xl text-base sm:text-lg text-navy/80 leading-relaxed">
             AJDUT no procesa pagos ni custodia fondos. Es la herramienta de gestión,
             comunicación y certificación que respalda proyectos reales — startups,
-            inmobiliarios y de mercancía — para sus socios.
+            inmobiliarios y de mercancía — para sus miembros.
           </p>
 
           <div className="mt-5 sm:mt-6 flex flex-col items-stretch sm:items-center gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
@@ -45,7 +45,7 @@ export default function HomePage() {
         <Pillar
           number="02"
           title="Reportes trimestrales"
-          body="Documentos firmados con URL privada y marca de agua dinámica. Acceso solo para socios del proyecto."
+          body="Documentos firmados con URL privada y marca de agua dinámica. Acceso solo para miembros del proyecto."
         />
         <Pillar
           number="03"

@@ -9,6 +9,12 @@ import {
   type ApproveResult,
 } from "./actions";
 
+const ROLE_LABEL: Record<"PARTNER" | "PROJECT_OWNER" | "CO_ADMIN", string> = {
+  PARTNER: "Miembro",
+  PROJECT_OWNER: "Founder",
+  CO_ADMIN: "Co-admin",
+};
+
 export function ApplicationReviewActions({
   applicationId,
 }: {
@@ -126,7 +132,7 @@ export function ApplicationReviewActions({
                   onChange={() => setApprovedRole(r)}
                   className="sr-only"
                 />
-                <span className="eyebrow">{r}</span>
+                <span className="eyebrow">{ROLE_LABEL[r]}</span>
               </label>
             ))}
           </div>

@@ -279,7 +279,7 @@ export function NewProjectForm() {
             maxLength={2000}
             value={form.equityStructureNote}
             onChange={(e) => update("equityStructureNote", e.target.value)}
-            placeholder="Cómo está repartida la propiedad: clases de acciones, founders, inversores previos, opciones, etc."
+            placeholder="Cómo está repartida la propiedad: clases de acciones, founders, participaciones previas, opciones, etc."
             className="input"
           />
         </Field>
@@ -355,7 +355,7 @@ export function NewProjectForm() {
         <p className="text-navy/75 leading-relaxed">
           A partir de la valoración calculamos el precio por acción (múltiplo de 10) y el total de
           acciones de tu empresa. AJDUT mantiene el 10% institucional; el resto queda como pool
-          disponible para inversores.
+          disponible para los miembros.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Monto" htmlFor="preMoneyValuation">

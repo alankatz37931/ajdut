@@ -47,7 +47,7 @@ export async function createInterestLead(input: CreateInterestInput) {
   // Cualquier usuario autenticado puede manifestar interés excepto el rol
   // institucional PLATFORM (que no es un humano real).
   if (user.role === "PLATFORM") {
-    throw new ForbiddenError("El usuario institucional no puede comprar acciones.");
+    throw new ForbiddenError("El usuario institucional no puede participar en proyectos.");
   }
 
   if (input.shareCountRequested < 1) {

@@ -10,14 +10,14 @@ const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Admin",
   PROJECT_OWNER: "Founder",
   CO_ADMIN: "Co-admin",
-  PARTNER: "Socio",
+  PARTNER: "Miembro",
 };
 
 export default async function ProfilePage() {
   const session = await requireSession();
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: session.id },
-    select: { fullName: true, role: true, createdAt: true },
+    select: { fullName: true, alias: true, role: true, createdAt: true },
   });
 
   return (
@@ -35,7 +35,7 @@ export default async function ProfilePage() {
         </p>
       </header>
 
-      <ProfileForm initialName={user.fullName} />
+      <ProfileForm initialName={user.fullName} initialAlias={user.alias ?? ""} />
     </div>
   );
 }

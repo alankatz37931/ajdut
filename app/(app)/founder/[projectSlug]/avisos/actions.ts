@@ -74,7 +74,7 @@ export async function sendBroadcastAction(
 
   const emails = await loadMemberEmails(project.id);
   if (emails.length === 0) {
-    return { ok: false, error: "Este proyecto todavía no tiene socios a quienes avisar." };
+    return { ok: false, error: "Este proyecto todavía no tiene miembros a quienes avisar." };
   }
 
   const founderName = user.name ?? project.name;

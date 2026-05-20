@@ -46,13 +46,13 @@ export function newInterestToFounderEmail(input: NewInterestToFounderInput) {
     : "";
 
   const html = renderEmail({
-    preview: `${input.investorName} quiere comprar ${fmtInt(input.sharesRequested)} acciones de ${input.projectName}.`,
+    preview: `${input.investorName} quiere participar con ${fmtInt(input.sharesRequested)} acciones de ${input.projectName}.`,
     eyebrow: "Nuevo interés",
     heading: `${input.investorName} se interesó en ${input.projectName}.`,
     bodyHtml: `
       <p style="margin:0 0 24px 0;">
-        Hola ${escapeText(input.founderFirstName)} — recibimos un nuevo interés de compra. Revisá
-        los detalles y contactalo cuando puedas.
+        Hola ${escapeText(input.founderFirstName)} — recibimos un nuevo interés de participación.
+        Revisá los detalles y contactalo cuando puedas.
       </p>
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;border-top:0.5px solid #E8E3D9;border-bottom:0.5px solid #E8E3D9;">
         <tr>

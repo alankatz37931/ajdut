@@ -168,7 +168,7 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
       )}
       {success && (
         <p className="eyebrow !text-gold" role="status">
-          Reporte publicado. Los socios reciben aviso por email.
+          Reporte publicado. Los miembros reciben aviso por email.
         </p>
       )}
 
@@ -177,7 +177,7 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
           {isPending ? "Publicando…" : "Publicar reporte →"}
         </button>
         <span className="eyebrow !text-navy/40">
-          Se envía aviso por email a todos los socios del proyecto.
+          Se envía aviso por email a todos los miembros del proyecto.
         </span>
       </div>
     </form>

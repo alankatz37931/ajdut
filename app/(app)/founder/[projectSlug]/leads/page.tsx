@@ -96,7 +96,7 @@ export default async function FounderLeadsPage({ params }: Params) {
 
       {leads.length === 0 ? (
         <p className="mt-10 text-navy/60">
-          Cuando alguien manifieste interés en comprar acciones de tu proyecto, va a aparecer acá.
+          Cuando alguien diga “me interesa participar” en tu proyecto, va a aparecer acá.
         </p>
       ) : (
         <ul className="mt-10 space-y-4">

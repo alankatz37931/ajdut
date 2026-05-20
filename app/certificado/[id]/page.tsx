@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { BrandMark } from "@/components/landing/BrandMark";
 import { BackLink } from "@/components/app/BackLink";
-import { formatDate, formatNumber, formatPercent } from "@/lib/utils/format";
+import { formatDate, formatNumber } from "@/lib/utils/format";
 import { PrintButton } from "./PrintButton";
 
 export const metadata = { title: "Certificado de participación · AJDUT" };
@@ -35,7 +35,6 @@ export default async function CertificatePage({ params }: Params) {
 
   const shares = cert.participation.shareCount;
   const totalShares = cert.participation.project.totalShares;
-  const pct = totalShares > 0 ? (shares / totalShares) * 100 : 0;
   const acquired = cert.participation.acquiredAt ?? cert.issuedAt;
   const revoked = cert.revokedAt != null;
 
@@ -80,8 +79,8 @@ export default async function CertificatePage({ params }: Params) {
         <dl className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
           <Cell label="Miembro" value={holder?.fullName ?? holder?.email ?? "—"} />
           <Cell label="Proyecto" value={cert.participation.project.name} />
-          <Cell label="Participación" value={formatPercent(pct)} mono />
           <Cell label="Acciones" value={formatNumber(shares)} mono />
+          <Cell label="Total emitido" value={formatNumber(totalShares)} mono />
           <Cell label="Asignada" value={formatDate(acquired)} mono />
           <Cell
             label="Validez"

@@ -77,7 +77,7 @@ export default function NosotrosPage() {
           <div>
             <p className="eyebrow !text-navy/50">Lo que NO somos</p>
             <ul className="mt-4 space-y-3 text-navy/85 leading-relaxed">
-              <li>✕ Un fondo de inversión.</li>
+              <li>✕ Un fondo de participación.</li>
               <li>✕ Un procesador de pagos o custodia de dinero.</li>
               <li>✕ Asesoría legal o financiera.</li>
               <li>✕ Un exchange ni plataforma de trading.</li>
@@ -102,7 +102,7 @@ export default function NosotrosPage() {
           <Value
             n="02"
             title="Unidad"
-            body="Para personas que comparten visión, no solo capital. Cada miembro es parte activa, no espectador. No buscamos socios pasivos: buscamos comunidad comprometida."
+            body="Para personas que comparten visión, no solo capital. Cada miembro es parte activa, no espectador. No buscamos miembros pasivos: buscamos comunidad comprometida."
           />
           <Value
             n="03"

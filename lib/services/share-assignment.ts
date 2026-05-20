@@ -74,7 +74,7 @@ export async function assignSharesFromLead(
       );
     }
     if (!lead.user.isActive || lead.user.deletedAt) {
-      throw new ValidationError("user", "El inversor ya no tiene cuenta activa.");
+      throw new ValidationError("user", "El miembro ya no tiene cuenta activa.");
     }
     if (lead.shareCountRequested < 1) {
       throw new ValidationError("shareCountRequested", "Cantidad inválida en el lead.");
