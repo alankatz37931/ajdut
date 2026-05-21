@@ -37,6 +37,8 @@ export type FileUploadProps = {
   helperText?: string;
   /** Si true, la fila cargada muestra preview de imagen. */
   showImagePreview?: boolean;
+  /** Dropzone más fino y elegante: borde 0.5px discontinuo + ícono en disco. */
+  subtle?: boolean;
 };
 
 type UploadState =
@@ -70,6 +72,7 @@ export function FileUpload({
   label,
   helperText,
   showImagePreview = false,
+  subtle = false,
 }: FileUploadProps) {
   const [state, setState] = useState<UploadState>({ kind: "idle" });
   const [value, setValue] = useState(currentUrl ?? "");
@@ -191,13 +194,21 @@ export function FileUpload({
             }}
             onDragLeave={() => setDragActive(false)}
             onDrop={onDrop}
-            className={`w-full border border-dashed flex flex-col items-center justify-center gap-2 px-4 py-8 transition-colors cursor-pointer ${
-              dragActive
-                ? "border-gold bg-gold/10"
-                : "border-navy/30 hover:border-navy/50 hover:bg-paper-dark/30"
-            }`}
+            className={
+              subtle
+                ? `group w-full border-[0.5px] border-dashed flex flex-col items-center justify-center gap-3 px-6 py-11 transition-all duration-200 cursor-pointer ${
+                    dragActive
+                      ? "border-gold bg-gold/10"
+                      : "border-navy/25 hover:border-navy/40 hover:bg-paper-light"
+                  }`
+                : `w-full border border-dashed flex flex-col items-center justify-center gap-2 px-4 py-8 transition-colors cursor-pointer ${
+                    dragActive
+                      ? "border-gold bg-gold/10"
+                      : "border-navy/30 hover:border-navy/50 hover:bg-paper-dark/30"
+                  }`
+            }
           >
-            <UploadGlyph active={dragActive} />
+            <UploadGlyph active={dragActive} subtle={subtle} />
             <span className="font-sans text-sm text-navy/70 pointer-events-none">
               {dragActive
                 ? "Soltá el archivo acá"
@@ -233,7 +244,35 @@ export function FileUpload({
 }
 
 /** Flecha hacia arriba sobre una bandeja — glifo de la zona de carga. */
-function UploadGlyph({ active }: { active: boolean }) {
+function UploadGlyph({ active, subtle }: { active: boolean; subtle: boolean }) {
+  if (subtle) {
+    return (
+      <span
+        className={`pointer-events-none flex items-center justify-center w-12 h-12 rounded-full transition-colors duration-200 ${
+          active ? "bg-gold/15" : "bg-paper-dark/70 group-hover:bg-paper-dark"
+        }`}
+      >
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`transition-colors duration-200 ${
+            active ? "text-gold" : "text-navy/50"
+          }`}
+          aria-hidden
+        >
+          <path d="M12 15.5V4" />
+          <path d="M7 9l5-5 5 5" />
+          <path d="M5 15v3.5A1.5 1.5 0 006.5 20h11a1.5 1.5 0 001.5-1.5V15" />
+        </svg>
+      </span>
+    );
+  }
   return (
     <svg
       width="24"

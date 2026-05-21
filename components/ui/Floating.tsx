@@ -231,6 +231,7 @@ export function FloatingTextarea({
   maxLength,
   counterSuffix = "",
   required,
+  discreetCounter = false,
 }: {
   id: string;
   label: string;
@@ -241,6 +242,8 @@ export function FloatingTextarea({
   maxLength?: number;
   counterSuffix?: string;
   required?: boolean;
+  /** Contador en estilo discreto: mono chico, tenue, alineado a la derecha. */
+  discreetCounter?: boolean;
 }) {
   return (
     <div className="pt-2">
@@ -265,7 +268,13 @@ export function FloatingTextarea({
         <GoldUnderline />
       </div>
       {maxLength != null && (
-        <span className="mt-1.5 block eyebrow !text-navy/40">
+        <span
+          className={
+            discreetCounter
+              ? "mt-1.5 block text-right font-mono text-[0.7rem] tracking-wide tabular-nums text-navy/30"
+              : "mt-1.5 block eyebrow !text-navy/40"
+          }
+        >
           {value.length} / {maxLength} {counterSuffix}
         </span>
       )}

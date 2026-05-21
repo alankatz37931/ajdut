@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
-import { ProjectHeader } from "@/components/founder/ProjectHeader";
+import { BackLink } from "@/components/app/BackLink";
+import { StatusBadge } from "@/components/founder/StatusBadge";
 import { formatDate } from "@/lib/utils/format";
 import { ReportForm } from "./ReportForm";
 import { DeleteReportButton } from "./DeleteReportButton";
@@ -12,6 +13,9 @@ type Params = { params: Promise<{ projectSlug: string }> };
 export const metadata = {
   title: "Reportes trimestrales · AJDUT",
 };
+
+const REPORT_DESCRIPTION =
+  "Compartí avances financieros y de negocio con tu comunidad. Cada miembro recibe un aviso por email cuando publicás.";
 
 const PERIOD_LABEL: Record<string, string> = {
   Q1: "Q1",
@@ -72,33 +76,33 @@ export default async function FounderReportsPage({ params }: Params) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="max-w-4xl">
-      <ProjectHeader
-        projectName={project.name}
+    <div>
+      {/* ── Cabecera · breadcrumb ──────────────────────────────────── */}
+      <div className="pt-5 sm:pt-7 pb-6 hairline-b flex flex-wrap items-center gap-3">
+        <BackLink fallback={`/founder/${project.slug}`}>
+          Project owner · {project.name}
+        </BackLink>
+        <StatusBadge status={project.status} />
+      </div>
+
+      {/* ── Formulario · dos columnas ──────────────────────────────── */}
+      <ReportForm
         projectSlug={project.slug}
-        projectStatus={project.status}
-        section="Reportes trimestrales"
-        description="Compartí avances financieros y de negocio con tus miembros. Cuando publicás un reporte, todos los miembros reciben un aviso por email con el link al archivo."
+        defaultYear={currentYear}
+        heading="Reportes trimestrales"
+        description={REPORT_DESCRIPTION}
       />
 
-      <section className="mt-10">
-        <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
-          <p className="eyebrow !text-navy">01 · Publicar nuevo reporte</p>
-          <p className="eyebrow !text-navy/40">
-            {reports.length} publicado{reports.length === 1 ? "" : "s"} en total
-          </p>
-        </div>
-        <ReportForm projectSlug={project.slug} defaultYear={currentYear} />
-      </section>
+      {/* ── Historial · ancho completo (solo si ya hay reportes) ───── */}
+      {reports.length > 0 && (
+        <section className="mt-16 pt-12 hairline-t">
+          <div className="mb-8 flex items-baseline justify-between gap-3">
+            <p className="eyebrow !text-navy">Historial</p>
+            <p className="eyebrow !text-navy/40">
+              {reports.length} publicado{reports.length === 1 ? "" : "s"}
+            </p>
+          </div>
 
-      <section className="mt-12">
-        <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
-          <p className="eyebrow !text-navy">02 · Historial</p>
-        </div>
-
-        {reports.length === 0 ? (
-          <p className="text-navy/60">Todavía no publicaste ningún reporte.</p>
-        ) : (
           <ul>
             <li className="hidden sm:grid grid-cols-12 gap-3 pb-2 hairline-b">
               <span className="sm:col-span-2 eyebrow !text-navy/40">Tipo</span>
@@ -110,7 +114,7 @@ export default async function FounderReportsPage({ params }: Params) {
             {reports.map((r) => (
               <li
                 key={r.id}
-                className="grid grid-cols-12 items-baseline gap-x-3 gap-y-1 hairline-b py-3"
+                className="grid grid-cols-12 items-baseline gap-x-3 gap-y-1 hairline-b py-4"
               >
                 <span className="col-span-6 sm:col-span-2 eyebrow !text-navy">
                   {KIND_LABEL[r.kind] ?? r.kind}
@@ -142,8 +146,8 @@ export default async function FounderReportsPage({ params }: Params) {
               </li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }
