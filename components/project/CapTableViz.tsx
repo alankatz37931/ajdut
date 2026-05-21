@@ -51,16 +51,16 @@ export function CapTableViz({
   // Anchor: el holder más grande define el 100% visual.
   const max = displayRows[0]?.shares ?? 1;
 
-  // Padding horizontal simétrico (px-5) en cada fila — los bordes
-  // hairline-b van full-width del <ul>, así se alinean milimétricamente
-  // sin importar el ancho del contenido.
+  // Padding horizontal simétrico (px-5). Sin hairline-t en el <ul> — quien
+  // lo use ya provee el divisor superior (evita doble línea). Última fila
+  // sin hairline-b por la misma razón.
   return (
-    <ul className="hairline-t">
+    <ul>
       {displayRows.map((r, i) => {
         const pct = (r.shares / totalShares) * 100;
         const widthPct = max > 0 ? (r.shares / max) * 100 : 0;
         return (
-          <li key={i} className="hairline-b px-5 py-4">
+          <li key={i} className="hairline-b last:border-b-0 px-5 py-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <p className="min-w-0 text-navy break-words">
                 {r.holder}

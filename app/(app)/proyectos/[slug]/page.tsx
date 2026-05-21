@@ -7,7 +7,6 @@ import { getProjectAccess } from "@/lib/services/project-access";
 import { getInfoRequest } from "@/lib/services/info-request";
 import { getUserPreferences } from "@/lib/preferences";
 import { getDict, getLocale, localeFor } from "@/lib/i18n";
-import { KpiCard } from "@/components/ui/KpiCard";
 import { InterestForm } from "./InterestForm";
 import { InfoRequestForm } from "./InfoRequestForm";
 import { AdminApprovalActions } from "./AdminApprovalActions";
@@ -16,8 +15,6 @@ import { ProjectHero } from "@/components/project/ProjectHero";
 import { ProjectVideo } from "@/components/project/ProjectVideo";
 import { ProjectSection } from "@/components/project/ProjectSection";
 import { CapTableViz } from "@/components/project/CapTableViz";
-import { InlineParticipateCta } from "@/components/project/InlineParticipateCta";
-import { ParticipateFooterCta } from "@/components/project/ParticipateFooterCta";
 import { BackLink } from "@/components/app/BackLink";
 import { embedUrl } from "@/lib/utils/embed";
 import {
@@ -236,45 +233,54 @@ export default async function ProjectPage({ params }: Params) {
   const canSeePrivateDocs =
     isPrivilegedReader || partnerHasApprovedInfo || myShares > 0;
 
-  // ───────────── CTA principal: ¿qué pintamos en el hero? ────────────
-  // Logica: la prioridad es PARTNER → InfoRequest → InterestForm; el resto
-  // (admin/owner) entra directo a "Me interesa participar". Si no hay
-  // acciones, el botón no aparece (la sección de cierre lo explica).
-  type HeroCta = { kind: "primary"; label: string; href?: string; asText?: boolean };
-  const heroCtas: HeroCta[] = [];
+  // ───────────── CTAs del hero ───────────────────────────────────────
+  // Hero: "Me interesa participar" (primario) + "Abrir chat" (secundario,
+  // outline) para quien tiene acceso al chat. "Quiero más información" NO
+  // va en el hero — vive en el sidebar como acción secundaria.
+  type HeroCta = {
+    kind: "primary" | "outline";
+    label: string;
+    href?: string;
+    asText?: boolean;
+  };
   const canCtaShow = access.canManifestInterest && availableShares > 0;
-  if (canCtaShow) {
-    if (access.role === "PARTNER") {
-      if (myInfoRequest?.status === "PENDING") {
-        heroCtas.push({ kind: "primary", label: t.waitingApproval, asText: true });
-      } else if (myInfoRequest?.status === "APPROVED") {
-        heroCtas.push({ kind: "primary", label: t.interest, href: "#comprar" });
-      } else {
-        heroCtas.push({ kind: "primary", label: t.requestInfo, href: "#info-request" });
-      }
-    } else {
-      heroCtas.push({ kind: "primary", label: t.interest, href: "#comprar" });
-    }
-  }
-
-  // Acciones satélite (esquinita superior). Editar y chat.
-  type SatAct = { kind: "outline" | "ghost"; label: string; href?: string };
-  const satellite: SatAct[] = [];
-  if (
+  const hasChatAccess =
     myShares > 0 ||
     access.role === "OWNER" ||
     access.role === "CO_ADMIN" ||
-    access.role === "ADMIN"
-  ) {
-    satellite.push({
-      kind: "ghost",
+    access.role === "ADMIN";
+
+  const heroCtas: HeroCta[] = [];
+  if (canCtaShow) {
+    heroCtas.push({ kind: "primary", label: t.interest, href: "#comprar" });
+  }
+  if (hasChatAccess) {
+    heroCtas.push({
+      kind: "outline",
       label: t.openChat,
       href: `/proyectos/${project.slug}/chat`,
     });
   }
+
+  // "Quiero más información" — CTA secundario que se renderiza en el
+  // sidebar, debajo del botón de participar. Solo para el PARTNER que
+  // todavía no tiene info aprobada.
+  const moreInfoCta:
+    | { pending: true; label: string }
+    | { pending: false; label: string; href: string }
+    | null =
+    canCtaShow && access.role === "PARTNER" && !partnerHasApprovedInfo
+      ? myInfoRequest?.status === "PENDING"
+        ? { pending: true, label: t.waitingApproval }
+        : { pending: false, label: t.requestInfo, href: "#info-request" }
+      : null;
+
+  // Acción satélite — solo Editar (utilidad del owner), link liviano.
+  type SatAct = { kind: "outline" | "ghost"; label: string; href?: string };
+  const satellite: SatAct[] = [];
   if (access.canEdit) {
     satellite.push({
-      kind: "outline",
+      kind: "ghost",
       label: t.editInfo,
       href: `/founder/${project.slug}/editar`,
     });
@@ -343,26 +349,37 @@ export default async function ProjectPage({ params }: Params) {
       title: t.sections.summary,
       tone: "vitrina",
       withInlineCta: hasAnySummary && canCtaShow,
-      node: (
-        <>
-          {hasAnySummary ? (
-            <div className="grid grid-cols-1 gap-8 sm:gap-10 md:grid-cols-3">
-              <Block title={t.summary.problem} body={project.startupProfile.problemStatement} />
-              <Block title={t.summary.solution} body={project.startupProfile.solutionStatement} />
-              <Block title={t.summary.businessModel} body={project.startupProfile.businessModel} />
-            </div>
-          ) : (
-            <p className="text-navy/60 leading-relaxed">{t.emptySection}</p>
+      node: hasAnySummary ? (
+        // Lista de definición apilada: label a la izquierda, cuerpo a la
+        // derecha. Más legible que 3 columnas angostas — el texto respira.
+        <dl className="hairline-t">
+          {project.startupProfile.problemStatement && (
+            <SummaryRow
+              label={t.summary.problem}
+              body={project.startupProfile.problemStatement}
+            />
+          )}
+          {project.startupProfile.solutionStatement && (
+            <SummaryRow
+              label={t.summary.solution}
+              body={project.startupProfile.solutionStatement}
+            />
+          )}
+          {project.startupProfile.businessModel && (
+            <SummaryRow
+              label={t.summary.businessModel}
+              body={project.startupProfile.businessModel}
+            />
           )}
           {project.description && project.description.trim() !== "" && (
-            <div className="mt-10 hairline-t pt-8 max-w-3xl">
-              <p className="eyebrow mb-3">{t.summary.description}</p>
-              <p className="text-navy/85 leading-relaxed whitespace-pre-line">
-                {project.description}
-              </p>
-            </div>
+            <SummaryRow
+              label={t.summary.description}
+              body={project.description}
+            />
           )}
-        </>
+        </dl>
+      ) : (
+        <p className="text-navy/60 leading-relaxed">{t.emptySection}</p>
       ),
     });
   }
@@ -377,7 +394,7 @@ export default async function ProjectPage({ params }: Params) {
       tone: "vitrina",
       withInlineCta: canCtaShow,
       node: (
-        <div className="grid grid-cols-1 gap-8 sm:gap-10 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {project.startupProfile.assetBackingNote && (
             <Block
               title={t.structure.assetBacking}
@@ -401,9 +418,9 @@ export default async function ProjectPage({ params }: Params) {
       title: t.sections.team,
       tone: "vitrina",
       node: (
-        <ul className="space-y-10 max-w-3xl">
+        <ul className="hairline-t max-w-3xl">
           {project.startupProfile!.founders.map((f) => (
-            <li key={f.id} className="space-y-3">
+            <li key={f.id} className="hairline-b last:border-b-0 py-4 space-y-2">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <span className="text-navy text-lg break-words">{f.fullName}</span>
                 <span className="font-mono text-navy text-sm">
@@ -451,7 +468,7 @@ export default async function ProjectPage({ params }: Params) {
             return (
               <li
                 key={m.id}
-                className="hairline-b grid grid-cols-12 items-center gap-x-3 gap-y-1 py-2.5"
+                className="hairline-b last:border-b-0 grid grid-cols-12 items-center gap-x-3 gap-y-1 py-2.5"
               >
                 <span className="col-span-5 sm:col-span-2 font-mono text-xs tracking-wider text-navy/50">
                   {m.achievedAt
@@ -485,15 +502,14 @@ export default async function ProjectPage({ params }: Params) {
       tone: "ref",
       node: (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-line">
-            <KpiCard
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <StatCard
               label={t.yours.shares}
               value={formatNumber(myShares, undefined, locale)}
-              hint={`${formatNumber(myShares, undefined, locale)} ${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
+              hint={`${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
               highlight
-              className="bg-paper-light"
             />
-            <KpiCard
+            <StatCard
               label={t.yours.value}
               value={myValue !== null ? formatCurrency(myValue, projectCurrency, 2, locale) : "—"}
               hint={
@@ -506,9 +522,8 @@ export default async function ProjectPage({ params }: Params) {
                     ? `${formatCurrency(pricePerShare, projectCurrency, 2, locale)} ${t.yours.pricePerShareSuffix}`
                     : t.yours.noValuation
               }
-              className="bg-paper-light"
             />
-            <KpiCard
+            <StatCard
               label={t.yours.participations}
               value={String(myParticipations.length)}
               hint={
@@ -516,7 +531,6 @@ export default async function ProjectPage({ params }: Params) {
                   ? t.yours.oneRecord
                   : `${myParticipations.length} ${t.yours.manyRecordsSuffix}`
               }
-              className="bg-paper-light"
             />
           </div>
 
@@ -570,20 +584,13 @@ export default async function ProjectPage({ params }: Params) {
               ))}
             </ul>
           )}
-
-          {!access.canSeeCapTable && (
-            <p className="mt-6 eyebrow !text-navy/40 max-w-2xl">
-              {t.yours.partnersOnlyOwnPositionNote}
-            </p>
-          )}
         </>
       ),
     });
   }
 
   // — Métricas (ref).
-  // Grilla compacta de 3 columnas — cards de baja altura (py-3 px-4),
-  // sin aire interno excesivo. Cada card es una hairline-box independiente.
+  // Mismo StatCard que "Tu participación" — un solo lenguaje de tarjeta.
   if (latestByKind.size > 0) {
     sections.push({
       title: t.sections.metrics,
@@ -591,15 +598,12 @@ export default async function ProjectPage({ params }: Params) {
       node: (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {Array.from(latestByKind.values()).map((m) => (
-            <div key={m.kind} className="hairline bg-paper py-3 px-4">
-              <p className="eyebrow !text-navy/40 truncate">{m.label}</p>
-              <p className="mt-1.5 font-mono text-lg text-navy leading-none">
-                {m.value} {m.unit}
-              </p>
-              <p className="mt-1.5 font-mono text-[11px] tracking-wider text-navy/40">
-                {formatDate(m.asOf, locale)}
-              </p>
-            </div>
+            <StatCard
+              key={m.kind}
+              label={m.label}
+              value={`${m.value} ${m.unit}`}
+              hint={formatDate(m.asOf, locale)}
+            />
           ))}
         </div>
       ),
@@ -656,32 +660,31 @@ export default async function ProjectPage({ params }: Params) {
       node: (
         <ul className="hairline-t">
           {reports.map((r) => (
-            <li
-              key={r.id}
-              className="hairline-b grid grid-cols-12 items-baseline gap-x-3 gap-y-1 py-4"
-            >
-              <span className="col-span-12 sm:col-span-6 text-navy break-words">
-                {r.title}
-              </span>
-              <span className="col-span-6 sm:col-span-3 eyebrow !text-navy">
+            <li key={r.id} className="hairline-b last:border-b-0 py-4">
+              {/* Línea 1: título + fecha. Línea 2: meta. Luego resumen y
+                  link — bloque prolijo, sin grid de 12-col quebrado. */}
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="text-navy break-words">{r.title}</p>
+                <span className="eyebrow !text-navy/40 shrink-0">
+                  {formatDate(r.publishedAt, locale)}
+                </span>
+              </div>
+              <p className="mt-1 eyebrow !text-navy/50">
                 {reportKindLabel(r.kind)} · {humanReportPeriod(r.period, r.fiscalYear)}
-              </span>
-              <span className="col-span-6 sm:col-span-2 eyebrow text-right">
-                {formatDate(r.publishedAt, locale)}
-              </span>
+              </p>
+              {r.summary.trim().length > 0 && (
+                <p className="mt-2 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
+                  {r.summary}
+                </p>
+              )}
               <a
                 href={r.storageKey}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="col-span-12 sm:col-span-1 eyebrow hover:!text-gold text-right"
+                className="mt-2 inline-block eyebrow !text-gold hover:!text-navy transition-colors"
               >
-                {t.documents.openLink}
+                {t.documents.openLink} →
               </a>
-              {r.summary.trim().length > 0 && (
-                <p className="col-span-12 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
-                  {r.summary}
-                </p>
-              )}
             </li>
           ))}
         </ul>
@@ -700,7 +703,7 @@ export default async function ProjectPage({ params }: Params) {
       title: t.sections.policies,
       tone: "ref",
       node: (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 max-w-4xl">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 max-w-4xl">
           {project.startupProfile.policyShares && (
             <Block title={t.policies.shares} body={project.startupProfile.policyShares} />
           )}
@@ -770,19 +773,21 @@ export default async function ProjectPage({ params }: Params) {
           websiteUrl={project.startupProfile?.websiteUrl}
           actions={heroCtas}
           satellite={satellite}
+          /* Video integrado al hero (columna derecha) — solo si hay URL. */
+          video={
+            project.startupProfile?.videoUrl ? (
+              <ProjectVideo
+                embedSrc={videoEmbed}
+                rawUrl={project.startupProfile.videoUrl}
+                titlePrefix={t.videoTitlePrefix}
+                projectName={project.name}
+                openLabel={t.openVideo}
+                bare
+              />
+            ) : undefined
+          }
         />
       </div>
-
-      {/* Video como primera impresión, justo bajo el hero — solo si hay URL. */}
-      {project.startupProfile?.videoUrl && (
-        <ProjectVideo
-          embedSrc={videoEmbed}
-          rawUrl={project.startupProfile.videoUrl}
-          titlePrefix={t.videoTitlePrefix}
-          projectName={project.name}
-          openLabel={t.openVideo}
-        />
-      )}
 
       {/* PARTNER con InfoRequest REJECTED: aviso visible. */}
       {access.role === "PARTNER" && myInfoRequest?.status === "REJECTED" && (
@@ -805,7 +810,11 @@ export default async function ProjectPage({ params }: Params) {
       )}
 
       {/* Forms — viven antes del cuerpo y, cuando abren su hash, ProjectBody
-          oculta el resto del scroll para foco total. */}
+          oculta el resto del scroll para foco total.
+          · InterestForm (#comprar): disponible para TODOS los que pueden
+            manifestar interés — sin gate de InfoRequest.
+          · InfoRequestForm (#info-request): opción secundaria para el
+            PARTNER que aún no tiene info aprobada. */}
       {access.canManifestInterest && availableShares > 0 && (
         <>
           {access.role === "PARTNER" && !partnerHasApprovedInfo && (
@@ -819,25 +828,23 @@ export default async function ProjectPage({ params }: Params) {
             </div>
           )}
 
-          {(access.role !== "PARTNER" || partnerHasApprovedInfo) && (
-            <div id="comprar">
-              <InterestForm
-                projectSlug={project.slug}
-                projectName={project.name}
-                viewerName={user.name}
-                availableShares={availableShares}
-                valuation={
-                  project.startupProfile?.preMoneyValuation
-                    ? Number(project.startupProfile.preMoneyValuation)
-                    : null
-                }
-                totalShares={project.totalShares}
-                currency={project.startupProfile?.valuationCurrency ?? "USD"}
-                dict={dict.interestForm}
-                locale={localeFor(prefs.language)}
-              />
-            </div>
-          )}
+          <div id="comprar">
+            <InterestForm
+              projectSlug={project.slug}
+              projectName={project.name}
+              viewerName={user.name}
+              availableShares={availableShares}
+              valuation={
+                project.startupProfile?.preMoneyValuation
+                  ? Number(project.startupProfile.preMoneyValuation)
+                  : null
+              }
+              totalShares={project.totalShares}
+              currency={project.startupProfile?.valuationCurrency ?? "USD"}
+              dict={dict.interestForm}
+              locale={localeFor(prefs.language)}
+            />
+          </div>
         </>
       )}
 
@@ -845,9 +852,11 @@ export default async function ProjectPage({ params }: Params) {
           (sections.map) — sidebar pegajoso a la derecha con Fondeo,
           Cap Table y CTA. Sin huecos blancos en el scroll inferior. */}
       <ProjectBody hideOnHash={["#comprar", "#info-request"]}>
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-[1fr_22rem] gap-x-10 xl:gap-x-14 gap-y-8">
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr_22rem] gap-x-10 xl:gap-x-14 gap-y-8">
           {/* ─── COLUMNA PRINCIPAL ──────────────────────────────── */}
-          {/* Sin space-y: cada ProjectSection ya trae su pt + hairline-t. */}
+          {/* Sin space-y: cada ProjectSection ya trae su pt + hairline-t.
+              El CTA "Me interesa participar" vive solo en el hero y en el
+              sidebar sticky — sin repetirlo inline ni en un footer. */}
           <div className="min-w-0">
             {sections.map((s, i) => (
               <ProjectSection
@@ -856,15 +865,6 @@ export default async function ProjectPage({ params }: Params) {
                 title={s.title}
                 tone={s.tone}
                 isFirst={i === 0}
-                trailingCta={
-                  s.withInlineCta && heroCtas[0]?.href ? (
-                    <InlineParticipateCta
-                      label={heroCtas[0].label}
-                      href={heroCtas[0].href}
-                      eyebrow={t.nextStep}
-                    />
-                  ) : undefined
-                }
               >
                 {s.node}
               </ProjectSection>
@@ -872,13 +872,12 @@ export default async function ProjectPage({ params }: Params) {
           </div>
 
           {/* ─── SIDEBAR PEGAJOSO ───────────────────────────────── */}
+          {/* Panel de control — sin numeración (esa es del main column).
+              Headers como eyebrow para distinguirlo del flujo editorial. */}
           <aside className="lg:sticky lg:top-6 lg:self-start lg:h-fit space-y-5">
             {/* Bloque Fondeo compacto. */}
             <div className="hairline bg-paper p-5">
-              <p className="font-mono text-sm tracking-wider mb-4">
-                <span className="text-gold">00</span>
-                <span className="ml-2 text-navy">· {t.sections.funding}</span>
-              </p>
+              <p className="eyebrow !text-navy/40 mb-4">{t.sections.funding}</p>
               <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-navy/50">
                 {t.funding.placedHeadlineSuffix}
               </p>
@@ -915,52 +914,38 @@ export default async function ProjectPage({ params }: Params) {
             {/* Cap Table (solo si access.canSeeCapTable + hay holders). */}
             {capTableNode && (
               <div className="hairline bg-paper">
-                <p className="px-5 pt-5 pb-3 font-mono text-sm tracking-wider hairline-b">
-                  <span className="text-gold">08</span>
-                  <span className="ml-2 text-navy">· {t.sections.capTable}</span>
+                <p className="px-5 pt-5 pb-3 eyebrow !text-navy/40 hairline-b">
+                  {t.sections.capTable}
                 </p>
                 {capTableNode}
               </div>
             )}
 
-            {/* CTA "Quiero postularme" — premium, separado con mt-6. */}
-            {canCtaShow && heroCtas[0]?.href && (
-              <div className="pt-2">
-                <a
-                  href={heroCtas[0].href}
-                  className="block w-full text-center px-6 py-4 rounded-lg bg-navy text-paper font-medium tracking-wide text-base transition-all duration-200 hover:bg-navy/90 hover:shadow-lg hover:shadow-navy/20 hover:-translate-y-0.5"
-                >
-                  {heroCtas[0].label}
+            {/* CTA del sidebar: "Me interesa participar" como botón
+                primario + "Quiero más información" como acción secundaria
+                debajo (solo PARTNER sin info aprobada). */}
+            {canCtaShow && (
+              <div className="pt-2 space-y-3">
+                <a href="#comprar" className="btn-primary w-full">
+                  {t.interest}
                 </a>
+                {moreInfoCta &&
+                  (moreInfoCta.pending ? (
+                    <p className="eyebrow !text-navy/40 text-center">
+                      {moreInfoCta.label}
+                    </p>
+                  ) : (
+                    <a
+                      href={moreInfoCta.href}
+                      className="block text-center eyebrow !text-navy/50 hover:!text-gold transition-colors"
+                    >
+                      {moreInfoCta.label}
+                    </a>
+                  ))}
               </div>
             )}
           </aside>
         </div>
-
-        {/* Cierre marketing: pregunta + botón grande. */}
-        {canCtaShow ? (
-          <ParticipateFooterCta
-            eyebrow={t.footerCta.eyebrow}
-            question={t.footerCta.question}
-            body={t.footerCta.body}
-            actions={
-              heroCtas[0]?.href
-                ? [
-                    { kind: "primary", label: heroCtas[0].label, href: heroCtas[0].href },
-                  ]
-                : heroCtas[0]?.asText
-                ? [{ kind: "muted", label: heroCtas[0].label }]
-                : []
-            }
-          />
-        ) : (
-          <ParticipateFooterCta
-            eyebrow={t.footerCta.notAvailableEyebrow}
-            question={t.footerCta.notAvailableTitle}
-            body={t.footerCta.notAvailableBody}
-            actions={[]}
-          />
-        )}
       </ProjectBody>
     </div>
   );
@@ -997,9 +982,57 @@ function Block({ title, body }: { title: string; body: string }) {
   );
 }
 
+/**
+ * Fila de definición — label eyebrow a la izquierda, cuerpo a la derecha.
+ * Patrón editorial usado en el Resumen: legible para textos largos.
+ */
+function SummaryRow({ label, body }: { label: string; body: string }) {
+  return (
+    <div className="hairline-b last:border-b-0 grid grid-cols-1 sm:grid-cols-[9rem_1fr] gap-1.5 sm:gap-6 py-4">
+      <dt className="eyebrow !text-navy/40 sm:pt-0.5">{label}</dt>
+      <dd className="text-navy/85 leading-relaxed whitespace-pre-line">{body}</dd>
+    </div>
+  );
+}
+
+/**
+ * Tarjeta compacta de métrica/dato — el ÚNICO estilo de card de la ficha.
+ * Usada en "Tu participación" y en "Métricas" para que sean idénticas.
+ * `highlight` pinta el valor en oro (acento para el dato propio del viewer).
+ */
+function StatCard({
+  label,
+  value,
+  hint,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="hairline bg-paper py-3 px-4">
+      <p className="eyebrow !text-navy/40 truncate">{label}</p>
+      <p
+        className={`mt-1.5 font-mono text-lg leading-none ${
+          highlight ? "text-gold" : "text-navy"
+        }`}
+      >
+        {value}
+      </p>
+      {hint && (
+        <p className="mt-1.5 font-mono text-[11px] tracking-wider text-navy/40 truncate">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function DocRow({ label, href, openLabel }: { label: string; href: string; openLabel: string }) {
   return (
-    <li className="hairline-b grid grid-cols-12 items-baseline gap-3 py-4">
+    <li className="hairline-b last:border-b-0 grid grid-cols-12 items-baseline gap-3 py-4">
       <span className="col-span-6 sm:col-span-9 text-navy">{label}</span>
       <a
         href={href}

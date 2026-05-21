@@ -464,7 +464,7 @@ export const dict = {
     backShort: "← Volver",
     cancel: "Cancelar",
     explainBody:
-      "Pedile al responsable del proyecto que te desbloquee la información ampliada (documentos, reportes). Si aprueba, después vas a poder indicar un monto concreto de participación.",
+      "Pedile al responsable del proyecto acceso a la información ampliada —documentos y reportes— para conocer el proyecto en profundidad.",
     messageLabel: "Mensaje al project owner",
     messageOptional: "(opcional)",
     messagePlaceholderPrefix: "Mi nombre es",

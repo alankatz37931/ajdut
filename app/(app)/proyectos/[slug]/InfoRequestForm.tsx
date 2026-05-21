@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import type { Dict } from "@/lib/i18n";
 import { requestProjectInfoAction } from "./actions";
+import { FloatingTextarea } from "@/components/ui/Floating";
 
 type Props = {
   projectSlug: string;
@@ -12,13 +13,16 @@ type Props = {
 };
 
 /**
- * Mini-form para la etapa 1 ("Quiero más información"). Solo mensaje opcional.
+ * Form de la etapa 1 ("Quiero más información"). Solo mensaje opcional.
  * Al enviar crea una InfoRequest PENDING. Se abre con el hash #info-request.
+ *
+ * Layout de 2 columnas, ancho completo — formulario a la izquierda, panel
+ * de contexto ("qué pasa al enviar") a la derecha. Mismo lenguaje editorial
+ * que el InterestForm y el resto de la plataforma.
  */
 export function InfoRequestForm({
   projectSlug,
   projectName,
-  viewerName,
   dict,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -49,8 +53,10 @@ export function InfoRequestForm({
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  function submit(formData: FormData) {
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
     setError(null);
+    const formData = new FormData();
     formData.set("message", message);
     startTransition(async () => {
       const r = await requestProjectInfoAction(projectSlug, formData);
@@ -62,87 +68,77 @@ export function InfoRequestForm({
     });
   }
 
+  if (!open && !success) return null;
+
   if (success) {
     return (
-      <div className="mt-10 hairline p-8 sm:p-10 bg-paper-light max-w-3xl">
-        <p className="eyebrow">{dict.successEyebrow}</p>
-        <p className="mt-5 font-sans text-h1 text-navy">{dict.successTitle}</p>
-        <p className="mt-4 text-navy/75 leading-relaxed max-w-xl">
-          {dict.successBody}
-        </p>
+      <div className="w-full pt-8 sm:pt-10 pb-12 max-w-3xl">
+        <p className="eyebrow !text-navy/40">{dict.successEyebrow}</p>
+        <h1 className="font-sans mt-3 text-h1 text-navy">{dict.successTitle}</h1>
+        <p className="mt-4 text-navy/75 leading-relaxed">{dict.successBody}</p>
       </div>
     );
   }
 
-  if (!open) return null;
-
   return (
-    <form
-      action={submit}
-      className="mt-10 hairline p-6 sm:p-10 bg-paper-light max-w-3xl"
-    >
-      <div className="flex items-baseline justify-between gap-3">
-        <div>
-          <p className="eyebrow">{dict.title}</p>
-          <p className="mt-3 font-sans text-h2 text-navy">{projectName}</p>
-        </div>
-        <button
-          type="button"
-          onClick={close}
-          disabled={isPending}
-          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
-        >
-          {dict.backShort}
-        </button>
+    <div className="w-full pt-8 sm:pt-10 pb-12">
+      {/* Header — eyebrow + nombre del proyecto como H1. Sin botón de
+          volver: el form ya tiene "Cancelar". */}
+      <div className="hairline-b pb-6 sm:pb-7">
+        <p className="eyebrow !text-navy/40">{dict.title}</p>
+        <h1 className="font-sans mt-3 text-h1 text-navy">{projectName}</h1>
       </div>
 
-      <p className="mt-6 text-navy/75 leading-relaxed max-w-xl">
-        {dict.explainBody}
-      </p>
+      {/* 2 columnas: formulario a la izquierda, panel de contexto sticky
+          a la derecha — ocupa el ancho completo de la página. */}
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-x-10 xl:gap-x-14 gap-y-8">
+        {/* ─── COLUMNA FORM ──────────────────────────────────────── */}
+        <form onSubmit={submit} className="min-w-0 space-y-7">
+          <FloatingTextarea
+            id="message"
+            label={dict.messageLabel}
+            value={message}
+            onChange={setMessage}
+            rows={5}
+            maxLength={2000}
+            counterSuffix=""
+          />
 
-      <div className="mt-7 hairline-t pt-6">
-        <label htmlFor="message" className="eyebrow block mb-2">
-          {dict.messageLabel}{" "}
-          <span className="!text-navy/40">{dict.messageOptional}</span>
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          rows={4}
-          maxLength={2000}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={`${dict.messagePlaceholderPrefix} ${viewerName.trim() || dict.yourNameFallback} ${dict.messagePlaceholderInfix} ${projectName} ${dict.messagePlaceholderSuffix}`}
-          className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2.5 font-sans text-sm text-navy focus:outline-none focus:border-navy"
-        />
-        <span className="eyebrow mt-2 block !text-navy/40">
-          {message.length} / 2000
-        </span>
+          {error && (
+            <p className="eyebrow !text-navy" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-5 pt-1">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="btn-primary disabled:opacity-50"
+            >
+              {isPending ? dict.sending : dict.send}
+            </button>
+            <button
+              type="button"
+              onClick={close}
+              disabled={isPending}
+              className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+            >
+              {dict.cancel}
+            </button>
+          </div>
+        </form>
+
+        {/* ─── PANEL DE CONTEXTO STICKY ──────────────────────────── */}
+        <aside className="lg:sticky lg:top-6 lg:self-start lg:h-fit">
+          <div className="hairline bg-paper p-5">
+            <p className="eyebrow !text-navy/40">{dict.title}</p>
+            <p className="mt-3 text-sm text-navy/75 leading-relaxed">
+              {dict.explainBody}
+            </p>
+          </div>
+        </aside>
       </div>
-
-      {error && (
-        <p className="eyebrow !text-navy mt-5" role="alert">
-          {error}
-        </p>
-      )}
-
-      <div className="mt-7 flex flex-wrap items-center gap-5">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="btn-primary disabled:opacity-50"
-        >
-          {isPending ? dict.sending : dict.send}
-        </button>
-        <button
-          type="button"
-          onClick={close}
-          disabled={isPending}
-          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
-        >
-          {dict.cancel}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 }

@@ -46,6 +46,12 @@ type Props = {
    * (ej. <BackLink>) para que el eyebrow doble como botón de retorno.
    */
   contextEyebrow?: React.ReactNode;
+  /**
+   * Video del proyecto. Cuando viene, el hero se parte en 2 columnas:
+   * texto a la izquierda, video a la derecha — el video deja de flotar
+   * suelto y pasa a ser parte del encabezado.
+   */
+  video?: React.ReactNode;
 };
 
 function initialsOf(name: string): string {
@@ -95,6 +101,7 @@ export function ProjectHero({
   actions,
   satellite,
   contextEyebrow,
+  video,
 }: Props) {
   const eyebrowParts: React.ReactNode[] = [];
   if (eyebrow.kind) eyebrowParts.push(<span key="k">{eyebrow.kind}</span>);
@@ -102,7 +109,9 @@ export function ProjectHero({
   if (eyebrow.stage) {
     const info = eyebrow.stageInfo?.[eyebrow.stage.key];
     eyebrowParts.push(
-      <span key="st">
+      // inline-flex items-center: label + ícono quedan centrados
+      // verticalmente entre sí, sin desfase de baseline.
+      <span key="st" className="inline-flex items-center">
         {eyebrow.stage.label}
         {info && <InfoTooltip text={info} />}
       </span>
@@ -114,76 +123,107 @@ export function ProjectHero({
     ? websiteUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")
     : null;
 
-  return (
-    <section className="relative">
-      {/* Satélites: editar, abrir chat — discretos, esquina superior derecha. */}
-      {satellite && satellite.length > 0 && (
-        <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 mb-3">
-          {satellite.map((a, i) => (
-            <ActionLink key={i} a={a} />
+  // El CTA primario va en la columna 1; el secundario (outline, ej. chat)
+  // en la columna 2 — alineado con la web del byline de arriba.
+  const primaryAction = actions.find((a) => a.kind === "primary");
+  const secondaryAction = actions.find((a) => a.kind !== "primary");
+
+  // Bloque de texto del hero — reutilizado tal cual lleve o no video al lado.
+  const textBlock = (
+    <div className="min-w-0">
+      {contextEyebrow && (
+        typeof contextEyebrow === "string" ? (
+          <p className="eyebrow !text-navy/40 mb-5">{contextEyebrow}</p>
+        ) : (
+          <div className="mb-5">{contextEyebrow}</div>
+        )
+      )}
+      {eyebrowParts.length > 0 && (
+        // leading-none: la caja de línea abraza el texto, así el ícono
+        // de info se centra contra las letras y no contra el line-box.
+        <p className="eyebrow leading-none flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          {eyebrowParts.map((node, i) => (
+            <span key={i} className="flex items-center">
+              {i > 0 && <span className="mr-3 text-navy/30">·</span>}
+              {node}
+            </span>
           ))}
-        </div>
+        </p>
       )}
 
-      <div className="hairline-t hairline-b py-10 sm:py-14 px-1 sm:px-2">
-        {contextEyebrow && (
-          typeof contextEyebrow === "string" ? (
-            <p className="eyebrow !text-navy/40 mb-6">{contextEyebrow}</p>
-          ) : (
-            <div className="mb-6">{contextEyebrow}</div>
-          )
-        )}
-        {eyebrowParts.length > 0 && (
-          <p className="eyebrow flex flex-wrap items-center gap-x-3 gap-y-1">
-            {eyebrowParts.map((node, i) => (
-              <span key={i} className="flex items-center">
-                {i > 0 && <span className="mr-3 text-navy/30">·</span>}
-                {node}
-              </span>
-            ))}
-          </p>
-        )}
+      <h1 className="font-sans mt-5 text-display text-navy break-words">
+        {name}
+      </h1>
 
-        <h1 className="font-sans mt-6 text-display text-navy break-words">
-          {name}
-        </h1>
+      {oneLiner && (
+        <p className="mt-4 max-w-3xl text-navy/75 leading-snug text-lg sm:text-xl italic">
+          &ldquo;{oneLiner}&rdquo;
+        </p>
+      )}
 
-        {oneLiner && (
-          <p className="mt-6 max-w-3xl text-navy/80 leading-snug text-lg sm:text-xl italic">
-            &ldquo;{oneLiner}&rdquo;
-          </p>
-        )}
-
-        <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
+      {/* Byline del founder + CTAs en UN grid de 2 columnas: así la web
+          (col 2, fila 1) queda alineada justo arriba del botón secundario
+          / "Abrir chat" (col 2, fila 2). Las columnas comparten track. */}
+      <div className="mt-8 grid grid-cols-[auto_auto] justify-start gap-x-3 gap-y-6 items-center">
+        {/* Col 1 · Fila 1 — bloque del founder */}
+        <div className="flex items-center gap-3 min-w-0">
           <span
             aria-hidden
-            className="inline-flex h-8 w-8 items-center justify-center hairline font-mono text-xs text-navy bg-paper-light"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center hairline font-mono text-xs text-navy bg-paper-light"
           >
             {initialsOf(founderName)}
           </span>
           <div className="min-w-0">
-            <p className="eyebrow !text-navy/40">{founderRoleLabel}</p>
-            <p className="mt-1 text-navy">{founderName}</p>
+            <p className="text-navy leading-tight truncate">{founderName}</p>
+            <p className="eyebrow !text-navy/40 mt-1">{founderRoleLabel}</p>
           </div>
-
+        </div>
+        {/* Col 2 · Fila 1 — web del proyecto */}
+        <div className="min-w-0">
           {cleanWebsite && websiteUrl && (
             <a
               href={websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-2 eyebrow hover:!text-gold"
+              className="eyebrow !text-navy/50 hover:!text-gold transition-colors"
             >
               {cleanWebsite} ↗
             </a>
           )}
         </div>
-
+        {/* Fila 2 — CTA primario (col 1) + secundario/chat (col 2).
+            Solo si hay alguna acción, para no dejar una fila vacía. */}
         {actions.length > 0 && (
-          <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
-            {actions.map((a, i) => (
-              <ActionLink key={i} a={a} />
-            ))}
+          <>
+            <div>{primaryAction && <ActionLink a={primaryAction} />}</div>
+            <div>{secondaryAction && <ActionLink a={secondaryAction} />}</div>
+          </>
+        )}
+      </div>
+
+      {/* Acciones de utilidad (editar) — link liviano, debajo del grid. */}
+      {satellite && satellite.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+          {satellite.map((a, i) => (
+            <ActionLink key={`s-${i}`} a={a} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <section className="relative">
+      <div className="hairline-b pt-2 pb-8 sm:pb-10 px-1 sm:px-2">
+        {video ? (
+          // 2 columnas (flex): texto a la izquierda, video a la derecha.
+          // El video queda integrado al encabezado, no flotando suelto.
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 lg:items-center">
+            <div className="lg:flex-1 min-w-0">{textBlock}</div>
+            <div className="lg:w-[42%] lg:shrink-0 min-w-0">{video}</div>
           </div>
+        ) : (
+          textBlock
         )}
       </div>
     </section>

@@ -460,7 +460,7 @@ export const dict: Dict = {
     backShort: "← Back",
     cancel: "Cancel",
     explainBody:
-      "Ask the project lead to unlock extended information (documents, reports). If they approve, you'll then be able to specify a concrete amount to participate.",
+      "Ask the project owner for access to extended information —documents and reports— to get to know the project in depth.",
     messageLabel: "Message to the project owner",
     messageOptional: "(optional)",
     messagePlaceholderPrefix: "My name is",

@@ -3,6 +3,11 @@
 import { useState, useTransition, useEffect } from "react";
 import type { Dict } from "@/lib/i18n";
 import { manifestInterestAction } from "./actions";
+import {
+  FloatingSelect,
+  FloatingTextarea,
+  GoldUnderline,
+} from "@/components/ui/Floating";
 
 type Props = {
   projectSlug: string;
@@ -19,10 +24,11 @@ type Props = {
   locale: string;
 };
 
+type SupportKind = "CAPITAL" | "SPONSOR" | "AMBASSADOR" | "ADVISOR" | "OTHER";
+
 export function InterestForm({
   projectSlug,
   projectName,
-  viewerName,
   availableShares,
   valuation,
   totalShares,
@@ -55,8 +61,7 @@ export function InterestForm({
 
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
-  const [supportKind, setSupportKind] =
-    useState<"CAPITAL" | "SPONSOR" | "AMBASSADOR" | "ADVISOR" | "OTHER">("CAPITAL");
+  const [supportKind, setSupportKind] = useState<SupportKind>("CAPITAL");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -92,7 +97,8 @@ export function InterestForm({
     return n.toLocaleString(locale);
   }
 
-  function submit(formData: FormData) {
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
     setError(null);
 
     if (!pricePerShare) {
@@ -116,6 +122,7 @@ export function InterestForm({
       return;
     }
 
+    const formData = new FormData();
     formData.set("shareCount", String(computedShares));
     formData.set("message", message);
     formData.set("supportKind", supportKind);
@@ -130,204 +137,191 @@ export function InterestForm({
     });
   }
 
+  if (!open && !success) return null;
+
   if (success) {
     return (
-      <div className="mt-10 hairline p-8 sm:p-10 bg-paper-light max-w-3xl">
-        <p className="eyebrow">{dict.successEyebrow}</p>
-        <p className="mt-5 font-sans text-h1 text-navy">{dict.successTitle}</p>
-        <p className="mt-4 text-navy/75 leading-relaxed max-w-xl">
-          {dict.successBody}
-        </p>
+      <div className="w-full pt-8 sm:pt-10 pb-12 max-w-3xl">
+        <p className="eyebrow !text-navy/40">{dict.successEyebrow}</p>
+        <h1 className="font-sans mt-3 text-h1 text-navy">{dict.successTitle}</h1>
+        <p className="mt-4 text-navy/75 leading-relaxed">{dict.successBody}</p>
       </div>
     );
   }
 
-  if (!open) return null;
-
   if (!pricePerShare) {
     return (
-      <form
-        action={() => undefined}
-        className="mt-10 hairline p-8 sm:p-10 bg-paper-light max-w-3xl"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <p className="eyebrow">{dict.notAvailableYet}</p>
-          <button
-            type="button"
-            onClick={close}
-            className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
-          >
-            {dict.backShort}
-          </button>
-        </div>
-        <p className="mt-5 text-navy/75 leading-relaxed">
-          {dict.noValuationBody}
-        </p>
-      </form>
+      <div className="w-full pt-8 sm:pt-10 pb-12 max-w-3xl">
+        <FormHeader eyebrow={dict.notAvailableYet} projectName={projectName} />
+        <p className="mt-4 text-navy/75 leading-relaxed">{dict.noValuationBody}</p>
+      </div>
     );
   }
 
   return (
-    <form
-      action={submit}
-      className="mt-10 hairline p-6 sm:p-10 bg-paper-light max-w-3xl"
-    >
-      <div className="flex items-baseline justify-between gap-3">
-        <div>
-          <p className="eyebrow">{dict.title}</p>
-          <p className="mt-3 font-sans text-h2 text-navy">{projectName}</p>
-        </div>
-        <button
-          type="button"
-          onClick={close}
-          disabled={isPending}
-          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
-        >
-          {dict.backShort}
-        </button>
-      </div>
+    <div className="w-full pt-8 sm:pt-10 pb-12">
+      <FormHeader eyebrow={dict.title} projectName={projectName} />
 
-      <div className="mt-7 space-y-5">
-        <div>
-          <label htmlFor="supportKind" className="eyebrow block mb-2">
-            {dict.supportKindLabel}
-          </label>
-          <select
+      {/* 2 columnas: formulario a la izquierda, panel-resumen sticky a la
+          derecha — ocupa el ancho completo de la página, no centrado. */}
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-x-10 xl:gap-x-14 gap-y-8">
+        {/* ─── COLUMNA FORM ──────────────────────────────────────── */}
+        <form onSubmit={submit} className="min-w-0 space-y-7">
+          <FloatingSelect
             id="supportKind"
-            name="supportKind"
+            label={dict.supportKindLabel}
             value={supportKind}
-            onChange={(e) =>
-              setSupportKind(
-                e.target.value as
-                  | "CAPITAL"
-                  | "SPONSOR"
-                  | "AMBASSADOR"
-                  | "ADVISOR"
-                  | "OTHER"
-              )
-            }
-            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2.5 font-sans text-sm text-navy focus:outline-none focus:border-navy"
-          >
-            <option value="CAPITAL">{dict.supportKind.CAPITAL}</option>
-            <option value="SPONSOR">{dict.supportKind.SPONSOR}</option>
-            <option value="AMBASSADOR">{dict.supportKind.AMBASSADOR}</option>
-            <option value="ADVISOR">{dict.supportKind.ADVISOR}</option>
-            <option value="OTHER">{dict.supportKind.OTHER}</option>
-          </select>
-        </div>
+            onChange={(v) => setSupportKind(v as SupportKind)}
+            options={[
+              { value: "CAPITAL", label: dict.supportKind.CAPITAL ?? "Capital" },
+              { value: "SPONSOR", label: dict.supportKind.SPONSOR ?? "Sponsor" },
+              { value: "AMBASSADOR", label: dict.supportKind.AMBASSADOR ?? "Embajador" },
+              { value: "ADVISOR", label: dict.supportKind.ADVISOR ?? "Advisor" },
+              { value: "OTHER", label: dict.supportKind.OTHER ?? "Otro" },
+            ]}
+          />
 
-        <div>
-          <label htmlFor="amount" className="eyebrow block mb-2">
-            {dict.amountLabel}
-          </label>
-          <div className="flex items-stretch hairline bg-paper transition-colors focus-within:border-navy">
-            <span className="self-center px-4 font-mono text-lg text-navy/40">
-              {currency}
-            </span>
-            <input
-              id="amount"
-              name="amount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
-              autoFocus
-              placeholder={dict.amountPlaceholder}
-              className="flex-1 min-w-0 border-l-hairline border-navy/20 px-4 py-2.5 font-mono text-xl text-navy bg-transparent focus:outline-none"
-            />
+          {/* Monto — campo underline con prefijo de moneda. */}
+          <div className="pt-2">
+            <label htmlFor="amount" className="block eyebrow !text-navy mb-1.5">
+              {dict.amountLabel}
+            </label>
+            <div className="relative flex items-baseline gap-2.5">
+              <span className="font-mono text-lg text-navy/40">{currency}</span>
+              <input
+                id="amount"
+                name="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                autoFocus
+                placeholder={dict.amountPlaceholder}
+                className="peer flex-1 min-w-0 bg-transparent border-0 px-0 py-1.5 font-mono text-xl text-navy outline-none placeholder:text-navy/30"
+              />
+              <span
+                aria-hidden
+                className="absolute left-0 right-0 bottom-0 h-px bg-navy/30"
+              />
+              <GoldUnderline />
+            </div>
           </div>
-        </div>
 
-        <p className="eyebrow !text-navy/40">
-          {maxAmount !== null
-            ? `${dict.maxOf} ${fmtMoney(maxAmount)} · ${fmtInt(maxShares)} ${dict.sharesShort}`
-            : `${dict.maxOf} ${fmtInt(maxShares)} ${dict.sharesAvailableSuffix}`}
-        </p>
+          {/* Mensaje al project owner */}
+          <FloatingTextarea
+            id="message"
+            label={`${dict.messageLabel} ${dict.messageOptional}`}
+            value={message}
+            onChange={setMessage}
+            rows={4}
+            maxLength={2000}
+            counterSuffix=""
+          />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
-          <div className="bg-paper px-4 py-3">
-            <p className="eyebrow !text-navy/40">{dict.equivalentTo}</p>
-            <p className="mt-1 font-mono text-base">
-              {inputValid ? (
-                <span
-                  className={
-                    overAvailable
-                      ? "text-navy/40 line-through"
-                      : "text-gold"
-                  }
-                >
-                  {`${fmtInt(computedShares)} ${
-                    computedShares === 1 ? dict.sharesSingular : dict.sharesPlural
-                  }`}
-                </span>
-              ) : (
-                <span className="text-navy/30">—</span>
-              )}
+          {error && (
+            <p className="eyebrow !text-navy" role="alert">
+              {error}
             </p>
-            {inputValid && !overAvailable && computedAmount > 0 && (
-              <p className="mt-1 eyebrow !text-navy/40">
-                {fmtMoney(computedAmount)} {dict.effectiveSuffix}
+          )}
+
+          <div className="flex flex-wrap items-center gap-5 pt-1">
+            <button
+              type="submit"
+              disabled={isPending || !inputValid || overAvailable}
+              className="btn-primary disabled:opacity-50"
+            >
+              {isPending ? dict.sending : dict.send}
+            </button>
+            <button
+              type="button"
+              onClick={close}
+              disabled={isPending}
+              className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+            >
+              {dict.cancel}
+            </button>
+          </div>
+        </form>
+
+        {/* ─── PANEL RESUMEN STICKY ──────────────────────────────── */}
+        <aside className="lg:sticky lg:top-6 lg:self-start lg:h-fit space-y-5">
+          <div className="hairline bg-paper">
+            {/* Equivale a — el dato vivo, se actualiza al tipear el monto. */}
+            <div className="p-5 hairline-b">
+              <p className="eyebrow !text-navy/40">{dict.equivalentTo}</p>
+              <p className="mt-2 font-mono text-2xl leading-none">
+                {inputValid ? (
+                  <span
+                    className={
+                      overAvailable
+                        ? "text-navy/40 line-through"
+                        : "text-gold"
+                    }
+                  >
+                    {fmtInt(computedShares)}
+                  </span>
+                ) : (
+                  <span className="text-navy/30">—</span>
+                )}
+                {inputValid && (
+                  <span className="ml-2 text-sm text-navy/40">
+                    {computedShares === 1
+                      ? dict.sharesSingular
+                      : dict.sharesPlural}
+                  </span>
+                )}
               </p>
-            )}
+              {inputValid && !overAvailable && computedAmount > 0 && (
+                <p className="mt-2 font-mono text-[11px] tracking-wider text-navy/40">
+                  {fmtMoney(computedAmount)} {dict.effectiveSuffix}
+                </p>
+              )}
+            </div>
+            {/* Precio por acción */}
+            <div className="p-5 hairline-b flex items-baseline justify-between gap-3">
+              <p className="eyebrow !text-navy/40">{dict.pricePerShare}</p>
+              <p className="font-mono text-sm text-navy">
+                {fmtMoney(pricePerShare)}
+              </p>
+            </div>
+            {/* Máximo disponible */}
+            <div className="p-5 flex items-baseline justify-between gap-3">
+              <p className="eyebrow !text-navy/40">{dict.maxOf}</p>
+              <p className="font-mono text-sm text-navy text-right">
+                {maxAmount !== null ? fmtMoney(maxAmount) : "—"}
+                <span className="block eyebrow !text-navy/40 mt-0.5">
+                  {fmtInt(maxShares)} {dict.sharesShort}
+                </span>
+              </p>
+            </div>
           </div>
-          <div className="bg-paper px-4 py-3">
-            <p className="eyebrow !text-navy/40">{dict.pricePerShare}</p>
-            <p className="mt-1 font-mono text-base text-navy">
-              {fmtMoney(pricePerShare)}
-            </p>
-          </div>
-        </div>
+
+          <p className="text-xs leading-relaxed text-navy/40">
+            {dict.footerNote}
+          </p>
+        </aside>
       </div>
+    </div>
+  );
+}
 
-      <div className="mt-7 hairline-t pt-6">
-        <label htmlFor="message" className="eyebrow block mb-2">
-          {dict.messageLabel}{" "}
-          <span className="!text-navy/40">{dict.messageOptional}</span>
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          rows={3}
-          maxLength={2000}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={`${dict.messagePlaceholderPrefix} ${viewerName.trim() || dict.yourNameFallback} ${dict.messagePlaceholderInfix} ${projectName} ${dict.messagePlaceholderSuffix}`}
-          className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2.5 font-sans text-sm text-navy focus:outline-none focus:border-navy"
-        />
-        <span className="eyebrow mt-2 block !text-navy/40">
-          {message.length} / 2000
-        </span>
-      </div>
-
-      {error && (
-        <p className="eyebrow !text-navy mt-5" role="alert">
-          {error}
-        </p>
-      )}
-
-      <div className="mt-7 flex flex-wrap items-center gap-5">
-        <button
-          type="submit"
-          disabled={isPending || !inputValid || overAvailable}
-          className="btn-primary disabled:opacity-50"
-        >
-          {isPending ? dict.sending : dict.send}
-        </button>
-        <button
-          type="button"
-          onClick={close}
-          disabled={isPending}
-          className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
-        >
-          {dict.cancel}
-        </button>
-      </div>
-
-      <p className="mt-5 text-xs leading-relaxed text-navy/40 max-w-xl">
-        {dict.footerNote}
-      </p>
-    </form>
+/**
+ * Header compartido de los formularios de la ficha — eyebrow + nombre del
+ * proyecto como H1. Sin botón de volver: el form ya tiene "Cancelar".
+ */
+function FormHeader({
+  eyebrow,
+  projectName,
+}: {
+  eyebrow: string;
+  projectName: string;
+}) {
+  return (
+    <div className="hairline-b pb-6 sm:pb-7">
+      <p className="eyebrow !text-navy/40">{eyebrow}</p>
+      <h1 className="font-sans mt-3 text-h1 text-navy">{projectName}</h1>
+    </div>
   );
 }
