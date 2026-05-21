@@ -46,6 +46,10 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
     e.preventDefault();
     setError(null);
     setSuccess(false);
+    if (!url.trim()) {
+      setError("Subí un archivo o pegá el link del reporte.");
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       const r = await publishReportAction(projectSlug, formData);
@@ -127,25 +131,10 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
         maxSizeMb={25}
         currentUrl={url || undefined}
         onUploaded={(publicUrl) => setUrl(publicUrl)}
-        label="Subir archivo"
-        helperText="PDF, Excel o Word. Máximo 25MB. Si tu storage no está configurado, podés pegar el link directo abajo."
+        label="Archivo del reporte"
+        helperText="PDF, Excel o Word · máximo 25 MB."
       />
-
-      <div>
-        <FloatingInput
-          id="url"
-          type="url"
-          inputMode="url"
-          label="URL del archivo"
-          value={url}
-          onChange={setUrl}
-          required
-        />
-        <p className="eyebrow !text-navy/40 mt-1.5">
-          Se autocompleta tras subir un archivo, o pegá un link público (Google
-          Drive, Dropbox, etc.).
-        </p>
-      </div>
+      <input type="hidden" name="url" value={url} />
 
       {error && (
         <p className="eyebrow !text-navy" role="alert">

@@ -1,26 +1,28 @@
 "use client";
 
 /**
- * FileUpload — picker reutilizable que sube a Cloudflare R2 via presigned URL
- * y degrada con gracia a "pegar URL pública" si R2 no está configurado.
+ * FileUpload — adjuntar un archivo o un link público.
  *
- * Flujo:
- *   1. Usuario elige archivo. Validamos size/mime localmente para feedback
- *      inmediato — el server valida igual en /api/uploads/presign.
- *   2. POST a /api/uploads/presign con { scope, filename, contentType, sizeBytes }.
- *      - 503 con "R2_NOT_CONFIGURED" → marcamos `r2Unavailable=true` y NO
- *        reintentamos. El componente muestra SOLO el input URL manual.
- *      - 200 → recibimos { uploadUrl, publicUrl, key }. Hacemos PUT directo
- *        con XHR (para tener % de progreso real).
- *   3. Cuando el PUT termina 2xx, llamamos `onUploaded(publicUrl, key)`.
+ * Diseño:
+ *   - Vacío: zona de carga (arrastrar-y-soltar o clic) + campo de URL
+ *     visible debajo como alternativa equivalente.
+ *   - Cargado: fila compacta con el archivo/link y "quitar".
+ *   - Subiendo: barra de progreso gold.
  *
- * El componente NUNCA persiste por sí solo — el caller recibe la URL y la
- * mete en su action / form.
+ * Flujo de subida:
+ *   1. El usuario suelta/elige un archivo. Validamos size client-side.
+ *   2. POST /api/uploads/presign → { uploadUrl, publicUrl, key } | 503.
+ *      - 503 "R2_NOT_CONFIGURED" → r2Unavailable: queda solo el campo
+ *        de URL manual (la zona de carga no puede funcionar).
+ *   3. PUT directo a R2 con XHR (para % de progreso real).
+ *   4. Al terminar → onUploaded(publicUrl, key).
  *
- * Estados: idle → uploading → done | error  (con fallback: r2Unavailable)
+ * El componente nunca persiste por sí solo: el caller recibe la URL por
+ * `onUploaded` y la mete en su form. "quitar" llama onUploaded("", "").
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { GoldUnderline } from "@/components/ui/Floating";
 
 export type FileUploadProps = {
   scope:
@@ -29,19 +31,19 @@ export type FileUploadProps = {
     | "report-attachment"
     | "project-doc"
     | "chat-attachment";
-  /** MIME attr para <input type="file"> (e.g. "image/png,image/jpeg"). */
+  /** MIME / extensiones para <input type="file"> (e.g. "image/png,.pdf"). */
   accept: string;
   /** Tope client-side (MB). El server vuelve a validar. */
   maxSizeMb: number;
-  /** Callback cuando el upload termina ok. Recibe URL pública final. */
+  /** Callback con la URL pública final. Recibe "" cuando se quita. */
   onUploaded: (publicUrl: string, key: string) => void;
-  /** URL actual del archivo (si ya hay uno cargado), para preview / fallback input. */
+  /** URL actual (si ya hay algo cargado), para arrancar en estado lleno. */
   currentUrl?: string;
-  /** Etiqueta visible arriba del control. */
+  /** Etiqueta eyebrow arriba del control. */
   label?: string;
-  /** Texto pequeño debajo del control con hints sobre formatos / pesos. */
+  /** Texto chico debajo de la zona con hints de formato / peso. */
   helperText?: string;
-  /** Si true, muestra preview de imagen (rounded square 96x96). */
+  /** Si true, la fila cargada muestra preview de imagen. */
   showImagePreview?: boolean;
 };
 
@@ -62,25 +64,42 @@ export function FileUpload({
 }: FileUploadProps) {
   const [state, setState] = useState<UploadState>({ kind: "idle" });
   const [r2Unavailable, setR2Unavailable] = useState(false);
-  const [manualUrl, setManualUrl] = useState(currentUrl ?? "");
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(
-    currentUrl ?? null,
-  );
+  const [value, setValue] = useState(currentUrl ?? "");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [urlDraft, setUrlDraft] = useState("");
+  const [dragActive, setDragActive] = useState(false);
+  const [previewBroken, setPreviewBroken] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /** Confirma la URL pegada manualmente (fallback). */
-  function commitManualUrl() {
-    const url = manualUrl.trim();
-    if (url.length === 0) return;
+  /** Fija el valor final y avisa al caller. */
+  function commit(url: string, key: string, name: string | null) {
+    setValue(url);
+    setFileName(name);
+    setPreviewBroken(false);
+    setState({ kind: "idle" });
+    onUploaded(url, key);
+  }
+
+  /** Quita el archivo/URL — vuelve a la zona de carga vacía. */
+  function clear() {
+    setValue("");
+    setFileName(null);
+    setUrlDraft("");
+    setState({ kind: "idle" });
+    onUploaded("", "");
+  }
+
+  function commitUrl() {
+    const url = urlDraft.trim();
+    if (!url) return;
     try {
-      // Validación mínima — si no parsea, no se confirma.
       new URL(url);
     } catch {
       setState({ kind: "error", message: "URL inválida." });
       return;
     }
-    setUploadedUrl(url);
-    setState({ kind: "idle" });
-    onUploaded(url, ""); // sin key cuando es URL externa
+    setUrlDraft("");
+    commit(url, "", null);
   }
 
   async function handleFile(file: File) {
@@ -89,14 +108,11 @@ export function FileUpload({
     // Validación cliente — el server valida igual.
     const maxBytes = maxSizeMb * 1024 * 1024;
     if (file.size > maxBytes) {
-      setState({
-        kind: "error",
-        message: `El archivo supera ${maxSizeMb}MB.`,
-      });
+      setState({ kind: "error", message: `El archivo supera ${maxSizeMb}MB.` });
       return;
     }
 
-    // 1) Pedimos presigned URL.
+    // 1) Presigned URL.
     let presignRes: Response;
     try {
       presignRes = await fetch("/api/uploads/presign", {
@@ -118,7 +134,7 @@ export function FileUpload({
     }
 
     if (presignRes.status === 503) {
-      // Fallback: R2 no configurado. Mostramos solo el input manual.
+      // R2 no configurado → degradamos al input de URL manual.
       setR2Unavailable(true);
       setState({ kind: "idle" });
       return;
@@ -155,7 +171,7 @@ export function FileUpload({
         xhr.open("PUT", presigned.uploadUrl, true);
         xhr.setRequestHeader(
           "Content-Type",
-          file.type || "application/octet-stream",
+          file.type || "application/octet-stream"
         );
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
@@ -178,123 +194,143 @@ export function FileUpload({
     }
 
     // 3) Listo.
-    setUploadedUrl(presigned.publicUrl);
-    setState({ kind: "idle" });
-    onUploaded(presigned.publicUrl, presigned.key);
+    commit(presigned.publicUrl, presigned.key, file.name);
   }
 
-  const inputCls =
-    "w-full border-hairline border-navy/40 bg-paper px-3 py-1.5 font-sans text-navy focus:outline-none focus:border-navy";
-
-  // ─── Modo fallback: SOLO input URL manual ─────────────────────────────
-  if (r2Unavailable) {
-    return (
-      <div className="space-y-2">
-        {label && <p className="eyebrow">{label}</p>}
-        <p className="eyebrow !text-navy/60">
-          Storage no configurado; pegá una URL pública.
-        </p>
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={manualUrl}
-            onChange={(e) => setManualUrl(e.target.value)}
-            placeholder="https://…"
-            className={`${inputCls} font-mono text-sm`}
-          />
-          <button
-            type="button"
-            onClick={commitManualUrl}
-            className="btn-primary disabled:opacity-50"
-            disabled={manualUrl.trim().length === 0}
-          >
-            Usar
-          </button>
-        </div>
-        {uploadedUrl && (
-          <p className="eyebrow !text-gold">
-            ✓ URL guardada (recordá presionar &quot;Guardar&quot; en el
-            formulario).
-          </p>
-        )}
-        {state.kind === "error" && (
-          <p className="eyebrow !text-navy" role="alert">
-            {state.message}
-          </p>
-        )}
-        {helperText && (
-          <p className="eyebrow !text-navy/40">{helperText}</p>
-        )}
-      </div>
-    );
+  function onDrop(e: React.DragEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    setDragActive(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) void handleFile(f);
   }
 
-  // ─── Modo normal: picker + preview + fallback secundario ───────────────
+  const showThumb = showImagePreview && !previewBroken && value !== "";
+
   return (
-    <div className="space-y-2">
-      {label && <p className="eyebrow">{label}</p>}
+    <div className="space-y-2.5">
+      {label && <p className="eyebrow !text-navy">{label}</p>}
 
-      {showImagePreview && uploadedUrl && (
-        <div className="flex items-center gap-3">
-          {/* Preview chiquito. Si no carga (PDF, etc.) cae a un placeholder. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={uploadedUrl}
-            alt="Vista previa"
-            className="w-24 h-24 rounded-md object-cover border-hairline border-navy/20 bg-paper"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-          <a
-            href={uploadedUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="eyebrow hover:!text-gold"
-          >
-            Ver archivo actual ↗
-          </a>
-        </div>
-      )}
-
-      {!showImagePreview && uploadedUrl && (
-        <a
-          href={uploadedUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="eyebrow hover:!text-gold inline-block"
-        >
-          Ver archivo actual ↗
-        </a>
-      )}
-
-      <label className="block">
-        <input
-          type="file"
-          accept={accept}
-          disabled={state.kind === "uploading"}
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void handleFile(f);
-            // limpiá el input para permitir re-elegir el mismo archivo
-            e.target.value = "";
-          }}
-          className="block w-full text-sm text-navy file:mr-3 file:py-1.5 file:px-3 file:border-hairline file:border-navy/40 file:bg-paper file:text-navy file:eyebrow file:cursor-pointer file:hover:bg-paper-dark disabled:opacity-50"
-        />
-      </label>
-
-      {state.kind === "uploading" && (
-        <div className="space-y-1">
+      {state.kind === "uploading" ? (
+        /* ─── Subiendo ──────────────────────────────────────────── */
+        <div className="hairline bg-paper-light p-3.5 space-y-2">
+          <p className="eyebrow !text-navy/60">Subiendo… {state.progress}%</p>
           <div className="h-1 w-full bg-paper-dark relative overflow-hidden">
             <div
               className="absolute inset-y-0 left-0 bg-gold transition-[width] duration-150"
               style={{ width: `${state.progress}%` }}
             />
           </div>
-          <p className="eyebrow !text-navy/60">
-            Subiendo… {state.progress}%
-          </p>
         </div>
+      ) : value !== "" ? (
+        /* ─── Cargado: fila compacta ────────────────────────────── */
+        <div className="hairline bg-paper-light flex items-center gap-3 p-3">
+          {showThumb ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={value}
+              alt="Vista previa"
+              onError={() => setPreviewBroken(true)}
+              className="w-12 h-12 object-cover hairline shrink-0 bg-paper"
+            />
+          ) : (
+            <FileGlyph />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="font-sans text-sm text-navy truncate">
+              {fileName ?? (showImagePreview ? "Imagen cargada" : value)}
+            </p>
+            <a
+              href={value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="eyebrow !text-navy/50 hover:!text-gold"
+            >
+              ver archivo ↗
+            </a>
+          </div>
+          <button
+            type="button"
+            onClick={clear}
+            className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
+          >
+            quitar ×
+          </button>
+        </div>
+      ) : (
+        /* ─── Vacío: zona de carga + URL ────────────────────────── */
+        <>
+          {!r2Unavailable && (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragActive(true);
+              }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={onDrop}
+              className={`w-full border border-dashed flex flex-col items-center justify-center gap-2 px-4 py-8 transition-colors cursor-pointer ${
+                dragActive
+                  ? "border-gold bg-gold/10"
+                  : "border-navy/30 hover:border-navy/50 hover:bg-paper-dark/30"
+              }`}
+            >
+              <UploadGlyph active={dragActive} />
+              <span className="font-sans text-sm text-navy/70 pointer-events-none">
+                {dragActive
+                  ? "Soltá el archivo acá"
+                  : "Arrastrá un archivo o hacé clic para elegir"}
+              </span>
+            </button>
+          )}
+
+          {helperText && !r2Unavailable && (
+            <p className="eyebrow !text-navy/40">{helperText}</p>
+          )}
+          {r2Unavailable && (
+            <p className="eyebrow !text-navy/60">
+              El almacenamiento no está configurado — pegá una URL pública.
+            </p>
+          )}
+
+          {!r2Unavailable && (
+            <div className="flex items-center gap-3">
+              <span aria-hidden className="h-px flex-1 bg-navy/15" />
+              <span className="eyebrow !text-navy/40">o pegá un link</span>
+              <span aria-hidden className="h-px flex-1 bg-navy/15" />
+            </div>
+          )}
+
+          <div className="relative flex items-center gap-3">
+            <input
+              type="url"
+              value={urlDraft}
+              onChange={(e) => setUrlDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commitUrl();
+                }
+              }}
+              placeholder="https://…"
+              className="peer flex-1 min-w-0 bg-transparent border-0 px-0 py-1.5 font-mono text-sm text-navy outline-none placeholder:text-navy/30"
+            />
+            {urlDraft.trim().length > 0 && (
+              <button
+                type="button"
+                onClick={commitUrl}
+                className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
+              >
+                usar →
+              </button>
+            )}
+            <span
+              aria-hidden
+              className="absolute left-0 right-0 bottom-0 h-px bg-navy/30"
+            />
+            <GoldUnderline />
+          </div>
+        </>
       )}
 
       {state.kind === "error" && (
@@ -303,35 +339,63 @@ export function FileUpload({
         </p>
       )}
 
-      {helperText && (
-        <p className="eyebrow !text-navy/40">{helperText}</p>
-      )}
-
-      {/* Fallback secundario: aunque R2 esté configurado, dejamos el input
-          URL manual disponible para que el usuario pueda pegar links externos
-          (Drive, Dropbox, etc.) si prefiere. */}
-      <details className="mt-2">
-        <summary className="eyebrow !text-navy/60 cursor-pointer hover:!text-navy">
-          …o pegá una URL pública
-        </summary>
-        <div className="mt-2 flex gap-2">
-          <input
-            type="url"
-            value={manualUrl}
-            onChange={(e) => setManualUrl(e.target.value)}
-            placeholder="https://…"
-            className={`${inputCls} font-mono text-sm`}
-          />
-          <button
-            type="button"
-            onClick={commitManualUrl}
-            className="btn-primary disabled:opacity-50"
-            disabled={manualUrl.trim().length === 0}
-          >
-            Usar
-          </button>
-        </div>
-      </details>
+      {/* Input de archivo oculto — sin `name`, no se envía en el form. */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+          e.target.value = ""; // permite re-elegir el mismo archivo
+        }}
+      />
     </div>
+  );
+}
+
+/** Flecha hacia arriba sobre una bandeja — glifo de la zona de carga. */
+function UploadGlyph({ active }: { active: boolean }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`pointer-events-none ${active ? "text-gold" : "text-navy/40"}`}
+      aria-hidden
+    >
+      <path d="M12 16V4" />
+      <path d="M7 9l5-5 5 5" />
+      <path d="M5 16v2.5A1.5 1.5 0 006.5 20h11a1.5 1.5 0 001.5-1.5V16" />
+    </svg>
+  );
+}
+
+/** Glifo de documento para la fila cargada cuando no hay preview de imagen. */
+function FileGlyph() {
+  return (
+    <span className="w-12 h-12 shrink-0 hairline bg-paper flex items-center justify-center">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-navy/40"
+        aria-hidden
+      >
+        <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" />
+        <path d="M14 3v5h5" />
+      </svg>
+    </span>
   );
 }
