@@ -380,6 +380,12 @@ export default async function PartnerDashboardPage() {
                           >
                             {t.chatShort}
                           </Link>
+                          <Link
+                            href={`/proyectos/${p.project.slug}/reventa` as Route}
+                            className="eyebrow hover:!text-gold shrink-0"
+                          >
+                            Reventa
+                          </Link>
                         </div>
                         <p className="mt-1 eyebrow">{p.project.shortPitch}</p>
                       </div>

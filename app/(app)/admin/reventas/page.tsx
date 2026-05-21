@@ -1,0 +1,229 @@
+import Link from "next/link";
+import type { Route } from "next";
+import { requireRole } from "@/lib/auth/session";
+import { prisma } from "@/lib/db/client";
+import { formatDate } from "@/lib/utils/format";
+import { ResaleTransferActions } from "./ResaleTransferActions";
+
+export const metadata = { title: "Reventas · AJDUT" };
+
+const FILTER_LABEL: Record<string, string> = {
+  pending: "Pendientes",
+  completed: "Aprobadas",
+  all: "Todas",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  LISTED: "En el tablón",
+  IN_CONVERSATION: "En conversación",
+  AWAITING_VALIDATION: "Esperando aprobación",
+  COMPLETED: "Aprobada",
+  CANCELLED: "Cancelada",
+};
+
+function fmtInt(n: number): string {
+  return n.toLocaleString("es-MX");
+}
+
+export default async function AdminResalesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
+  await requireRole(["ADMIN"]);
+  const sp = await searchParams;
+  const filter = sp.filter ?? "pending";
+
+  const where =
+    filter === "completed"
+      ? { status: "COMPLETED" as const }
+      : filter === "all"
+      ? {}
+      : { status: "AWAITING_VALIDATION" as const };
+
+  const [listings, pendingCount, completedCount, allCount] = await Promise.all([
+    prisma.resaleListing.findMany({
+      where,
+      orderBy:
+        filter === "pending" ? { createdAt: "asc" } : { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        status: true,
+        intentNote: true,
+        contactChannel: true,
+        createdAt: true,
+        proposedBuyerId: true,
+        seller: { select: { fullName: true, alias: true, email: true } },
+        project: { select: { name: true, slug: true } },
+        participation: { select: { serialCode: true, shareCount: true } },
+      },
+    }),
+    prisma.resaleListing.count({ where: { status: "AWAITING_VALIDATION" } }),
+    prisma.resaleListing.count({ where: { status: "COMPLETED" } }),
+    prisma.resaleListing.count(),
+  ]);
+
+  const buyerIds = Array.from(
+    new Set(
+      listings
+        .map((l) => l.proposedBuyerId)
+        .filter((x): x is string => x !== null)
+    )
+  );
+  const buyers = buyerIds.length
+    ? await prisma.user.findMany({
+        where: { id: { in: buyerIds } },
+        select: { id: true, fullName: true, alias: true, email: true },
+      })
+    : [];
+  const buyerMap = new Map(buyers.map((b) => [b.id, b]));
+
+  const countsByFilter: Record<string, number> = {
+    pending: pendingCount,
+    completed: completedCount,
+    all: allCount,
+  };
+
+  return (
+    <div>
+      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+        <p className="eyebrow">— Admin</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
+          Reventas de acciones
+        </h1>
+        <p className="mt-3 font-mono text-sm text-navy/75">
+          {pendingCount === 0
+            ? "Sin traspasos pendientes de aprobar."
+            : `${pendingCount} traspaso${
+                pendingCount === 1 ? "" : "s"
+              } esperando aprobación.`}
+        </p>
+      </header>
+
+      <nav className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2">
+        {(["pending", "completed", "all"] as const).map((key) => {
+          const active = filter === key;
+          const count = countsByFilter[key] ?? 0;
+          return (
+            <Link
+              key={key}
+              href={{ pathname: "/admin/reventas", query: { filter: key } }}
+              className={`eyebrow whitespace-nowrap transition-colors ${
+                active ? "!text-navy" : "!text-navy/40 hover:!text-navy"
+              }`}
+            >
+              {FILTER_LABEL[key]}{" "}
+              <span className={active ? "text-gold" : "text-navy/30"}>
+                ({count})
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="mt-10">
+        {listings.length === 0 ? (
+          <p className="text-navy/60">
+            {filter === "completed"
+              ? "Todavía no aprobaste ningún traspaso."
+              : filter === "all"
+              ? "Todavía no hay reventas registradas."
+              : "Bandeja al día — no hay traspasos pendientes."}
+          </p>
+        ) : (
+          <ul className="space-y-6">
+            {listings.map((l) => {
+              const sellerName = l.seller.alias ?? l.seller.fullName;
+              const buyer = l.proposedBuyerId
+                ? buyerMap.get(l.proposedBuyerId)
+                : null;
+              const buyerName = buyer
+                ? buyer.alias ?? buyer.fullName
+                : "Sin designar";
+              const isPending = l.status === "AWAITING_VALIDATION";
+              const railClass = isPending
+                ? "bg-gold"
+                : l.status === "COMPLETED"
+                ? "bg-navy/60"
+                : "bg-navy/20";
+
+              return (
+                <li key={l.id} className="flex gap-4">
+                  <span
+                    aria-hidden
+                    className={`shrink-0 w-[3px] self-stretch ${railClass}`}
+                  />
+                  <div className="flex-1 min-w-0 py-2 pr-2">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <Link
+                        href={`/proyectos/${l.project.slug}` as Route}
+                        className="font-sans text-navy text-lg leading-tight hover:!text-gold"
+                      >
+                        {l.project.name}
+                      </Link>
+                      <p className="eyebrow shrink-0 !text-navy/40">
+                        {formatDate(l.createdAt)}
+                      </p>
+                    </div>
+
+                    <p className="mt-1 eyebrow">
+                      <span className={isPending ? "!text-gold" : "!text-navy/50"}>
+                        {STATUS_LABEL[l.status] ?? l.status}
+                      </span>
+                    </p>
+
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-sm">
+                      <div>
+                        <p className="eyebrow !text-navy/40">Vendedor</p>
+                        <p className="mt-1 text-navy">{sellerName}</p>
+                        <p className="text-navy/60 text-xs">{l.seller.email}</p>
+                      </div>
+                      <div>
+                        <p className="eyebrow !text-navy/40">Comprador</p>
+                        <p className="mt-1 text-navy">{buyerName}</p>
+                        {buyer && (
+                          <p className="text-navy/60 text-xs">{buyer.email}</p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="eyebrow !text-navy/40">Acciones</p>
+                        <p className="mt-1 text-navy">
+                          {fmtInt(l.participation.shareCount)}
+                        </p>
+                        <p className="text-navy/60 text-xs">
+                          {l.participation.serialCode}
+                        </p>
+                      </div>
+                    </div>
+
+                    {l.intentNote.trim().length > 0 && (
+                      <p className="mt-3 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
+                        “{l.intentNote}”
+                      </p>
+                    )}
+                    <p className="mt-2 eyebrow !text-navy/40">
+                      Contacto del vendedor:{" "}
+                      <span className="!text-navy/70">{l.contactChannel}</span>
+                    </p>
+
+                    {isPending && (
+                      <div className="mt-4">
+                        <ResaleTransferActions
+                          resaleListingId={l.id}
+                          sellerName={sellerName}
+                          buyerName={buyerName}
+                          shareCount={l.participation.shareCount}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}

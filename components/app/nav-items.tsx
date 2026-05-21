@@ -98,15 +98,19 @@ export async function navItemsFor(
   };
 
   if (role === "ADMIN") {
-    const [pendingApps, pendingAssignmentsCount, escalatedHeirs] = await Promise.all([
-      prisma.application.count({
-        where: { status: { in: ["PENDING", "UNDER_REVIEW"] } },
-      }),
-      prisma.pendingAssignment.count({ where: { status: "PENDING" } }),
-      prisma.user.count({
-        where: { heirsEscalated: true, isActive: true, deletedAt: null },
-      }),
-    ]);
+    const [pendingApps, pendingAssignmentsCount, escalatedHeirs, pendingResales] =
+      await Promise.all([
+        prisma.application.count({
+          where: { status: { in: ["PENDING", "UNDER_REVIEW"] } },
+        }),
+        prisma.pendingAssignment.count({ where: { status: "PENDING" } }),
+        prisma.user.count({
+          where: { heirsEscalated: true, isActive: true, deletedAt: null },
+        }),
+        prisma.resaleListing.count({
+          where: { status: "AWAITING_VALIDATION" },
+        }),
+      ]);
     return [
       // PORTAFOLIO
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
@@ -124,6 +128,14 @@ export async function navItemsFor(
         label: n.assignments,
         href: "/admin/asignaciones" as Route,
         badge: pendingAssignmentsCount,
+        badgeHighlight: true,
+        group: SEC_ADMIN,
+        icon: <AssignmentsIcon />,
+      },
+      {
+        label: "Reventas",
+        href: "/admin/reventas" as Route,
+        badge: pendingResales,
         badgeHighlight: true,
         group: SEC_ADMIN,
         icon: <AssignmentsIcon />,

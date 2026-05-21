@@ -192,10 +192,16 @@ export type CloseResaleDealInput = {
   resaleListingId: string;
   sellerId: string;
   proposedBuyerId: string;
-  sellerSignedAt: Date;
-  buyerSignedAt: Date;
-  rofrWaivedById: string;     // PROJECT_OWNER (founder) que renuncia explícitamente
-  rofrWaiverNote?: string;
+  /**
+   * Firmas electrónicas y waiver de ROFR son OPCIONALES. El flujo vigente es
+   * simplificado: el vendedor designa al comprador y el ADMIN aprueba el
+   * traspaso. Los campos quedan disponibles por si se reactiva el flujo legal
+   * completo (doble firma + renuncia explícita del founder al ROFR).
+   */
+  sellerSignedAt?: Date | null;
+  buyerSignedAt?: Date | null;
+  rofrWaivedById?: string | null;
+  rofrWaiverNote?: string | null;
 };
 
 export async function closeResaleDeal(input: CloseResaleDealInput) {
@@ -225,14 +231,17 @@ export async function closeResaleDeal(input: CloseResaleDealInput) {
       throw new ValidationError("proposedBuyerId", "El usuario institucional no puede comprar reventas.");
     }
 
-    // Verificar ROFR: quien renuncia debe ser el founder del proyecto
-    const project = await tx.project.findUnique({
-      where: { id: listing.projectId },
-      select: { ownerId: true },
-    });
-    if (!project) throw new NotFoundError("Project", listing.projectId);
-    if (project.ownerId !== input.rofrWaivedById) {
-      throw new ForbiddenError("Solo el founder del proyecto puede renunciar al ROFR.");
+    // ROFR: si se declara un waiver explícito, quien renuncia debe ser el
+    // founder del proyecto. En el flujo simplificado no hay waiver.
+    if (input.rofrWaivedById) {
+      const project = await tx.project.findUnique({
+        where: { id: listing.projectId },
+        select: { ownerId: true },
+      });
+      if (!project) throw new NotFoundError("Project", listing.projectId);
+      if (project.ownerId !== input.rofrWaivedById) {
+        throw new ForbiddenError("Solo el founder del proyecto puede renunciar al ROFR.");
+      }
     }
 
     const participation = await loadParticipation(tx, listing.participationId);
@@ -245,10 +254,10 @@ export async function closeResaleDeal(input: CloseResaleDealInput) {
       data: {
         status: "AWAITING_VALIDATION",
         proposedBuyerId: input.proposedBuyerId,
-        sellerSignedAt: input.sellerSignedAt,
-        buyerSignedAt: input.buyerSignedAt,
-        rofrWaivedAt: new Date(),
-        rofrWaivedById: input.rofrWaivedById,
+        sellerSignedAt: input.sellerSignedAt ?? null,
+        buyerSignedAt: input.buyerSignedAt ?? null,
+        rofrWaivedAt: input.rofrWaivedById ? new Date() : null,
+        rofrWaivedById: input.rofrWaivedById ?? null,
         rofrWaiverNote: input.rofrWaiverNote ?? null,
       },
     });
@@ -290,19 +299,6 @@ export async function validateTransfer(input: ValidateTransferInput) {
         "ResaleListing en AWAITING_VALIDATION sin comprador propuesto."
       );
     }
-    if (!listing.sellerSignedAt || !listing.buyerSignedAt) {
-      throw new InvariantViolation(
-        "R_02_MISSING_SIGNATURE",
-        "Faltan firmas electrónicas de comprador o vendedor."
-      );
-    }
-    if (!listing.rofrWaivedAt) {
-      throw new InvariantViolation(
-        "R_03_ROFR_PENDING",
-        "El founder no ha renunciado explícitamente al ROFR."
-      );
-    }
-
     const participation = await loadParticipation(tx, listing.participationId);
     if (!canTransition(participation.status, "TRANSFER_VALIDATED")) {
       throw new IllegalTransition(participation.status, "TRANSFER_VALIDATED");

@@ -89,6 +89,15 @@ import {
 import {
   validationCheckEmail,
 } from "./templates/validation-check";
+import {
+  resaleTransferToAdminEmail,
+} from "./templates/resale-transfer-to-admin";
+import {
+  resaleApprovedEmail,
+} from "./templates/resale-approved";
+import {
+  resaleRejectedEmail,
+} from "./templates/resale-rejected";
 
 function appUrl(): string {
   return (
@@ -748,5 +757,89 @@ export async function notifyRequesterInfoRequestResolved(input: {
     html,
     fireAndForget: true,
     kind: "info-request.resolved",
+  });
+}
+
+// ─── Reventa de acciones ───────────────────────────────────────────
+
+/**
+ * Avisa al equipo de admins que un vendedor designó comprador y el traspaso
+ * necesita aprobación.
+ */
+export async function notifyAdminsResaleTransfer(input: {
+  projectName: string;
+  sellerName: string;
+  buyerName: string;
+  shareCount: number;
+  intentNote: string;
+}) {
+  const admins = getAdminNotifyEmails();
+  if (admins.length === 0) {
+    console.warn(
+      "ADMIN_NOTIFY_EMAILS no configurado. Saltando notificación de reventa."
+    );
+    return { ok: false as const, error: "no admin recipients", via: "console" as const };
+  }
+  const reviewUrl = `${appUrl()}/admin/reventas`;
+  const { subject, html } = resaleTransferToAdminEmail({ ...input, reviewUrl });
+  return sendEmail({
+    to: admins,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "resale.admin-notice",
+  });
+}
+
+/** Avisa al vendedor y al comprador que el admin aprobó el traspaso. */
+export async function notifyResaleApproved(input: {
+  to: string[];
+  projectSlug: string;
+  projectName: string;
+  sellerName: string;
+  buyerName: string;
+  shareCount: number;
+}) {
+  if (input.to.length === 0) {
+    return { ok: true as const, id: null, via: "console" as const };
+  }
+  const projectUrl = `${appUrl()}/proyectos/${input.projectSlug}`;
+  const { subject, html } = resaleApprovedEmail({
+    projectName: input.projectName,
+    sellerName: input.sellerName,
+    buyerName: input.buyerName,
+    shareCount: input.shareCount,
+    projectUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "resale.approved",
+  });
+}
+
+/** Avisa al vendedor que el admin rechazó el traspaso. */
+export async function notifyResaleRejected(input: {
+  to: string;
+  projectSlug: string;
+  projectName: string;
+  shareCount: number;
+  note: string;
+}) {
+  const resaleUrl = `${appUrl()}/proyectos/${input.projectSlug}/reventa`;
+  const { subject, html } = resaleRejectedEmail({
+    projectName: input.projectName,
+    shareCount: input.shareCount,
+    note: input.note,
+    resaleUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "resale.rejected",
   });
 }
