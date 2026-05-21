@@ -3,6 +3,11 @@
 import { useState, useTransition } from "react";
 import { addMetricAction, removeMetricAction } from "./actions";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
+import {
+  FloatingInput,
+  FloatingSelect,
+  FloatingDate,
+} from "@/components/ui/Floating";
 
 type Kind =
   | "MRR"
@@ -78,10 +83,22 @@ export function MetricsEditor({
   const [kind, setKind] = useState<Kind>("MRR");
   const [unit, setUnit] = useState<string>(KIND_DEFAULT_UNIT.MRR);
   const [customLabel, setCustomLabel] = useState("");
+  const [metricValue, setMetricValue] = useState("");
+  const [asOf, setAsOf] = useState(today());
+  const [visibility, setVisibility] = useState("PUBLIC_TO_HOLDERS");
 
   function onKindChange(next: Kind) {
     setKind(next);
     setUnit(KIND_DEFAULT_UNIT[next]);
+  }
+
+  function resetForm() {
+    setKind("MRR");
+    setUnit(KIND_DEFAULT_UNIT.MRR);
+    setCustomLabel("");
+    setMetricValue("");
+    setAsOf(today());
+    setVisibility("PUBLIC_TO_HOLDERS");
   }
 
   function onSubmit(formData: FormData) {
@@ -90,10 +107,7 @@ export function MetricsEditor({
       const r = await addMetricAction(projectSlug, formData);
       if (r.ok) {
         setShowNew(false);
-        // reset
-        setKind("MRR");
-        setUnit(KIND_DEFAULT_UNIT.MRR);
-        setCustomLabel("");
+        resetForm();
       } else {
         setError(r.error);
       }
@@ -144,88 +158,79 @@ export function MetricsEditor({
       </div>
 
       {showNew && (
-        <form action={onSubmit} className="hairline p-4 bg-paper space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Tipo" htmlFor="kind">
-              <select
+        <form action={onSubmit} className="hairline p-4 bg-paper space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            <div>
+              <FloatingSelect
                 id="kind"
-                name="kind"
+                label="Tipo"
                 value={kind}
-                onChange={(e) => onKindChange(e.target.value as Kind)}
-                className="input"
-              >
-                {(Object.keys(KIND_LABEL) as Kind[]).map((k) => (
-                  <option key={k} value={k}>
-                    {KIND_LABEL[k]}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Unidad" htmlFor="unit">
-              <input
-                id="unit"
-                name="unit"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                required
-                placeholder="USD · MXN · % · count …"
-                className="input font-mono"
+                onChange={(v) => onKindChange(v as Kind)}
+                options={(Object.keys(KIND_LABEL) as Kind[]).map((k) => ({
+                  value: k,
+                  label: KIND_LABEL[k],
+                }))}
               />
-            </Field>
+              <input type="hidden" name="kind" value={kind} />
+            </div>
+            <FloatingInput
+              id="unit"
+              label="Unidad"
+              value={unit}
+              onChange={setUnit}
+              required
+            />
           </div>
 
           {kind === "CUSTOM" && (
-            <Field label="Etiqueta personalizada" htmlFor="customLabel">
-              <input
-                id="customLabel"
-                name="customLabel"
-                value={customLabel}
-                onChange={(e) => setCustomLabel(e.target.value)}
-                required
-                placeholder="ej: Daily downloads"
-                className="input"
-              />
-            </Field>
+            <FloatingInput
+              id="customLabel"
+              label="Etiqueta personalizada"
+              value={customLabel}
+              onChange={setCustomLabel}
+              required
+            />
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Field label="Valor" htmlFor="value">
-              <input
-                id="value"
-                name="value"
-                type="number"
-                step="any"
-                required
-                className="input font-mono"
-              />
-            </Field>
-            <Field label="Fecha" htmlFor="asOf">
-              <input
-                id="asOf"
-                name="asOf"
-                type="date"
-                defaultValue={today()}
-                required
-                className="input font-mono"
-              />
-            </Field>
-            <Field label="Visibilidad" htmlFor="visibility">
-              <select
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3">
+            <FloatingInput
+              id="value"
+              type="number"
+              step="any"
+              label="Valor"
+              value={metricValue}
+              onChange={setMetricValue}
+              required
+            />
+            <FloatingDate
+              id="asOf"
+              label="Fecha"
+              value={asOf}
+              onChange={setAsOf}
+              required
+            />
+            <div>
+              <FloatingSelect
                 id="visibility"
-                name="visibility"
-                defaultValue="PUBLIC_TO_HOLDERS"
-                className="input"
-              >
-                <option value="PUBLIC_TO_HOLDERS">Visible para miembros</option>
-                <option value="PRIVATE">Privada (solo vos y admin)</option>
-              </select>
-            </Field>
+                label="Visibilidad"
+                value={visibility}
+                onChange={setVisibility}
+                options={[
+                  { value: "PUBLIC_TO_HOLDERS", label: "Visible para miembros" },
+                  { value: "PRIVATE", label: "Privada (solo vos y admin)" },
+                ]}
+              />
+              <input type="hidden" name="visibility" value={visibility} />
+            </div>
           </div>
 
-          <div className="flex justify-end gap-3 hairline-t pt-4">
+          <div className="flex justify-end gap-4 hairline-t pt-4">
             <button
               type="button"
-              onClick={() => setShowNew(false)}
+              onClick={() => {
+                setShowNew(false);
+                resetForm();
+              }}
               disabled={isPending}
               className="eyebrow hover:!text-gold"
             >
@@ -235,21 +240,6 @@ export function MetricsEditor({
               {isPending ? "Guardando…" : "Agregar"}
             </button>
           </div>
-
-          <style jsx>{`
-            :global(.input) {
-              width: 100%;
-              border: 0.5px solid rgba(26, 26, 46, 0.4);
-              background: #f5f3ee;
-              padding: 0.5rem 0.75rem;
-              font-family: var(--font-inter);
-              color: #1a1a2e;
-            }
-            :global(.input:focus) {
-              outline: none;
-              border-color: #1a1a2e;
-            }
-          `}</style>
         </form>
       )}
 
@@ -279,25 +269,6 @@ export function MetricsEditor({
       {initial.length === 0 && !showNew && (
         <p className="text-navy/60">Sin métricas cargadas todavía.</p>
       )}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={htmlFor} className="eyebrow block mb-2">
-        {label}
-      </label>
-      {children}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { FloatingInput } from "@/components/ui/Floating";
 
 type FilterDict = {
   searchLabel: string;
@@ -33,34 +34,25 @@ export function ProjectFilters({ dict }: { dict: FilterDict }) {
     return () => clearTimeout(t);
   }, [query, params, router]);
 
-  const inputCls =
-    "w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy text-sm focus:outline-none focus:border-navy";
-
   return (
     <div className="w-full">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <label htmlFor="q" className="eyebrow">
-          {dict.searchLabel}
-        </label>
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
-          >
-            {dict.searchClear}
-          </button>
-        )}
-      </div>
-      <input
+      <FloatingInput
         id="q"
-        type="text"
+        label={dict.searchLabel}
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={dict.searchPlaceholder}
-        className={inputCls}
+        onChange={setQuery}
         autoComplete="off"
+        inputMode="search"
       />
+      {query && (
+        <button
+          type="button"
+          onClick={() => setQuery("")}
+          className="mt-2 eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+        >
+          {dict.searchClear}
+        </button>
+      )}
     </div>
   );
 }

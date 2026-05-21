@@ -2,6 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { sendBroadcastAction } from "./actions";
+import {
+  FloatingInput,
+  FloatingSelect,
+  FloatingTextarea,
+} from "@/components/ui/Floating";
 
 type Member = { userId: string; label: string; email: string };
 
@@ -20,6 +25,8 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
   const [recipientUserId, setRecipientUserId] = useState<string>(
     members[0]?.userId ?? ""
   );
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -27,6 +34,10 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
     e.preventDefault();
     setError(null);
     setSuccess(false);
+    if (!subject.trim() || !body.trim()) {
+      setError("Completá el asunto y el mensaje del aviso.");
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     if (mode === "ONE") {
       if (!recipientUserId) {
@@ -44,6 +55,8 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
         return;
       }
       setSuccess(true);
+      setSubject("");
+      setBody("");
       formRef.current?.reset();
     });
   }
@@ -98,58 +111,33 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
         </div>
 
         {mode === "ONE" && (
-          <div className="mt-2">
-            <label htmlFor="recipientUserId" className="eyebrow block mb-1.5">
-              Miembro
-            </label>
-            <select
-              id="recipientUserId"
-              value={recipientUserId}
-              onChange={(e) => setRecipientUserId(e.target.value)}
-              disabled={isPending}
-              className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-            >
-              {members.map((m) => (
-                <option key={m.userId} value={m.userId}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FloatingSelect
+            id="recipientUserId"
+            label="Miembro"
+            value={recipientUserId}
+            onChange={setRecipientUserId}
+            disabled={isPending}
+            options={members.map((m) => ({ value: m.userId, label: m.label }))}
+          />
         )}
       </div>
 
-      <div>
-        <label htmlFor="subject" className="eyebrow block mb-1.5">
-          Asunto
-        </label>
-        <input
-          id="subject"
-          name="subject"
-          type="text"
-          maxLength={160}
-          required
-          disabled={isPending}
-          placeholder="Reporte trimestral disponible"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-        />
-      </div>
+      <FloatingInput
+        id="subject"
+        label="Asunto"
+        value={subject}
+        onChange={setSubject}
+        maxLength={160}
+      />
 
-      <div>
-        <label htmlFor="body" className="eyebrow block mb-1.5">
-          Mensaje
-        </label>
-        <textarea
-          id="body"
-          name="body"
-          rows={8}
-          maxLength={5000}
-          required
-          disabled={isPending}
-          placeholder="Escribí el aviso que querés enviar…"
-          className="w-full resize-y border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy leading-relaxed focus:outline-none focus:border-navy disabled:opacity-50"
-        />
-      </div>
+      <FloatingTextarea
+        id="body"
+        label="Mensaje"
+        value={body}
+        onChange={setBody}
+        rows={8}
+        maxLength={5000}
+      />
 
       {error && (
         <p className="eyebrow !text-navy" role="alert">

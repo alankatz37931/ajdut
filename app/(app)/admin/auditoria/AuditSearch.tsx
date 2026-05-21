@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { FloatingInput } from "@/components/ui/Floating";
 
 /**
  * Búsqueda instantánea por actor — mismo patrón que /proyectos:
@@ -30,29 +31,23 @@ export function AuditSearch() {
 
   return (
     <div className="w-full">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <label htmlFor="actor" className="eyebrow">
-          Buscar por actor
-        </label>
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
-          >
-            Limpiar
-          </button>
-        )}
-      </div>
-      <input
+      <FloatingInput
         id="actor"
-        type="text"
+        label="Buscar por actor"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="email o nombre"
-        className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy text-sm focus:outline-none focus:border-navy"
+        onChange={setQuery}
         autoComplete="off"
+        inputMode="search"
       />
+      {query && (
+        <button
+          type="button"
+          onClick={() => setQuery("")}
+          className="mt-2 eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+        >
+          Limpiar
+        </button>
+      )}
     </div>
   );
 }

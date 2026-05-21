@@ -52,6 +52,7 @@ export function FloatingInput({
   autoComplete,
   required,
   inputMode,
+  step,
 }: {
   id: string;
   name?: string;
@@ -64,6 +65,8 @@ export function FloatingInput({
   autoComplete?: string;
   required?: boolean;
   inputMode?: "text" | "email" | "tel" | "numeric" | "decimal" | "url" | "search";
+  /** Para type="number" — pasá "any" para permitir decimales. */
+  step?: string;
 }) {
   return (
     <div className="relative pt-2">
@@ -78,6 +81,7 @@ export function FloatingInput({
         autoComplete={autoComplete}
         required={required}
         inputMode={inputMode}
+        step={step}
         placeholder=" "
         className={FIELD_BASE}
       />
@@ -100,6 +104,7 @@ export function FloatingSelect({
   onChange,
   options,
   autoFocus,
+  disabled,
 }: {
   id: string;
   label: string;
@@ -107,6 +112,7 @@ export function FloatingSelect({
   onChange: (v: string) => void;
   options: Array<{ value: string; label: string }>;
   autoFocus?: boolean;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -148,9 +154,12 @@ export function FloatingSelect({
           id={id}
           type="button"
           onClick={() => setOpen((o) => !o)}
+          disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className="peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none cursor-pointer flex items-center justify-between gap-3 transition-colors"
+          className={`peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none flex items-center justify-between gap-3 transition-colors ${
+            disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+          }`}
         >
           <span>{selected?.label ?? ""}</span>
           <span
@@ -220,15 +229,18 @@ export function FloatingTextarea({
   onChange,
   rows,
   maxLength,
-  counterSuffix,
+  counterSuffix = "",
+  required,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
   rows: number;
-  maxLength: number;
-  counterSuffix: string;
+  /** Si se omite, no se renderiza el contador y no hay tope de caracteres. */
+  maxLength?: number;
+  counterSuffix?: string;
+  required?: boolean;
 }) {
   return (
     <div className="pt-2">
@@ -243,6 +255,7 @@ export function FloatingTextarea({
           onChange={(e) => onChange(e.target.value)}
           rows={rows}
           maxLength={maxLength}
+          required={required}
           className="peer block w-full bg-transparent border-0 px-0 py-1.5 font-sans text-navy leading-relaxed outline-none resize-none"
         />
         <span
@@ -251,9 +264,50 @@ export function FloatingTextarea({
         />
         <GoldUnderline />
       </div>
-      <span className="mt-1.5 block eyebrow !text-navy/40">
-        {value.length} / {maxLength} {counterSuffix}
-      </span>
+      {maxLength != null && (
+        <span className="mt-1.5 block eyebrow !text-navy/40">
+          {value.length} / {maxLength} {counterSuffix}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * FloatingDate — para <input type="date">. Los date inputs no soportan
+ * `placeholder`, así que el floating label no aplica: usamos label estático
+ * arriba como eyebrow, igual que FloatingSelect / FloatingTextarea.
+ */
+export function FloatingDate({
+  id,
+  label,
+  value,
+  onChange,
+  required,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  required?: boolean;
+}) {
+  return (
+    <div className="pt-2">
+      <label htmlFor={id} className="block eyebrow !text-navy mb-1.5">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          name={id}
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required={required}
+          className="peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-mono text-sm text-navy outline-none"
+        />
+        <GoldUnderline />
+      </div>
     </div>
   );
 }

@@ -3,6 +3,12 @@
 import { useState, useTransition } from "react";
 import { createProjectAction } from "./actions";
 import { derivePriceAndShares } from "@/lib/utils/shares";
+import {
+  FloatingInput,
+  FloatingSelect,
+  FloatingTextarea,
+} from "@/components/ui/Floating";
+import { FileUpload } from "@/components/ui/FileUpload";
 
 const STAGES = [
   { id: "IDEA", label: "Idea" },
@@ -18,6 +24,10 @@ const KINDS = [
   { id: "MERCHANDISE", label: "Mercancía" },
   { id: "STARTUP", label: "Otro" },
 ] as const;
+
+const DOC_ACCEPT = ".pdf,.xlsx,.xls,.docx,.doc,.png,.jpg,.jpeg";
+const DOC_HELP =
+  "PDF, Word, Excel o imagen (máx. 25 MB). También podés pegar un link público.";
 
 export function NewProjectForm() {
   const [form, setForm] = useState({
@@ -82,211 +92,161 @@ export function NewProjectForm() {
       <section className="space-y-5">
         <p className="eyebrow">Identidad</p>
 
-        <Field label="Nombre del proyecto" htmlFor="name">
-          <input
-            id="name"
-            name="name"
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            required
-            placeholder="Ej. Pushka SAS"
-            className="input"
-          />
-        </Field>
+        <FloatingInput
+          id="name"
+          label="Nombre del proyecto"
+          value={form.name}
+          onChange={(v) => update("name", v)}
+          required
+        />
 
-        <Field label="One-liner (máx 160 caracteres)" htmlFor="oneLiner">
-          <input
+        <div>
+          <FloatingInput
             id="oneLiner"
-            name="oneLiner"
-            maxLength={160}
+            label="One-liner"
             value={form.oneLiner}
-            onChange={(e) => update("oneLiner", e.target.value)}
+            onChange={(v) => update("oneLiner", v)}
+            maxLength={160}
             required
-            placeholder="En una frase, qué hace tu empresa"
-            className="input"
           />
-          <span className="eyebrow mt-2 block">{form.oneLiner.length} / 160</span>
-        </Field>
+          <p className="eyebrow !text-navy/40 mt-1.5">
+            {form.oneLiner.length} / 160 — en una frase, qué hace tu empresa.
+          </p>
+        </div>
 
-        <Field label="Descripción larga" htmlFor="description">
-          <textarea
-            id="description"
-            name="description"
-            rows={5}
-            value={form.description}
-            onChange={(e) => update("description", e.target.value)}
-            required
-            placeholder="Contexto, mercado, por qué ahora, etc."
-            className="input"
-          />
-        </Field>
+        <FloatingTextarea
+          id="description"
+          label="Descripción larga"
+          value={form.description}
+          onChange={(v) => update("description", v)}
+          rows={5}
+          required
+        />
       </section>
 
       {/* Legal */}
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">Datos legales</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Razón social" htmlFor="legalName">
-            <input
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+          <div>
+            <FloatingInput
               id="legalName"
-              name="legalName"
+              label="Razón social"
               value={form.legalName}
-              onChange={(e) => update("legalName", e.target.value)}
-              placeholder="Pushka Servicios SAS"
-              className="input"
+              onChange={(v) => update("legalName", v)}
             />
-            <span className="eyebrow mt-2 block">Si está en blanco, usamos el nombre del proyecto.</span>
-          </Field>
-          <Field label="Jurisdicción" htmlFor="jurisdiction">
-            <input
-              id="jurisdiction"
-              name="jurisdiction"
-              value={form.jurisdiction}
-              onChange={(e) => update("jurisdiction", e.target.value)}
-              required
-              placeholder="MX-CDMX, UY-Montevideo, etc."
-              className="input"
-            />
-          </Field>
+            <p className="eyebrow !text-navy/40 mt-1.5">
+              Si está en blanco, usamos el nombre del proyecto.
+            </p>
+          </div>
+          <FloatingInput
+            id="jurisdiction"
+            label="Jurisdicción"
+            value={form.jurisdiction}
+            onChange={(v) => update("jurisdiction", v)}
+            required
+          />
         </div>
       </section>
 
       {/* Categorización */}
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">Categorización</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Tipo" htmlFor="kind">
-            <select
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+          <div>
+            <FloatingSelect
               id="kind"
-              name="kind"
+              label="Tipo"
               value={form.kind}
-              onChange={(e) => update("kind", e.target.value as typeof form.kind)}
-              className="input"
-            >
-              {KINDS.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Ubicación" htmlFor="location">
-            <input
-              id="location"
-              name="location"
-              value={form.location}
-              onChange={(e) => update("location", e.target.value)}
-              placeholder="Ciudad de México · Buenos Aires · etc."
-              className="input"
+              onChange={(v) => update("kind", v as typeof form.kind)}
+              options={KINDS.map((k) => ({ value: k.id, label: k.label }))}
             />
-          </Field>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Sector" htmlFor="sector">
-            <input
-              id="sector"
-              name="sector"
-              value={form.sector}
-              onChange={(e) => update("sector", e.target.value)}
-              required
-              placeholder="Fintech · SaaS B2B"
-              className="input"
-            />
-          </Field>
-          <Field label="Stage" htmlFor="stage">
-            <select
-              id="stage"
-              name="stage"
-              value={form.stage}
-              onChange={(e) => update("stage", e.target.value as typeof form.stage)}
-              className="input"
-            >
-              {STAGES.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-        <Field label="Sitio web (opcional)" htmlFor="websiteUrl">
-          <input
-            id="websiteUrl"
-            name="websiteUrl"
-            type="url"
-            value={form.websiteUrl}
-            onChange={(e) => update("websiteUrl", e.target.value)}
-            placeholder="https://miempresa.com"
-            className="input"
+            <input type="hidden" name="kind" value={form.kind} />
+          </div>
+          <FloatingInput
+            id="location"
+            label="Ubicación"
+            value={form.location}
+            onChange={(v) => update("location", v)}
           />
-        </Field>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+          <FloatingInput
+            id="sector"
+            label="Sector"
+            value={form.sector}
+            onChange={(v) => update("sector", v)}
+            required
+          />
+          <div>
+            <FloatingSelect
+              id="stage"
+              label="Stage"
+              value={form.stage}
+              onChange={(v) => update("stage", v as typeof form.stage)}
+              options={STAGES.map((s) => ({ value: s.id, label: s.label }))}
+            />
+            <input type="hidden" name="stage" value={form.stage} />
+          </div>
+        </div>
+        <FloatingInput
+          id="websiteUrl"
+          type="url"
+          inputMode="url"
+          label="Sitio web (opcional)"
+          value={form.websiteUrl}
+          onChange={(v) => update("websiteUrl", v)}
+        />
       </section>
 
       {/* ¿Qué hace? */}
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">¿Qué hace tu empresa?</p>
-        <Field label="Problema que resuelve" htmlFor="problemStatement">
-          <textarea
-            id="problemStatement"
-            name="problemStatement"
-            rows={3}
-            value={form.problemStatement}
-            onChange={(e) => update("problemStatement", e.target.value)}
-            required
-            className="input"
-          />
-        </Field>
-        <Field label="Solución" htmlFor="solutionStatement">
-          <textarea
-            id="solutionStatement"
-            name="solutionStatement"
-            rows={3}
-            value={form.solutionStatement}
-            onChange={(e) => update("solutionStatement", e.target.value)}
-            required
-            className="input"
-          />
-        </Field>
-        <Field label="Modelo de negocio" htmlFor="businessModel">
-          <textarea
-            id="businessModel"
-            name="businessModel"
-            rows={2}
-            value={form.businessModel}
-            onChange={(e) => update("businessModel", e.target.value)}
-            required
-            className="input"
-          />
-        </Field>
+        <FloatingTextarea
+          id="problemStatement"
+          label="Problema que resuelve"
+          value={form.problemStatement}
+          onChange={(v) => update("problemStatement", v)}
+          rows={3}
+          required
+        />
+        <FloatingTextarea
+          id="solutionStatement"
+          label="Solución"
+          value={form.solutionStatement}
+          onChange={(v) => update("solutionStatement", v)}
+          rows={3}
+          required
+        />
+        <FloatingTextarea
+          id="businessModel"
+          label="Modelo de negocio"
+          value={form.businessModel}
+          onChange={(v) => update("businessModel", v)}
+          rows={2}
+          required
+        />
       </section>
 
       {/* Estructura y respaldo */}
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">Estructura y respaldo</p>
-        <Field label="Activo respaldado (opcional)" htmlFor="assetBackingNote">
-          <textarea
-            id="assetBackingNote"
-            name="assetBackingNote"
-            rows={3}
-            maxLength={2000}
-            value={form.assetBackingNote}
-            onChange={(e) => update("assetBackingNote", e.target.value)}
-            placeholder="Describí qué activo concreto respalda al proyecto (inmueble, mercancía, contrato, propiedad intelectual, etc.)."
-            className="input"
-          />
-        </Field>
-        <Field label="Estructura accionaria (opcional)" htmlFor="equityStructureNote">
-          <textarea
-            id="equityStructureNote"
-            name="equityStructureNote"
-            rows={3}
-            maxLength={2000}
-            value={form.equityStructureNote}
-            onChange={(e) => update("equityStructureNote", e.target.value)}
-            placeholder="Cómo está repartida la propiedad: clases de acciones, founders, participaciones previas, opciones, etc."
-            className="input"
-          />
-        </Field>
+        <FloatingTextarea
+          id="assetBackingNote"
+          label="Activo respaldado (opcional)"
+          value={form.assetBackingNote}
+          onChange={(v) => update("assetBackingNote", v)}
+          rows={3}
+          maxLength={2000}
+        />
+        <FloatingTextarea
+          id="equityStructureNote"
+          label="Estructura accionaria (opcional)"
+          value={form.equityStructureNote}
+          onChange={(v) => update("equityStructureNote", v)}
+          rows={3}
+          maxLength={2000}
+        />
       </section>
 
       {/* Políticas */}
@@ -296,120 +256,124 @@ export function NewProjectForm() {
           Texto informativo que verán los miembros con acceso a la información del proyecto.
           Todos los campos son opcionales.
         </p>
-        <Field label="Política de acciones (opcional)" htmlFor="policyShares">
-          <textarea
-            id="policyShares"
-            name="policyShares"
-            rows={3}
-            maxLength={2000}
-            value={form.policyShares}
-            onChange={(e) => update("policyShares", e.target.value)}
-            placeholder="Cómo se emiten, transfieren o recompran las acciones. Restricciones, derechos de tag-along, etc."
-            className="input"
-          />
-        </Field>
-        <Field label="Política de dividendos (opcional)" htmlFor="policyDividends">
-          <textarea
-            id="policyDividends"
-            name="policyDividends"
-            rows={3}
-            maxLength={2000}
-            value={form.policyDividends}
-            onChange={(e) => update("policyDividends", e.target.value)}
-            placeholder="Cómo se calculan y distribuyen los dividendos. Reservas, reinversión, prioridades, etc."
-            className="input"
-          />
-        </Field>
-        <Field label="Frecuencia de dividendos (opcional)" htmlFor="dividendsFrequency">
-          <input
-            id="dividendsFrequency"
-            name="dividendsFrequency"
-            type="text"
-            maxLength={120}
-            value={form.dividendsFrequency}
-            onChange={(e) => update("dividendsFrequency", e.target.value)}
-            placeholder="Ej. Trimestral · Semestral · Anual · A definir según resultados"
-            className="input"
-          />
-        </Field>
+        <FloatingTextarea
+          id="policyShares"
+          label="Política de acciones (opcional)"
+          value={form.policyShares}
+          onChange={(v) => update("policyShares", v)}
+          rows={3}
+          maxLength={2000}
+        />
+        <FloatingTextarea
+          id="policyDividends"
+          label="Política de dividendos (opcional)"
+          value={form.policyDividends}
+          onChange={(v) => update("policyDividends", v)}
+          rows={3}
+          maxLength={2000}
+        />
+        <FloatingInput
+          id="dividendsFrequency"
+          label="Frecuencia de dividendos (opcional)"
+          value={form.dividendsFrequency}
+          onChange={(v) => update("dividendsFrequency", v)}
+          maxLength={120}
+        />
       </section>
 
       {/* Documentos del proyecto */}
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">Documentos del proyecto</p>
         <p className="text-navy/75 leading-relaxed">
-          Pegá las URLs a documentos hospedados en Google Drive, Dropbox, Notion u otro servicio.
-          Todos son opcionales — los podés sumar después desde la pantalla de edición.
+          Subí los documentos clave del proyecto o pegá un link público (Google Drive,
+          Dropbox, Notion). Todos son opcionales — los podés sumar después desde la
+          pantalla de edición.
         </p>
-        <Field label="Proyecciones financieras (URL)" htmlFor="projectionsUrl">
-          <input
-            id="projectionsUrl"
-            name="projectionsUrl"
-            type="url"
-            value={form.projectionsUrl}
-            onChange={(e) => update("projectionsUrl", e.target.value)}
-            placeholder="https://drive.google.com/..."
-            className="input"
+        <div>
+          <FileUpload
+            scope="project-doc"
+            accept={DOC_ACCEPT}
+            maxSizeMb={25}
+            currentUrl={form.projectionsUrl || undefined}
+            onUploaded={(url) => update("projectionsUrl", url)}
+            label="Proyecciones financieras"
+            helperText={DOC_HELP}
           />
-        </Field>
-        <Field label="Plan de negocios inicial (URL)" htmlFor="planNegociosUrl">
-          <input
-            id="planNegociosUrl"
-            name="planNegociosUrl"
-            type="url"
-            value={form.planNegociosUrl}
-            onChange={(e) => update("planNegociosUrl", e.target.value)}
-            placeholder="https://drive.google.com/..."
-            className="input"
+          <input type="hidden" name="projectionsUrl" value={form.projectionsUrl} />
+        </div>
+        <div>
+          <FileUpload
+            scope="project-doc"
+            accept={DOC_ACCEPT}
+            maxSizeMb={25}
+            currentUrl={form.planNegociosUrl || undefined}
+            onUploaded={(url) => update("planNegociosUrl", url)}
+            label="Plan de negocios inicial"
+            helperText={DOC_HELP}
           />
-        </Field>
-        <Field label="Objetivos y estrategias periódicas (URL)" htmlFor="estrategiasPeriodicasUrl">
+          <input type="hidden" name="planNegociosUrl" value={form.planNegociosUrl} />
+        </div>
+        <div>
+          <FileUpload
+            scope="project-doc"
+            accept={DOC_ACCEPT}
+            maxSizeMb={25}
+            currentUrl={form.estrategiasPeriodicasUrl || undefined}
+            onUploaded={(url) => update("estrategiasPeriodicasUrl", url)}
+            label="Objetivos y estrategias periódicas"
+            helperText={DOC_HELP}
+          />
           <input
-            id="estrategiasPeriodicasUrl"
+            type="hidden"
             name="estrategiasPeriodicasUrl"
-            type="url"
             value={form.estrategiasPeriodicasUrl}
-            onChange={(e) => update("estrategiasPeriodicasUrl", e.target.value)}
-            placeholder="https://www.notion.so/..."
-            className="input"
           />
-        </Field>
-        <Field label="Estados financieros trimestrales (URL)" htmlFor="estadosFinancierosUrl">
+        </div>
+        <div>
+          <FileUpload
+            scope="project-doc"
+            accept={DOC_ACCEPT}
+            maxSizeMb={25}
+            currentUrl={form.estadosFinancierosUrl || undefined}
+            onUploaded={(url) => update("estadosFinancierosUrl", url)}
+            label="Estados financieros trimestrales"
+            helperText={DOC_HELP}
+          />
           <input
-            id="estadosFinancierosUrl"
+            type="hidden"
             name="estadosFinancierosUrl"
-            type="url"
             value={form.estadosFinancierosUrl}
-            onChange={(e) => update("estadosFinancierosUrl", e.target.value)}
-            placeholder="https://drive.google.com/..."
-            className="input"
           />
-        </Field>
-        <Field label="Estrategia de emisión de nuevas participaciones (URL)" htmlFor="estrategiaEmisionUrl">
+        </div>
+        <div>
+          <FileUpload
+            scope="project-doc"
+            accept={DOC_ACCEPT}
+            maxSizeMb={25}
+            currentUrl={form.estrategiaEmisionUrl || undefined}
+            onUploaded={(url) => update("estrategiaEmisionUrl", url)}
+            label="Estrategia de emisión de nuevas participaciones"
+            helperText={DOC_HELP}
+          />
           <input
-            id="estrategiaEmisionUrl"
+            type="hidden"
             name="estrategiaEmisionUrl"
-            type="url"
             value={form.estrategiaEmisionUrl}
-            onChange={(e) => update("estrategiaEmisionUrl", e.target.value)}
-            placeholder="https://drive.google.com/..."
-            className="input"
           />
-        </Field>
-        <Field label="URL del video (YouTube / Vimeo)" htmlFor="videoUrl">
-          <input
+        </div>
+        <div>
+          <FloatingInput
             id="videoUrl"
-            name="videoUrl"
             type="url"
+            inputMode="url"
+            label="URL del video (YouTube / Vimeo)"
             value={form.videoUrl}
-            onChange={(e) => update("videoUrl", e.target.value)}
-            placeholder="https://youtu.be/..."
-            className="input"
+            onChange={(v) => update("videoUrl", v)}
           />
-          <p className="mt-2 eyebrow">
+          <p className="eyebrow !text-navy/40 mt-1.5">
             Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.
           </p>
-        </Field>
+        </div>
       </section>
 
       {/* Valoración */}
@@ -420,47 +384,42 @@ export function NewProjectForm() {
           acciones de tu empresa. AJDUT mantiene el 10% institucional; el resto queda como pool
           disponible para los miembros.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Monto" htmlFor="preMoneyValuation">
-            <input
-              id="preMoneyValuation"
-              name="preMoneyValuation"
-              type="number"
-              min="0"
-              step="1000"
-              value={form.preMoneyValuation}
-              onChange={(e) => update("preMoneyValuation", e.target.value)}
-              required
-              placeholder="1000000"
-              className="input font-mono"
-            />
-          </Field>
-          <Field label="Moneda" htmlFor="valuationCurrency">
-            <select
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+          <FloatingInput
+            id="preMoneyValuation"
+            type="number"
+            step="any"
+            label="Monto"
+            value={form.preMoneyValuation}
+            onChange={(v) => update("preMoneyValuation", v)}
+            required
+          />
+          <div>
+            <FloatingSelect
               id="valuationCurrency"
+              label="Moneda"
+              value={form.valuationCurrency}
+              onChange={(v) => update("valuationCurrency", v as "USD" | "MXN")}
+              options={[
+                { value: "USD", label: "USD · Dólares" },
+                { value: "MXN", label: "MXN · Pesos" },
+              ]}
+            />
+            <input
+              type="hidden"
               name="valuationCurrency"
               value={form.valuationCurrency}
-              onChange={(e) => update("valuationCurrency", e.target.value as "USD" | "MXN")}
-              className="input"
-            >
-              <option value="USD">USD · Dólares</option>
-              <option value="MXN">MXN · Pesos</option>
-            </select>
-          </Field>
+            />
+          </div>
         </div>
-        <Field label="Monto a levantar (opcional)" htmlFor="targetRaiseAmount">
-          <input
-            id="targetRaiseAmount"
-            name="targetRaiseAmount"
-            type="number"
-            min="0"
-            step="1000"
-            value={form.targetRaiseAmount}
-            onChange={(e) => update("targetRaiseAmount", e.target.value)}
-            placeholder="250000"
-            className="input font-mono"
-          />
-        </Field>
+        <FloatingInput
+          id="targetRaiseAmount"
+          type="number"
+          step="any"
+          label="Monto a levantar (opcional)"
+          value={form.targetRaiseAmount}
+          onChange={(v) => update("targetRaiseAmount", v)}
+        />
 
         {derived && (
           <div className="hairline p-4 bg-paper grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-sm">
@@ -495,40 +454,6 @@ export function NewProjectForm() {
           {isPending ? "Creando proyecto…" : "Crear proyecto y enviar para revisión"}
         </button>
       </div>
-
-      <style jsx>{`
-        :global(.input) {
-          width: 100%;
-          border: 0.5px solid rgba(26, 26, 46, 0.4);
-          background: #f5f3ee;
-          padding: 0.5rem 0.75rem;
-          font-family: var(--font-inter);
-          color: #1a1a2e;
-        }
-        :global(.input:focus) {
-          outline: none;
-          border-color: #1a1a2e;
-        }
-      `}</style>
     </form>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={htmlFor} className="eyebrow block mb-2">
-        {label}
-      </label>
-      {children}
-    </div>
   );
 }

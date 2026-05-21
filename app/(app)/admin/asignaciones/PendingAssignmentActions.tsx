@@ -5,6 +5,7 @@ import {
   approvePendingAssignmentAction,
   rejectPendingAssignmentAction,
 } from "./actions";
+import { FloatingTextarea } from "@/components/ui/Floating";
 
 type Props = {
   pendingId: string;
@@ -108,13 +109,14 @@ export function PendingAssignmentActions({
   if (mode === "rejecting") {
     return (
       <div className="hairline p-4 bg-paper-light space-y-3">
-        <p className="eyebrow !text-navy">Nota de rechazo (mínimo 10 caracteres)</p>
-        <textarea
-          rows={4}
+        <FloatingTextarea
+          id="note"
+          label="Nota de rechazo (mínimo 10 caracteres)"
           value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy"
-          placeholder="Explicale al project owner por qué se rechaza esta asignación…"
+          onChange={setNote}
+          rows={4}
+          maxLength={1000}
+          counterSuffix=""
         />
         {error && (
           <p className="eyebrow !text-navy" role="alert">

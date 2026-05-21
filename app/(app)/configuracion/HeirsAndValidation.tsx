@@ -9,6 +9,7 @@ import {
   type HeirActionResult,
 } from "./actions";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
+import { FloatingInput, FloatingSelect } from "@/components/ui/Floating";
 
 export type HeirRow = {
   id: string;
@@ -293,23 +294,18 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
           contacto con tus herederos.
         </p>
 
-        <div className="mt-5">
-          <label className="eyebrow block mb-2" htmlFor="frequencyMonths">
-            Frecuencia
-          </label>
-          <select
+        <div className="mt-5 max-w-xs">
+          <FloatingSelect
             id="frequencyMonths"
-            value={validation.frequencyMonths}
-            onChange={(e) => onFrequencyChange(Number.parseInt(e.target.value, 10))}
+            label="Frecuencia"
+            value={String(validation.frequencyMonths)}
+            onChange={(v) => onFrequencyChange(Number.parseInt(v, 10))}
+            options={FREQUENCY_OPTIONS.map((o) => ({
+              value: String(o.value),
+              label: o.label,
+            }))}
             disabled={isPending}
-            className="hairline bg-paper px-3 py-2 font-sans text-navy"
-          >
-            {FREQUENCY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div className="mt-6 hairline p-4 bg-paper space-y-2">
@@ -360,53 +356,48 @@ function HeirForm({
   onCancel: () => void;
   isPending: boolean;
 }) {
+  const [fullName, setFullName] = useState(heir.fullName);
+  const [email, setEmail] = useState(heir.email ?? "");
+  const [relationship, setRelationship] = useState(heir.relationship ?? "");
+  const [sharePercent, setSharePercent] = useState(
+    heir.sharePercent ? String(heir.sharePercent) : ""
+  );
+
   return (
-    <form action={onSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="Nombre completo" htmlFor="fullName">
-          <input
-            id="fullName"
-            name="fullName"
-            defaultValue={heir.fullName}
-            required
-            className="input"
-          />
-        </Field>
-        <Field label="Email (opcional)" htmlFor="email">
-          <input
-            id="email"
-            name="email"
-            type="email"
-            defaultValue={heir.email ?? ""}
-            className="input"
-          />
-        </Field>
+    <form action={onSubmit} className="space-y-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <FloatingInput
+          id="fullName"
+          label="Nombre completo"
+          value={fullName}
+          onChange={setFullName}
+          autoFocus={isNew}
+          required
+        />
+        <FloatingInput
+          id="email"
+          type="email"
+          inputMode="email"
+          label="Email (opcional)"
+          value={email}
+          onChange={setEmail}
+        />
+        <FloatingInput
+          id="relationship"
+          label="Relación (opcional)"
+          value={relationship}
+          onChange={setRelationship}
+        />
+        <FloatingInput
+          id="sharePercent"
+          inputMode="decimal"
+          label="Porcentaje asignado"
+          value={sharePercent}
+          onChange={setSharePercent}
+          required
+        />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="Relación (opcional)" htmlFor="relationship">
-          <input
-            id="relationship"
-            name="relationship"
-            defaultValue={heir.relationship ?? ""}
-            placeholder="hermana · cónyuge · hijo · etc."
-            className="input"
-          />
-        </Field>
-        <Field label="Porcentaje asignado" htmlFor="sharePercent">
-          <input
-            id="sharePercent"
-            name="sharePercent"
-            type="number"
-            step="0.01"
-            min="0.01"
-            max="100"
-            required
-            defaultValue={heir.sharePercent || ""}
-            className="input font-mono"
-          />
-        </Field>
-      </div>
-      <div className="flex justify-end gap-3 hairline-t pt-4">
+      <div className="flex justify-end gap-4 hairline-t pt-4">
         <button
           type="button"
           onClick={onCancel}
@@ -423,40 +414,7 @@ function HeirForm({
           {isPending ? "Guardando…" : isNew ? "Agregar" : "Guardar"}
         </button>
       </div>
-      <style jsx>{`
-        :global(.input) {
-          width: 100%;
-          border: 0.5px solid rgba(26, 26, 46, 0.4);
-          background: #f5f3ee;
-          padding: 0.5rem 0.75rem;
-          font-family: var(--font-inter);
-          color: #1a1a2e;
-        }
-        :global(.input:focus) {
-          outline: none;
-          border-color: #1a1a2e;
-        }
-      `}</style>
     </form>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={htmlFor} className="eyebrow block mb-2">
-        {label}
-      </label>
-      {children}
-    </div>
   );
 }
 

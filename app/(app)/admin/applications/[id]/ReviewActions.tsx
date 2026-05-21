@@ -8,6 +8,7 @@ import {
   rejectApplicationAction,
   type ApproveResult,
 } from "./actions";
+import { FloatingTextarea } from "@/components/ui/Floating";
 
 const ROLE_LABEL: Record<"PARTNER" | "PROJECT_OWNER" | "CO_ADMIN", string> = {
   PARTNER: "Miembro",
@@ -163,12 +164,14 @@ export function ApplicationReviewActions({
 
       {mode === "rejecting" && (
         <div className="space-y-4 hairline p-6">
-          <p className="eyebrow">— Nota de rechazo (mínimo 10 caracteres)</p>
-          <textarea
-            rows={4}
+          <FloatingTextarea
+            id="rejectionNote"
+            label="Nota de rechazo (mínimo 10 caracteres)"
             value={rejectionNote}
-            onChange={(e) => setRejectionNote(e.target.value)}
-            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-navy"
+            onChange={setRejectionNote}
+            rows={4}
+            maxLength={1000}
+            counterSuffix=""
           />
           <div className="flex gap-3">
             <button onClick={reject} disabled={isPending} className="btn-primary">

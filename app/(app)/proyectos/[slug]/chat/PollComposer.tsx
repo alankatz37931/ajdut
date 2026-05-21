@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createPollAction } from "./actions";
+import { FloatingInput, GoldUnderline } from "@/components/ui/Floating";
 
 type Props = {
   projectSlug: string;
@@ -102,38 +103,35 @@ export function PollComposer({ projectSlug }: Props) {
         </button>
       </div>
 
-      <div className="mt-3">
-        <label htmlFor="poll-question" className="eyebrow block mb-1.5">
-          Pregunta
-        </label>
-        <input
+      <div className="mt-2">
+        <FloatingInput
           id="poll-question"
-          name="question"
-          type="text"
-          maxLength={MAX_QUESTION}
+          label="Pregunta"
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="¿Qué quieren votar?"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
+          onChange={setQuestion}
+          maxLength={MAX_QUESTION}
         />
       </div>
 
-      <div className="mt-3">
-        <p className="eyebrow mb-1.5">Opciones</p>
-        <ul className="space-y-2">
+      <div className="mt-5">
+        <p className="eyebrow mb-2">Opciones</p>
+        <ul className="space-y-3">
           {options.map((opt, idx) => (
-            <li key={idx} className="flex items-center gap-2">
+            <li key={idx} className="flex items-center gap-3">
               <span className="font-mono text-xs text-navy/40 w-5 shrink-0">
                 {String(idx + 1).padStart(2, "0")}
               </span>
-              <input
-                type="text"
-                maxLength={MAX_OPTION_LABEL}
-                value={opt}
-                onChange={(e) => setOpt(idx, e.target.value)}
-                placeholder={`Opción ${idx + 1}`}
-                className="flex-1 min-w-0 border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
-              />
+              <div className="relative flex-1 min-w-0">
+                <input
+                  type="text"
+                  maxLength={MAX_OPTION_LABEL}
+                  value={opt}
+                  onChange={(e) => setOpt(idx, e.target.value)}
+                  placeholder={`Opción ${idx + 1}`}
+                  className="peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-sm text-navy outline-none placeholder:text-navy/30"
+                />
+                <GoldUnderline />
+              </div>
               {options.length > 2 && (
                 <button
                   type="button"
@@ -153,15 +151,15 @@ export function PollComposer({ projectSlug }: Props) {
             type="button"
             onClick={addOpt}
             disabled={isPending}
-            className="mt-2 eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
+            className="mt-3 eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
             Agregar opción +
           </button>
         )}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-end gap-4">
-        <label className="flex items-center gap-2 text-sm text-navy">
+      <div className="mt-5 flex flex-wrap items-end gap-6">
+        <label className="flex items-center gap-2 text-sm text-navy cursor-pointer">
           <input
             type="checkbox"
             checked={multiple}
@@ -180,7 +178,7 @@ export function PollComposer({ projectSlug }: Props) {
             type="datetime-local"
             value={closesAt}
             onChange={(e) => setClosesAt(e.target.value)}
-            className="border-hairline border-navy/40 bg-paper px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy"
+            className="bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-mono text-sm text-navy outline-none focus:border-navy"
           />
         </div>
       </div>
@@ -191,7 +189,7 @@ export function PollComposer({ projectSlug }: Props) {
         </p>
       )}
 
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-5 flex items-center gap-3">
         <button
           type="submit"
           disabled={isPending}

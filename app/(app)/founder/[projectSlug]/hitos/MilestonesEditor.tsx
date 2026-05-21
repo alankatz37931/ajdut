@@ -3,6 +3,12 @@
 import { useState, useTransition } from "react";
 import { upsertMilestoneAction, removeMilestoneAction } from "./actions";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
+import {
+  FloatingInput,
+  FloatingSelect,
+  FloatingTextarea,
+  FloatingDate,
+} from "@/components/ui/Floating";
 
 type Status = "PLANNED" | "IN_PROGRESS" | "ACHIEVED" | "DELAYED" | "CANCELLED";
 
@@ -176,60 +182,58 @@ function MilestoneForm({
   onCancel: () => void;
   isPending: boolean;
 }) {
+  const [title, setTitle] = useState(milestone.title);
+  const [description, setDescription] = useState(milestone.description);
+  const [status, setStatus] = useState<Status>(milestone.status);
+  const [targetDate, setTargetDate] = useState(milestone.targetDate);
+  const [achievedAt, setAchievedAt] = useState(milestone.achievedAt);
+
   return (
-    <form action={onSubmit} className="space-y-4">
+    <form action={onSubmit} className="space-y-5">
       <input type="hidden" name="milestoneId" value={milestone.id} />
-      <Field label="Título" htmlFor="title">
-        <input
-          id="title"
-          name="title"
-          defaultValue={milestone.title}
-          required
-          placeholder="Lanzamiento beta · MVP funcional · 100 usuarios pagos…"
-          className="input"
-        />
-      </Field>
-      <Field label="Descripción" htmlFor="description">
-        <textarea
-          id="description"
-          name="description"
-          defaultValue={milestone.description}
-          rows={3}
-          required
-          className="input"
-          placeholder="Qué implica este hito y cómo se mide."
-        />
-      </Field>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Field label="Estado" htmlFor="status">
-          <select id="status" name="status" defaultValue={milestone.status} className="input">
-            <option value="PLANNED">Planeado</option>
-            <option value="IN_PROGRESS">En curso</option>
-            <option value="ACHIEVED">Cumplido</option>
-            <option value="DELAYED">Atrasado</option>
-            <option value="CANCELLED">Cancelado</option>
-          </select>
-        </Field>
-        <Field label="Fecha objetivo" htmlFor="targetDate">
-          <input
-            id="targetDate"
-            name="targetDate"
-            type="date"
-            defaultValue={milestone.targetDate}
-            className="input font-mono"
+      <FloatingInput
+        id="title"
+        label="Título"
+        value={title}
+        onChange={setTitle}
+        required
+      />
+      <FloatingTextarea
+        id="description"
+        label="Descripción"
+        value={description}
+        onChange={setDescription}
+        rows={3}
+        required
+      />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3">
+        <div>
+          <FloatingSelect
+            id="status"
+            label="Estado"
+            value={status}
+            onChange={(v) => setStatus(v as Status)}
+            options={(Object.keys(STATUS_LABEL) as Status[]).map((s) => ({
+              value: s,
+              label: STATUS_LABEL[s],
+            }))}
           />
-        </Field>
-        <Field label="Cumplido el" htmlFor="achievedAt">
-          <input
-            id="achievedAt"
-            name="achievedAt"
-            type="date"
-            defaultValue={milestone.achievedAt}
-            className="input font-mono"
-          />
-        </Field>
+          <input type="hidden" name="status" value={status} />
+        </div>
+        <FloatingDate
+          id="targetDate"
+          label="Fecha objetivo"
+          value={targetDate}
+          onChange={setTargetDate}
+        />
+        <FloatingDate
+          id="achievedAt"
+          label="Cumplido el"
+          value={achievedAt}
+          onChange={setAchievedAt}
+        />
       </div>
-      <div className="flex justify-end gap-3 hairline-t pt-4">
+      <div className="flex justify-end gap-4 hairline-t pt-4">
         <button
           type="button"
           onClick={onCancel}
@@ -242,39 +246,6 @@ function MilestoneForm({
           {isPending ? "Guardando…" : "Guardar"}
         </button>
       </div>
-      <style jsx>{`
-        :global(.input) {
-          width: 100%;
-          border: 0.5px solid rgba(26, 26, 46, 0.4);
-          background: #f5f3ee;
-          padding: 0.5rem 0.75rem;
-          font-family: var(--font-inter);
-          color: #1a1a2e;
-        }
-        :global(.input:focus) {
-          outline: none;
-          border-color: #1a1a2e;
-        }
-      `}</style>
     </form>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={htmlFor} className="eyebrow block mb-2">
-        {label}
-      </label>
-      {children}
-    </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { postMessageAction } from "./actions";
+import { FloatingInput, FloatingTextarea } from "@/components/ui/Floating";
 
 type Props = {
   projectSlug: string;
@@ -42,35 +43,24 @@ export function MessageComposer({ projectSlug }: Props) {
 
   return (
     <form action={submit} className="hairline p-4 bg-paper-light">
-      <label htmlFor="chat-body" className="eyebrow block mb-1.5">
-        Mensaje
-      </label>
-      <textarea
+      <FloatingTextarea
         id="chat-body"
-        name="body"
+        label="Mensaje"
+        value={body}
+        onChange={setBody}
         rows={3}
         maxLength={MAX_BODY}
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder="Escribí algo para el equipo del proyecto…"
-        className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
+        counterSuffix=""
       />
-      <p className="eyebrow mt-1.5 !text-navy/40">
-        {body.length} / {MAX_BODY}
-      </p>
 
       <div className="mt-3">
-        <label htmlFor="chat-url" className="eyebrow block mb-1.5">
-          Adjuntar link <span className="!text-navy/40">(opcional)</span>
-        </label>
-        <input
+        <FloatingInput
           id="chat-url"
-          name="attachmentUrl"
           type="url"
+          inputMode="url"
+          label="Adjuntar link (opcional)"
           value={attachmentUrl}
-          onChange={(e) => setAttachmentUrl(e.target.value)}
-          placeholder="https://drive.google.com/…"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
+          onChange={setAttachmentUrl}
         />
       </div>
 

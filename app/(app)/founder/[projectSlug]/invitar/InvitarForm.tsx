@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { inviteMemberAction } from "./actions";
+import { FloatingInput, FloatingTextarea } from "@/components/ui/Floating";
 
 type Props = {
   projectSlug: string;
@@ -19,6 +20,10 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<SuccessState | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [shareCount, setShareCount] = useState("");
+  const [message, setMessage] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -33,64 +38,50 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
         return;
       }
       setSuccess(r.data);
+      setEmail("");
+      setFullName("");
+      setShareCount("");
+      setMessage("");
       formRef.current?.reset();
     });
   }
 
   return (
     <form ref={formRef} onSubmit={onSubmit} className="mt-10 space-y-6">
-      <div>
-        <label htmlFor="email" className="eyebrow block mb-1.5">
-          Email del invitado
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          disabled={isPending}
-          placeholder="socio@ejemplo.com"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-        />
-      </div>
+      <FloatingInput
+        id="email"
+        type="email"
+        inputMode="email"
+        label="Email del invitado"
+        value={email}
+        onChange={setEmail}
+        required
+      />
 
       <div>
-        <label htmlFor="fullName" className="eyebrow block mb-1.5">
-          Nombre completo
-        </label>
-        <input
+        <FloatingInput
           id="fullName"
-          name="fullName"
-          type="text"
-          required
-          minLength={2}
+          label="Nombre completo"
+          value={fullName}
+          onChange={setFullName}
           maxLength={120}
-          disabled={isPending}
-          placeholder="María González"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
+          required
         />
-        <p className="mt-1.5 eyebrow !text-navy/50">
+        <p className="eyebrow !text-navy/50 mt-1.5">
           Se usa para crear la cuenta si el email no está registrado todavía.
         </p>
       </div>
 
       <div>
-        <label htmlFor="shareCount" className="eyebrow block mb-1.5">
-          Acciones a asignar
-        </label>
-        <input
+        <FloatingInput
           id="shareCount"
-          name="shareCount"
           type="number"
+          label="Acciones a asignar"
+          value={shareCount}
+          onChange={setShareCount}
           required
-          min={1}
-          max={availableShares}
-          step={1}
-          disabled={isPending || availableShares === 0}
-          placeholder="100"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
         />
-        <p className="mt-1.5 eyebrow !text-navy/50">
+        <p className="eyebrow !text-navy/50 mt-1.5">
           Disponibles ahora:{" "}
           <span className="font-mono text-navy">
             {availableShares.toLocaleString("es-MX")}
@@ -98,20 +89,14 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
         </p>
       </div>
 
-      <div>
-        <label htmlFor="message" className="eyebrow block mb-1.5">
-          Mensaje (opcional)
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          rows={5}
-          maxLength={1000}
-          disabled={isPending}
-          placeholder="Bienvenida/o al proyecto…"
-          className="w-full resize-y border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy leading-relaxed focus:outline-none focus:border-navy disabled:opacity-50"
-        />
-      </div>
+      <FloatingTextarea
+        id="message"
+        label="Mensaje (opcional)"
+        value={message}
+        onChange={setMessage}
+        rows={5}
+        maxLength={1000}
+      />
 
       {error && (
         <p className="eyebrow !text-navy" role="alert">

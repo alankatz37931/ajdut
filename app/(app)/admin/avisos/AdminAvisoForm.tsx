@@ -2,6 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { countRecipientsAction, sendAdminBroadcastAction } from "./actions";
+import {
+  FloatingInput,
+  FloatingSelect,
+  FloatingTextarea,
+} from "@/components/ui/Floating";
 
 type ProjectOpt = { id: string; name: string; slug: string };
 
@@ -25,6 +30,9 @@ export function AdminAvisoForm({ projects }: Props) {
   const [isCounting, startCount] = useTransition();
   const [isSending, startSend] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [projectId, setProjectId] = useState("");
 
   function markStale() {
     setSuccess(null);
@@ -53,6 +61,10 @@ export function AdminAvisoForm({ projects }: Props) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    if (!subject.trim() || !body.trim()) {
+      setError("Completá el asunto y el mensaje del aviso.");
+      return;
+    }
     if (!countState || countState.stale) {
       setError("Calculá los destinatarios antes de enviar.");
       return;
@@ -66,6 +78,9 @@ export function AdminAvisoForm({ projects }: Props) {
       }
       setSuccess(r.count);
       setCountState(null);
+      setSubject("");
+      setBody("");
+      setProjectId("");
       formRef.current?.reset();
     });
   }
@@ -120,24 +135,24 @@ export function AdminAvisoForm({ projects }: Props) {
         </div>
 
         <div>
-          <label htmlFor="projectId" className="eyebrow block mb-1.5">
-            Proyecto (opcional — restringe a miembros de ese proyecto)
-          </label>
-          <select
+          <FloatingSelect
             id="projectId"
-            name="projectId"
-            defaultValue=""
-            onChange={markStale}
+            label="Proyecto (opcional)"
+            value={projectId}
+            onChange={(v) => {
+              setProjectId(v);
+              markStale();
+            }}
             disabled={isSending}
-            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-          >
-            <option value="">— Todos los proyectos —</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "— Todos los proyectos —" },
+              ...projects.map((p) => ({ value: p.id, label: p.name })),
+            ]}
+          />
+          <p className="eyebrow !text-navy/40 mt-1.5">
+            Restringe el envío a miembros de ese proyecto.
+          </p>
+          <input type="hidden" name="projectId" value={projectId} />
         </div>
 
         <div className="flex flex-wrap items-center gap-4 pt-1">
@@ -164,37 +179,23 @@ export function AdminAvisoForm({ projects }: Props) {
       </section>
 
       {/* ─── Mensaje ─────────────────────────────────────────────── */}
-      <div>
-        <label htmlFor="subject" className="eyebrow block mb-1.5">
-          Asunto
-        </label>
-        <input
-          id="subject"
-          name="subject"
-          type="text"
-          maxLength={160}
-          required
-          disabled={isSending}
-          placeholder="Mantenimiento programado · próximo viernes"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-        />
-      </div>
+      <FloatingInput
+        id="subject"
+        label="Asunto"
+        value={subject}
+        onChange={setSubject}
+        maxLength={160}
+      />
 
-      <div>
-        <label htmlFor="body" className="eyebrow block mb-1.5">
-          Mensaje
-        </label>
-        <textarea
-          id="body"
-          name="body"
-          rows={8}
-          maxLength={5000}
-          required
-          disabled={isSending}
-          placeholder="Escribí el aviso que querés enviar…"
-          className="w-full resize-y border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy leading-relaxed focus:outline-none focus:border-navy disabled:opacity-50"
-        />
-      </div>
+      <FloatingTextarea
+        id="body"
+        label="Mensaje"
+        value={body}
+        onChange={setBody}
+        rows={8}
+        maxLength={5000}
+        counterSuffix=""
+      />
 
       {error && (
         <p className="eyebrow !text-navy" role="alert">

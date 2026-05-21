@@ -3,6 +3,12 @@
 import { useState, useTransition } from "react";
 import { upsertFounderAction, removeFounderAction } from "./actions";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
+import {
+  FloatingInput,
+  FloatingSelect,
+  FloatingTextarea,
+  FloatingDate,
+} from "@/components/ui/Floating";
 
 type Founder = {
   id: string;
@@ -166,90 +172,88 @@ function FounderForm({
   onCancel: () => void;
   isPending: boolean;
 }) {
+  const [fullName, setFullName] = useState(founder.fullName);
+  const [role, setRole] = useState(founder.role);
+  const [equityPercent, setEquityPercent] = useState(
+    founder.equityPercent ? String(founder.equityPercent) : ""
+  );
+  const [joinedAt, setJoinedAt] = useState(founder.joinedAt);
+  const [linkedinUrl, setLinkedinUrl] = useState(founder.linkedinUrl);
+  const [bio, setBio] = useState(founder.bio);
+  const [references, setReferences] = useState(founder.references);
+  const [isActive, setIsActive] = useState(String(founder.isActive));
+
   return (
-    <form action={onSubmit} className="space-y-4">
+    <form action={onSubmit} className="space-y-5">
       <input type="hidden" name="founderId" value={founder.id} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="Nombre completo" htmlFor="fullName">
-          <input
-            id="fullName"
-            name="fullName"
-            defaultValue={founder.fullName}
-            required
-            className="input"
-          />
-        </Field>
-        <Field label="Rol" htmlFor="role">
-          <input
-            id="role"
-            name="role"
-            defaultValue={founder.role}
-            required
-            placeholder="CEO · CTO · Product · etc."
-            className="input"
-          />
-        </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <FloatingInput
+          id="fullName"
+          label="Nombre completo"
+          value={fullName}
+          onChange={setFullName}
+          required
+        />
+        <FloatingInput
+          id="role"
+          label="Rol"
+          value={role}
+          onChange={setRole}
+          required
+        />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="Equity %" htmlFor="equityPercent">
-          <input
-            id="equityPercent"
-            name="equityPercent"
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
-            defaultValue={founder.equityPercent}
-            className="input font-mono"
-          />
-        </Field>
-        <Field label="Se unió (opcional)" htmlFor="joinedAt">
-          <input
-            id="joinedAt"
-            name="joinedAt"
-            type="date"
-            defaultValue={founder.joinedAt}
-            className="input font-mono"
-          />
-        </Field>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <FloatingInput
+          id="equityPercent"
+          type="number"
+          step="any"
+          label="Equity %"
+          value={equityPercent}
+          onChange={setEquityPercent}
+        />
+        <FloatingDate
+          id="joinedAt"
+          label="Se unió (opcional)"
+          value={joinedAt}
+          onChange={setJoinedAt}
+        />
       </div>
-      <Field label="LinkedIn (opcional)" htmlFor="linkedinUrl">
-        <input
-          id="linkedinUrl"
-          name="linkedinUrl"
-          type="url"
-          defaultValue={founder.linkedinUrl}
-          placeholder="https://linkedin.com/in/..."
-          className="input"
+      <FloatingInput
+        id="linkedinUrl"
+        type="url"
+        inputMode="url"
+        label="LinkedIn (opcional)"
+        value={linkedinUrl}
+        onChange={setLinkedinUrl}
+      />
+      <FloatingTextarea
+        id="bio"
+        label="Bio / experiencia (opcional)"
+        value={bio}
+        onChange={setBio}
+        rows={3}
+      />
+      <FloatingTextarea
+        id="references"
+        label="Referencias (3) — opcional"
+        value={references}
+        onChange={setReferences}
+        rows={3}
+      />
+      <div>
+        <FloatingSelect
+          id="isActive"
+          label="Estado"
+          value={isActive}
+          onChange={setIsActive}
+          options={[
+            { value: "true", label: "Activo" },
+            { value: "false", label: "Inactivo (histórico)" },
+          ]}
         />
-      </Field>
-      <Field label="Bio / experiencia (opcional)" htmlFor="bio">
-        <textarea
-          id="bio"
-          name="bio"
-          defaultValue={founder.bio}
-          rows={3}
-          placeholder="Trayectoria, experiencia relevante, logros."
-          className="input"
-        />
-      </Field>
-      <Field label="Referencias (3) — opcional" htmlFor="references">
-        <textarea
-          id="references"
-          name="references"
-          defaultValue={founder.references}
-          rows={3}
-          placeholder="Una referencia por línea (nombre · vínculo · contacto)."
-          className="input"
-        />
-      </Field>
-      <Field label="Estado" htmlFor="isActive">
-        <select id="isActive" name="isActive" defaultValue={String(founder.isActive)} className="input">
-          <option value="true">Activo</option>
-          <option value="false">Inactivo (histórico)</option>
-        </select>
-      </Field>
-      <div className="flex justify-end gap-3 hairline-t pt-4">
+        <input type="hidden" name="isActive" value={isActive} />
+      </div>
+      <div className="flex justify-end gap-4 hairline-t pt-4">
         <button
           type="button"
           onClick={onCancel}
@@ -262,39 +266,6 @@ function FounderForm({
           {isPending ? "Guardando…" : "Guardar"}
         </button>
       </div>
-      <style jsx>{`
-        :global(.input) {
-          width: 100%;
-          border: 0.5px solid rgba(26, 26, 46, 0.4);
-          background: #f5f3ee;
-          padding: 0.5rem 0.75rem;
-          font-family: var(--font-inter);
-          color: #1a1a2e;
-        }
-        :global(.input:focus) {
-          outline: none;
-          border-color: #1a1a2e;
-        }
-      `}</style>
     </form>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={htmlFor} className="eyebrow block mb-2">
-        {label}
-      </label>
-      {children}
-    </div>
   );
 }

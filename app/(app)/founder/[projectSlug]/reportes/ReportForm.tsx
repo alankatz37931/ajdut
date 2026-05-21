@@ -3,6 +3,11 @@
 import { useRef, useState, useTransition } from "react";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { publishReportAction } from "./actions";
+import {
+  FloatingInput,
+  FloatingSelect,
+  FloatingTextarea,
+} from "@/components/ui/Floating";
 
 type Props = {
   projectSlug: string;
@@ -29,6 +34,11 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [fiscalYear, setFiscalYear] = useState(String(defaultYear));
+  const [period, setPeriod] = useState("Q1");
+  const [kind, setKind] = useState("QUARTERLY_FINANCIAL");
   const [url, setUrl] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -44,6 +54,11 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
         return;
       }
       setSuccess(true);
+      setTitle("");
+      setSummary("");
+      setFiscalYear(String(defaultYear));
+      setPeriod("Q1");
+      setKind("QUARTERLY_FINANCIAL");
       setUrl("");
       formRef.current?.reset();
     });
@@ -56,124 +71,77 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
         <span className="text-navy">· Publicar reporte</span>
       </p>
 
-      <div>
-        <label htmlFor="title" className="eyebrow block mb-1.5">
-          Título
-        </label>
-        <input
-          id="title"
-          name="title"
-          type="text"
-          maxLength={160}
-          required
-          disabled={isPending}
-          placeholder="Resultados Q1 2026"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-        />
-      </div>
+      <FloatingInput
+        id="title"
+        label="Título"
+        value={title}
+        onChange={setTitle}
+        maxLength={160}
+        required
+      />
 
-      <div>
-        <label htmlFor="summary" className="eyebrow block mb-1.5">
-          Resumen
-        </label>
-        <textarea
-          id="summary"
-          name="summary"
-          rows={5}
-          maxLength={1000}
-          required
-          disabled={isPending}
-          placeholder="Resumen ejecutivo de avances, métricas y desafíos del período…"
-          className="w-full resize-y border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy leading-relaxed focus:outline-none focus:border-navy disabled:opacity-50"
-        />
-      </div>
+      <FloatingTextarea
+        id="summary"
+        label="Resumen"
+        value={summary}
+        onChange={setSummary}
+        rows={5}
+        maxLength={1000}
+        required
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3">
+        <FloatingInput
+          id="fiscalYear"
+          type="number"
+          label="Año fiscal"
+          value={fiscalYear}
+          onChange={setFiscalYear}
+          required
+        />
         <div>
-          <label htmlFor="fiscalYear" className="eyebrow block mb-1.5">
-            Año fiscal
-          </label>
-          <input
-            id="fiscalYear"
-            name="fiscalYear"
-            type="number"
-            min={1900}
-            max={2999}
-            step={1}
-            defaultValue={defaultYear}
-            required
-            disabled={isPending}
-            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label htmlFor="period" className="eyebrow block mb-1.5">
-            Período
-          </label>
-          <select
+          <FloatingSelect
             id="period"
-            name="period"
-            defaultValue="Q1"
-            required
-            disabled={isPending}
-            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-          >
-            {PERIOD_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            label="Período"
+            value={period}
+            onChange={setPeriod}
+            options={PERIOD_OPTIONS}
+          />
+          <input type="hidden" name="period" value={period} />
         </div>
         <div>
-          <label htmlFor="kind" className="eyebrow block mb-1.5">
-            Tipo
-          </label>
-          <select
+          <FloatingSelect
             id="kind"
-            name="kind"
-            defaultValue="QUARTERLY_FINANCIAL"
-            required
-            disabled={isPending}
-            className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
-          >
-            {KIND_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+            label="Tipo"
+            value={kind}
+            onChange={setKind}
+            options={KIND_OPTIONS}
+          />
+          <input type="hidden" name="kind" value={kind} />
         </div>
       </div>
 
-      <div>
-        <label className="eyebrow block mb-1.5">Subir archivo</label>
-        <FileUpload
-          scope="report-attachment"
-          accept=".pdf,.xlsx,.xls,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
-          maxSizeMb={25}
-          currentUrl={url || undefined}
-          onUploaded={(publicUrl) => setUrl(publicUrl)}
-          helperText="PDF, Excel o Word. Máximo 25MB. Si tu storage no está configurado, podés pegar el link directo abajo."
-        />
-      </div>
+      <FileUpload
+        scope="report-attachment"
+        accept=".pdf,.xlsx,.xls,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+        maxSizeMb={25}
+        currentUrl={url || undefined}
+        onUploaded={(publicUrl) => setUrl(publicUrl)}
+        label="Subir archivo"
+        helperText="PDF, Excel o Word. Máximo 25MB. Si tu storage no está configurado, podés pegar el link directo abajo."
+      />
 
       <div>
-        <label htmlFor="url" className="eyebrow block mb-1.5">
-          URL del archivo
-        </label>
-        <input
+        <FloatingInput
           id="url"
-          name="url"
           type="url"
-          required
-          disabled={isPending}
+          inputMode="url"
+          label="URL del archivo"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://drive.google.com/file/d/…"
-          className="w-full border-hairline border-navy/40 bg-paper px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy disabled:opacity-50"
+          onChange={setUrl}
+          required
         />
-        <p className="mt-1.5 eyebrow !text-navy/40">
+        <p className="eyebrow !text-navy/40 mt-1.5">
           Se autocompleta tras subir un archivo, o pegá un link público (Google
           Drive, Dropbox, etc.).
         </p>
