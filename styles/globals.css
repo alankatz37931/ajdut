@@ -124,7 +124,7 @@ html, body {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 border-hairline border-navy text-navy font-medium tracking-wide transition-colors;
   }
   .btn-outline:hover {
-    box-shadow: inset 0 -1px 0 0 theme("colors.gold.DEFAULT");
+    background-color: theme("colors.paper.dark");
   }
 }
 
@@ -135,6 +135,7 @@ input[type="number"]::-webkit-inner-spin-button {
   margin: 0;
 }
 input[type="number"] {
-  -moz-appearance: textfield;
-  appearance: textfield;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
