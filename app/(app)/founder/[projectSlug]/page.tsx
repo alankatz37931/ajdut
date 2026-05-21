@@ -33,6 +33,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         },
         orderBy: [{ isPlatformStake: "desc" }, { shareCount: "desc" }],
       },
+      _count: { select: { shareholderClasses: true, externalHoldings: true } },
     },
   });
 
@@ -140,6 +141,14 @@ export default async function FounderDashboardPage({ params }: Params) {
       done: Boolean(lastReport),
       href: `/founder/${project.slug}/reportes` as Route,
       hint: "Avances financieros y de negocio.",
+    },
+    {
+      label: "Composición accionaria",
+      done:
+        project._count.shareholderClasses > 0 ||
+        project._count.externalHoldings > 0,
+      href: `/founder/${project.slug}/composicion` as Route,
+      hint: "Clases de accionistas y tenencias pre-existentes.",
     },
   ];
 
@@ -548,6 +557,14 @@ export default async function FounderDashboardPage({ params }: Params) {
               />
             ))}
           </ul>
+          <div className="px-5 py-3 hairline-t">
+            <Link
+              href={`/founder/${project.slug}/composicion` as Route}
+              className="eyebrow !text-gold hover:!text-navy transition-colors"
+            >
+              Gestionar clases de accionistas →
+            </Link>
+          </div>
         </div>
 
         {/* ─── 09 · Checklist owner ─────────────────────────────── */}

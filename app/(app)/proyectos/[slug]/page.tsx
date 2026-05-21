@@ -15,6 +15,7 @@ import { ProjectHero } from "@/components/project/ProjectHero";
 import { ProjectVideo } from "@/components/project/ProjectVideo";
 import { ProjectSection } from "@/components/project/ProjectSection";
 import { CapTableViz } from "@/components/project/CapTableViz";
+import { CapTableByClass } from "@/components/project/CapTableByClass";
 import { BackLink } from "@/components/app/BackLink";
 import { embedUrl } from "@/lib/utils/embed";
 import {
@@ -49,6 +50,8 @@ export default async function ProjectPage({ params }: Params) {
           currentOwner: { select: { id: true, fullName: true, alias: true, role: true } },
         },
       },
+      shareholderClasses: { orderBy: { order: "asc" } },
+      externalHoldings: true,
     },
   });
   if (!project) notFound();
@@ -149,6 +152,78 @@ export default async function ProjectPage({ params }: Params) {
       });
     }
     capTable.sort((a, b) => b.shares - a.shares);
+  }
+
+  // Cap table por clase (anonimizado) — lo ve el miembro normal: composición
+  // por clase de accionista (cantidad de personas + %), sin nombres. El
+  // owner/admin ven el cap table nominal de arriba.
+  type ByClassRow = {
+    label: string;
+    people: number | null;
+    shares: number;
+    tone?: "default" | "platform" | "muted";
+  };
+  const byClassRows: ByClassRow[] = [];
+  {
+    const UNCL = "__uncl__";
+    const buckets = new Map<
+      string,
+      { label: string; owners: Set<string>; extPeople: number; shares: number }
+    >();
+    for (const c of project.shareholderClasses) {
+      buckets.set(c.id, { label: c.name, owners: new Set(), extPeople: 0, shares: 0 });
+    }
+    buckets.set(UNCL, {
+      label: t.capTable.unclassified,
+      owners: new Set(),
+      extPeople: 0,
+      shares: 0,
+    });
+    for (const p of project.participations) {
+      if (p.isPlatformStake || p.status === "AVAILABLE" || !p.currentOwnerId) continue;
+      const key =
+        p.shareholderClassId && buckets.has(p.shareholderClassId)
+          ? p.shareholderClassId
+          : UNCL;
+      const b = buckets.get(key)!;
+      b.owners.add(p.currentOwnerId);
+      b.shares += p.shareCount;
+    }
+    for (const h of project.externalHoldings) {
+      const key =
+        h.shareholderClassId && buckets.has(h.shareholderClassId)
+          ? h.shareholderClassId
+          : UNCL;
+      const b = buckets.get(key)!;
+      b.extPeople += h.peopleCount;
+      b.shares += h.shareCount;
+    }
+    for (const [key, b] of buckets) {
+      const people = b.owners.size + b.extPeople;
+      if (b.shares <= 0 && people <= 0) continue;
+      byClassRows.push({
+        label: b.label,
+        people,
+        shares: b.shares,
+        tone: key === UNCL ? "muted" : "default",
+      });
+    }
+    if (platformShares > 0) {
+      byClassRows.push({
+        label: t.capTable.platform,
+        people: null,
+        shares: platformShares,
+        tone: "platform",
+      });
+    }
+    if (availableShares > 0) {
+      byClassRows.push({
+        label: t.capTable.unassigned,
+        people: null,
+        shares: availableShares,
+        tone: "muted",
+      });
+    }
   }
 
   // Métricas: agrupar por kind y mostrar el último valor.
@@ -738,6 +813,23 @@ export default async function ProjectPage({ params }: Params) {
       />
     ) : null;
 
+  // El miembro normal ve la composición anónima por clase.
+  const capByClassNode =
+    !access.canSeeCapTable && byClassRows.length > 0 ? (
+      <CapTableByClass
+        rows={byClassRows}
+        totalShares={totalShares}
+        ofTotalLabel={`${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
+        formatShares={(n) => formatNumber(n, undefined, locale)}
+        formatPct={(p) => formatPercent(p, 2, locale)}
+        peopleLabel={(n) =>
+          `${formatNumber(n, undefined, locale)} ${
+            n === 1 ? t.capTable.person : t.capTable.people
+          }`
+        }
+      />
+    ) : null;
+
   // Embed del video — visible para cualquier viewer del proyecto.
   const videoEmbed = project.startupProfile?.videoUrl
     ? embedUrl(project.startupProfile.videoUrl)
@@ -911,13 +1003,14 @@ export default async function ProjectPage({ params }: Params) {
               )}
             </div>
 
-            {/* Cap Table (solo si access.canSeeCapTable + hay holders). */}
-            {capTableNode && (
+            {/* Cap table: nominal para owner/admin, por clase (anónimo)
+                para el miembro normal. */}
+            {(capTableNode || capByClassNode) && (
               <div className="hairline bg-paper">
                 <p className="px-5 pt-5 pb-3 eyebrow !text-navy/40 hairline-b">
                   {t.sections.capTable}
                 </p>
-                {capTableNode}
+                {capTableNode ?? capByClassNode}
               </div>
             )}
 

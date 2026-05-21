@@ -283,6 +283,8 @@ model Project {
   auditEntries    AuditLog[]
   infoRequests    InfoRequest[]
   pendingAssignments PendingAssignment[]
+  shareholderClasses ShareholderClass[]
+  externalHoldings   ExternalHolding[]
 
   @@index([status, kind])
 }
@@ -481,6 +483,9 @@ model Participation {
   status          ParticipationStatus @default(AVAILABLE)
   currentOwnerId  String?
   currentOwner    User?               @relation("CurrentOwner", fields: [currentOwnerId], references: [id])
+  // Clase de accionista asignada por el owner — cap table por clases.
+  shareholderClassId String?
+  shareholderClass   ShareholderClass? @relation(fields: [shareholderClassId], references: [id])
   acquiredAt      DateTime?
   isPlatformStake Boolean             @default(false)
   createdAt       DateTime            @default(now())
@@ -524,6 +529,44 @@ model OwnershipHistory {
 
   @@index([participationId, validatedAt])
   @@index([toUserId])
+}
+
+// ─── COMPOSICIÓN ACCIONARIA POR CLASES ──────────────────────────────
+//
+// El project owner agrupa a los accionistas en clases ("Directivo",
+// "Operativo", "Inversionistas pasivos", "Promotor", etc.). Los miembros
+// ven el cap table agregado por clase (cantidad de personas + %), sin
+// nombres. Owner / admin siguen viendo el cap table nominal.
+
+model ShareholderClass {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  name      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  participations   Participation[]
+  externalHoldings ExternalHolding[]
+
+  @@index([projectId, order])
+}
+
+// Tenencias declaradas por el owner que NO pasan por AJDUT — accionistas
+// pre-existentes (founders, inversores previos). Es un agregado: cantidad
+// de personas + de acciones, con su clase.
+model ExternalHolding {
+  id                 String            @id @default(cuid())
+  projectId          String
+  project            Project           @relation(fields: [projectId], references: [id])
+  shareholderClassId String?
+  shareholderClass   ShareholderClass? @relation(fields: [shareholderClassId], references: [id])
+  label              String?
+  peopleCount        Int               @default(1)
+  shareCount         Int
+  createdAt          DateTime          @default(now())
+
+  @@index([projectId])
 }
 
 // ─── LEADS Y REVENTA ────────────────────────────────────────────────

@@ -372,6 +372,9 @@ export const dict: Dict = {
       platform: "AJDUT Platform",
       others: "Others",
       ofTotal: "of total",
+      unclassified: "Unclassified",
+      person: "person",
+      people: "people",
     },
     participationStatus: {
       ASSIGNED: "Assigned",
