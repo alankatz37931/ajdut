@@ -22,8 +22,10 @@ export function ProjectVideo({
   openLabel,
 }: Props) {
   if (embedSrc) {
+    // max-w-2xl: el embed no ocupa el ancho completo de la ficha — queda
+    // como una pieza acotada y prolija, no un banner gigante.
     return (
-      <div className="mt-10 sm:mt-12">
+      <div className="mt-8 sm:mt-10 max-w-2xl">
         <div
           className="hairline relative bg-paper-dark"
           style={{ paddingTop: "56.25%" }}

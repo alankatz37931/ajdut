@@ -36,33 +36,44 @@ type Props = {
 export function FundingBar({ headline, percent, stats }: Props) {
   return (
     <div>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      {/* Bloque numérico unificado: micro-etiqueta arriba + número grande
+          + denominador. El suffix queda como label superior en lugar de
+          flotar al extremo derecho. */}
+      <div className="flex flex-col gap-1.5">
+        <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-navy/50">
+          {headline.suffix}
+        </p>
         <p className="font-mono text-kpi-lg text-navy leading-none">
           <span className="text-gold">{headline.placed}</span>
           <span className="text-navy/40">{" / "}</span>
           {headline.total}
         </p>
-        <p className="eyebrow !text-navy/60 sm:text-right">{headline.suffix}</p>
       </div>
 
-      {/* Barra hairline ancha — gris cálido como track, oro como progreso. */}
+      {/* Barra premium — track ultra-suave + relleno gold con volumen,
+          ambos rounded-full para sensación de pastilla, no de línea. */}
       <div
-        className="mt-5 h-2 w-full bg-line"
+        className="mt-6 h-2.5 w-full rounded-full bg-line/60 overflow-hidden"
         role="progressbar"
         aria-valuenow={Math.round(percent)}
         aria-valuemin={0}
         aria-valuemax={100}
       >
         <div
-          className="h-full bg-gold transition-[width]"
+          className="h-full bg-gold rounded-full transition-[width] duration-500 ease-out shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.06)]"
           style={{ width: `${percent}%` }}
         />
       </div>
 
+      {/* Stats: hairlines explícitos por celda en vez del truco `gap-px bg-line`
+          que dejaba bordes huérfanos cuando las celdas no llenaban la grilla. */}
       {stats.length > 0 && (
-        <div className="mt-8 grid grid-cols-1 gap-px bg-line sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 hairline-t hairline-l grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((s, i) => (
-            <div key={i} className="bg-paper p-5">
+            <div
+              key={i}
+              className="bg-paper p-5 hairline-r hairline-b"
+            >
               <p className="eyebrow">{s.label}</p>
               <p className="mt-3 font-mono text-kpi text-navy">{s.value}</p>
               {s.hint && <p className="mt-2 eyebrow !text-navy/40">{s.hint}</p>}

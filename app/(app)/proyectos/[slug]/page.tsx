@@ -14,7 +14,6 @@ import { AdminApprovalActions } from "./AdminApprovalActions";
 import { ProjectBody } from "./ProjectBody";
 import { ProjectHero } from "@/components/project/ProjectHero";
 import { ProjectVideo } from "@/components/project/ProjectVideo";
-import { FundingBar } from "@/components/project/FundingBar";
 import { ProjectSection } from "@/components/project/ProjectSection";
 import { CapTableViz } from "@/components/project/CapTableViz";
 import { InlineParticipateCta } from "@/components/project/InlineParticipateCta";
@@ -434,32 +433,46 @@ export default async function ProjectPage({ params }: Params) {
   }
 
   // — Hitos (vitrina).
+  // Estructura tabular: fecha (col-2) | badge de status (col-3) | título (col-7).
+  // Status como micro-badge con bg de baja opacidad — verde para "Logrado"
+  // (achieved), neutro para el resto. La fecha mono en navy/50.
   if ((project.startupProfile?.milestones.length ?? 0) > 0) {
     sections.push({
       title: t.sections.milestones,
       tone: "vitrina",
       node: (
         <ul className="hairline-t">
-          {project.startupProfile!.milestones.map((m) => (
-            <li
-              key={m.id}
-              className="hairline-b grid grid-cols-12 items-baseline gap-3 py-4"
-            >
-              <span className="col-span-12 sm:col-span-6 text-navy">
-                {m.title}
-              </span>
-              <span className="col-span-6 sm:col-span-3 eyebrow !text-navy">
-                {t.milestoneStatus[m.status] ?? m.status}
-              </span>
-              <span className="col-span-6 sm:col-span-3 eyebrow text-right">
-                {m.achievedAt
-                  ? formatDate(m.achievedAt, locale)
-                  : m.targetDate
-                  ? `${t.milestonesTargetPrefix} ${formatDate(m.targetDate, locale)}`
-                  : "—"}
-              </span>
-            </li>
-          ))}
+          {project.startupProfile!.milestones.map((m) => {
+            const isDone = m.status === "ACHIEVED";
+            // Badge: verde sutil para logrados, neutro para el resto.
+            const badgeCls = isDone
+              ? "bg-emerald-500/10 text-emerald-700"
+              : "bg-navy/[0.04] text-navy/60";
+            return (
+              <li
+                key={m.id}
+                className="hairline-b grid grid-cols-12 items-center gap-x-3 gap-y-1 py-2.5"
+              >
+                <span className="col-span-5 sm:col-span-2 font-mono text-xs tracking-wider text-navy/50">
+                  {m.achievedAt
+                    ? formatDate(m.achievedAt, locale)
+                    : m.targetDate
+                      ? formatDate(m.targetDate, locale)
+                      : "—"}
+                </span>
+                <span className="col-span-7 sm:col-span-3">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full font-mono text-[10px] tracking-[0.16em] uppercase ${badgeCls}`}
+                  >
+                    {t.milestoneStatus[m.status] ?? m.status}
+                  </span>
+                </span>
+                <span className="col-span-12 sm:col-span-7 text-navy text-sm leading-snug">
+                  {m.title}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       ),
     });
@@ -569,19 +582,24 @@ export default async function ProjectPage({ params }: Params) {
   }
 
   // — Métricas (ref).
+  // Grilla compacta de 3 columnas — cards de baja altura (py-3 px-4),
+  // sin aire interno excesivo. Cada card es una hairline-box independiente.
   if (latestByKind.size > 0) {
     sections.push({
       title: t.sections.metrics,
       tone: "ref",
       node: (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {Array.from(latestByKind.values()).map((m) => (
-            <KpiCard
-              key={m.kind}
-              label={m.label}
-              value={`${m.value} ${m.unit}`}
-              hint={`${dict.partner.lastPayment.replace(":", "")} ${formatDate(m.asOf, locale)}`}
-            />
+            <div key={m.kind} className="hairline bg-paper py-3 px-4">
+              <p className="eyebrow !text-navy/40 truncate">{m.label}</p>
+              <p className="mt-1.5 font-mono text-lg text-navy leading-none">
+                {m.value} {m.unit}
+              </p>
+              <p className="mt-1.5 font-mono text-[11px] tracking-wider text-navy/40">
+                {formatDate(m.asOf, locale)}
+              </p>
+            </div>
           ))}
         </div>
       ),
@@ -703,23 +721,19 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  // — Cap table (ref, gated). Visualización tipo histograma horizontal.
-  if (access.canSeeCapTable && capTable.length > 0) {
-    sections.push({
-      title: t.sections.capTable,
-      tone: "ref",
-      node: (
-        <CapTableViz
-          rows={capTable}
-          totalShares={totalShares}
-          ofTotalLabel={`${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
-          formatShares={(n) => formatNumber(n, undefined, locale)}
-          formatPct={(p) => formatPercent(p, 2, locale)}
-          othersLabel={t.capTable.others}
-        />
-      ),
-    });
-  }
+  // — Cap table (ref, gated). Va al sidebar — NO se incluye en sections.
+  // Se renderiza directamente abajo dentro del aside sticky.
+  const capTableNode =
+    access.canSeeCapTable && capTable.length > 0 ? (
+      <CapTableViz
+        rows={capTable}
+        totalShares={totalShares}
+        ofTotalLabel={`${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
+        formatShares={(n) => formatNumber(n, undefined, locale)}
+        formatPct={(p) => formatPercent(p, 2, locale)}
+        othersLabel={t.capTable.others}
+      />
+    ) : null;
 
   // Embed del video — visible para cualquier viewer del proyecto.
   const videoEmbed = project.startupProfile?.videoUrl
@@ -827,45 +841,101 @@ export default async function ProjectPage({ params }: Params) {
         </>
       )}
 
-      {/* Cuerpo de la ficha — focus mode oculta esto si hay form abierto. */}
+      {/* Cuerpo: grid de 2 columnas. Main editorial a la izquierda
+          (sections.map) — sidebar pegajoso a la derecha con Fondeo,
+          Cap Table y CTA. Sin huecos blancos en el scroll inferior. */}
       <ProjectBody hideOnHash={["#comprar", "#info-request"]}>
-        {/* Banda de números: el headline grande, la barra y los KPIs juntos. */}
-        <section className="mt-12 sm:mt-16">
-          <p className="font-mono text-sm tracking-wider mb-5">
-            <span className="text-gold">00</span>
-            <span className="ml-2 text-navy">· {t.sections.funding}</span>
-          </p>
-          <FundingBar
-            headline={{
-              placed: formatNumber(visibleAssigned, undefined, locale),
-              total: formatNumber(totalShares, undefined, locale),
-              suffix: t.funding.placedHeadlineSuffix,
-            }}
-            percent={fundedPct}
-            stats={fundingStats}
-          />
-        </section>
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-[1fr_22rem] gap-x-10 xl:gap-x-14 gap-y-8">
+          {/* ─── COLUMNA PRINCIPAL ──────────────────────────────── */}
+          {/* Sin space-y: cada ProjectSection ya trae su pt + hairline-t. */}
+          <div className="min-w-0">
+            {sections.map((s, i) => (
+              <ProjectSection
+                key={i}
+                index={i + 1}
+                title={s.title}
+                tone={s.tone}
+                isFirst={i === 0}
+                trailingCta={
+                  s.withInlineCta && heroCtas[0]?.href ? (
+                    <InlineParticipateCta
+                      label={heroCtas[0].label}
+                      href={heroCtas[0].href}
+                      eyebrow={t.nextStep}
+                    />
+                  ) : undefined
+                }
+              >
+                {s.node}
+              </ProjectSection>
+            ))}
+          </div>
 
-        {sections.map((s, i) => (
-          <ProjectSection
-            key={i}
-            index={i + 1}
-            title={s.title}
-            tone={s.tone}
-            isFirst={false}
-            trailingCta={
-              s.withInlineCta && heroCtas[0]?.href ? (
-                <InlineParticipateCta
-                  label={heroCtas[0].label}
-                  href={heroCtas[0].href}
-                  eyebrow={t.nextStep}
+          {/* ─── SIDEBAR PEGAJOSO ───────────────────────────────── */}
+          <aside className="lg:sticky lg:top-6 lg:self-start lg:h-fit space-y-5">
+            {/* Bloque Fondeo compacto. */}
+            <div className="hairline bg-paper p-5">
+              <p className="font-mono text-sm tracking-wider mb-4">
+                <span className="text-gold">00</span>
+                <span className="ml-2 text-navy">· {t.sections.funding}</span>
+              </p>
+              <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-navy/50">
+                {t.funding.placedHeadlineSuffix}
+              </p>
+              <p className="mt-1.5 font-mono text-2xl text-navy leading-none">
+                <span className="text-gold">
+                  {formatNumber(visibleAssigned, undefined, locale)}
+                </span>
+                <span className="text-navy/40"> / {formatNumber(totalShares, undefined, locale)}</span>
+              </p>
+              <div className="mt-4 h-2.5 w-full rounded-full bg-line/60 overflow-hidden">
+                <div
+                  className="h-full bg-gold rounded-full transition-[width] duration-500 ease-out"
+                  style={{ width: `${fundedPct}%` }}
+                  aria-hidden
                 />
-              ) : undefined
-            }
-          >
-            {s.node}
-          </ProjectSection>
-        ))}
+              </div>
+              {fundingStats.length > 0 && (
+                <dl className="mt-5 space-y-2.5">
+                  {fundingStats.map((s, i) => (
+                    <div
+                      key={i}
+                      className="flex items-baseline justify-between gap-3"
+                    >
+                      <dt className="eyebrow !text-navy/50 truncate">{s.label}</dt>
+                      <dd className="font-mono text-sm text-navy text-right shrink-0">
+                        {s.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </div>
+
+            {/* Cap Table (solo si access.canSeeCapTable + hay holders). */}
+            {capTableNode && (
+              <div className="hairline bg-paper">
+                <p className="px-5 pt-5 pb-3 font-mono text-sm tracking-wider hairline-b">
+                  <span className="text-gold">08</span>
+                  <span className="ml-2 text-navy">· {t.sections.capTable}</span>
+                </p>
+                {capTableNode}
+              </div>
+            )}
+
+            {/* CTA "Quiero postularme" — premium, separado con mt-6. */}
+            {canCtaShow && heroCtas[0]?.href && (
+              <div className="pt-2">
+                <a
+                  href={heroCtas[0].href}
+                  className="block w-full text-center px-6 py-4 rounded-lg bg-navy text-paper font-medium tracking-wide text-base transition-all duration-200 hover:bg-navy/90 hover:shadow-lg hover:shadow-navy/20 hover:-translate-y-0.5"
+                >
+                  {heroCtas[0].label}
+                </a>
+              </div>
+            )}
+          </aside>
+        </div>
 
         {/* Cierre marketing: pregunta + botón grande. */}
         {canCtaShow ? (

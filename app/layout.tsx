@@ -7,11 +7,10 @@ import "../styles/globals.css";
 // contenido inglés se sirve correctamente igual; un futuro Ola 7d puede
 // promover esto a dinámico vía generateMetadata / route handler dedicado.
 
-// Script bloqueante en <head>: lee la cookie `ajdut-theme` y aplica la clase
-// `dark` antes del primer paint. Patrón estándar de dark mode — sin FOUC y
-// sin forzar render dinámico (leer cookies() en el root layout rompía la
-// prerenderización de las páginas de error en el build).
-const THEME_INIT = `(function(){try{var m=document.cookie.match(/(?:^|; )ajdut-theme=([^;]+)/);if(m&&decodeURIComponent(m[1])==='dark'){document.documentElement.classList.add('dark')}}catch(e){}})();`;
+// Modo oscuro deshabilitado a nivel producto. Script que asegura que la
+// clase `dark` jamás esté presente, aunque exista una cookie/clase vieja
+// de versiones anteriores. Corre síncrono antes del primer paint.
+const THEME_INIT = `(function(){try{document.documentElement.classList.remove('dark')}catch(e){}})();`;
 
 const inter = Inter({
   subsets: ["latin"],

@@ -33,7 +33,6 @@ export default async function SettingsPage() {
       <SettingsForm
         initialLanguage={prefs.language}
         initialCurrency={prefs.currency}
-        initialTheme={prefs.theme}
         roleLabel={roleLabel}
         dict={dict.settings}
       />

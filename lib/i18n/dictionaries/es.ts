@@ -302,7 +302,7 @@ export const dict = {
       metrics: "Métricas",
       documents: "Documentos",
       reports: "Reportes",
-      capTable: "Cap table",
+      capTable: "Distribución de capital",
       policies: "Políticas",
       yourParticipation: "Tu participación",
     } as Record<string, string>,

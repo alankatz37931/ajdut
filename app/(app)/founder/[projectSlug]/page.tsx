@@ -3,12 +3,13 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { Section } from "@/components/ui/Section";
 import { StatusBadge } from "@/components/founder/StatusBadge";
-import { ModuleCard } from "@/components/founder/ModuleCard";
-import { ProjectChecklist } from "@/components/founder/ProjectChecklist";
-import { BackLink } from "@/components/app/BackLink";
-import { formatNumber, formatPercent, formatCurrency, formatDate } from "@/lib/utils/format";
+import {
+  formatNumber,
+  formatPercent,
+  formatCurrency,
+  formatDate,
+} from "@/lib/utils/format";
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
@@ -21,13 +22,16 @@ export default async function FounderDashboardPage({ params }: Params) {
     include: {
       startupProfile: {
         include: {
-          founders: true,
-          milestones: { orderBy: { createdAt: "desc" }, take: 6 },
-          metrics: { orderBy: { asOf: "desc" }, take: 12 },
+          founders: { orderBy: [{ isActive: "desc" }, { equityPercent: "desc" }] },
+          milestones: { orderBy: { createdAt: "desc" }, take: 8 },
+          metrics: { orderBy: { asOf: "desc" }, take: 6 },
         },
       },
       participations: {
-        select: { id: true, status: true, shareCount: true, isPlatformStake: true },
+        include: {
+          currentOwner: { select: { id: true, fullName: true, alias: true } },
+        },
+        orderBy: [{ isPlatformStake: "desc" }, { shareCount: "desc" }],
       },
     },
   });
@@ -37,7 +41,9 @@ export default async function FounderDashboardPage({ params }: Params) {
   // El workspace del founder es estrictamente del dueño del proyecto.
   if (project.ownerId !== user.id) notFound();
 
-  // ─── KPIs estructurales del cap table ───────────────────────────────
+  const sp = project.startupProfile;
+
+  // ─── Cap table (estructural + por holder individual) ──────────────
   const totalShares = project.totalShares;
   const assigned = project.participations
     .filter((p) => ["ASSIGNED", "IN_RESALE", "TRANSFER_PENDING"].includes(p.status))
@@ -49,9 +55,26 @@ export default async function FounderDashboardPage({ params }: Params) {
     .filter((p) => p.isPlatformStake)
     .reduce((sum, p) => sum + p.shareCount, 0);
 
-  // ─── KPIs operativos del founder (no del proyecto público) ─────────
-  // Estos son los números que el founder necesita ver de un vistazo
-  // para saber qué le requiere atención HOY.
+  // Lista detallada para el sidebar: agrupamos por holder (excluyendo
+  // disponibles y la cuota de plataforma — esos van como filas dedicadas).
+  const individualHoldings = new Map<string, { name: string; shares: number }>();
+  for (const p of project.participations) {
+    if (p.isPlatformStake) continue;
+    if (p.status === "AVAILABLE") continue;
+    if (!p.currentOwner) continue;
+    const key = p.currentOwner.id;
+    const name = p.currentOwner.alias ?? p.currentOwner.fullName;
+    const prev = individualHoldings.get(key);
+    individualHoldings.set(key, {
+      name,
+      shares: (prev?.shares ?? 0) + p.shareCount,
+    });
+  }
+  const individualRows = Array.from(individualHoldings.values()).sort(
+    (a, b) => b.shares - a.shares,
+  );
+
+  // ─── KPIs operativos (lo que requiere atención hoy) ───────────────
   const [openLeadsCount, pendingInfoRequestsCount, membersCount, lastReport] =
     await Promise.all([
       prisma.lead.count({
@@ -60,7 +83,6 @@ export default async function FounderDashboardPage({ params }: Params) {
       prisma.infoRequest.count({
         where: { projectId: project.id, status: "PENDING" },
       }),
-      // Distintos owners con acciones asignadas (excluyendo la plataforma).
       prisma.participation
         .findMany({
           where: {
@@ -81,8 +103,7 @@ export default async function FounderDashboardPage({ params }: Params) {
 
   const pendingActions = openLeadsCount + pendingInfoRequestsCount;
 
-  // ─── Checklist de completitud ───────────────────────────────────────
-  const sp = project.startupProfile;
+  // ─── Checklist de completitud ─────────────────────────────────────
   const checklist = [
     {
       label: "Información básica del proyecto",
@@ -122,341 +143,643 @@ export default async function FounderDashboardPage({ params }: Params) {
     },
   ];
 
-  const completedChecklist = checklist.filter((c) => c.done).length;
+  const pricePerShare =
+    sp?.preMoneyValuation && totalShares > 0
+      ? Number(sp.preMoneyValuation) / totalShares
+      : null;
 
+  // ─────────────────────────────────────────────────────────────────
+  // Layout: dos columnas (main editorial + sidebar de control).
+  // El sidebar tiene sticky-top en desktop para acompañar el scroll.
+  // ─────────────────────────────────────────────────────────────────
   return (
-    <div>
-      {/* ─── HERO COMPACTO ─────────────────────────────────────────── */}
-      <header className="pt-5 sm:pt-7 flex flex-col gap-6 hairline-b pb-8 sm:pb-10 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 sm:max-w-2xl">
-          <BackLink fallback="/founder">
-            Project owner · {sp?.sector ?? project.kind}
-            {sp?.stage ? ` · ${sp.stage}` : ""}
-          </BackLink>
-          <h1 className="font-sans mt-4 sm:mt-6 text-h1 text-navy">{project.name}</h1>
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_22rem] gap-x-10 xl:gap-x-14 gap-y-10">
+      {/* ════════════════════════════════════════════════════════════
+          COLUMNA PRINCIPAL — contenido editorial del proyecto
+          ════════════════════════════════════════════════════════════ */}
+      <div className="min-w-0">
+        {/* ─── HERO ──────────────────────────────────────────────── */}
+        <header className="pt-5 sm:pt-7 hairline-b pb-8">
+          <div className="flex items-start justify-between gap-4">
+            <p className="eyebrow !text-navy/40">
+              Project owner
+              {sp?.sector && ` · ${sp.sector}`}
+              {sp?.stage && ` · ${sp.stage}`}
+            </p>
+            <StatusBadge status={project.status} />
+          </div>
+
+          <h1 className="font-sans mt-4 text-h1 text-navy">{project.name}</h1>
+
           {sp?.oneLiner || project.shortPitch ? (
-            <p className="mt-3 sm:mt-4 text-navy/75 leading-relaxed">
-              “{sp?.oneLiner ?? project.shortPitch}”
+            <p className="mt-3 text-navy/75 leading-relaxed max-w-2xl">
+              "{sp?.oneLiner ?? project.shortPitch}"
             </p>
           ) : null}
-        </div>
-        <div className="flex flex-col items-start sm:items-end gap-3 shrink-0">
-          <StatusBadge status={project.status} />
-          {project.approvedAt && (
-            <p className="eyebrow !text-navy/50">
-              Aprobado · {formatDate(project.approvedAt)}
-            </p>
-          )}
-        </div>
-      </header>
 
-      {/* ─── ACCIONES PRIMARIAS ────────────────────────────────────── */}
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        <Link href={`/proyectos/${project.slug}` as Route} className="btn-primary">
-          Ver ficha pública →
-        </Link>
-        <Link
-          href={`/founder/${project.slug}/editar` as Route}
-          className="btn-outline"
+          {/* Acciones primarias del owner. El "Abrir chat" sale primero —
+              es la acción frecuente. "Editar" como botón outline contiguo.
+              "Ver ficha pública" y "+ Otro proyecto" quedan como links
+              discretos al lado. */}
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Link
+              href={`/proyectos/${project.slug}/chat` as Route}
+              className="btn-primary"
+            >
+              Abrir chat →
+            </Link>
+            <Link
+              href={`/founder/${project.slug}/editar` as Route}
+              className="btn-outline"
+            >
+              Editar información
+            </Link>
+            <span className="eyebrow !text-navy/30">·</span>
+            <Link
+              href={`/proyectos/${project.slug}` as Route}
+              className="eyebrow hover:!text-gold transition-colors"
+            >
+              Ver ficha pública
+            </Link>
+            <Link
+              href={"/founder/nuevo-proyecto" as Route}
+              className="eyebrow hover:!text-gold transition-colors"
+            >
+              + Otro proyecto
+            </Link>
+          </div>
+        </header>
+
+        {/* ─── 01 · Resumen ─────────────────────────────────────── */}
+        <FounderSection
+          n="01"
+          title="Resumen"
+          editHref={`/founder/${project.slug}/editar` as Route}
+          editLabel="Editar"
         >
-          Editar información
-        </Link>
-        <span className="eyebrow !text-navy/30">·</span>
-        <Link
-          href={"/founder/nuevo-proyecto" as Route}
-          className="eyebrow hover:!text-gold transition-colors"
-        >
-          + Otro proyecto
-        </Link>
-      </div>
-
-      {/* ─── BANDA DE KPIs OPERATIVOS (lo que requiere atención hoy) */}
-      <Section title="Resumen operativo">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-line">
-          <OperationalKpi
-            label="Sin atender"
-            value={pendingActions}
-            hint={
-              pendingActions === 0
-                ? "Todo al día"
-                : `${openLeadsCount} lead${openLeadsCount === 1 ? "" : "s"}${pendingInfoRequestsCount > 0 ? ` · ${pendingInfoRequestsCount} solicitud${pendingInfoRequestsCount === 1 ? "" : "es"}` : ""}`
-            }
-            urgent={pendingActions > 0}
-          />
-          <OperationalKpi
-            label="Miembros activos"
-            value={membersCount}
-            hint={
-              membersCount === 0
-                ? "Sin socios todavía"
-                : `${formatNumber(assigned)} acciones distribuidas`
-            }
-          />
-          <OperationalKpi
-            label="Pool disponible"
-            value={formatNumber(available)}
-            hint={`${Math.round((available / Math.max(totalShares, 1)) * 100)}% del total`}
-          />
-          <OperationalKpi
-            label="Completitud"
-            value={`${completedChecklist}/${checklist.length}`}
-            hint={completedChecklist === checklist.length ? "Listo" : "Ítems pendientes"}
-            mono
-          />
-        </div>
-      </Section>
-
-      {/* ─── GRILLA DE MÓDULOS (acciones del founder) ──────────────── */}
-      <Section title="Módulos del proyecto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-line">
-          <ModuleCard
-            eyebrow="01 · Interés de compra"
-            value={openLeadsCount > 0 ? openLeadsCount : undefined}
-            empty={openLeadsCount === 0 && pendingInfoRequestsCount === 0}
-            emptyCta="Sin interés registrado todavía."
-            description={
-              pendingInfoRequestsCount > 0
-                ? `${pendingInfoRequestsCount} solicitud${pendingInfoRequestsCount === 1 ? "" : "es"} de información pendiente${pendingInfoRequestsCount === 1 ? "" : "s"}.`
-                : openLeadsCount > 0
-                  ? `${openLeadsCount} lead${openLeadsCount === 1 ? "" : "s"} sin contactar.`
-                  : "Cuando alguien pida participar, aparece acá."
-            }
-            href={`/founder/${project.slug}/leads` as Route}
-            highlight={pendingActions > 0}
-          />
-          <ModuleCard
-            eyebrow="02 · Equipo fundador"
-            value={sp?.founders.length ? sp.founders.length : undefined}
-            empty={!sp?.founders.length}
-            emptyCta="Cargá quiénes están detrás."
-            description={
-              sp?.founders.length
-                ? `${sp.founders.length} miembro${sp.founders.length === 1 ? "" : "s"} cargado${sp.founders.length === 1 ? "" : "s"}.`
-                : "Los founders se muestran en la ficha pública."
-            }
-            href={`/founder/${project.slug}/equipo` as Route}
-          />
-          <ModuleCard
-            eyebrow="03 · Hitos"
-            value={sp?.milestones.length ? sp.milestones.length : undefined}
-            empty={!sp?.milestones.length}
-            emptyCta="Marcá tu roadmap."
-            description={
-              sp?.milestones.length
-                ? "Lo que prometiste cumplir y lo que ya cumpliste."
-                : "Lo que prometiste cumplir, visible para socios."
-            }
-            href={`/founder/${project.slug}/hitos` as Route}
-          />
-          <ModuleCard
-            eyebrow="04 · Métricas"
-            value={sp?.metrics.length ? sp.metrics.length : undefined}
-            empty={!sp?.metrics.length}
-            emptyCta="Subí tu primera medición."
-            description={
-              sp?.metrics.length
-                ? "Snapshot numérico — MRR, churn, runway, etc."
-                : "Volumen, ingresos, runway. Histórico visible para socios."
-            }
-            href={`/founder/${project.slug}/metricas` as Route}
-          />
-          <ModuleCard
-            eyebrow="05 · Reportes"
-            value={lastReport ? undefined : undefined}
-            description={
-              lastReport
-                ? `Último: ${lastReport.title} · ${formatDate(lastReport.publishedAt)}`
-                : "Publicá avances financieros y de negocio."
-            }
-            empty={!lastReport}
-            emptyCta="Publicá tu primer reporte trimestral."
-            href={`/founder/${project.slug}/reportes` as Route}
-          />
-          <ModuleCard
-            eyebrow="06 · Avisos a miembros"
-            description={
-              membersCount > 0
-                ? `Enviá un email a tus ${membersCount} miembro${membersCount === 1 ? "" : "s"}.`
-                : "Cuando tengas socios, vas a poder avisarles desde acá."
-            }
-            empty={membersCount === 0}
-            emptyCta="Sin miembros todavía."
-            href={`/founder/${project.slug}/avisos` as Route}
-          />
-          <ModuleCard
-            eyebrow="07 · Invitar"
-            value={available > 0 ? formatNumber(available) : undefined}
-            description={
-              available > 0
-                ? "Proponé al admin agregar un socio desde el pool disponible."
-                : "Para invitar nuevos miembros, primero recuperá pool."
-            }
-            empty={available === 0}
-            emptyCta="Sin pool disponible."
-            href={`/founder/${project.slug}/invitar` as Route}
-          />
-        </div>
-      </Section>
-
-      {/* ─── CHECKLIST + CAP TABLE ─────────────────────────────────── */}
-      <Section title="Estado y cap table">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ProjectChecklist items={checklist} />
-
-          <div className="hairline bg-paper">
-            <div className="hairline-b p-5 flex items-baseline justify-between gap-4">
-              <p className="eyebrow">— Cap table</p>
-              <Link
-                href={`/proyectos/${project.slug}` as Route}
-                className="eyebrow hover:!text-gold transition-colors"
-              >
-                Ver detalle →
-              </Link>
-            </div>
-            <dl className="divide-y divide-line">
-              <CapRow label="Total emitidas" value={formatNumber(totalShares)} />
-              <CapRow
-                label="Distribuidas"
-                value={formatNumber(assigned)}
-                hint={`${Math.round((assigned / Math.max(totalShares, 1)) * 100)}%`}
-              />
-              <CapRow
-                label="Disponibles (pool)"
-                value={formatNumber(available)}
-                hint={`${Math.round((available / Math.max(totalShares, 1)) * 100)}%`}
-              />
-              <CapRow
-                label="AJDUT plataforma"
-                value={formatNumber(platform)}
-                hint={`${Math.round((platform / Math.max(totalShares, 1)) * 100)}%`}
-                gold
-              />
-              {sp?.preMoneyValuation && (
-                <CapRow
-                  label="Última valoración"
-                  value={formatCurrency(
-                    Number(sp.preMoneyValuation),
-                    sp.valuationCurrency,
-                  )}
-                />
+          {sp?.problemStatement ||
+          sp?.solutionStatement ||
+          sp?.businessModel ||
+          project.description ? (
+            <dl className="space-y-5">
+              {sp?.problemStatement && (
+                <SummaryField label="Problema" value={sp.problemStatement} />
+              )}
+              {sp?.solutionStatement && (
+                <SummaryField label="Solución" value={sp.solutionStatement} />
+              )}
+              {sp?.businessModel && (
+                <SummaryField label="Modelo de negocio" value={sp.businessModel} />
+              )}
+              {project.description && (
+                <SummaryField label="Descripción" value={project.description} />
               )}
             </dl>
-          </div>
-        </div>
-      </Section>
+          ) : (
+            <EmptyState
+              text="Sin información cargada todavía."
+              href={`/founder/${project.slug}/editar` as Route}
+              cta="Cargar resumen →"
+            />
+          )}
+        </FounderSection>
 
-      {/* ─── EQUIPO + HITOS RÁPIDOS ───────────────────────────────── */}
-      {sp?.founders.length ? (
-        <Section
+        {/* ─── 02 · Equipo fundador ─────────────────────────────── */}
+        <FounderSection
+          n="02"
           title="Equipo fundador"
-          actionLabel="Editar"
-          actionHref={`/founder/${project.slug}/equipo` as Route}
+          editHref={`/founder/${project.slug}/equipo` as Route}
+          editLabel="+ Invitar / Modificar"
         >
-          <ul className="hairline-t">
-            {sp.founders.map((f) => (
-              <li
-                key={f.id}
-                className="grid grid-cols-12 items-center gap-3 hairline-b py-3"
-              >
-                <span className="col-span-7 sm:col-span-5 text-navy break-words">
-                  {f.fullName}
-                </span>
-                <span className="col-span-5 sm:col-span-3 eyebrow text-right sm:text-left">
-                  {f.role}
-                </span>
-                <span className="col-span-6 sm:col-span-2 font-mono text-navy">
-                  {formatPercent(Number(f.equityPercent))}
-                </span>
-                <span className="col-span-6 sm:col-span-2 eyebrow text-right">
-                  {f.isActive ? "activo" : "inactivo"}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      ) : null}
+          {sp?.founders.length ? (
+            <ul className="hairline-t">
+              {sp.founders.map((f) => (
+                <li
+                  key={f.id}
+                  className="grid grid-cols-12 items-baseline gap-3 hairline-b py-3"
+                >
+                  <span className="col-span-7 sm:col-span-5 text-navy break-words">
+                    {f.fullName}
+                    {!f.isActive && (
+                      <span className="ml-2 eyebrow !text-navy/40">
+                        inactivo
+                      </span>
+                    )}
+                  </span>
+                  <span className="col-span-5 sm:col-span-5 eyebrow !text-navy/60 text-right sm:text-left">
+                    {f.role}
+                  </span>
+                  <span className="col-span-12 sm:col-span-2 font-mono text-navy text-right">
+                    {formatPercent(Number(f.equityPercent))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState
+              text="Cargá quiénes están detrás del proyecto."
+              href={`/founder/${project.slug}/equipo` as Route}
+              cta="Cargar equipo →"
+            />
+          )}
+        </FounderSection>
 
-      {sp?.milestones.length ? (
-        <Section
-          title="Últimos hitos"
-          actionLabel="Editar"
-          actionHref={`/founder/${project.slug}/hitos` as Route}
+        {/* ─── 03 · Hitos del roadmap ───────────────────────────── */}
+        <FounderSection
+          n="03"
+          title="Hitos del roadmap"
+          editHref={`/founder/${project.slug}/hitos` as Route}
+          editLabel="+ Hito / Editar"
         >
-          <ul className="hairline-t">
-            {sp.milestones.map((m) => (
-              <li
-                key={m.id}
-                className="grid grid-cols-12 gap-x-3 gap-y-1 hairline-b py-3"
-              >
-                <span className="col-span-6 sm:col-span-2 eyebrow !text-navy">
-                  {m.status}
-                </span>
-                <span className="col-span-6 sm:col-span-2 eyebrow text-right sm:text-left">
-                  {m.targetDate ? formatDate(m.targetDate) : "—"}
-                </span>
-                <span className="col-span-12 sm:col-span-8 text-navy">{m.title}</span>
-              </li>
+          {sp?.milestones.length ? (
+            <ul className="hairline-t">
+              {sp.milestones.map((m) => {
+                const isDone = m.status === "ACHIEVED";
+                const statusLabel = isDone ? "Logrado" : "Planeado";
+                return (
+                  <li
+                    key={m.id}
+                    className="hairline-b py-3 flex items-baseline gap-4 flex-wrap sm:flex-nowrap"
+                  >
+                    {/* Status: dot + label compactos, no se empujan al extremo */}
+                    <span className="inline-flex items-baseline gap-2 shrink-0 min-w-[6.5rem]">
+                      <span
+                        className={`font-mono text-sm leading-none ${
+                          isDone ? "text-gold" : "text-navy/30"
+                        }`}
+                        aria-hidden
+                      >
+                        {isDone ? "●" : "○"}
+                      </span>
+                      <span className="eyebrow !text-navy/60">{statusLabel}</span>
+                    </span>
+                    {/* Fecha al lado del status, no en el otro extremo */}
+                    <span className="eyebrow !text-navy/40 font-mono shrink-0 min-w-[5.5rem]">
+                      {m.targetDate ? formatDate(m.targetDate) : "—"}
+                    </span>
+                    {/* Título + descripción — ocupa el espacio restante */}
+                    <span className="text-navy flex-1 min-w-0">
+                      {m.title}
+                      {m.description && (
+                        <span className="block mt-1 text-sm text-navy/60 leading-relaxed">
+                          {m.description}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EmptyState
+              text="Marcá tu roadmap — lo prometido y lo cumplido."
+              href={`/founder/${project.slug}/hitos` as Route}
+              cta="Agregar primer hito →"
+            />
+          )}
+        </FounderSection>
+
+        {/* ─── 04 · Interés de compra (micro-panel) ─────────────── */}
+        <FounderSection
+          n="04"
+          title="Interés de compra"
+          editHref={`/founder/${project.slug}/leads` as Route}
+          editLabel="Ver leads"
+          urgent={pendingActions > 0}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
+            <MicroKpi
+              label="Leads sin atender"
+              value={openLeadsCount}
+              hint={
+                openLeadsCount === 0
+                  ? "Sin solicitudes activas"
+                  : `${openLeadsCount} esperando contacto`
+              }
+              urgent={openLeadsCount > 0}
+            />
+            <MicroKpi
+              label="Solicitudes de info pendientes"
+              value={pendingInfoRequestsCount}
+              hint={
+                pendingInfoRequestsCount === 0
+                  ? "Bandeja al día"
+                  : `${pendingInfoRequestsCount} sin resolver`
+              }
+              urgent={pendingInfoRequestsCount > 0}
+            />
+          </div>
+        </FounderSection>
+
+        {/* ─── 05 · Métricas ────────────────────────────────────── */}
+        <FounderSection
+          n="05"
+          title="Métricas"
+          editHref={`/founder/${project.slug}/metricas` as Route}
+          editLabel="Actualizar"
+        >
+          {sp?.metrics.length ? (
+            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-line">
+              {sp.metrics.slice(0, 6).map((m) => (
+                <li key={m.id} className="bg-paper p-4">
+                  <p className="eyebrow !text-navy/40 truncate">
+                    {m.customLabel ?? m.kind}
+                  </p>
+                  <p className="mt-2 font-mono text-lg text-navy">
+                    {m.unit === "CURRENCY"
+                      ? formatCurrency(Number(m.value), sp.valuationCurrency)
+                      : m.unit === "PERCENT"
+                        ? `${Number(m.value).toFixed(1)}%`
+                        : formatNumber(Number(m.value))}
+                  </p>
+                  <p className="mt-1 eyebrow !text-navy/40">
+                    {formatDate(m.asOf)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState
+              text="Subí tu primera medición (MRR, DAU, runway, etc.)."
+              href={`/founder/${project.slug}/metricas` as Route}
+              cta="Cargar métrica →"
+            />
+          )}
+        </FounderSection>
+
+        {/* ─── 06 · Reportes ────────────────────────────────────── */}
+        <FounderSection
+          n="06"
+          title="Reportes"
+          editHref={`/founder/${project.slug}/reportes` as Route}
+          editLabel="Nuevo reporte"
+        >
+          {lastReport ? (
+            <div className="hairline p-5 bg-paper-light flex items-baseline justify-between gap-4">
+              <div className="min-w-0">
+                <p className="eyebrow !text-navy/40">Último reporte</p>
+                <p className="mt-1 text-navy truncate">{lastReport.title}</p>
+              </div>
+              <p className="eyebrow !text-navy/60 shrink-0">
+                {formatDate(lastReport.publishedAt)}
+              </p>
+            </div>
+          ) : (
+            <EmptyState
+              text="Publicá un reporte trimestral con objetivos, ingresos y avances."
+              href={`/founder/${project.slug}/reportes` as Route}
+              cta="Publicar primer reporte →"
+            />
+          )}
+        </FounderSection>
+
+        {/* ─── 07 · Avisos a miembros ───────────────────────────── */}
+        <FounderSection
+          n="07"
+          title="Avisos a miembros"
+          editHref={`/founder/${project.slug}/avisos` as Route}
+          editLabel={membersCount > 0 ? "Nuevo aviso" : undefined}
+        >
+          <p className="text-navy/75 leading-relaxed">
+            {membersCount > 0
+              ? `Tenés ${membersCount} miembro${membersCount === 1 ? "" : "s"} activo${membersCount === 1 ? "" : "s"} en este proyecto. Podés mandarles un email desde acá.`
+              : "Cuando un miembro reciba acciones del proyecto, vas a poder enviarle avisos por email desde acá."}
+          </p>
+        </FounderSection>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════
+          COLUMNA LATERAL — métricas financieras + control operativo
+          Mismo lenguaje visual que las secciones del main column:
+          header mono con número + dot + título sans.
+          ════════════════════════════════════════════════════════════ */}
+      <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start lg:pt-5">
+        {/* ─── 00 · Fondeo (medidor + KPIs cortos) ──────────────── */}
+        <div className="hairline bg-paper">
+          <div className="px-5 pt-5 pb-5 hairline-b">
+            <WidgetHeader n="00" title="Fondeo" />
+            <div className="mt-4">
+              <p className="eyebrow !text-navy/50">Acciones colocadas hasta hoy</p>
+              <p className="mt-1.5 font-mono text-2xl text-navy leading-none">
+                {formatNumber(assigned)}
+                <span className="text-navy/30"> / {formatNumber(totalShares)}</span>
+              </p>
+            </div>
+            {/* Barra de progreso: contenedor pill h-2 con relleno gold. */}
+            <div className="mt-4 h-2 rounded-full bg-line/70 overflow-hidden">
+              <div
+                className="h-full bg-gold rounded-full transition-all"
+                style={{
+                  width: `${Math.min(100, (assigned / Math.max(totalShares, 1)) * 100)}%`,
+                }}
+                aria-hidden
+              />
+            </div>
+          </div>
+          <dl className="grid grid-cols-2 gap-px bg-line">
+            <SidebarStat
+              label="Disponibles"
+              value={formatNumber(available)}
+            />
+            <SidebarStat
+              label="Valor sugerido"
+              value={
+                pricePerShare
+                  ? formatCurrency(
+                      pricePerShare,
+                      sp?.valuationCurrency ?? "USD",
+                    )
+                  : "—"
+              }
+              mono
+            />
+            <SidebarStat
+              label="Valoración"
+              value={
+                sp?.preMoneyValuation
+                  ? formatCurrency(
+                      Number(sp.preMoneyValuation),
+                      sp.valuationCurrency,
+                    )
+                  : "—"
+              }
+              fullWidth
+              mono
+            />
+          </dl>
+        </div>
+
+        {/* ─── 08 · Cap table detallado por holder ──────────────── */}
+        <div className="hairline bg-paper">
+          <div className="px-5 pt-5 pb-5 hairline-b flex items-baseline justify-between gap-3">
+            <WidgetHeader n="08" title="Cap table" />
+            <Link
+              href={`/proyectos/${project.slug}` as Route}
+              className="eyebrow !text-navy/50 hover:!text-gold transition-colors shrink-0"
+            >
+              Detalle →
+            </Link>
+          </div>
+          {/* Filas con hairline-b explícito (0.5px) — match con el header
+              de arriba y con el resto del sistema editorial. */}
+          <ul>
+            {available > 0 && (
+              <CapHolderRow
+                name="Disponible (pool)"
+                shares={available}
+                totalShares={totalShares}
+                muted
+              />
+            )}
+            {platform > 0 && (
+              <CapHolderRow
+                name="AJDUT plataforma"
+                shares={platform}
+                totalShares={totalShares}
+                gold
+              />
+            )}
+            {individualRows.map((row) => (
+              <CapHolderRow
+                key={row.name}
+                name={row.name}
+                shares={row.shares}
+                totalShares={totalShares}
+              />
             ))}
           </ul>
-        </Section>
-      ) : null}
+        </div>
+
+        {/* ─── 09 · Checklist owner ─────────────────────────────── */}
+        <div className="hairline bg-paper">
+          <div className="px-5 pt-5 pb-5 hairline-b">
+            <WidgetHeader n="09" title="Estado del proyecto" />
+          </div>
+          <ChecklistInline items={checklist} />
+        </div>
+      </aside>
     </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
+// Subcomponentes
+// ════════════════════════════════════════════════════════════════════
+
+/**
+ * Header de sección — mismo lenguaje para main column y sidebar widgets.
+ * Mono "NN" gold + `·` navy/30 + título sans navy. Tracking wider, text-sm.
+ */
+function WidgetHeader({ n, title }: { n: string; title: string }) {
+  return (
+    <h2 className="font-mono text-sm tracking-wider text-navy">
+      <span className="text-gold">{n}</span>
+      <span className="text-navy/30"> · </span>
+      <span className="font-sans text-navy">{title}</span>
+    </h2>
   );
 }
 
 /**
- * KPI compacto, alineado con el manual: eyebrow chico, número grande mono,
- * hint debajo. Cuando es "urgente" (leads sin atender) el número se pinta oro.
+ * Sección del founder dashboard (main column). Reusa WidgetHeader para
+ * mantener consistencia con los widgets del sidebar. El trigger de edición
+ * va a la derecha del título — sin emojis ni iconos extra.
  */
-function OperationalKpi({
-  label,
-  value,
-  hint,
-  urgent,
-  mono,
+function FounderSection({
+  n,
+  title,
+  editHref,
+  editLabel,
+  children,
 }: {
-  label: string;
-  value: string | number;
-  hint?: string;
+  n: string;
+  title: string;
+  editHref?: Route;
+  editLabel?: string;
   urgent?: boolean;
-  mono?: boolean;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="bg-paper p-5 sm:p-6">
-      <p className="eyebrow">{label}</p>
-      <p
-        className={`mt-3 font-mono text-kpi leading-none ${
-          urgent ? "text-gold" : "text-navy"
-        } ${mono ? "" : ""}`}
-      >
+    <section className="py-8 sm:py-10 hairline-b last:border-b-0">
+      <div className="flex items-baseline justify-between gap-4">
+        <WidgetHeader n={n} title={title} />
+        {editHref && editLabel && (
+          <Link
+            href={editHref}
+            className="eyebrow !text-navy/50 hover:!text-gold transition-colors shrink-0"
+          >
+            {editLabel} →
+          </Link>
+        )}
+      </div>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+/**
+ * Checklist inline para encajar dentro de un widget con su propio
+ * header. Versión compacta del ProjectChecklist standalone.
+ */
+function ChecklistInline({
+  items,
+}: {
+  items: Array<{ label: string; done: boolean; href: Route; hint?: string }>;
+}) {
+  return (
+    <ul>
+      {items.map((it) => (
+        <li key={it.label} className="hairline-b last:border-b-0">
+          <div className="flex items-start gap-3 px-5 py-3">
+            <span
+              aria-hidden
+              className={`mt-0.5 font-mono text-sm leading-none shrink-0 ${
+                it.done ? "text-gold" : "text-navy/30"
+              }`}
+            >
+              {it.done ? "●" : "○"}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p
+                className={`text-sm leading-snug ${
+                  it.done ? "text-navy/55" : "text-navy"
+                }`}
+              >
+                {it.label}
+              </p>
+            </div>
+            {!it.done && (
+              <Link
+                href={it.href}
+                className="eyebrow !text-gold hover:!text-navy transition-colors shrink-0 self-center"
+              >
+                Completar →
+              </Link>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SummaryField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-2 sm:gap-6">
+      <dt className="eyebrow !text-navy/40">{label}</dt>
+      <dd className="text-navy/85 leading-relaxed whitespace-pre-line">
         {value}
-      </p>
-      {hint && <p className="mt-2 eyebrow !text-navy/50">{hint}</p>}
+      </dd>
     </div>
   );
 }
 
-function CapRow({
+function EmptyState({
+  text,
+  href,
+  cta,
+}: {
+  text: string;
+  href: Route;
+  cta: string;
+}) {
+  return (
+    <div className="hairline p-5 bg-paper-light">
+      <p className="text-navy/65 leading-relaxed">{text}</p>
+      <Link
+        href={href}
+        className="mt-3 inline-block eyebrow !text-gold hover:!text-navy transition-colors"
+      >
+        {cta}
+      </Link>
+    </div>
+  );
+}
+
+function MicroKpi({
   label,
   value,
   hint,
-  gold,
+  urgent,
+}: {
+  label: string;
+  value: number;
+  hint?: string;
+  urgent?: boolean;
+}) {
+  return (
+    <div className="bg-paper p-5">
+      <p className="eyebrow !text-navy/40">{label}</p>
+      <p
+        className={`mt-2 font-mono text-3xl leading-none ${
+          urgent ? "text-gold" : "text-navy"
+        }`}
+      >
+        {value}
+      </p>
+      {hint && (
+        <p className="mt-2 eyebrow !text-navy/50">{hint}</p>
+      )}
+    </div>
+  );
+}
+
+function SidebarStat({
+  label,
+  value,
+  mono,
+  fullWidth,
 }: {
   label: string;
   value: string;
-  hint?: string;
-  gold?: boolean;
+  mono?: boolean;
+  fullWidth?: boolean;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 px-5 py-3">
-      <dt className="eyebrow">{label}</dt>
-      <dd className="flex items-baseline gap-3">
-        {hint && <span className="eyebrow !text-navy/40">{hint}</span>}
-        <span className={`font-mono text-navy ${gold ? "" : ""}`}>
-          {value}
+    <div className={`bg-paper p-4 ${fullWidth ? "col-span-2" : ""}`}>
+      <p className="eyebrow !text-navy/40">{label}</p>
+      <p
+        className={`mt-1.5 text-navy ${mono ? "font-mono text-sm" : "font-sans"}`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function CapHolderRow({
+  name,
+  shares,
+  totalShares,
+  muted,
+  gold,
+}: {
+  name: string;
+  shares: number;
+  totalShares: number;
+  muted?: boolean;
+  gold?: boolean;
+}) {
+  const pct = totalShares > 0 ? (shares / totalShares) * 100 : 0;
+  // Mismo px-5 que el header del widget (Fondeo/Cap table), por lo que los
+  // bordes hairline-b de cada fila se alinean visualmente con el divisor
+  // del header sin "tocar abruptamente" el borde del contenedor.
+  return (
+    <li className="hairline-b last:border-b-0">
+      <div className="flex items-baseline justify-between gap-3 px-5 py-3 text-sm">
+        <span
+          className={`min-w-0 truncate ${
+            muted ? "text-navy/50" : "text-navy"
+          }`}
+        >
+          {name}
           {gold && <span className="ml-2 text-gold">◆</span>}
         </span>
-      </dd>
-    </div>
+        <span className="flex items-baseline gap-2 shrink-0 font-mono">
+          <span className="text-navy/40 text-xs">{pct.toFixed(1)}%</span>
+          <span className="text-navy">{formatNumber(shares)}</span>
+        </span>
+      </div>
+    </li>
   );
 }

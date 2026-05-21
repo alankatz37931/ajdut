@@ -39,21 +39,23 @@ export function ProjectSection({
 }: Props) {
   const num = String(index).padStart(2, "0");
 
+  // Padding más controlado — espaciado vertical reducido para evitar
+  // huecos blancos en el scroll, especialmente con el sidebar sticky.
+  // vitrina: pt-8/10 (antes pt-12/16) · ref: pt-6/7 (antes pt-8/10)
   return (
     <section
       className={cn(
         isFirst ? "" : "hairline-t",
-        tone === "vitrina" ? "pt-12 sm:pt-16 pb-2" : "pt-8 sm:pt-10 pb-1",
-        "mt-0"
+        tone === "vitrina" ? "pt-8 sm:pt-10 pb-2" : "pt-6 sm:pt-7 pb-1",
       )}
     >
       {tone === "vitrina" ? (
-        <div className="flex items-baseline gap-4 mb-7">
+        <div className="flex items-baseline gap-4 mb-5">
           <span className="font-mono text-base text-gold tracking-wider">{num}</span>
           {title && <h2 className="font-sans text-h2 text-navy">{title}</h2>}
         </div>
       ) : (
-        <p className="font-mono text-sm tracking-wider mb-5">
+        <p className="font-mono text-sm tracking-wider mb-4">
           <span className="text-gold">{num}</span>
           {title && <span className="ml-2 text-navy">· {title}</span>}
         </p>
@@ -61,7 +63,7 @@ export function ProjectSection({
 
       <div>{children}</div>
 
-      {trailingCta && <div className="mt-8">{trailingCta}</div>}
+      {trailingCta && <div className="mt-6">{trailingCta}</div>}
     </section>
   );
 }

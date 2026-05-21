@@ -101,6 +101,7 @@ export function SideNav({ user, navItems, labels }: Props) {
 
     // Color del label: inactivo neutro / hover más claro / activo paper bright.
     // Items "faded" (institucional) parten de un tono más bajo.
+    // Sidebar fijo en navy — no se intercambia con tema.
     const idleClass = faded
       ? "!text-paper/35 hover:!text-paper/70"
       : "!text-paper/55 hover:!text-paper/85";
@@ -174,7 +175,7 @@ export function SideNav({ user, navItems, labels }: Props) {
         />
       )}
 
-      {/* ─── Sidebar ─────────────────────────────────────────────── */}
+      {/* ─── Sidebar — fijo en navy, no se intercambia con tema ────── */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-navy flex flex-col transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"

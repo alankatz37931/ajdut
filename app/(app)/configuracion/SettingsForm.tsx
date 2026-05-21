@@ -4,12 +4,11 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Dict } from "@/lib/i18n";
 import { savePreferencesAction } from "./actions";
-import type { Language, PreferredCurrency, Theme } from "@/lib/preferences";
+import type { Language, PreferredCurrency } from "@/lib/preferences";
 
 type Props = {
   initialLanguage: Language;
   initialCurrency: PreferredCurrency;
-  initialTheme: Theme;
   roleLabel: string;
   dict: Dict["settings"];
 };
@@ -17,28 +16,26 @@ type Props = {
 export function SettingsForm({
   initialLanguage,
   initialCurrency,
-  initialTheme,
   roleLabel,
   dict,
 }: Props) {
   const router = useRouter();
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [currency, setCurrency] = useState<PreferredCurrency>(initialCurrency);
-  const [theme, setTheme] = useState<Theme>(initialTheme);
   const [saved, setSaved] = useState(false);
   const [, startTransition] = useTransition();
 
   // Guardado instantáneo: cada cambio persiste solo (sin botón). Mismo
   // patrón que el resto de AJDUT (acciones inmediatas, sin "Guardar").
+  // El tema queda fijo en "light" — no es elegible por el usuario.
   function persist(next: {
     currency?: PreferredCurrency;
-    theme?: Theme;
     language?: Language;
   }) {
     const fd = new FormData();
     fd.set("language", next.language ?? language);
     fd.set("currency", next.currency ?? currency);
-    fd.set("theme", next.theme ?? theme);
+    fd.set("theme", "light");
     startTransition(async () => {
       const r = await savePreferencesAction(fd);
       if (r.ok) {
@@ -52,12 +49,6 @@ export function SettingsForm({
         }
       }
     });
-  }
-
-  function pickTheme(next: Theme) {
-    setTheme(next);
-    document.documentElement.classList.toggle("dark", next === "dark");
-    persist({ theme: next });
   }
 
   function pickCurrency(next: PreferredCurrency) {
@@ -75,17 +66,6 @@ export function SettingsForm({
       <div className="hairline-t">
         <Row label={dict.roleLabel}>
           <span className="eyebrow !text-navy/40">{roleLabel}</span>
-        </Row>
-
-        <Row label={dict.themeLabel}>
-          <Segmented
-            value={theme}
-            options={[
-              { value: "light", content: <SunIcon />, aria: dict.themeLightAria },
-              { value: "dark", content: <MoonIcon />, aria: dict.themeDarkAria },
-            ]}
-            onChange={(v) => pickTheme(v as Theme)}
-          />
         </Row>
 
         <Row label={dict.currencyLabel}>
@@ -130,42 +110,6 @@ function Row({
       <span className="text-navy">{label}</span>
       {children}
     </div>
-  );
-}
-
-function SunIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden
-    >
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-    </svg>
   );
 }
 

@@ -51,13 +51,16 @@ export function CapTableViz({
   // Anchor: el holder más grande define el 100% visual.
   const max = displayRows[0]?.shares ?? 1;
 
+  // Padding horizontal simétrico (px-5) en cada fila — los bordes
+  // hairline-b van full-width del <ul>, así se alinean milimétricamente
+  // sin importar el ancho del contenido.
   return (
     <ul className="hairline-t">
       {displayRows.map((r, i) => {
         const pct = (r.shares / totalShares) * 100;
         const widthPct = max > 0 ? (r.shares / max) * 100 : 0;
         return (
-          <li key={i} className="hairline-b py-4">
+          <li key={i} className="hairline-b px-5 py-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <p className="min-w-0 text-navy break-words">
                 {r.holder}
@@ -72,9 +75,9 @@ export function CapTableViz({
                 <span className="ml-3 text-navy">{formatPct(pct)}</span>
               </p>
             </div>
-            <div className="mt-2 h-px w-full bg-line/60">
+            <div className="mt-2 h-px w-full bg-line/60 rounded-full">
               <div
-                className={r.isPlatform ? "h-full bg-gold" : "h-full bg-navy/70"}
+                className={`h-full rounded-full ${r.isPlatform ? "bg-gold" : "bg-navy/70"}`}
                 style={{ width: `${widthPct}%` }}
               />
             </div>

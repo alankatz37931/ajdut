@@ -60,6 +60,12 @@ html, body {
   .hairline-t {
     border-top: 0.5px solid theme("colors.line.DEFAULT");
   }
+  .hairline-l {
+    border-left: 0.5px solid theme("colors.line.DEFAULT");
+  }
+  .hairline-r {
+    border-right: 0.5px solid theme("colors.line.DEFAULT");
+  }
   .hairline {
     border: 0.5px solid theme("colors.line.DEFAULT");
   }

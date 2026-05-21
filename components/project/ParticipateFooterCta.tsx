@@ -31,7 +31,14 @@ function renderAction(a: Action, i: number) {
       </span>
     );
   }
-  const cls = a.kind === "primary" ? "btn-primary" : "btn-outline";
+  // CTA premium: navy oscuro sólido, padding generoso, rounded-lg,
+  // micro-lift al hover. Se diferencia de cualquier fila tabular y se
+  // siente como una acción de software financiero (Stripe/Vercel-like).
+  const primaryCls =
+    "inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg bg-navy text-paper font-medium tracking-wide text-base transition-all duration-200 hover:bg-navy/90 hover:shadow-lg hover:shadow-navy/20 hover:-translate-y-0.5";
+  const outlineCls =
+    "inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-lg border-hairline border-navy text-navy font-medium tracking-wide transition-colors hover:bg-paper-dark";
+  const cls = a.kind === "primary" ? primaryCls : outlineCls;
   if (a.href.startsWith("#") || a.href.startsWith("http")) {
     return (
       <a key={i} href={a.href} className={cls}>
@@ -47,6 +54,9 @@ function renderAction(a: Action, i: number) {
 }
 
 export function ParticipateFooterCta({ eyebrow, question, body, actions }: Props) {
+  // mt-16 separa el bloque de la sección anterior; el botón vive con
+  // mt-10 dentro para dar aire respecto al body — evita que parezca una
+  // fila más de la sección anterior.
   return (
     <section className="mt-16 hairline-t hairline-b bg-paper-light px-1 sm:px-2 py-12 sm:py-16">
       <p className="eyebrow">{eyebrow}</p>
@@ -55,7 +65,7 @@ export function ParticipateFooterCta({ eyebrow, question, body, actions }: Props
         <p className="mt-4 max-w-2xl text-navy/75 leading-relaxed">{body}</p>
       )}
       {actions.length > 0 && (
-        <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-3">
           {actions.map(renderAction)}
         </div>
       )}
