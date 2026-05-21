@@ -11,9 +11,8 @@ export type ProfileResult =
   | { ok: false; error: string; field?: string };
 
 /**
- * Valida que un valor sea URL absoluta http(s) o null. Usado para los
- * campos avatarUrl / idPhotoUrl que pueden venir de un upload a R2 o de un
- * link externo pegado por el usuario (fallback cuando R2 no está configurado).
+ * Valida que un valor sea URL absoluta http(s) o null. Usado para el campo
+ * avatarUrl, que viene de la URL pública del archivo subido a R2.
  */
 function normalizeOptionalUrl(raw: unknown): string | null | "INVALID" {
   if (raw === null || raw === undefined) return null;
@@ -49,15 +48,11 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
     }
   }
 
-  // avatarUrl + idPhotoUrl son opcionales. Vienen como hidden inputs llenados
-  // por el componente FileUpload (URL pública post-R2 o pegada manualmente).
+  // avatarUrl es opcional. Viene de un hidden input llenado por el componente
+  // FileUpload con la URL pública del archivo subido a R2.
   const avatar = normalizeOptionalUrl(formData.get("avatarUrl"));
   if (avatar === "INVALID") {
     return { ok: false, error: "La URL de la foto de perfil no es válida.", field: "avatarUrl" };
-  }
-  const idPhoto = normalizeOptionalUrl(formData.get("idPhotoUrl"));
-  if (idPhoto === "INVALID") {
-    return { ok: false, error: "La URL de la foto de identificación no es válida.", field: "idPhotoUrl" };
   }
 
   // Contacto: país + teléfono — campos editables post-aplicación.
@@ -79,7 +74,6 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
       fullName,
       alias,
       avatarUrl: avatar,
-      idPhotoUrl: idPhoto,
       country,
       phone,
     },

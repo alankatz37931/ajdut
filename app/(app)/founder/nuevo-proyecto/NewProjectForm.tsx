@@ -26,8 +26,7 @@ const KINDS = [
 ] as const;
 
 const DOC_ACCEPT = ".pdf,.xlsx,.xls,.docx,.doc,.png,.jpg,.jpeg";
-const DOC_HELP =
-  "PDF, Word, Excel o imagen (máx. 25 MB). También podés pegar un link público.";
+const DOC_HELP = "PDF, Word, Excel o imagen (máx. 25 MB).";
 
 export function NewProjectForm() {
   const [form, setForm] = useState({
@@ -285,9 +284,8 @@ export function NewProjectForm() {
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">Documentos del proyecto</p>
         <p className="text-navy/75 leading-relaxed">
-          Subí los documentos clave del proyecto o pegá un link público (Google Drive,
-          Dropbox, Notion). Todos son opcionales — los podés sumar después desde la
-          pantalla de edición.
+          Subí los documentos clave del proyecto. Todos son opcionales — los podés
+          sumar después desde la pantalla de edición.
         </p>
         <div>
           <FileUpload

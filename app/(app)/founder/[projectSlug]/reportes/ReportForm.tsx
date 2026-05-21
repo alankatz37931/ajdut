@@ -47,7 +47,7 @@ export function ReportForm({ projectSlug, defaultYear }: Props) {
     setError(null);
     setSuccess(false);
     if (!url.trim()) {
-      setError("Subí un archivo o pegá el link del reporte.");
+      setError("Subí el archivo del reporte.");
       return;
     }
     const formData = new FormData(e.currentTarget);

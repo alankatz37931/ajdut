@@ -10,7 +10,6 @@ export function ProfileForm({
   initialName,
   initialAlias = "",
   initialAvatarUrl = "",
-  initialIdPhotoUrl = "",
   initialCountry = "",
   initialPhone = "",
   dict,
@@ -18,7 +17,6 @@ export function ProfileForm({
   initialName: string;
   initialAlias?: string;
   initialAvatarUrl?: string;
-  initialIdPhotoUrl?: string;
   initialCountry?: string;
   initialPhone?: string;
   dict: Dict["profile"];
@@ -29,8 +27,6 @@ export function ProfileForm({
   const [savedAlias, setSavedAlias] = useState(initialAlias);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [savedAvatarUrl, setSavedAvatarUrl] = useState(initialAvatarUrl);
-  const [idPhotoUrl, setIdPhotoUrl] = useState(initialIdPhotoUrl);
-  const [savedIdPhotoUrl, setSavedIdPhotoUrl] = useState(initialIdPhotoUrl);
   const [country, setCountry] = useState(initialCountry);
   const [savedCountry, setSavedCountry] = useState(initialCountry);
   const [phone, setPhone] = useState(initialPhone);
@@ -47,7 +43,6 @@ export function ProfileForm({
     fullName !== savedName ||
     alias !== savedAlias ||
     avatarUrl !== savedAvatarUrl ||
-    idPhotoUrl !== savedIdPhotoUrl ||
     country !== savedCountry ||
     phone !== savedPhone;
 
@@ -63,7 +58,6 @@ export function ProfileForm({
       setSavedName(fullName);
       setSavedAlias(alias);
       setSavedAvatarUrl(avatarUrl);
-      setSavedIdPhotoUrl(idPhotoUrl);
       setSavedCountry(country);
       setSavedPhone(phone);
       setNameSuccess(true);
@@ -145,20 +139,6 @@ export function ProfileForm({
             showImagePreview
           />
           <input type="hidden" name="avatarUrl" value={avatarUrl} />
-        </div>
-
-        {/* Foto de identificación */}
-        <div className="pt-4 hairline-t">
-          <FileUpload
-            scope="id-photo"
-            accept="image/png,image/jpeg,application/pdf"
-            maxSizeMb={5}
-            currentUrl={idPhotoUrl || undefined}
-            onUploaded={(url) => setIdPhotoUrl(url)}
-            label="Foto de identificación"
-            helperText="Documento de identidad. PNG, JPG o PDF. Máximo 5MB. Visible solo para vos y el equipo de AJDUT (KYC)."
-          />
-          <input type="hidden" name="idPhotoUrl" value={idPhotoUrl} />
         </div>
 
         {nameError && (

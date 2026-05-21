@@ -58,8 +58,7 @@ const KINDS: Array<{ id: Initial["kind"]; label: string }> = [
 ];
 
 const DOC_ACCEPT = ".pdf,.xlsx,.xls,.docx,.doc,.png,.jpg,.jpeg";
-const DOC_HELP =
-  "PDF, Word, Excel o imagen (máx. 25 MB). También podés pegar un link público.";
+const DOC_HELP = "PDF, Word, Excel o imagen (máx. 25 MB).";
 
 export function EditProjectForm({
   projectSlug,
@@ -192,8 +191,7 @@ export function EditProjectForm({
           <section className="space-y-5 hairline-t pt-8">
             <p className="eyebrow">Documentos</p>
             <p className="text-navy/75 leading-relaxed">
-              Compartí los documentos clave de tu proyecto. Subí cada archivo o pegá un
-              link público (Google Drive, Dropbox, Notion) — lo que te resulte más cómodo.
+              Subí los documentos clave de tu proyecto.
             </p>
             <div>
               <FloatingInput
@@ -228,7 +226,7 @@ export function EditProjectForm({
                 currentUrl={form.dataRoomUrl || undefined}
                 onUploaded={(url) => update("dataRoomUrl", url)}
                 label="Data room"
-                helperText="Subí un documento o pegá el link al data room. Conviene que esté protegido (acceso solo con link o cuenta)."
+                helperText={DOC_HELP}
               />
               <input type="hidden" name="dataRoomUrl" value={form.dataRoomUrl} />
             </div>
