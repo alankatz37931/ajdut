@@ -68,6 +68,13 @@ export async function navItemsFor(
     icon: <ParticipationsIcon />,
   };
 
+  const documentosItem: NavItem = {
+    label: "Documentos",
+    href: "/documentos" as Route,
+    group: SEC_PORTFOLIO,
+    icon: <AuditIcon />,
+  };
+
   // CUENTA — perfil + configuración. Quedan agrupados bajo su sección.
   const profileItem: NavItem = {
     label: n.profile,
@@ -114,7 +121,7 @@ export async function navItemsFor(
     return [
       // PORTAFOLIO
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
-      ...(ownsShares ? [misParticipacionesItem] : []),
+      ...(ownsShares ? [misParticipacionesItem, documentosItem] : []),
       // ADMINISTRACIÓN
       {
         label: n.applications,
@@ -162,7 +169,7 @@ export async function navItemsFor(
     return [
       { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
       { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
-      ...(ownsShares ? [misParticipacionesItem] : []),
+      ...(ownsShares ? [misParticipacionesItem, documentosItem] : []),
       profileItem,
       settingsItem,
       nosotrosItem,
@@ -173,6 +180,7 @@ export async function navItemsFor(
     return [
       { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
       { label: n.myParticipations, href: "/partner" as Route, group: SEC_PORTFOLIO, icon: <ParticipationsIcon /> },
+      documentosItem,
       profileItem,
       settingsItem,
       nosotrosItem,
@@ -182,7 +190,7 @@ export async function navItemsFor(
   if (role === "CO_ADMIN") {
     return [
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
-      ...(ownsShares ? [misParticipacionesItem] : []),
+      ...(ownsShares ? [misParticipacionesItem, documentosItem] : []),
       profileItem,
       settingsItem,
       nosotrosItem,

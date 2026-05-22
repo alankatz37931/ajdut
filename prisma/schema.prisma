@@ -276,6 +276,7 @@ model Project {
   coAdmins        ProjectCoAdmin[]
   participations  Participation[]
   reports         Report[]
+  documents       Document[]
   chatChannel     ChatChannel?
   leads           Lead[]
   resaleListings  ResaleListing[]
@@ -716,6 +717,24 @@ model Report {
 
   @@unique([projectId, fiscalYear, period, kind])
   @@index([projectId, publishedAt])
+}
+
+// ─── DOCUMENTOS ─────────────────────────────────────────────────────
+// Archivo que el founder comparte con los miembros del proyecto. Toda la
+// información (período, cifras, avances) vive DENTRO del archivo — la
+// plataforma solo lo guarda y lo distribuye.
+model Document {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id])
+  title        String
+  storageKey   String
+  fileMime     String?
+  fileSizeKb   Int?
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  @@index([projectId, createdAt])
 }
 
 model Certificate {

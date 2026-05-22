@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { StatusBadge } from "@/components/founder/StatusBadge";
+import { DocumentsPanel } from "./DocumentsPanel";
 import {
   formatNumber,
   formatPercent,
@@ -32,6 +33,10 @@ export default async function FounderDashboardPage({ params }: Params) {
           currentOwner: { select: { id: true, fullName: true, alias: true } },
         },
         orderBy: [{ isPlatformStake: "desc" }, { shareCount: "desc" }],
+      },
+      documents: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, title: true, storageKey: true, createdAt: true },
       },
       _count: { select: { shareholderClasses: true, externalHoldings: true } },
     },
@@ -76,7 +81,7 @@ export default async function FounderDashboardPage({ params }: Params) {
   );
 
   // ─── KPIs operativos (lo que requiere atención hoy) ───────────────
-  const [openLeadsCount, pendingInfoRequestsCount, membersCount, lastReport] =
+  const [openLeadsCount, pendingInfoRequestsCount, membersCount] =
     await Promise.all([
       prisma.lead.count({
         where: { projectId: project.id, status: { in: ["OPEN", "CONTACTED"] } },
@@ -95,11 +100,6 @@ export default async function FounderDashboardPage({ params }: Params) {
           select: { currentOwnerId: true },
         })
         .then((rows) => new Set(rows.map((r) => r.currentOwnerId)).size),
-      prisma.report.findFirst({
-        where: { projectId: project.id },
-        orderBy: { publishedAt: "desc" },
-        select: { id: true, title: true, publishedAt: true, period: true, fiscalYear: true },
-      }),
     ]);
 
   const pendingActions = openLeadsCount + pendingInfoRequestsCount;
@@ -137,10 +137,10 @@ export default async function FounderDashboardPage({ params }: Params) {
       hint: "Determina el precio por acción.",
     },
     {
-      label: "Primer reporte trimestral",
-      done: Boolean(lastReport),
-      href: `/founder/${project.slug}/reportes` as Route,
-      hint: "Avances financieros y de negocio.",
+      label: "Primer documento compartido",
+      done: project.documents.length > 0,
+      href: `/founder/${project.slug}` as Route,
+      hint: "Reportes, estados financieros, lo que quieras compartir.",
     },
     {
       label: "Composición accionaria",
@@ -416,30 +416,17 @@ export default async function FounderDashboardPage({ params }: Params) {
           )}
         </FounderSection>
 
-        {/* ─── 06 · Reportes ────────────────────────────────────── */}
-        <FounderSection
-          n="06"
-          title="Reportes"
-          editHref={`/founder/${project.slug}/reportes` as Route}
-          editLabel="Nuevo reporte"
-        >
-          {lastReport ? (
-            <div className="hairline p-5 bg-paper-light flex items-baseline justify-between gap-4">
-              <div className="min-w-0">
-                <p className="eyebrow !text-navy/40">Último reporte</p>
-                <p className="mt-1 text-navy truncate">{lastReport.title}</p>
-              </div>
-              <p className="eyebrow !text-navy/60 shrink-0">
-                {formatDate(lastReport.publishedAt)}
-              </p>
-            </div>
-          ) : (
-            <EmptyState
-              text="Publicá un reporte trimestral con objetivos, ingresos y avances."
-              href={`/founder/${project.slug}/reportes` as Route}
-              cta="Publicar primer reporte →"
-            />
-          )}
+        {/* ─── 06 · Documentos ──────────────────────────────────── */}
+        <FounderSection n="06" title="Documentos">
+          <DocumentsPanel
+            projectSlug={project.slug}
+            documents={project.documents.map((d) => ({
+              id: d.id,
+              title: d.title,
+              storageKey: d.storageKey,
+              createdAt: d.createdAt.toISOString(),
+            }))}
+          />
         </FounderSection>
 
         {/* ─── 07 · Avisos a miembros ───────────────────────────── */}

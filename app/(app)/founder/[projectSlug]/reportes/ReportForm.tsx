@@ -78,105 +78,104 @@ export function ReportForm({
   }
 
   return (
-    <form
-      ref={formRef}
-      onSubmit={onSubmit}
-      className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-x-14 gap-y-12"
-    >
-      {/* ── Columna izquierda · compacta ─────────────────────────────── */}
-      <div className="lg:col-span-5">
-        <h1 className="font-sans text-h1 text-navy">{heading}</h1>
-        <p className="mt-3 text-navy/70 leading-relaxed">{description}</p>
+    <form ref={formRef} onSubmit={onSubmit} className="mt-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-14 gap-y-12">
+        {/* ── Columna izquierda · identificación ─────────────────────── */}
+        <div className="lg:col-span-5">
+          <h1 className="font-sans text-h1 text-navy">{heading}</h1>
+          <p className="mt-3 text-navy/70 leading-relaxed">{description}</p>
 
-        <div className="mt-9 space-y-5">
+          <div className="mt-9 space-y-5">
+            <FloatingInput
+              id="fiscalYear"
+              type="number"
+              label="Año fiscal"
+              value={fiscalYear}
+              onChange={setFiscalYear}
+              required
+            />
+            <div>
+              <FloatingSelect
+                id="period"
+                label="Período"
+                value={period}
+                onChange={setPeriod}
+                options={PERIOD_OPTIONS}
+              />
+              <input type="hidden" name="period" value={period} />
+            </div>
+            <div>
+              <FloatingSelect
+                id="kind"
+                label="Tipo"
+                value={kind}
+                onChange={setKind}
+                options={KIND_OPTIONS}
+              />
+              <input type="hidden" name="kind" value={kind} />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Columna derecha · contenido ────────────────────────────── */}
+        <div className="lg:col-span-7 space-y-6">
+          <FileUpload
+            scope="report-attachment"
+            accept=".pdf,.xlsx,.xls,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+            maxSizeMb={25}
+            currentUrl={url || undefined}
+            onUploaded={(publicUrl) => setUrl(publicUrl)}
+            label="Archivo del reporte"
+            helperText="PDF, Excel o Word · máximo 25 MB."
+            subtle
+          />
+          <input type="hidden" name="url" value={url} />
+
           <FloatingInput
-            id="fiscalYear"
-            type="number"
-            label="Año fiscal"
-            value={fiscalYear}
-            onChange={setFiscalYear}
+            id="title"
+            label="Título"
+            value={title}
+            onChange={setTitle}
+            maxLength={160}
             required
           />
-          <div>
-            <FloatingSelect
-              id="period"
-              label="Período"
-              value={period}
-              onChange={setPeriod}
-              options={PERIOD_OPTIONS}
-            />
-            <input type="hidden" name="period" value={period} />
-          </div>
-          <div>
-            <FloatingSelect
-              id="kind"
-              label="Tipo"
-              value={kind}
-              onChange={setKind}
-              options={KIND_OPTIONS}
-            />
-            <input type="hidden" name="kind" value={kind} />
-          </div>
+
+          <FloatingTextarea
+            id="summary"
+            label="Resumen"
+            value={summary}
+            onChange={setSummary}
+            rows={4}
+            maxLength={1000}
+            required
+            discreetCounter
+          />
         </div>
       </div>
 
-      {/* ── Columna derecha · destacada ──────────────────────────────── */}
-      <div className="lg:col-span-7 space-y-6">
-        <FileUpload
-          scope="report-attachment"
-          accept=".pdf,.xlsx,.xls,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
-          maxSizeMb={25}
-          currentUrl={url || undefined}
-          onUploaded={(publicUrl) => setUrl(publicUrl)}
-          label="Archivo del reporte"
-          helperText="PDF, Excel o Word · máximo 25 MB."
-          subtle
-        />
-        <input type="hidden" name="url" value={url} />
-
-        <FloatingInput
-          id="title"
-          label="Título"
-          value={title}
-          onChange={setTitle}
-          maxLength={160}
-          required
-        />
-
-        <FloatingTextarea
-          id="summary"
-          label="Resumen"
-          value={summary}
-          onChange={setSummary}
-          rows={5}
-          maxLength={1000}
-          required
-          discreetCounter
-        />
-
+      {/* ── Pie · acción a todo el ancho ─────────────────────────────── */}
+      <div className="mt-12 pt-8 hairline-t">
         {error && (
-          <p className="eyebrow !text-navy" role="alert">
+          <p className="eyebrow !text-navy mb-4" role="alert">
             {error}
           </p>
         )}
         {success && (
-          <p className="eyebrow !text-gold" role="status">
+          <p className="eyebrow !text-gold mb-4" role="status">
             Reporte publicado. Los miembros reciben aviso por email.
           </p>
         )}
 
-        <div>
-          <button
-            type="submit"
-            disabled={isPending}
-            className="btn-primary w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isPending ? "Publicando…" : "Publicar reporte →"}
-          </button>
-          <p className="mt-3 text-center text-[0.75rem] text-navy/45">
-            Se envía un aviso por email a todos los miembros del proyecto.
-          </p>
-        </div>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="btn-primary w-full py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isPending ? "Publicando…" : "Publicar reporte →"}
+        </button>
+        <p className="mt-3 text-center text-[0.75rem] text-navy/45">
+          Se envía un aviso por email a todos los miembros del proyecto.
+        </p>
       </div>
     </form>
   );

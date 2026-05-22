@@ -28,7 +28,7 @@ export type FileUploadProps = {
   /** Tope client-side (MB). El server vuelve a validar. */
   maxSizeMb: number;
   /** Callback con la URL pública. Recibe "" cuando se quita el archivo. */
-  onUploaded: (publicUrl: string) => void;
+  onUploaded: (publicUrl: string, fileName?: string) => void;
   /** URL actual (si ya hay algo cargado), para arrancar en estado lleno. */
   currentUrl?: string;
   /** Etiqueta eyebrow arriba del control. */
@@ -113,7 +113,7 @@ export function FileUpload({
       setFileName(file.name);
       setPreviewBroken(false);
       setState({ kind: "idle" });
-      onUploaded(blob.url);
+      onUploaded(blob.url, file.name);
     } catch (err) {
       const message =
         err instanceof Error
@@ -196,7 +196,7 @@ export function FileUpload({
             onDrop={onDrop}
             className={
               subtle
-                ? `group w-full border-[0.5px] border-dashed flex flex-col items-center justify-center gap-3 px-6 py-11 transition-all duration-200 cursor-pointer ${
+                ? `group w-full border-[0.5px] border-dashed flex flex-col items-center justify-center gap-3 px-6 py-7 transition-all duration-200 cursor-pointer ${
                     dragActive
                       ? "border-gold bg-gold/10"
                       : "border-navy/25 hover:border-navy/40 hover:bg-paper-light"
