@@ -75,6 +75,13 @@ export async function navItemsFor(
     icon: <AuditIcon />,
   };
 
+  const historialItem: NavItem = {
+    label: "Historial",
+    href: "/historial" as Route,
+    group: SEC_PORTFOLIO,
+    icon: <AssignmentsIcon />,
+  };
+
   // CUENTA — perfil + configuración. Quedan agrupados bajo su sección.
   const profileItem: NavItem = {
     label: n.profile,
@@ -121,7 +128,7 @@ export async function navItemsFor(
     return [
       // PORTAFOLIO
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
-      ...(ownsShares ? [misParticipacionesItem, documentosItem] : []),
+      ...(ownsShares ? [misParticipacionesItem, documentosItem, historialItem] : []),
       // ADMINISTRACIÓN
       {
         label: n.applications,
@@ -169,7 +176,7 @@ export async function navItemsFor(
     return [
       { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
       { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
-      ...(ownsShares ? [misParticipacionesItem, documentosItem] : []),
+      ...(ownsShares ? [misParticipacionesItem, documentosItem, historialItem] : []),
       profileItem,
       settingsItem,
       nosotrosItem,
@@ -181,6 +188,7 @@ export async function navItemsFor(
       { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
       { label: n.myParticipations, href: "/partner" as Route, group: SEC_PORTFOLIO, icon: <ParticipationsIcon /> },
       documentosItem,
+      historialItem,
       profileItem,
       settingsItem,
       nosotrosItem,
@@ -190,7 +198,7 @@ export async function navItemsFor(
   if (role === "CO_ADMIN") {
     return [
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
-      ...(ownsShares ? [misParticipacionesItem, documentosItem] : []),
+      ...(ownsShares ? [misParticipacionesItem, documentosItem, historialItem] : []),
       profileItem,
       settingsItem,
       nosotrosItem,

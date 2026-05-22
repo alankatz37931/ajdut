@@ -88,22 +88,6 @@ export default async function ProjectPage({ params }: Params) {
     orderBy: { asOf: "desc" },
   });
 
-  // Reportes publicados por el founder.
-  const reports = await prisma.report.findMany({
-    where: { projectId: project.id },
-    orderBy: { publishedAt: "desc" },
-    select: {
-      id: true,
-      kind: true,
-      period: true,
-      fiscalYear: true,
-      title: true,
-      summary: true,
-      storageKey: true,
-      publishedAt: true,
-    },
-  });
-
   // Snapshot de participaciones.
   const totalShares = project.totalShares;
   const platformShares = project.participations
@@ -269,27 +253,6 @@ export default async function ProjectPage({ params }: Params) {
     totalShares > 0
       ? Math.min(100, Math.max(0, (visibleAssigned / totalShares) * 100))
       : 0;
-
-  function humanReportPeriod(period: string, year: number): string {
-    if (period === "ANNUAL") return `${t.reports.annual} ${year}`;
-    if (period === "EXTRAORDINARY") return `${t.reports.extraordinary} ${year}`;
-    return `${period} ${year}`;
-  }
-
-  function reportKindLabel(kind: string): string {
-    switch (kind) {
-      case "QUARTERLY_FINANCIAL":
-        return t.reports.kindQuarterly;
-      case "INVESTOR_UPDATE":
-        return t.reports.kindInvestorUpdate;
-      case "ANNUAL_AUDIT":
-        return t.reports.kindAnnualAudit;
-      case "EXTRAORDINARY":
-        return t.reports.kindExtraordinary;
-      default:
-        return kind;
-    }
-  }
 
   // ───────────── Gating de secciones de letra-chica ──────────────────
   const isPrivilegedReaderForPolicies =
@@ -722,46 +685,6 @@ export default async function ProjectPage({ params }: Params) {
           {project.startupProfile.estrategiaEmisionUrl && (
             <DocRow label={t.documents.issuanceStrategy} href={project.startupProfile.estrategiaEmisionUrl} openLabel={t.documents.openLink} />
           )}
-        </ul>
-      ),
-    });
-  }
-
-  // — Reportes (ref, gated).
-  if (canSeePrivateDocs && reports.length > 0) {
-    sections.push({
-      title: t.sections.reports,
-      tone: "ref",
-      node: (
-        <ul className="hairline-t">
-          {reports.map((r) => (
-            <li key={r.id} className="hairline-b last:border-b-0 py-4">
-              {/* Línea 1: título + fecha. Línea 2: meta. Luego resumen y
-                  link — bloque prolijo, sin grid de 12-col quebrado. */}
-              <div className="flex items-baseline justify-between gap-4">
-                <p className="text-navy break-words">{r.title}</p>
-                <span className="eyebrow !text-navy/40 shrink-0">
-                  {formatDate(r.publishedAt, locale)}
-                </span>
-              </div>
-              <p className="mt-1 eyebrow !text-navy/50">
-                {reportKindLabel(r.kind)} · {humanReportPeriod(r.period, r.fiscalYear)}
-              </p>
-              {r.summary.trim().length > 0 && (
-                <p className="mt-2 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
-                  {r.summary}
-                </p>
-              )}
-              <a
-                href={r.storageKey}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-block eyebrow !text-gold hover:!text-navy transition-colors"
-              >
-                {t.documents.openLink} →
-              </a>
-            </li>
-          ))}
         </ul>
       ),
     });
