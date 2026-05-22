@@ -264,13 +264,6 @@ export default async function ProjectPage({ params }: Params) {
 
   const canSeeTeam = access.role !== "PARTNER";
 
-  const isPrivilegedReader =
-    access.role === "OWNER" ||
-    access.role === "CO_ADMIN" ||
-    access.role === "ADMIN";
-  const canSeePrivateDocs =
-    isPrivilegedReader || partnerHasApprovedInfo || myShares > 0;
-
   // ───────────── CTAs del hero ───────────────────────────────────────
   // Hero: "Me interesa participar" (primario) + "Abrir chat" (secundario,
   // outline) para quien tiene acceso al chat. "Quiero más información" NO
@@ -648,48 +641,6 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  // — Documentos (ref, gated).
-  if (
-    canSeePrivateDocs &&
-    (project.startupProfile?.pitchDeckStorageKey ||
-      project.startupProfile?.dataRoomStorageKey ||
-      project.startupProfile?.projectionsUrl ||
-      project.startupProfile?.planNegociosUrl ||
-      project.startupProfile?.estrategiasPeriodicasUrl ||
-      project.startupProfile?.estadosFinancierosUrl ||
-      project.startupProfile?.estrategiaEmisionUrl)
-  ) {
-    sections.push({
-      title: t.sections.documents,
-      tone: "ref",
-      node: (
-        <ul className="hairline-t">
-          {project.startupProfile.pitchDeckStorageKey && (
-            <DocRow label={t.documents.pitchDeck} href={project.startupProfile.pitchDeckStorageKey} openLabel={t.documents.openLink} />
-          )}
-          {project.startupProfile.dataRoomStorageKey && (
-            <DocRow label={t.documents.dataRoom} href={project.startupProfile.dataRoomStorageKey} openLabel={t.documents.openLink} />
-          )}
-          {project.startupProfile.projectionsUrl && (
-            <DocRow label={t.documents.projections} href={project.startupProfile.projectionsUrl} openLabel={t.documents.openLink} />
-          )}
-          {project.startupProfile.planNegociosUrl && (
-            <DocRow label={t.documents.businessPlan} href={project.startupProfile.planNegociosUrl} openLabel={t.documents.openLink} />
-          )}
-          {project.startupProfile.estrategiasPeriodicasUrl && (
-            <DocRow label={t.documents.periodicStrategies} href={project.startupProfile.estrategiasPeriodicasUrl} openLabel={t.documents.openLink} />
-          )}
-          {project.startupProfile.estadosFinancierosUrl && (
-            <DocRow label={t.documents.financials} href={project.startupProfile.estadosFinancierosUrl} openLabel={t.documents.openLink} />
-          )}
-          {project.startupProfile.estrategiaEmisionUrl && (
-            <DocRow label={t.documents.issuanceStrategy} href={project.startupProfile.estrategiaEmisionUrl} openLabel={t.documents.openLink} />
-          )}
-        </ul>
-      ),
-    });
-  }
-
   // — Políticas (ref, gated).
   if (
     canSeePoliciesGated &&
@@ -1046,18 +997,3 @@ function StatCard({
   );
 }
 
-function DocRow({ label, href, openLabel }: { label: string; href: string; openLabel: string }) {
-  return (
-    <li className="hairline-b last:border-b-0 grid grid-cols-12 items-baseline gap-3 py-4">
-      <span className="col-span-6 sm:col-span-9 text-navy">{label}</span>
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="col-span-6 sm:col-span-3 eyebrow hover:!text-gold text-right"
-      >
-        {openLabel}
-      </a>
-    </li>
-  );
-}

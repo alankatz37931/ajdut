@@ -280,85 +280,13 @@ export function NewProjectForm() {
         />
       </section>
 
-      {/* Documentos del proyecto */}
+      {/* Video */}
       <section className="space-y-5 hairline-t pt-8">
-        <p className="eyebrow">Documentos del proyecto</p>
+        <p className="eyebrow">Video</p>
         <p className="text-navy/75 leading-relaxed">
-          Subí los documentos clave del proyecto. Todos son opcionales — los podés
-          sumar después desde la pantalla de edición.
+          Si tenés un video de presentación del proyecto, pegá el link acá. Los
+          documentos se suben después desde la sección Documentos.
         </p>
-        <div>
-          <FileUpload
-            scope="project-doc"
-            accept={DOC_ACCEPT}
-            maxSizeMb={25}
-            currentUrl={form.projectionsUrl || undefined}
-            onUploaded={(url) => update("projectionsUrl", url)}
-            label="Proyecciones financieras"
-            helperText={DOC_HELP}
-          />
-          <input type="hidden" name="projectionsUrl" value={form.projectionsUrl} />
-        </div>
-        <div>
-          <FileUpload
-            scope="project-doc"
-            accept={DOC_ACCEPT}
-            maxSizeMb={25}
-            currentUrl={form.planNegociosUrl || undefined}
-            onUploaded={(url) => update("planNegociosUrl", url)}
-            label="Plan de negocios inicial"
-            helperText={DOC_HELP}
-          />
-          <input type="hidden" name="planNegociosUrl" value={form.planNegociosUrl} />
-        </div>
-        <div>
-          <FileUpload
-            scope="project-doc"
-            accept={DOC_ACCEPT}
-            maxSizeMb={25}
-            currentUrl={form.estrategiasPeriodicasUrl || undefined}
-            onUploaded={(url) => update("estrategiasPeriodicasUrl", url)}
-            label="Objetivos y estrategias periódicas"
-            helperText={DOC_HELP}
-          />
-          <input
-            type="hidden"
-            name="estrategiasPeriodicasUrl"
-            value={form.estrategiasPeriodicasUrl}
-          />
-        </div>
-        <div>
-          <FileUpload
-            scope="project-doc"
-            accept={DOC_ACCEPT}
-            maxSizeMb={25}
-            currentUrl={form.estadosFinancierosUrl || undefined}
-            onUploaded={(url) => update("estadosFinancierosUrl", url)}
-            label="Estados financieros trimestrales"
-            helperText={DOC_HELP}
-          />
-          <input
-            type="hidden"
-            name="estadosFinancierosUrl"
-            value={form.estadosFinancierosUrl}
-          />
-        </div>
-        <div>
-          <FileUpload
-            scope="project-doc"
-            accept={DOC_ACCEPT}
-            maxSizeMb={25}
-            currentUrl={form.estrategiaEmisionUrl || undefined}
-            onUploaded={(url) => update("estrategiaEmisionUrl", url)}
-            label="Estrategia de emisión de nuevas participaciones"
-            helperText={DOC_HELP}
-          />
-          <input
-            type="hidden"
-            name="estrategiaEmisionUrl"
-            value={form.estrategiaEmisionUrl}
-          />
-        </div>
         <div>
           <FloatingInput
             id="videoUrl"

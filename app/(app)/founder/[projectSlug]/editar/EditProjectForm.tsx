@@ -187,11 +187,12 @@ export function EditProjectForm({
             />
           </section>
 
-          {/* Documentos */}
+          {/* Video */}
           <section className="space-y-5 hairline-t pt-8">
-            <p className="eyebrow">Documentos</p>
+            <p className="eyebrow">Video</p>
             <p className="text-navy/75 leading-relaxed">
-              Subí los documentos clave de tu proyecto.
+              Si tenés un video de presentación, pegá el link acá. Los
+              documentos del proyecto se suben desde la sección Documentos.
             </p>
             <div>
               <FloatingInput
@@ -205,102 +206,6 @@ export function EditProjectForm({
               <p className="eyebrow !text-navy/40 mt-1.5">
                 Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.
               </p>
-            </div>
-            <div>
-              <FileUpload
-                scope="project-doc"
-                accept={DOC_ACCEPT}
-                maxSizeMb={25}
-                currentUrl={form.pitchDeckUrl || undefined}
-                onUploaded={(url) => update("pitchDeckUrl", url)}
-                label="Pitch deck"
-                helperText={DOC_HELP}
-              />
-              <input type="hidden" name="pitchDeckUrl" value={form.pitchDeckUrl} />
-            </div>
-            <div>
-              <FileUpload
-                scope="project-doc"
-                accept={DOC_ACCEPT}
-                maxSizeMb={25}
-                currentUrl={form.dataRoomUrl || undefined}
-                onUploaded={(url) => update("dataRoomUrl", url)}
-                label="Data room"
-                helperText={DOC_HELP}
-              />
-              <input type="hidden" name="dataRoomUrl" value={form.dataRoomUrl} />
-            </div>
-            <div>
-              <FileUpload
-                scope="project-doc"
-                accept={DOC_ACCEPT}
-                maxSizeMb={25}
-                currentUrl={form.projectionsUrl || undefined}
-                onUploaded={(url) => update("projectionsUrl", url)}
-                label="Proyecciones financieras"
-                helperText={DOC_HELP}
-              />
-              <input type="hidden" name="projectionsUrl" value={form.projectionsUrl} />
-            </div>
-            <div>
-              <FileUpload
-                scope="project-doc"
-                accept={DOC_ACCEPT}
-                maxSizeMb={25}
-                currentUrl={form.planNegociosUrl || undefined}
-                onUploaded={(url) => update("planNegociosUrl", url)}
-                label="Plan de negocios inicial"
-                helperText={DOC_HELP}
-              />
-              <input type="hidden" name="planNegociosUrl" value={form.planNegociosUrl} />
-            </div>
-            <div>
-              <FileUpload
-                scope="project-doc"
-                accept={DOC_ACCEPT}
-                maxSizeMb={25}
-                currentUrl={form.estrategiasPeriodicasUrl || undefined}
-                onUploaded={(url) => update("estrategiasPeriodicasUrl", url)}
-                label="Objetivos y estrategias periódicas"
-                helperText={DOC_HELP}
-              />
-              <input
-                type="hidden"
-                name="estrategiasPeriodicasUrl"
-                value={form.estrategiasPeriodicasUrl}
-              />
-            </div>
-            <div>
-              <FileUpload
-                scope="project-doc"
-                accept={DOC_ACCEPT}
-                maxSizeMb={25}
-                currentUrl={form.estadosFinancierosUrl || undefined}
-                onUploaded={(url) => update("estadosFinancierosUrl", url)}
-                label="Estados financieros trimestrales"
-                helperText={DOC_HELP}
-              />
-              <input
-                type="hidden"
-                name="estadosFinancierosUrl"
-                value={form.estadosFinancierosUrl}
-              />
-            </div>
-            <div>
-              <FileUpload
-                scope="project-doc"
-                accept={DOC_ACCEPT}
-                maxSizeMb={25}
-                currentUrl={form.estrategiaEmisionUrl || undefined}
-                onUploaded={(url) => update("estrategiaEmisionUrl", url)}
-                label="Estrategia de emisión de nuevas participaciones"
-                helperText={DOC_HELP}
-              />
-              <input
-                type="hidden"
-                name="estrategiaEmisionUrl"
-                value={form.estrategiaEmisionUrl}
-              />
             </div>
           </section>
 
