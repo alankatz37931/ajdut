@@ -129,9 +129,9 @@ export function HeaderAvatar({ initialUrl, dict, onSaved }: Props) {
             onClick={removePhoto}
             aria-label={dict.removePhoto}
             title={dict.removePhoto}
-            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-paper hairline flex items-center justify-center text-navy/60 hover:text-navy hover:border-navy p-0 m-0 cursor-pointer leading-none transition-opacity duration-150 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-paper hairline flex items-center justify-center text-navy/70 hover:text-navy hover:border-navy p-0 m-0 cursor-pointer leading-none transition-opacity duration-150 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           >
-            <span aria-hidden className="font-sans text-[11px] leading-none">
+            <span aria-hidden className="font-sans text-lg leading-none">
               ×
             </span>
           </button>
