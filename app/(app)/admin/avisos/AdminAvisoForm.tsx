@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { countRecipientsAction, sendAdminBroadcastAction } from "./actions";
 import {
   FloatingInput,
@@ -9,21 +10,24 @@ import {
 } from "@/components/ui/Floating";
 
 type ProjectOpt = { id: string; name: string; slug: string };
+type AvisoDict = Dict["adminAvisos"];
 
 type Props = {
   projects: ProjectOpt[];
+  dict: AvisoDict;
+  locale: string;
 };
-
-const ROLES = [
-  { value: "ADMIN", label: "Admin" },
-  { value: "PROJECT_OWNER", label: "Project owner" },
-  { value: "CO_ADMIN", label: "Co-admin" },
-  { value: "PARTNER", label: "Miembro" },
-] as const;
 
 type CountState = { count: number; stale: boolean } | null;
 
-export function AdminAvisoForm({ projects }: Props) {
+export function AdminAvisoForm({ projects, dict, locale }: Props) {
+  const ROLES = [
+    { value: "ADMIN", label: dict.roleAdmin },
+    { value: "PROJECT_OWNER", label: dict.roleProjectOwner },
+    { value: "CO_ADMIN", label: dict.roleCoAdmin },
+    { value: "PARTNER", label: dict.rolePartner },
+  ] as const;
+
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<number | null>(null);
   const [countState, setCountState] = useState<CountState>(null);
@@ -62,11 +66,11 @@ export function AdminAvisoForm({ projects }: Props) {
     setError(null);
     setSuccess(null);
     if (!subject.trim() || !body.trim()) {
-      setError("Completá el asunto y el mensaje del aviso.");
+      setError(dict.errEmpty);
       return;
     }
     if (!countState || countState.stale) {
-      setError("Calculá los destinatarios antes de enviar.");
+      setError(dict.errNotCounted);
       return;
     }
     const fd = new FormData(e.currentTarget);
@@ -91,139 +95,173 @@ export function AdminAvisoForm({ projects }: Props) {
     countState.count > 0 &&
     !isSending;
 
+  const countLabel = countState
+    ? (countState.count === 1
+        ? dict.countResultSingle
+        : dict.countResultPlural
+      ).replace("{n}", countState.count.toLocaleString(locale))
+    : "";
+
+  const sendBtnLabel =
+    countState && !countState.stale
+      ? (countState.count === 1
+          ? dict.sendBtnFmtSingle
+          : dict.sendBtnFmt
+        ).replace("{n}", String(countState.count))
+      : dict.sendBtnIdle;
+
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="mt-10 space-y-8">
-      {/* ─── Filtros ─────────────────────────────────────────────── */}
-      <section className="space-y-5 hairline p-5 bg-paper">
-        <p className="eyebrow !text-navy">Filtros</p>
+    <form ref={formRef} onSubmit={onSubmit}>
+      {/* ─── 01 · Filtros ─────────────────────────────────────────── */}
+      <section className="py-8 sm:py-10 hairline-b">
+        <SectionHeader n="01" title={dict.sectionFilters} />
 
-        <div>
-          <p className="eyebrow block mb-2">Roles (vacío = todos)</p>
-          <div className="flex flex-wrap gap-2">
-            {ROLES.map((r) => (
-              <label
-                key={r.value}
-                className="inline-flex items-center gap-2 border-hairline border-navy/40 px-3 py-1.5 cursor-pointer hover:border-navy"
-              >
-                <input
-                  type="checkbox"
-                  name="roles"
-                  value={r.value}
-                  onChange={markStale}
-                  disabled={isSending}
-                  className="accent-navy"
-                />
-                <span className="font-sans text-sm text-navy">{r.label}</span>
-              </label>
-            ))}
+        <div className="mt-6 space-y-6">
+          <div>
+            <p className="eyebrow !text-navy/50 mb-2.5">{dict.rolesLabel}</p>
+            <div className="flex flex-wrap gap-2">
+              {ROLES.map((r) => (
+                <label
+                  key={r.value}
+                  className="inline-flex items-center gap-2 hairline px-3 py-1.5 cursor-pointer hover:border-navy transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    name="roles"
+                    value={r.value}
+                    onChange={markStale}
+                    disabled={isSending}
+                    className="accent-navy"
+                  />
+                  <span className="font-sans text-sm text-navy">{r.label}</span>
+                </label>
+              ))}
+            </div>
+            <p className="eyebrow !text-navy/40 mt-2">{dict.rolesHelper}</p>
           </div>
-        </div>
 
-        <div>
-          <label className="inline-flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              name="onlyActive"
-              value="true"
-              defaultChecked
-              onChange={markStale}
+          <div>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="onlyActive"
+                value="true"
+                defaultChecked
+                onChange={markStale}
+                disabled={isSending}
+                className="accent-navy"
+              />
+              <span className="font-sans text-sm text-navy">
+                {dict.onlyActiveLabel}
+              </span>
+            </label>
+          </div>
+
+          <div className="max-w-md">
+            <FloatingSelect
+              id="projectId"
+              label={dict.projectLabel}
+              value={projectId}
+              onChange={(v) => {
+                setProjectId(v);
+                markStale();
+              }}
               disabled={isSending}
-              className="accent-navy"
+              options={[
+                { value: "", label: dict.projectAll },
+                ...projects.map((p) => ({ value: p.id, label: p.name })),
+              ]}
             />
-            <span className="font-sans text-sm text-navy">Solo usuarios activos</span>
-          </label>
-        </div>
-
-        <div>
-          <FloatingSelect
-            id="projectId"
-            label="Proyecto (opcional)"
-            value={projectId}
-            onChange={(v) => {
-              setProjectId(v);
-              markStale();
-            }}
-            disabled={isSending}
-            options={[
-              { value: "", label: "— Todos los proyectos —" },
-              ...projects.map((p) => ({ value: p.id, label: p.name })),
-            ]}
-          />
-          <p className="eyebrow !text-navy/40 mt-1.5">
-            Restringe el envío a miembros de ese proyecto.
-          </p>
-          <input type="hidden" name="projectId" value={projectId} />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4 pt-1">
-          <button
-            type="button"
-            onClick={onCount}
-            disabled={isCounting || isSending}
-            className="btn-outline disabled:opacity-50"
-          >
-            {isCounting ? "Calculando…" : "Calcular destinatarios"}
-          </button>
-          {countState && !countState.stale && (
-            <span className="eyebrow !text-navy">
-              {countState.count.toLocaleString("es-MX")} destinatario
-              {countState.count === 1 ? "" : "s"}
-            </span>
-          )}
-          {countState?.stale && (
-            <span className="eyebrow !text-navy/50">
-              Filtros modificados — recalculá.
-            </span>
-          )}
+            <p className="eyebrow !text-navy/40 mt-2">{dict.projectHelper}</p>
+            <input type="hidden" name="projectId" value={projectId} />
+          </div>
         </div>
       </section>
 
-      {/* ─── Mensaje ─────────────────────────────────────────────── */}
-      <FloatingInput
-        id="subject"
-        label="Asunto"
-        value={subject}
-        onChange={setSubject}
-        maxLength={160}
-      />
+      {/* ─── 02 · Mensaje ─────────────────────────────────────────── */}
+      <section className="py-8 sm:py-10 hairline-b">
+        <SectionHeader n="02" title={dict.sectionMessage} />
 
-      <FloatingTextarea
-        id="body"
-        label="Mensaje"
-        value={body}
-        onChange={setBody}
-        rows={8}
-        maxLength={5000}
-        counterSuffix=""
-      />
+        <div className="mt-6 space-y-8 max-w-3xl">
+          <FloatingInput
+            id="subject"
+            label={dict.subjectLabel}
+            value={subject}
+            onChange={setSubject}
+            maxLength={160}
+          />
 
-      {error && (
-        <p className="eyebrow !text-navy" role="alert">
-          {error}
-        </p>
-      )}
-      {success !== null && (
-        <p className="eyebrow !text-gold" role="status">
-          Aviso enviado a {success} destinatario{success === 1 ? "" : "s"}.
-        </p>
-      )}
+          <FloatingTextarea
+            id="body"
+            label={dict.bodyLabel}
+            value={body}
+            onChange={setBody}
+            rows={8}
+            maxLength={5000}
+            counterSuffix=""
+          />
+        </div>
+      </section>
 
-      <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="submit"
-          disabled={!canSend}
-          className="btn-primary disabled:opacity-50"
-        >
-          {isSending
-            ? "Enviando…"
-            : countState && !countState.stale
-              ? `Enviar a ${countState.count} destinatario${countState.count === 1 ? "" : "s"} →`
-              : "Enviar →"}
-        </button>
-        <span className="eyebrow !text-navy/40">
-          El email se envía como “Equipo AJDUT”.
-        </span>
-      </div>
+      {/* ─── 03 · Envío ───────────────────────────────────────────── */}
+      <section className="py-8 sm:py-10">
+        <SectionHeader n="03" title={dict.sectionSend} />
+
+        <div className="mt-6 space-y-5">
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              onClick={onCount}
+              disabled={isCounting || isSending}
+              className="btn-outline disabled:opacity-50"
+            >
+              {isCounting ? dict.countingBtn : dict.countBtn}
+            </button>
+            {countState && !countState.stale && (
+              <span className="eyebrow !text-navy">{countLabel}</span>
+            )}
+            {countState?.stale && (
+              <span className="eyebrow !text-navy/50">{dict.countStale}</span>
+            )}
+          </div>
+
+          {error && (
+            <p className="eyebrow !text-navy" role="alert">
+              {error}
+            </p>
+          )}
+          {success !== null && (
+            <p className="eyebrow !text-gold" role="status">
+              {(success === 1
+                ? dict.successFmtSingle
+                : dict.successFmt
+              ).replace("{n}", String(success))}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-4 pt-1">
+            <button
+              type="submit"
+              disabled={!canSend}
+              className="btn-primary disabled:opacity-50"
+            >
+              {isSending ? dict.sendingBtn : sendBtnLabel}
+            </button>
+            <span className="eyebrow !text-navy/40">{dict.sendDisclaimer}</span>
+          </div>
+        </div>
+      </section>
     </form>
+  );
+}
+
+/** Header de sección numerada — mismo lenguaje visual que el founder
+ *  dashboard y la página de chat: número en gold mono + título navy. */
+function SectionHeader({ n, title }: { n: string; title: string }) {
+  return (
+    <p className="font-mono text-sm tracking-wider">
+      <span className="text-gold">{n}</span>{" "}
+      <span className="text-navy">· {title}</span>
+    </p>
   );
 }
