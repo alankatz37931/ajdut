@@ -189,22 +189,22 @@ export default async function FounderDashboardPage({ params }: Params) {
             </p>
           ) : null}
 
-          {/* Acciones primarias del owner. El "Abrir chat" sale primero —
-              es la acción frecuente. "Editar" como botón outline contiguo.
+          {/* Acciones primarias del owner. "Editar información" sale primero
+              como acción principal del dueño; "Abrir chat" outline al lado.
               "Ver ficha pública" y "+ Otro proyecto" quedan como links
               discretos al lado. */}
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link
-              href={`/proyectos/${project.slug}/chat` as Route}
+              href={`/founder/${project.slug}/editar` as Route}
               className="btn-primary"
             >
-              Abrir chat →
+              Editar información
             </Link>
             <Link
-              href={`/founder/${project.slug}/editar` as Route}
+              href={`/proyectos/${project.slug}/chat` as Route}
               className="btn-outline"
             >
-              Editar información
+              Abrir chat →
             </Link>
             <span className="eyebrow !text-navy/30">·</span>
             <Link
