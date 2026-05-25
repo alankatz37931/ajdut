@@ -48,6 +48,16 @@ export const dict = {
     sectionAdministration: "Administración",
     sectionPortfolio: "Portafolio",
     sectionAccount: "Cuenta",
+    documents: "Documentos",
+    history: "Historial",
+    resales: "Reventas",
+  },
+
+  roles: {
+    ADMIN: "Admin",
+    PROJECT_OWNER: "Project owner",
+    CO_ADMIN: "Co-admin",
+    PARTNER: "Miembro",
   },
 
   home: {
@@ -503,6 +513,7 @@ export const dict = {
     noParticipations:
       "Aún no tienes participaciones asignadas. Cuando AJDUT te las asigne, aparecerán aquí.",
     chatShort: "Chat →",
+    resaleShort: "Reventa →",
     seeProject: "Ver proyecto →",
     colShares: "Acciones",
     colValue: "Valor",
@@ -564,6 +575,235 @@ export const dict = {
     } as Record<string, string>,
   },
 
+  documentos: {
+    metaTitle: "Documentos · AJDUT",
+    eyebrow: "— Tus proyectos",
+    title: "Documentos",
+    intro:
+      "Todos los documentos que los founders compartieron en los proyectos donde tenés acciones, en un solo lugar.",
+    filterAll: "Todos",
+    emptyNoProjects: "Todavía no tenés acciones en ningún proyecto.",
+    emptyNoDocs: "No hay documentos compartidos por ahora.",
+    openLink: "Abrir ↗",
+  },
+
+  historial: {
+    metaTitle: "Historial · AJDUT",
+    eyebrow: "— Tu actividad",
+    title: "Historial",
+    intro:
+      "Todos tus movimientos en AJDUT — dividendos cobrados, compras y ventas de acciones.",
+    cats: {
+      all: "Todos",
+      dividendo: "Dividendos",
+      compra: "Compras",
+      venta: "Ventas",
+    },
+    periods: {
+      all: "Histórico",
+      "30": "Últimos 30 días",
+      "90": "Últimos 90 días",
+      "365": "Últimos 12 meses",
+    },
+    types: {
+      dividendo: "Dividendo cobrado",
+      compra: "Compra de acciones",
+      venta: "Venta de acciones",
+    },
+    empty: "Todavía no tenés movimientos registrados.",
+    emptyFiltered: "No hay movimientos para ese filtro.",
+    sharesSuffix: "acc.",
+  },
+
+  reventa: {
+    metaTitle: "Reventa de acciones · AJDUT",
+    title: "Reventa de acciones",
+    intro:
+      "Listá tus acciones para que otros miembros de la comunidad puedan adquirirlas. Cuando acordás con un comprador lo designás acá, y el equipo de AJDUT aprueba el traspaso para que quede registrado.",
+    sectionYours: "01 · Tus participaciones",
+    sectionBoard: "02 · Tablón de reventa",
+    emptyNoShares: "No tenés participaciones en este proyecto para revender.",
+    emptyNoBoard: "No hay acciones en reventa en este proyecto por ahora.",
+    boardSharesSuffix: "acciones",
+    boardContactLabel: "Contacto:",
+    seller: {
+      sharesSuffix: "acciones",
+      transferPending: "Traspaso enviado · esperando aprobación del equipo de AJDUT",
+      inBoard: "En el tablón de reventa",
+      listBtn: "Listar para reventa →",
+      designateBtn: "Designar comprador →",
+      removeBtn: "Quitar del tablón",
+      removingBtn: "Cancelando…",
+      listingNoteLabel: "Detalle para el comprador",
+      listingContactLabel: "Cómo te contactan (email, WhatsApp, teléfono)",
+      listingConfirmBtn: "Confirmar reventa",
+      listingConfirmingBtn: "Listando…",
+      cancelBtn: "Cancelar",
+      designatingBuyerLabel: "Comprador",
+      designatingNoMembers:
+        "Todavía no hay otros miembros en este proyecto para designar como comprador.",
+      designatingNoteWithShares:
+        "Al confirmar, el traspaso de las {shares} acciones queda pendiente de aprobación del equipo de AJDUT.",
+      designatingSubmitBtn: "Designar y enviar a aprobación",
+      designatingSubmittingBtn: "Enviando…",
+      errNoteTooShort: "La nota debe tener al menos 10 caracteres.",
+      errContactRequired: "Indicá un medio de contacto.",
+      errBuyerRequired: "Elegí un comprador.",
+    },
+    errors: {
+      projectNotFound: "Proyecto no encontrado.",
+      participationNotFound: "Participación no encontrada.",
+      notOwner: "Solo el titular puede listar esta participación.",
+      contactInvalid: "Indicá un medio de contacto válido.",
+      buyerRequired: "Elegí un comprador.",
+      serverError: "Error interno del servidor.",
+    },
+  },
+
+  heirs: {
+    eyebrow: "— Sucesión",
+    title: "Herederos y validación de vida",
+    savedTick: "✓ Guardado",
+    section1Title: "Herederos",
+    section1Desc:
+      "Definí quiénes recibirán tu participación. Solo el equipo de AJDUT verá estos datos, y se contactará a estas personas si dejás de responder nuestras verificaciones por más de 3 ciclos consecutivos.",
+    allocatedSuffix: "% asignado",
+    remainingSuffix: "% restante",
+    addHeirBtn: "+ Agregar heredero",
+    overAllocatedWarning:
+      "La suma de % supera 100. Ajustá los valores antes de guardar nuevos cambios.",
+    emptyHeirs: "Todavía no cargaste herederos.",
+    editBtn: "Editar",
+    removeBtn: "Eliminar",
+    removeConfirm: "¿Eliminar este heredero?",
+    form: {
+      fullName: "Nombre completo",
+      email: "Email (opcional)",
+      relationship: "Relación (opcional)",
+      sharePercent: "Porcentaje asignado",
+      cancelBtn: "Cancelar",
+      addBtn: "Agregar",
+      saveBtn: "Guardar",
+      savingBtn: "Guardando…",
+    },
+    validation: {
+      title: "Validación de vida",
+      desc: "Cada cierto tiempo te enviaremos un email para confirmar que seguís activo. Si no respondés 3 veces seguidas, nuestro equipo se pondrá en contacto con tus herederos.",
+      frequencyLabel: "Frecuencia",
+      freqOptions: {
+        "0": "Desactivada",
+        "1": "Mensual",
+        "3": "Cada 3 meses",
+        "6": "Cada 6 meses",
+        "12": "Anual",
+      },
+      lastConfirmedPrefix: "Última confirmación:",
+      emptyLastConfirmed: "Todavía no confirmaste ninguna verificación.",
+      pendingSincePrefix: "Pendiente de responder desde el",
+      missedSingle: "verificación sin responder",
+      missedPlural: "verificaciones sin responder",
+      escalated: "Nuestro equipo ya fue alertado y va a contactar a tus herederos.",
+      almostEscalated: "Una más y se contactará a tus herederos.",
+      keepResponding:
+        "Si seguís sin responder, se contactará a tus herederos después de la tercera consecutiva.",
+      ago: {
+        hours: "hace unas horas",
+        daySingle: "hace 1 día",
+        daysPlural: "hace {n} días",
+        monthSingle: "hace 1 mes",
+        monthsPlural: "hace {n} meses",
+        yearSingle: "hace 1 año",
+        yearsPlural: "hace {n} años",
+      },
+    },
+  },
+
+  documentsPanel: {
+    addBtn: "+ Agregar documento",
+    empty: "Todavía no compartiste ningún documento con tus miembros.",
+    deleteConfirm:
+      "¿Eliminar \"{title}\"? Esta acción no se puede deshacer.",
+    deleteBtn: "Eliminar",
+    deletingBtn: "Eliminando…",
+    openLink: "Abrir ↗",
+    modal: {
+      title: "Agregar documento",
+      closeBtn: "Cerrar ×",
+      description:
+        "Subí el archivo. Toda la información — período, cifras, avances — va dentro del documento. Tus miembros lo van a ver en su sección \"Documentos\".",
+      fileLabel: "Archivo del documento",
+      fileHelper: "PDF, Excel o Word · máximo 25 MB.",
+      errNoFile: "Subí un archivo primero.",
+      publishBtn: "Publicar documento →",
+      publishingBtn: "Publicando…",
+      cancelBtn: "Cancelar",
+    },
+    errors: {
+      projectNotFound: "Proyecto no encontrado.",
+      noPermission: "No tenés permiso sobre este proyecto.",
+      nameRequired: "El documento necesita un nombre.",
+      fileRequired: "Subí el archivo del documento.",
+      uploadError: "Error al subir el documento.",
+      notFound: "Documento no encontrado.",
+      deleteError: "Error al eliminar el documento.",
+    },
+  },
+
+  adminReventas: {
+    metaTitle: "Reventas · AJDUT",
+    eyebrow: "— Admin",
+    title: "Reventas de acciones",
+    emptyInbox: "Sin traspasos pendientes de aprobar.",
+    pendingCountSingle: "{n} traspaso esperando aprobación.",
+    pendingCountPlural: "{n} traspasos esperando aprobación.",
+    filters: {
+      pending: "Pendientes",
+      completed: "Aprobadas",
+      all: "Todas",
+    },
+    status: {
+      LISTED: "En el tablón",
+      IN_CONVERSATION: "En conversación",
+      AWAITING_VALIDATION: "Esperando aprobación",
+      COMPLETED: "Aprobada",
+      CANCELLED: "Cancelada",
+    },
+    emptyByFilter: {
+      completed: "Todavía no aprobaste ningún traspaso.",
+      all: "Todavía no hay reventas registradas.",
+      pending: "Bandeja al día — no hay traspasos pendientes.",
+    },
+    row: {
+      seller: "Vendedor",
+      buyer: "Comprador",
+      shares: "Acciones",
+      noBuyer: "Sin designar",
+      contact: "Contacto del vendedor:",
+    },
+    actions: {
+      approveBtn: "Aprobar traspaso →",
+      rejectBtn: "Rechazar",
+      cancelBtn: "Cancelar",
+      doneApproved:
+        "Traspaso aprobado. Las acciones quedaron a nombre del comprador.",
+      doneRejected:
+        "Traspaso rechazado. La reventa vuelve al tablón del proyecto.",
+      confirmTitle: "Confirmar aprobación",
+      confirmDescription:
+        "Vas a traspasar {shares} acciones de {seller} a {buyer}. Se registra el cambio de titularidad en la cadena de propiedad. Es irreversible.",
+      confirmApprove: "Sí, aprobar el traspaso",
+      approving: "Aprobando…",
+      rejectNoteLabel: "Nota de rechazo (mínimo 10 caracteres)",
+      confirmReject: "Confirmar rechazo",
+      rejecting: "Rechazando…",
+      errNoteTooShort: "La nota debe tener al menos 10 caracteres.",
+    },
+    errors: {
+      noteTooShort: "La nota debe tener al menos 10 caracteres.",
+      serverError: "Error interno del servidor.",
+    },
+  },
+
   legal: {
     metaTitle: "Aviso legal · AJDUT",
     eyebrow: "— Aviso legal",
@@ -612,6 +852,88 @@ export const dict = {
         "Ajdut no es un fondo, no es un banco, no es un exchange. Es una plataforma de comunidades de negocio donde el valor —tangible o intangible— es real, tiene respaldo genuino y personas responsables detrás.",
       body2:
         "Tomamos el lenguaje intuitivo de los activos digitales —participaciones, portafolio, rendimiento— y lo aterrizamos en negocios con propósito, personas que comparten visión y una comunidad que se conoce, se comunica y rinde cuentas. No prometemos magia. Prometemos orden, transparencia y comunidad.",
+    },
+    purpose: {
+      sectionTitle: "Propósito",
+      mision: {
+        label: "Misión",
+        body: "Coordinar comunidades de negocio donde la confianza, la comunicación y el valor compartido son la base de cada participación.",
+      },
+      vision: {
+        label: "Visión",
+        body: "Ser la plataforma de referencia en Latinoamérica para comunidades de negocio donde el valor se construye colectivamente —y se hereda.",
+      },
+      propuesta: {
+        label: "Propuesta",
+        body: "Convertimos proyectos en comunidades. Cada participación es una membresía activa: acceso a información, reportes y comunicación directa con quienes operan el negocio.",
+      },
+    },
+    whatWeAre: {
+      sectionTitle: "Lo que somos",
+      yesLabel: "Lo que SÍ somos",
+      noLabel: "Lo que NO somos",
+      yes: [
+        "Una comunidad de negocios con acceso aprobado.",
+        "Un espacio de comunicación e información.",
+        "Un validador de participaciones accionarias.",
+        "Un puente entre proyectos y comunidad.",
+      ],
+      no: [
+        "Un fondo de participación.",
+        "Un procesador de pagos o custodia de dinero.",
+        "Asesoría legal o financiera.",
+        "Un exchange ni plataforma de trading.",
+      ],
+    },
+    coreValues: {
+      sectionTitle: "Valores",
+      intro:
+        "No son aspiracionales. Son criterios de entrada. Quien entra a la plataforma —como responsable o como miembro— los asume como parte del acuerdo.",
+      cards: {
+        transparency: {
+          title: "Transparencia",
+          body: "Reportes periódicos para todos los miembros. Comunicación directa, sin intermediarios. Liderazgo que rinde cuentas.",
+        },
+        unity: {
+          title: "Unidad",
+          body: "Para personas que comparten visión, no solo capital. Cada miembro es parte activa, no espectador.",
+        },
+        value: {
+          title: "Valor",
+          body: "Tangible o intangible: activo, marca, sistema, comunidad, tracción. Real, verificable y con responsables detrás.",
+        },
+        legacy: {
+          title: "Legado",
+          body: "Lo que se construye acá es para lo que viene después. Una participación bien administrada se puede heredar.",
+        },
+      },
+    },
+    glossary: {
+      sectionTitle: "Lenguaje de participaciones",
+      intro:
+        "Activos reales, lenguaje accesible. Familiar para quien conoce fintech, sin excluir a quien nunca operó en esos mercados.",
+      terms: {
+        participation: {
+          name: "Participación",
+          body: "Una fracción del proyecto. No es una acción bursátil ni un token: es tu lugar en la comunidad y en el valor del negocio.",
+        },
+        community: {
+          name: "Comunidad",
+          body: "El grupo de personas que conforman un proyecto Ajdut. Transparente, comunicada y responsable.",
+        },
+        back: {
+          name: "Respaldar",
+          body: "Lo que le da sustancia a una participación: un inmueble, una marca, un sistema, una comunidad, un plan de acción o la tracción del negocio. Siempre hay algo real detrás.",
+        },
+        cultivate: {
+          name: "Cultivar valor",
+          body: "Ser parte de un proyecto: no solo esperar rendimiento, sino participar, informarse y crecer.",
+        },
+        legacy: {
+          name: "Legado",
+          body: "Lo que una participación bien administrada puede representar para quien viene después. Construimos valor que trasciende.",
+        },
+      },
     },
   },
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import {
   FloatingInput,
   FloatingSelect,
@@ -22,14 +23,18 @@ type Row = {
   listing: { id: string; status: string } | null;
 };
 
+type ReventaDict = Dict["reventa"];
+
 export function ResaleSellerPanel({
   projectSlug,
   rows,
   members,
+  dict,
 }: {
   projectSlug: string;
   rows: Row[];
   members: Member[];
+  dict: ReventaDict;
 }) {
   return (
     <ul className="space-y-4">
@@ -39,6 +44,7 @@ export function ResaleSellerPanel({
           projectSlug={projectSlug}
           row={row}
           members={members}
+          dict={dict}
         />
       ))}
     </ul>
@@ -46,6 +52,8 @@ export function ResaleSellerPanel({
 }
 
 function fmtInt(n: number): string {
+  // Integer formatting — thousands separator. Same output in es-MX and en-US
+  // for plain integers (no decimals), so this stays locale-agnostic.
   return n.toLocaleString("es-MX");
 }
 
@@ -53,11 +61,14 @@ function SellerRow({
   projectSlug,
   row,
   members,
+  dict,
 }: {
   projectSlug: string;
   row: Row;
   members: Member[];
+  dict: ReventaDict;
 }) {
+  const s = dict.seller;
   const [mode, setMode] = useState<"idle" | "listing" | "designating">("idle");
   const [intentNote, setIntentNote] = useState("");
   const [contact, setContact] = useState("");
@@ -77,11 +88,11 @@ function SellerRow({
   function doList() {
     setError(null);
     if (intentNote.trim().length < 10) {
-      setError("La nota debe tener al menos 10 caracteres.");
+      setError(s.errNoteTooShort);
       return;
     }
     if (contact.trim().length < 3) {
-      setError("Indicá un medio de contacto.");
+      setError(s.errContactRequired);
       return;
     }
     startTransition(async () => {
@@ -103,7 +114,7 @@ function SellerRow({
     setError(null);
     if (!row.listing) return;
     if (!buyerId) {
-      setError("Elegí un comprador.");
+      setError(s.errBuyerRequired);
       return;
     }
     startTransition(async () => {
@@ -130,40 +141,40 @@ function SellerRow({
       <div className="flex items-baseline justify-between gap-3">
         <span className="font-mono text-sm text-navy">{row.serialCode}</span>
         <span className="eyebrow !text-navy/50">
-          {fmtInt(row.shareCount)} acciones
+          {fmtInt(row.shareCount)} {s.sharesSuffix}
         </span>
       </div>
 
       {transferPending && (
         <p className="mt-3 eyebrow !text-gold" role="status">
-          Traspaso enviado · esperando aprobación del equipo de AJDUT
+          {s.transferPending}
         </p>
       )}
 
       {canList && mode === "idle" && (
         <div className="mt-4">
           <button onClick={() => setMode("listing")} className="btn-outline">
-            Listar para reventa →
+            {s.listBtn}
           </button>
         </div>
       )}
 
       {inResale && mode === "idle" && (
         <div className="mt-4 flex flex-wrap items-center gap-4">
-          <span className="eyebrow !text-navy/60">En el tablón de reventa</span>
+          <span className="eyebrow !text-navy/60">{s.inBoard}</span>
           <button
             onClick={() => setMode("designating")}
             disabled={isPending}
             className="btn-primary disabled:opacity-50"
           >
-            Designar comprador →
+            {s.designateBtn}
           </button>
           <button
             onClick={doCancel}
             disabled={isPending}
             className="eyebrow !text-navy/40 hover:!text-navy p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
           >
-            {isPending ? "Cancelando…" : "Quitar del tablón"}
+            {isPending ? s.removingBtn : s.removeBtn}
           </button>
           {error && (
             <span className="eyebrow !text-navy" role="alert">
@@ -177,7 +188,7 @@ function SellerRow({
         <div className="mt-4 space-y-4">
           <FloatingTextarea
             id={`note-${row.participationId}`}
-            label="Detalle para el comprador"
+            label={s.listingNoteLabel}
             value={intentNote}
             onChange={setIntentNote}
             rows={3}
@@ -186,7 +197,7 @@ function SellerRow({
           />
           <FloatingInput
             id={`contact-${row.participationId}`}
-            label="Cómo te contactan (email, WhatsApp, teléfono)"
+            label={s.listingContactLabel}
             value={contact}
             onChange={setContact}
             maxLength={160}
@@ -202,14 +213,14 @@ function SellerRow({
               disabled={isPending}
               className="btn-primary disabled:opacity-50"
             >
-              {isPending ? "Listando…" : "Confirmar reventa"}
+              {isPending ? s.listingConfirmingBtn : s.listingConfirmBtn}
             </button>
             <button
               onClick={reset}
               disabled={isPending}
               className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
             >
-              Cancelar
+              {s.cancelBtn}
             </button>
           </div>
         </div>
@@ -218,23 +229,21 @@ function SellerRow({
       {mode === "designating" && (
         <div className="mt-4 space-y-4">
           {members.length === 0 ? (
-            <p className="text-sm text-navy/60">
-              Todavía no hay otros miembros en este proyecto para designar como
-              comprador.
-            </p>
+            <p className="text-sm text-navy/60">{s.designatingNoMembers}</p>
           ) : (
             <>
               <FloatingSelect
                 id={`buyer-${row.participationId}`}
-                label="Comprador"
+                label={s.designatingBuyerLabel}
                 value={buyerId}
                 onChange={setBuyerId}
                 options={members.map((m) => ({ value: m.id, label: m.name }))}
               />
               <p className="text-sm text-navy/60 leading-relaxed">
-                Al confirmar, el traspaso de las{" "}
-                <span className="text-navy">{fmtInt(row.shareCount)}</span>{" "}
-                acciones queda pendiente de aprobación del equipo de AJDUT.
+                {s.designatingNoteWithShares.replace(
+                  "{shares}",
+                  fmtInt(row.shareCount)
+                )}
               </p>
             </>
           )}
@@ -250,7 +259,9 @@ function SellerRow({
                 disabled={isPending}
                 className="btn-primary disabled:opacity-50"
               >
-                {isPending ? "Enviando…" : "Designar y enviar a aprobación"}
+                {isPending
+                  ? s.designatingSubmittingBtn
+                  : s.designatingSubmitBtn}
               </button>
             )}
             <button
@@ -258,7 +269,7 @@ function SellerRow({
               disabled={isPending}
               className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
             >
-              Cancelar
+              {s.cancelBtn}
             </button>
           </div>
         </div>

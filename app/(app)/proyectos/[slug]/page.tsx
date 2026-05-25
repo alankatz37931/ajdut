@@ -158,7 +158,8 @@ export default async function ProjectPage({ params }: Params) {
       buckets.set(c.id, { label: c.name, owners: new Set(), extPeople: 0, shares: 0 });
     }
     buckets.set(UNCL, {
-      label: t.capTable.unclassified,
+      // Sin label visible — el row muestra solo el conteo de personas.
+      label: "",
       owners: new Set(),
       extPeople: 0,
       shares: 0,
@@ -192,14 +193,9 @@ export default async function ProjectPage({ params }: Params) {
         tone: key === UNCL ? "muted" : "default",
       });
     }
-    if (platformShares > 0) {
-      byClassRows.push({
-        label: t.capTable.platform,
-        people: null,
-        shares: platformShares,
-        tone: "platform",
-      });
-    }
+    // La participación de AJDUT Platform NO se muestra en la vista anónima
+    // del miembro — el founder y el admin sí la ven en el cap table nominal
+    // (CapTableViz), abajo en este mismo sidebar.
     if (availableShares > 0) {
       byClassRows.push({
         label: t.capTable.unassigned,

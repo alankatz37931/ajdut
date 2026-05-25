@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
-import { getDict, getLanguage } from "@/lib/i18n";
+import { getDict } from "@/lib/i18n";
 import { BackLink } from "@/components/app/BackLink";
 import { getOptionalSession } from "@/lib/auth/session";
 
-// Metadata estática: el dict no llega acá. El metaTitle/metaDescription
-// traducibles vienen del dict y se aplican en el JSX para SEO de la página.
-// TODO i18n: promover a generateMetadata cuando se ajuste la prerender policy.
-export const metadata: Metadata = {
-  title: "Sobre nosotros · AJDUT",
-  description:
-    "Ajdut coordina comunidades de negocio donde personas reales construyen valor real, juntos. Transparencia, unidad, valor y legado.",
-};
+/** Metadata traducida — se resuelve por request usando el dict del idioma activo. */
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return {
+    title: dict.nosotros.metaTitle,
+    description: dict.nosotros.metaDescription,
+  };
+}
 
 export default async function NosotrosPage() {
   const dict = await getDict();
-  const language = await getLanguage();
   const user = await getOptionalSession();
   const t = dict.nosotros;
   return (
@@ -39,17 +38,10 @@ export default async function NosotrosPage() {
         <p className="mt-3 sm:mt-4 eyebrow !text-navy/50">{t.values}</p>
       </section>
 
-      {/* Aviso EN sobre el contenido aún no traducido del manual */}
-      {language === "en" && (
-        <p className="border-t border-navy/10 py-6 mt-6 sm:py-4 text-sm text-navy/60 italic">
-          The sections below are presented in the original Spanish from our brand manual.
-        </p>
-      )}
-
       {/* 01 Origen · 02 Propósito — dos columnas en desktop */}
       <section className="border-t border-navy/10 py-3 mt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-12 lg:gap-x-16">
-          {/* 01 · Origen — separa la columna del divisor superior */}
+          {/* 01 · Origen */}
           <div className="pt-4">
             <p className="font-mono text-sm tracking-wider text-navy mb-3">
               <span className="text-gold">01</span> · {t.origin.title}
@@ -58,23 +50,23 @@ export default async function NosotrosPage() {
             <p className="mt-3 text-navy/85 leading-relaxed">{t.origin.body2}</p>
           </div>
 
-          {/* 02 · Propósito — idem */}
+          {/* 02 · Propósito */}
           <div className="pt-4">
             <p className="font-mono text-sm tracking-wider text-navy mb-3">
-              <span className="text-gold">02</span> · Propósito
+              <span className="text-gold">02</span> · {t.purpose.sectionTitle}
             </p>
             <div className="space-y-4">
               <PurposeItem
-                label="Misión"
-                body="Coordinar comunidades de negocio donde la confianza, la comunicación y el valor compartido son la base de cada participación."
+                label={t.purpose.mision.label}
+                body={t.purpose.mision.body}
               />
               <PurposeItem
-                label="Visión"
-                body="Ser la plataforma de referencia en Latinoamérica para comunidades de negocio donde el valor se construye colectivamente —y se hereda."
+                label={t.purpose.vision.label}
+                body={t.purpose.vision.body}
               />
               <PurposeItem
-                label="Propuesta"
-                body="Convertimos proyectos en comunidades. Cada participación es una membresía activa: acceso a información, reportes y comunicación directa con quienes operan el negocio."
+                label={t.purpose.propuesta.label}
+                body={t.purpose.propuesta.body}
               />
             </div>
           </div>
@@ -84,96 +76,80 @@ export default async function NosotrosPage() {
       {/* 03 · Lo que somos / lo que no somos */}
       <section className="border-t border-navy/10 py-6 mt-6">
         <p className="font-mono text-sm tracking-wider text-navy mb-3 sm:mb-4">
-          <span className="text-gold">03</span> · Lo que somos
+          <span className="text-gold">03</span> · {t.whatWeAre.sectionTitle}
         </p>
 
-        {/* Bloque binario: gap ajustado, ancho completo */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           <div>
-            <p className="eyebrow !text-navy/50 mb-2">Lo que SÍ somos</p>
+            <p className="eyebrow !text-navy/50 mb-2">{t.whatWeAre.yesLabel}</p>
             <ul className="space-y-2">
-              <YesItem>Una comunidad de negocios con acceso aprobado.</YesItem>
-              <YesItem>Un espacio de comunicación e información.</YesItem>
-              <YesItem>Un validador de participaciones accionarias.</YesItem>
-              <YesItem>Un puente entre proyectos y comunidad.</YesItem>
+              {t.whatWeAre.yes.map((item, i) => (
+                <YesItem key={i}>{item}</YesItem>
+              ))}
             </ul>
           </div>
           <div>
-            <p className="eyebrow !text-navy/50 mb-2">Lo que NO somos</p>
+            <p className="eyebrow !text-navy/50 mb-2">{t.whatWeAre.noLabel}</p>
             <ul className="space-y-2">
-              <NoItem>Un fondo de participación.</NoItem>
-              <NoItem>Un procesador de pagos o custodia de dinero.</NoItem>
-              <NoItem>Asesoría legal o financiera.</NoItem>
-              <NoItem>Un exchange ni plataforma de trading.</NoItem>
+              {t.whatWeAre.no.map((item, i) => (
+                <NoItem key={i}>{item}</NoItem>
+              ))}
             </ul>
           </div>
         </div>
       </section>
 
-      {/* 04 · Valores — grilla 4 columnas en desktop, mismas tarjetas del landing */}
+      {/* 04 · Valores */}
       <section className="border-t border-navy/10 py-6 mt-6">
         <p className="font-mono text-sm tracking-wider text-navy mb-3">
-          <span className="text-gold">04</span> · Valores
+          <span className="text-gold">04</span> · {t.coreValues.sectionTitle}
         </p>
-        <p className="mb-4 text-navy/75 leading-relaxed">
-          No son aspiracionales. Son criterios de entrada. Quien entra a la
-          plataforma —como responsable o como miembro— los asume como parte del
-          acuerdo.
-        </p>
+        <p className="mb-4 text-navy/75 leading-relaxed">{t.coreValues.intro}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-stretch gap-6">
           <ValueCard
-            title="Transparencia"
-            body="Reportes periódicos para todos los miembros. Comunicación directa, sin intermediarios. Liderazgo que rinde cuentas."
+            title={t.coreValues.cards.transparency.title}
+            body={t.coreValues.cards.transparency.body}
             icon={<TransparencyIcon />}
           />
           <ValueCard
-            title="Unidad"
-            body="Para personas que comparten visión, no solo capital. Cada miembro es parte activa, no espectador."
+            title={t.coreValues.cards.unity.title}
+            body={t.coreValues.cards.unity.body}
             icon={<UnityIcon />}
           />
           <ValueCard
-            title="Valor"
-            body="Tangible o intangible: activo, marca, sistema, comunidad, tracción. Real, verificable y con responsables detrás."
+            title={t.coreValues.cards.value.title}
+            body={t.coreValues.cards.value.body}
             icon={<ValueIcon />}
           />
           <ValueCard
-            title="Legado"
-            body="Lo que se construye acá es para lo que viene después. Una participación bien administrada se puede heredar."
+            title={t.coreValues.cards.legacy.title}
+            body={t.coreValues.cards.legacy.body}
             icon={<LegacyIcon />}
           />
         </div>
       </section>
 
-      {/* 05 · Glosario — lista limpia: término izquierda, definición derecha */}
+      {/* 05 · Glosario */}
       <section className="border-t border-navy/10 py-6 mt-6">
         <p className="font-mono text-sm tracking-wider text-navy mb-3">
-          <span className="text-gold">05</span> · Lenguaje de participaciones
+          <span className="text-gold">05</span> · {t.glossary.sectionTitle}
         </p>
-        <p className="mb-4 text-navy/75 leading-relaxed">
-          Activos reales, lenguaje accesible. Familiar para quien conoce
-          fintech, sin excluir a quien nunca operó en esos mercados.
-        </p>
+        <p className="mb-4 text-navy/75 leading-relaxed">{t.glossary.intro}</p>
         <dl className="border-t border-navy/10">
-          <Term name="Participación">
-            Una fracción del proyecto. No es una acción bursátil ni un token: es
-            tu lugar en la comunidad y en el valor del negocio.
+          <Term name={t.glossary.terms.participation.name}>
+            {t.glossary.terms.participation.body}
           </Term>
-          <Term name="Comunidad">
-            El grupo de personas que conforman un proyecto Ajdut. Transparente,
-            comunicada y responsable.
+          <Term name={t.glossary.terms.community.name}>
+            {t.glossary.terms.community.body}
           </Term>
-          <Term name="Respaldar">
-            Lo que le da sustancia a una participación: un inmueble, una marca,
-            un sistema, una comunidad, un plan de acción o la tracción del
-            negocio. Siempre hay algo real detrás.
+          <Term name={t.glossary.terms.back.name}>
+            {t.glossary.terms.back.body}
           </Term>
-          <Term name="Cultivar valor">
-            Ser parte de un proyecto: no solo esperar rendimiento, sino
-            participar, informarse y crecer.
+          <Term name={t.glossary.terms.cultivate.name}>
+            {t.glossary.terms.cultivate.body}
           </Term>
-          <Term name="Legado">
-            Lo que una participación bien administrada puede representar para
-            quien viene después. Construimos valor que trasciende.
+          <Term name={t.glossary.terms.legacy.name}>
+            {t.glossary.terms.legacy.body}
           </Term>
         </dl>
       </section>
@@ -224,10 +200,6 @@ function ValueCard({
   body: string;
   icon?: React.ReactNode;
 }) {
-  // Layout: title arriba (uppercase tracked), body en el medio, icono
-  // centrado al pie. `flex flex-col` + `mt-auto` empuja el icono al bottom
-  // cuando los cuerpos de las cards tienen alturas distintas, manteniendo
-  // los iconos alineados horizontalmente entre las 4 cards.
   return (
     <article className="select-none cursor-default h-full flex flex-col rounded-xl border border-line/80 bg-gradient-to-br from-paper-light to-paper-light/40 p-5 shadow-sm shadow-navy/5 transition-all duration-300 hover:border-gold/60 hover:shadow-md hover:shadow-navy/10 hover:-translate-y-0.5">
       <p className="font-sans font-semibold text-navy text-base uppercase tracking-wide text-center">
@@ -245,10 +217,9 @@ function ValueCard({
   );
 }
 
-/* ── Íconos de los valores fundacionales (mismos del landing público) ── */
+/* ── Íconos de los valores fundacionales ── */
 
 function TransparencyIcon() {
-  // Cadena / link — vínculos visibles, transparencia de conexiones.
   return (
     <svg
       width="28"
@@ -268,7 +239,6 @@ function TransparencyIcon() {
 }
 
 function UnityIcon() {
-  // Persona dentro de un círculo — unidad / comunidad.
   return (
     <svg
       width="28"
@@ -289,7 +259,6 @@ function UnityIcon() {
 }
 
 function ValueIcon() {
-  // Gema facetada — activo durable, valor de cara.
   return (
     <svg
       width="28"
@@ -310,7 +279,6 @@ function ValueIcon() {
 }
 
 function LegacyIcon() {
-  // Templo clásico / columnas — patrimonio, herencia, lo que trasciende.
   return (
     <svg
       width="28"

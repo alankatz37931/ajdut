@@ -1,22 +1,26 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getProjectAccess } from "@/lib/services/project-access";
+import { getDict, getLocale } from "@/lib/i18n";
 import { BackLink } from "@/components/app/BackLink";
-import { formatDate } from "@/lib/utils/format";
+import { formatDate, formatNumber } from "@/lib/utils/format";
 import { ResaleSellerPanel } from "./ResaleSellerPanel";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export const metadata = { title: "Reventa de acciones · AJDUT" };
-
-function fmtInt(n: number): string {
-  return n.toLocaleString("es-MX");
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.reventa.metaTitle };
 }
 
 export default async function ProjectResalePage({ params }: Params) {
   const user = await requireSession();
   const { slug } = await params;
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.reventa;
 
   const project = await prisma.project.findUnique({
     where: { slug },
@@ -33,7 +37,6 @@ export default async function ProjectResalePage({ params }: Params) {
   });
   if (!access.canView) notFound();
 
-  // Participaciones del usuario en este proyecto.
   const myParticipations = await prisma.participation.findMany({
     where: {
       projectId: project.id,
@@ -44,7 +47,6 @@ export default async function ProjectResalePage({ params }: Params) {
     select: { id: true, serialCode: true, shareCount: true, status: true },
   });
 
-  // Listings activos del proyecto.
   const listings = await prisma.resaleListing.findMany({
     where: {
       projectId: project.id,
@@ -64,7 +66,6 @@ export default async function ProjectResalePage({ params }: Params) {
     },
   });
 
-  // Miembros del proyecto (titulares actuales) — opciones de comprador.
   const holders = await prisma.participation.findMany({
     where: {
       projectId: project.id,
@@ -88,7 +89,6 @@ export default async function ProjectResalePage({ params }: Params) {
     a.name.localeCompare(b.name)
   );
 
-  // Listing propio por participación.
   const myListingByPart = new Map<string, (typeof listings)[number]>();
   for (const l of listings) {
     if (l.sellerId === user.id) myListingByPart.set(l.participationId, l);
@@ -104,7 +104,6 @@ export default async function ProjectResalePage({ params }: Params) {
     };
   });
 
-  // Tablón: listings de otros miembros, todavía disponibles.
   const boardListings = listings.filter(
     (l) =>
       l.sellerId !== user.id &&
@@ -117,41 +116,32 @@ export default async function ProjectResalePage({ params }: Params) {
         <BackLink fallback={`/proyectos/${project.slug}`}>
           {project.name}
         </BackLink>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
-          Reventa de acciones
-        </h1>
-        <p className="mt-3 text-navy/70 leading-relaxed max-w-2xl">
-          Listá tus acciones para que otros miembros de la comunidad puedan
-          adquirirlas. Cuando acordás con un comprador lo designás acá, y el
-          equipo de AJDUT aprueba el traspaso para que quede registrado.
-        </p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
+        <p className="mt-3 text-navy/70 leading-relaxed max-w-2xl">{t.intro}</p>
       </div>
 
       <section className="mt-10">
         <p className="eyebrow !text-navy hairline-b pb-3 mb-6">
-          01 · Tus participaciones
+          {t.sectionYours}
         </p>
         {sellerRows.length === 0 ? (
-          <p className="text-navy/60">
-            No tenés participaciones en este proyecto para revender.
-          </p>
+          <p className="text-navy/60">{t.emptyNoShares}</p>
         ) : (
           <ResaleSellerPanel
             projectSlug={project.slug}
             rows={sellerRows}
             members={projectMembers}
+            dict={t}
           />
         )}
       </section>
 
       <section className="mt-14">
         <p className="eyebrow !text-navy hairline-b pb-3 mb-6">
-          02 · Tablón de reventa
+          {t.sectionBoard}
         </p>
         {boardListings.length === 0 ? (
-          <p className="text-navy/60">
-            No hay acciones en reventa en este proyecto por ahora.
-          </p>
+          <p className="text-navy/60">{t.emptyNoBoard}</p>
         ) : (
           <ul className="space-y-4">
             {boardListings.map((l) => (
@@ -161,15 +151,15 @@ export default async function ProjectResalePage({ params }: Params) {
                     {l.seller.alias ?? l.seller.fullName}
                   </span>
                   <span className="eyebrow !text-navy/50">
-                    {fmtInt(l.participation.shareCount)} acciones ·{" "}
-                    {formatDate(l.createdAt)}
+                    {formatNumber(l.participation.shareCount, undefined, locale)}{" "}
+                    {t.boardSharesSuffix} · {formatDate(l.createdAt, locale)}
                   </span>
                 </div>
                 <p className="mt-2 text-navy/80 text-sm leading-relaxed whitespace-pre-line">
                   {l.intentNote}
                 </p>
                 <p className="mt-3 eyebrow !text-navy/50">
-                  Contacto:{" "}
+                  {t.boardContactLabel}{" "}
                   <span className="!text-navy">{l.contactChannel}</span>
                 </p>
               </li>

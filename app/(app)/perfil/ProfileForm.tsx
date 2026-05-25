@@ -87,15 +87,14 @@ export function ProfileForm({
       <form action={onSubmitName} className="space-y-5">
         <p className="eyebrow">{dict.basicsTitle}</p>
 
-        <FloatingInput
-          id="fullName"
-          label={dict.fullNameLabel}
-          value={fullName}
-          onChange={setFullName}
-          required
-        />
-
-        <div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+          <FloatingInput
+            id="fullName"
+            label={dict.fullNameLabel}
+            value={fullName}
+            onChange={setFullName}
+            required
+          />
           <FloatingInput
             id="alias"
             label={`${dict.aliasLabel} ${dict.aliasHint}`}
@@ -103,12 +102,11 @@ export function ProfileForm({
             onChange={setAlias}
             maxLength={60}
           />
-          <p className="eyebrow !text-navy/40 mt-1.5">{dict.aliasFootnote}</p>
         </div>
 
         {/* Contacto — país + teléfono. Heredados de la Application al
             aprobar, editables por el dueño. */}
-        <div className="pt-4 hairline-t grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+        <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6">
           <FloatingInput
             id="country"
             label="País"
@@ -127,7 +125,7 @@ export function ProfileForm({
         </div>
 
         {/* Foto de perfil */}
-        <div className="pt-4 hairline-t">
+        <div className="pt-4">
           <FileUpload
             scope="profile-photo"
             accept="image/png,image/jpeg,image/webp"

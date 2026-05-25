@@ -1,9 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 
-export const metadata = { title: "Documentos · AJDUT" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.documentos.metaTitle };
+}
 
 export default async function DocumentosPage({
   searchParams,
@@ -11,9 +16,11 @@ export default async function DocumentosPage({
   searchParams: Promise<{ proyecto?: string }>;
 }) {
   const user = await requireSession();
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.documentos;
   const { proyecto } = await searchParams;
 
-  // Proyectos donde el usuario tiene acciones.
   const myParts = await prisma.participation.findMany({
     where: { currentOwnerId: user.id },
     select: { projectId: true },
@@ -53,18 +60,15 @@ export default async function DocumentosPage({
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Tus proyectos</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Documentos</h1>
-        <p className="mt-3 text-navy/75 leading-relaxed max-w-2xl">
-          Todos los documentos que los founders compartieron en los proyectos
-          donde tenés acciones, en un solo lugar.
-        </p>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
+        <p className="mt-3 text-navy/75 leading-relaxed">{t.intro}</p>
       </header>
 
       {projects.length > 1 && (
         <nav className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2">
           <Link href={{ pathname: "/documentos" }} className={chipClass(!proyecto)}>
-            Todos
+            {t.filterAll}
           </Link>
           {projects.map((p) => (
             <Link
@@ -81,9 +85,7 @@ export default async function DocumentosPage({
       <div className="mt-8">
         {documents.length === 0 ? (
           <p className="text-navy/60">
-            {projectIds.length === 0
-              ? "Todavía no tenés acciones en ningún proyecto."
-              : "No hay documentos compartidos por ahora."}
+            {projectIds.length === 0 ? t.emptyNoProjects : t.emptyNoDocs}
           </p>
         ) : (
           <ul className="hairline-t">
@@ -95,7 +97,7 @@ export default async function DocumentosPage({
                 <div className="min-w-0">
                   <p className="text-navy break-words">{d.title}</p>
                   <p className="mt-1 eyebrow !text-navy/50">
-                    {d.project.name} · {formatDate(d.createdAt)}
+                    {d.project.name} · {formatDate(d.createdAt, locale)}
                   </p>
                 </div>
                 <a
@@ -104,7 +106,7 @@ export default async function DocumentosPage({
                   rel="noopener noreferrer"
                   className="eyebrow hover:!text-gold transition-colors shrink-0"
                 >
-                  Abrir ↗
+                  {t.openLink}
                 </a>
               </li>
             ))}

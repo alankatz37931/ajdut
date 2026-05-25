@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { getProjectAccess } from "@/lib/services/project-access";
 import { recordAudit } from "@/lib/services/audit";
 
@@ -11,12 +12,14 @@ export type DocumentResult = { ok: true } | { ok: false; error: string };
 /** Valida sesión + permiso de edición sobre el proyecto. */
 async function ownerGuard(projectSlug: string) {
   const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.documentsPanel.errors;
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
     select: { id: true, ownerId: true, status: true },
   });
   if (!project) {
-    return { ok: false as const, error: "Proyecto no encontrado." };
+    return { ok: false as const, error: e.projectNotFound };
   }
   const access = await getProjectAccess({
     userId: user.id,
@@ -26,9 +29,9 @@ async function ownerGuard(projectSlug: string) {
     projectStatus: project.status,
   });
   if (!access.canEdit) {
-    return { ok: false as const, error: "No tenés permiso sobre este proyecto." };
+    return { ok: false as const, error: e.noPermission };
   }
-  return { ok: true as const, user, project };
+  return { ok: true as const, user, project, errors: e };
 }
 
 /**
@@ -42,10 +45,11 @@ export async function uploadDocumentAction(
 ): Promise<DocumentResult> {
   const guard = await ownerGuard(projectSlug);
   if (!guard.ok) return { ok: false, error: guard.error };
+  const e = guard.errors;
 
   const cleanTitle = title.trim();
-  if (!cleanTitle) return { ok: false, error: "El documento necesita un nombre." };
-  if (!storageKey.trim()) return { ok: false, error: "Subí el archivo del documento." };
+  if (!cleanTitle) return { ok: false, error: e.nameRequired };
+  if (!storageKey.trim()) return { ok: false, error: e.fileRequired };
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -66,8 +70,8 @@ export async function uploadDocumentAction(
         payload: { title: cleanTitle },
       });
     });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "Error al subir el documento.";
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : e.uploadError;
     return { ok: false, error: msg };
   }
 
@@ -83,19 +87,20 @@ export async function deleteDocumentAction(
 ): Promise<DocumentResult> {
   const guard = await ownerGuard(projectSlug);
   if (!guard.ok) return { ok: false, error: guard.error };
+  const e = guard.errors;
 
   const doc = await prisma.document.findUnique({
     where: { id: documentId },
     select: { id: true, projectId: true },
   });
   if (!doc || doc.projectId !== guard.project.id) {
-    return { ok: false, error: "Documento no encontrado." };
+    return { ok: false, error: e.notFound };
   }
 
   try {
     await prisma.document.delete({ where: { id: documentId } });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "Error al eliminar el documento.";
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : e.deleteError;
     return { ok: false, error: msg };
   }
 

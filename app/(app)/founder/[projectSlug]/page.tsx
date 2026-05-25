@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { StatusBadge } from "@/components/founder/StatusBadge";
 import { DocumentsPanel } from "./DocumentsPanel";
+import { getDict, getLocale } from "@/lib/i18n";
 import {
   formatNumber,
   formatPercent,
@@ -17,6 +18,8 @@ type Params = { params: Promise<{ projectSlug: string }> };
 export default async function FounderDashboardPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
   const { projectSlug } = await params;
+  const dict = await getDict();
+  const locale = await getLocale();
 
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
@@ -426,6 +429,8 @@ export default async function FounderDashboardPage({ params }: Params) {
               storageKey: d.storageKey,
               createdAt: d.createdAt.toISOString(),
             }))}
+            dict={dict.documentsPanel}
+            locale={locale}
           />
         </FounderSection>
 

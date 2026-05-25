@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { FloatingTextarea } from "@/components/ui/Floating";
 import { approveTransferAction, rejectTransferAction } from "./actions";
+
+type ActionsDict = Dict["adminReventas"]["actions"];
 
 type Props = {
   resaleListingId: string;
   sellerName: string;
   buyerName: string;
   shareCount: number;
+  dict: ActionsDict;
 };
 
 export function ResaleTransferActions({
@@ -16,6 +20,7 @@ export function ResaleTransferActions({
   sellerName,
   buyerName,
   shareCount,
+  dict,
 }: Props) {
   const [mode, setMode] = useState<
     "idle" | "confirming-approve" | "rejecting" | "done-approved" | "done-rejected"
@@ -39,7 +44,7 @@ export function ResaleTransferActions({
   function reject() {
     setError(null);
     if (note.trim().length < 10) {
-      setError("La nota debe tener al menos 10 caracteres.");
+      setError(dict.errNoteTooShort);
       return;
     }
     startTransition(async () => {
@@ -55,14 +60,14 @@ export function ResaleTransferActions({
   if (mode === "done-approved") {
     return (
       <p className="eyebrow !text-gold" role="status">
-        Traspaso aprobado. Las acciones quedaron a nombre del comprador.
+        {dict.doneApproved}
       </p>
     );
   }
   if (mode === "done-rejected") {
     return (
       <p className="eyebrow !text-navy/60" role="status">
-        Traspaso rechazado. La reventa vuelve al tablón del proyecto.
+        {dict.doneRejected}
       </p>
     );
   }
@@ -70,16 +75,12 @@ export function ResaleTransferActions({
   if (mode === "confirming-approve") {
     return (
       <div className="hairline p-4 bg-paper-light space-y-3">
-        <p className="eyebrow !text-gold">Confirmar aprobación</p>
+        <p className="eyebrow !text-gold">{dict.confirmTitle}</p>
         <p className="text-navy/85 text-sm leading-relaxed">
-          Vas a traspasar{" "}
-          <span className="font-mono text-navy">
-            {shareCount.toLocaleString("es-MX")}
-          </span>{" "}
-          acciones de <span className="text-navy">{sellerName}</span> a{" "}
-          <span className="text-navy">{buyerName}</span>. Se registra el cambio
-          de titularidad en la cadena de propiedad. Es{" "}
-          <strong>irreversible</strong>.
+          {dict.confirmDescription
+            .replace("{shares}", shareCount.toLocaleString("es-MX"))
+            .replace("{seller}", sellerName)
+            .replace("{buyer}", buyerName)}
         </p>
         {error && (
           <p className="eyebrow !text-navy" role="alert">
@@ -92,14 +93,14 @@ export function ResaleTransferActions({
             disabled={isPending}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Aprobando…" : "Sí, aprobar el traspaso"}
+            {isPending ? dict.approving : dict.confirmApprove}
           </button>
           <button
             onClick={() => setMode("idle")}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cancelar
+            {dict.cancelBtn}
           </button>
         </div>
       </div>
@@ -111,7 +112,7 @@ export function ResaleTransferActions({
       <div className="hairline p-4 bg-paper-light space-y-3">
         <FloatingTextarea
           id={`reject-${resaleListingId}`}
-          label="Nota de rechazo (mínimo 10 caracteres)"
+          label={dict.rejectNoteLabel}
           value={note}
           onChange={setNote}
           rows={4}
@@ -128,7 +129,7 @@ export function ResaleTransferActions({
             disabled={isPending}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Rechazando…" : "Confirmar rechazo"}
+            {isPending ? dict.rejecting : dict.confirmReject}
           </button>
           <button
             onClick={() => {
@@ -138,7 +139,7 @@ export function ResaleTransferActions({
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cancelar
+            {dict.cancelBtn}
           </button>
         </div>
       </div>
@@ -152,14 +153,14 @@ export function ResaleTransferActions({
         disabled={isPending}
         className="btn-primary disabled:opacity-50"
       >
-        Aprobar traspaso →
+        {dict.approveBtn}
       </button>
       <button
         onClick={() => setMode("rejecting")}
         disabled={isPending}
         className="eyebrow hover:!text-navy !text-navy/40 p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
       >
-        Rechazar
+        {dict.rejectBtn}
       </button>
       {error && (
         <span className="eyebrow !text-navy" role="alert">

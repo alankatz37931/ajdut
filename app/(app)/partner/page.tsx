@@ -161,7 +161,7 @@ export default async function PartnerDashboardPage() {
         {rows.length === 0 ? (
           <p className="text-navy/60">{t.noParticipations}</p>
         ) : (
-          <ul className="hairline-t">
+          <ul>
             {rows.map((p) => {
               const currency =
                 p.project.startupProfile?.valuationCurrency ?? "USD";
@@ -188,7 +188,7 @@ export default async function PartnerDashboardPage() {
                             href={`/proyectos/${p.project.slug}/reventa` as Route}
                             className="eyebrow hover:!text-gold shrink-0"
                           >
-                            Reventa
+                            {t.resaleShort}
                           </Link>
                         </div>
                         <p className="mt-1 eyebrow">{p.project.shortPitch}</p>

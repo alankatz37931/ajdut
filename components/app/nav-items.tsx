@@ -2,6 +2,7 @@ import type { Route } from "next";
 import { prisma } from "@/lib/db/client";
 import type { NavItem } from "@/components/app/SideNav";
 import { getDict } from "@/lib/i18n";
+import type { Dict } from "@/lib/i18n";
 import {
   ProjectsIcon,
   MyProjectIcon,
@@ -32,9 +33,9 @@ export const ROLE_LABEL: Record<string, string> = {
 };
 
 export async function getRoleLabel(role: string): Promise<string> {
-  // El dict no tiene roles aún (admin interno); reuso del estático.
-  // TODO i18n: mover a dict.roles cuando se traduzca el área admin.
-  return ROLE_LABEL[role] ?? role;
+  const dict = await getDict();
+  const dictRoles = dict.roles as Record<keyof Dict["roles"] | string, string>;
+  return dictRoles[role] ?? ROLE_LABEL[role] ?? role;
 }
 
 /**
@@ -69,14 +70,14 @@ export async function navItemsFor(
   };
 
   const documentosItem: NavItem = {
-    label: "Documentos",
+    label: n.documents,
     href: "/documentos" as Route,
     group: SEC_PORTFOLIO,
     icon: <AuditIcon />,
   };
 
   const historialItem: NavItem = {
-    label: "Historial",
+    label: n.history,
     href: "/historial" as Route,
     group: SEC_PORTFOLIO,
     icon: <AssignmentsIcon />,
@@ -147,7 +148,7 @@ export async function navItemsFor(
         icon: <AssignmentsIcon />,
       },
       {
-        label: "Reventas",
+        label: n.resales,
         href: "/admin/reventas" as Route,
         badge: pendingResales,
         badgeHighlight: true,

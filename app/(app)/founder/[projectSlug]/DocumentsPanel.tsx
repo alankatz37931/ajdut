@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { formatDate } from "@/lib/utils/format";
 import { uploadDocumentAction, deleteDocumentAction } from "./document-actions";
@@ -12,15 +13,21 @@ type Doc = {
   createdAt: string;
 };
 
+type PanelDict = Dict["documentsPanel"];
+
 const DOC_ACCEPT =
   ".pdf,.xlsx,.xls,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword";
 
 export function DocumentsPanel({
   projectSlug,
   documents,
+  dict,
+  locale,
 }: {
   projectSlug: string;
   documents: Doc[];
+  dict: PanelDict;
+  locale: string;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -28,18 +35,22 @@ export function DocumentsPanel({
     <div>
       <div className="flex justify-end">
         <button onClick={() => setModalOpen(true)} className="btn-outline">
-          + Agregar documento
+          {dict.addBtn}
         </button>
       </div>
 
       {documents.length === 0 ? (
-        <p className="mt-5 text-navy/60">
-          Todavía no compartiste ningún documento con tus miembros.
-        </p>
+        <p className="mt-5 text-navy/60">{dict.empty}</p>
       ) : (
         <ul className="mt-5 hairline-t">
           {documents.map((d) => (
-            <DocRow key={d.id} projectSlug={projectSlug} doc={d} />
+            <DocRow
+              key={d.id}
+              projectSlug={projectSlug}
+              doc={d}
+              dict={dict}
+              locale={locale}
+            />
           ))}
         </ul>
       )}
@@ -48,18 +59,29 @@ export function DocumentsPanel({
         <UploadModal
           projectSlug={projectSlug}
           onClose={() => setModalOpen(false)}
+          dict={dict}
         />
       )}
     </div>
   );
 }
 
-function DocRow({ projectSlug, doc }: { projectSlug: string; doc: Doc }) {
+function DocRow({
+  projectSlug,
+  doc,
+  dict,
+  locale,
+}: {
+  projectSlug: string;
+  doc: Doc;
+  dict: PanelDict;
+  locale: string;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function onDelete() {
-    if (!window.confirm(`¿Eliminar "${doc.title}"? Esta acción no se puede deshacer.`)) {
+    if (!window.confirm(dict.deleteConfirm.replace("{title}", doc.title))) {
       return;
     }
     setError(null);
@@ -74,7 +96,7 @@ function DocRow({ projectSlug, doc }: { projectSlug: string; doc: Doc }) {
       <div className="min-w-0">
         <p className="text-navy break-words">{doc.title}</p>
         <p className="mt-0.5 eyebrow !text-navy/40">
-          {formatDate(new Date(doc.createdAt))}
+          {formatDate(new Date(doc.createdAt), locale)}
         </p>
       </div>
       <span className="flex items-center gap-4 shrink-0">
@@ -84,14 +106,14 @@ function DocRow({ projectSlug, doc }: { projectSlug: string; doc: Doc }) {
           rel="noopener noreferrer"
           className="eyebrow hover:!text-gold transition-colors"
         >
-          Abrir ↗
+          {dict.openLink}
         </a>
         <button
           onClick={onDelete}
           disabled={isPending}
           className="eyebrow !text-navy/40 hover:!text-navy disabled:opacity-50 p-0 m-0 border-0 bg-transparent cursor-pointer"
         >
-          {isPending ? "Eliminando…" : "Eliminar"}
+          {isPending ? dict.deletingBtn : dict.deleteBtn}
         </button>
         {error && (
           <span className="eyebrow !text-navy" role="alert">
@@ -106,10 +128,13 @@ function DocRow({ projectSlug, doc }: { projectSlug: string; doc: Doc }) {
 function UploadModal({
   projectSlug,
   onClose,
+  dict,
 }: {
   projectSlug: string;
   onClose: () => void;
+  dict: PanelDict;
 }) {
+  const m = dict.modal;
   const [fileUrl, setFileUrl] = useState("");
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +143,7 @@ function UploadModal({
   function publish() {
     setError(null);
     if (!fileUrl) {
-      setError("Subí un archivo primero.");
+      setError(m.errNoFile);
       return;
     }
     startTransition(async () => {
@@ -141,19 +166,17 @@ function UploadModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-baseline justify-between gap-3 hairline-b pb-3">
-          <p className="eyebrow !text-navy">Agregar documento</p>
+          <p className="eyebrow !text-navy">{m.title}</p>
           <button
             onClick={onClose}
             className="eyebrow !text-navy/40 hover:!text-navy p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cerrar ×
+            {m.closeBtn}
           </button>
         </div>
 
         <p className="mt-4 text-sm text-navy/65 leading-relaxed">
-          Subí el archivo. Toda la información — período, cifras, avances — va
-          dentro del documento. Tus miembros lo van a ver en su sección
-          “Documentos”.
+          {m.description}
         </p>
 
         <div className="mt-4">
@@ -166,8 +189,8 @@ function UploadModal({
               setFileUrl(url);
               setFileName(name ?? "");
             }}
-            label="Archivo del documento"
-            helperText="PDF, Excel o Word · máximo 25 MB."
+            label={m.fileLabel}
+            helperText={m.fileHelper}
             subtle
           />
         </div>
@@ -184,14 +207,14 @@ function UploadModal({
             disabled={isPending || !fileUrl}
             className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? "Publicando…" : "Publicar documento →"}
+            {isPending ? m.publishingBtn : m.publishBtn}
           </button>
           <button
             onClick={onClose}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cancelar
+            {m.cancelBtn}
           </button>
         </div>
       </div>

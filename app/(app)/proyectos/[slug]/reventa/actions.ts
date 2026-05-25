@@ -1,16 +1,15 @@
 "use server";
 
-import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { DomainError } from "@/lib/services/errors";
 import {
   listForResale,
   closeResaleDeal,
   cancelResale,
 } from "@/lib/services/participation";
-import { notifyAdminsResaleTransfer } from "@/lib/email/notifications";
 
 export type ResaleResult = { ok: true } | { ok: false; error: string };
 
@@ -24,25 +23,27 @@ export async function listForResaleAction(
   contactChannel: string
 ): Promise<ResaleResult> {
   const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.reventa.errors;
 
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
     select: { id: true },
   });
-  if (!project) return { ok: false, error: "Proyecto no encontrado." };
+  if (!project) return { ok: false, error: e.projectNotFound };
 
   const participation = await prisma.participation.findUnique({
     where: { id: participationId },
     select: { projectId: true, currentOwnerId: true },
   });
   if (!participation || participation.projectId !== project.id) {
-    return { ok: false, error: "Participación no encontrada." };
+    return { ok: false, error: e.participationNotFound };
   }
   if (participation.currentOwnerId !== user.id) {
-    return { ok: false, error: "Solo el titular puede listar esta participación." };
+    return { ok: false, error: e.notOwner };
   }
   if (contactChannel.trim().length < 3) {
-    return { ok: false, error: "Indicá un medio de contacto válido." };
+    return { ok: false, error: e.contactInvalid };
   }
 
   try {
@@ -52,10 +53,10 @@ export async function listForResaleAction(
       intentNote,
       contactChannel: contactChannel.trim(),
     });
-  } catch (e) {
-    if (e instanceof DomainError) return { ok: false, error: e.message };
-    console.error("listForResaleAction", e);
-    return { ok: false, error: "Error interno del servidor." };
+  } catch (err) {
+    if (err instanceof DomainError) return { ok: false, error: err.message };
+    console.error("listForResaleAction", err);
+    return { ok: false, error: e.serverError };
   }
 
   revalidatePath(`/proyectos/${projectSlug}/reventa`);
@@ -74,9 +75,11 @@ export async function proposeBuyerAction(
   proposedBuyerId: string
 ): Promise<ResaleResult> {
   const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.reventa.errors;
 
   if (!proposedBuyerId) {
-    return { ok: false, error: "Elegí un comprador." };
+    return { ok: false, error: e.buyerRequired };
   }
 
   try {
@@ -84,46 +87,18 @@ export async function proposeBuyerAction(
       resaleListingId,
       sellerId: user.id,
       proposedBuyerId,
-      // El vendedor designa = confirma el trato. La aprobación final es del admin.
       sellerSignedAt: new Date(),
     });
-  } catch (e) {
-    if (e instanceof DomainError) return { ok: false, error: e.message };
-    console.error("proposeBuyerAction", e);
-    return { ok: false, error: "Error interno del servidor." };
+  } catch (err) {
+    if (err instanceof DomainError) return { ok: false, error: err.message };
+    console.error("proposeBuyerAction", err);
+    return { ok: false, error: e.serverError };
   }
 
   revalidatePath(`/proyectos/${projectSlug}/reventa`);
   revalidatePath(`/proyectos/${projectSlug}`);
   revalidatePath("/partner");
   revalidatePath("/admin/reventas");
-
-  // Aviso a los admins de que hay un traspaso para aprobar — fire-and-forget.
-  after(async () => {
-    const listing = await prisma.resaleListing.findUnique({
-      where: { id: resaleListingId },
-      select: {
-        intentNote: true,
-        proposedBuyerId: true,
-        seller: { select: { fullName: true, alias: true } },
-        project: { select: { name: true } },
-        participation: { select: { shareCount: true } },
-      },
-    });
-    if (!listing || !listing.proposedBuyerId) return;
-    const buyer = await prisma.user.findUnique({
-      where: { id: listing.proposedBuyerId },
-      select: { fullName: true, alias: true },
-    });
-    await notifyAdminsResaleTransfer({
-      projectName: listing.project.name,
-      sellerName: listing.seller.alias ?? listing.seller.fullName,
-      buyerName: buyer ? buyer.alias ?? buyer.fullName : "—",
-      shareCount: listing.participation.shareCount,
-      intentNote: listing.intentNote,
-    });
-  });
-
   return { ok: true };
 }
 
@@ -135,13 +110,15 @@ export async function cancelResaleAction(
   resaleListingId: string
 ): Promise<ResaleResult> {
   const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.reventa.errors;
 
   try {
     await cancelResale({ resaleListingId, actorId: user.id });
-  } catch (e) {
-    if (e instanceof DomainError) return { ok: false, error: e.message };
-    console.error("cancelResaleAction", e);
-    return { ok: false, error: "Error interno del servidor." };
+  } catch (err) {
+    if (err instanceof DomainError) return { ok: false, error: err.message };
+    console.error("cancelResaleAction", err);
+    return { ok: false, error: e.serverError };
   }
 
   revalidatePath(`/proyectos/${projectSlug}/reventa`);

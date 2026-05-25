@@ -44,6 +44,16 @@ export const dict: Dict = {
     sectionAdministration: "Administration",
     sectionPortfolio: "Portfolio",
     sectionAccount: "Account",
+    documents: "Documents",
+    history: "History",
+    resales: "Resales",
+  },
+
+  roles: {
+    ADMIN: "Admin",
+    PROJECT_OWNER: "Project owner",
+    CO_ADMIN: "Co-admin",
+    PARTNER: "Member",
   },
 
   home: {
@@ -499,6 +509,7 @@ export const dict: Dict = {
     noParticipations:
       "You don't have any assigned participations yet. They will appear here once AJDUT assigns them to you.",
     chatShort: "Chat →",
+    resaleShort: "Resale →",
     seeProject: "View project →",
     colShares: "Shares",
     colValue: "Value",
@@ -560,6 +571,232 @@ export const dict: Dict = {
     },
   },
 
+  documentos: {
+    metaTitle: "Documents · AJDUT",
+    eyebrow: "— Your projects",
+    title: "Documents",
+    intro:
+      "All documents shared by founders across the projects where you hold shares, in one place.",
+    filterAll: "All",
+    emptyNoProjects: "You don't hold shares in any project yet.",
+    emptyNoDocs: "No documents shared yet.",
+    openLink: "Open ↗",
+  },
+
+  historial: {
+    metaTitle: "History · AJDUT",
+    eyebrow: "— Your activity",
+    title: "History",
+    intro:
+      "All your activity on AJDUT — dividends received, share purchases and sales.",
+    cats: {
+      all: "All",
+      dividendo: "Dividends",
+      compra: "Purchases",
+      venta: "Sales",
+    },
+    periods: {
+      all: "All time",
+      "30": "Last 30 days",
+      "90": "Last 90 days",
+      "365": "Last 12 months",
+    },
+    types: {
+      dividendo: "Dividend received",
+      compra: "Share purchase",
+      venta: "Share sale",
+    },
+    empty: "No activity recorded yet.",
+    emptyFiltered: "No activity matches that filter.",
+    sharesSuffix: "sh.",
+  },
+
+  reventa: {
+    metaTitle: "Share resale · AJDUT",
+    title: "Share resale",
+    intro:
+      "List your shares so other community members can acquire them. When you reach an agreement with a buyer, designate them here, and the AJDUT team approves the transfer so it's recorded.",
+    sectionYours: "01 · Your shares",
+    sectionBoard: "02 · Resale board",
+    emptyNoShares: "You don't hold any shares in this project to resell.",
+    emptyNoBoard: "No shares for resale in this project right now.",
+    boardSharesSuffix: "shares",
+    boardContactLabel: "Contact:",
+    seller: {
+      sharesSuffix: "shares",
+      transferPending: "Transfer submitted · waiting for the AJDUT team to approve",
+      inBoard: "On the resale board",
+      listBtn: "List for resale →",
+      designateBtn: "Designate buyer →",
+      removeBtn: "Remove from board",
+      removingBtn: "Removing…",
+      listingNoteLabel: "Detail for the buyer",
+      listingContactLabel: "How buyers reach you (email, WhatsApp, phone)",
+      listingConfirmBtn: "Confirm listing",
+      listingConfirmingBtn: "Listing…",
+      cancelBtn: "Cancel",
+      designatingBuyerLabel: "Buyer",
+      designatingNoMembers:
+        "There are no other members in this project to designate as buyer yet.",
+      designatingNoteWithShares:
+        "On confirmation, the transfer of {shares} shares is sent to the AJDUT team for approval.",
+      designatingSubmitBtn: "Designate and send for approval",
+      designatingSubmittingBtn: "Sending…",
+      errNoteTooShort: "The note must be at least 10 characters.",
+      errContactRequired: "Please provide a contact method.",
+      errBuyerRequired: "Please pick a buyer.",
+    },
+    errors: {
+      projectNotFound: "Project not found.",
+      participationNotFound: "Participation not found.",
+      notOwner: "Only the holder can list this participation.",
+      contactInvalid: "Please provide a valid contact method.",
+      buyerRequired: "Please pick a buyer.",
+      serverError: "Internal server error.",
+    },
+  },
+
+  heirs: {
+    eyebrow: "— Succession",
+    title: "Heirs and life verification",
+    savedTick: "✓ Saved",
+    section1Title: "Heirs",
+    section1Desc:
+      "Define who will inherit your participation. Only the AJDUT team sees this data, and these people will be contacted if you stop responding to our verifications for more than 3 consecutive cycles.",
+    allocatedSuffix: "% allocated",
+    remainingSuffix: "% remaining",
+    addHeirBtn: "+ Add heir",
+    overAllocatedWarning:
+      "The sum exceeds 100%. Adjust the values before saving new changes.",
+    emptyHeirs: "You haven't added any heirs yet.",
+    editBtn: "Edit",
+    removeBtn: "Remove",
+    removeConfirm: "Remove this heir?",
+    form: {
+      fullName: "Full name",
+      email: "Email (optional)",
+      relationship: "Relationship (optional)",
+      sharePercent: "Allocated percent",
+      cancelBtn: "Cancel",
+      addBtn: "Add",
+      saveBtn: "Save",
+      savingBtn: "Saving…",
+    },
+    validation: {
+      title: "Life verification",
+      desc: "Every so often we'll send you an email to confirm you're still active. If you don't respond 3 times in a row, our team will contact your heirs.",
+      frequencyLabel: "Frequency",
+      freqOptions: {
+        "0": "Off",
+        "1": "Monthly",
+        "3": "Every 3 months",
+        "6": "Every 6 months",
+        "12": "Yearly",
+      },
+      lastConfirmedPrefix: "Last confirmation:",
+      emptyLastConfirmed: "You haven't confirmed any verification yet.",
+      pendingSincePrefix: "Pending response since",
+      missedSingle: "verification without response",
+      missedPlural: "verifications without response",
+      escalated: "Our team has been alerted and will contact your heirs.",
+      almostEscalated: "One more and your heirs will be contacted.",
+      keepResponding:
+        "If you keep not responding, your heirs will be contacted after the third consecutive miss.",
+      ago: {
+        hours: "a few hours ago",
+        daySingle: "1 day ago",
+        daysPlural: "{n} days ago",
+        monthSingle: "1 month ago",
+        monthsPlural: "{n} months ago",
+        yearSingle: "1 year ago",
+        yearsPlural: "{n} years ago",
+      },
+    },
+  },
+
+  documentsPanel: {
+    addBtn: "+ Add document",
+    empty: "You haven't shared any documents with your members yet.",
+    deleteConfirm: "Remove \"{title}\"? This cannot be undone.",
+    deleteBtn: "Remove",
+    deletingBtn: "Removing…",
+    openLink: "Open ↗",
+    modal: {
+      title: "Add document",
+      closeBtn: "Close ×",
+      description:
+        "Upload the file. All information — period, figures, progress — lives inside the document. Your members will see it in their \"Documents\" section.",
+      fileLabel: "Document file",
+      fileHelper: "PDF, Excel or Word · 25 MB max.",
+      errNoFile: "Upload a file first.",
+      publishBtn: "Publish document →",
+      publishingBtn: "Publishing…",
+      cancelBtn: "Cancel",
+    },
+    errors: {
+      projectNotFound: "Project not found.",
+      noPermission: "You don't have permission for this project.",
+      nameRequired: "The document needs a name.",
+      fileRequired: "Upload the document file.",
+      uploadError: "Error uploading the document.",
+      notFound: "Document not found.",
+      deleteError: "Error removing the document.",
+    },
+  },
+
+  adminReventas: {
+    metaTitle: "Resales · AJDUT",
+    eyebrow: "— Admin",
+    title: "Share resales",
+    emptyInbox: "No transfers pending approval.",
+    pendingCountSingle: "{n} transfer pending approval.",
+    pendingCountPlural: "{n} transfers pending approval.",
+    filters: {
+      pending: "Pending",
+      completed: "Approved",
+      all: "All",
+    },
+    status: {
+      LISTED: "On the board",
+      IN_CONVERSATION: "In conversation",
+      AWAITING_VALIDATION: "Pending approval",
+      COMPLETED: "Approved",
+      CANCELLED: "Cancelled",
+    },
+    emptyByFilter: {
+      completed: "You haven't approved any transfers yet.",
+      all: "No resales recorded yet.",
+      pending: "All clear — no pending transfers.",
+    },
+    row: {
+      seller: "Seller",
+      buyer: "Buyer",
+      shares: "Shares",
+      noBuyer: "Not designated",
+      contact: "Seller contact:",
+    },
+    actions: {
+      approveBtn: "Approve transfer →",
+      rejectBtn: "Reject",
+      cancelBtn: "Cancel",
+      doneApproved: "Transfer approved. The shares now belong to the buyer.",
+      doneRejected: "Transfer rejected. The resale returns to the project board.",
+      confirmTitle: "Confirm approval",
+      confirmDescription:
+        "You're about to transfer {shares} shares from {seller} to {buyer}. The ownership change is recorded in the ownership chain. It's irreversible.",
+      confirmApprove: "Yes, approve the transfer",
+      approving: "Approving…",
+      rejectNoteLabel: "Rejection note (10+ characters)",
+      confirmReject: "Confirm rejection",
+      rejecting: "Rejecting…",
+      errNoteTooShort: "The note must be at least 10 characters.",
+    },
+    errors: {
+      noteTooShort: "The note must be at least 10 characters.",
+      serverError: "Internal server error.",
+    },
+  },
+
   legal: {
     metaTitle: "Legal notice · AJDUT",
     eyebrow: "— Legal notice",
@@ -608,6 +845,88 @@ export const dict: Dict = {
         "Ajdut is not a fund, not a bank, not an exchange. It is a platform of business communities where value —tangible or intangible— is real, properly backed and has responsible people behind it.",
       body2:
         "We take the intuitive language of digital assets —participations, portfolio, returns— and ground it in purposeful businesses, people who share a vision, and a community that knows itself, communicates and is accountable. We do not promise magic. We promise order, transparency and community.",
+    },
+    purpose: {
+      sectionTitle: "Purpose",
+      mision: {
+        label: "Mission",
+        body: "Coordinate business communities where trust, communication and shared value are the foundation of every participation.",
+      },
+      vision: {
+        label: "Vision",
+        body: "To be Latin America's reference platform for business communities where value is built collectively —and inherited.",
+      },
+      propuesta: {
+        label: "Proposition",
+        body: "We turn projects into communities. Every participation is an active membership: access to information, reports and direct communication with the people running the business.",
+      },
+    },
+    whatWeAre: {
+      sectionTitle: "What we are",
+      yesLabel: "What we ARE",
+      noLabel: "What we are NOT",
+      yes: [
+        "A business community with approved access.",
+        "A space for communication and information.",
+        "A validator of shareholding participations.",
+        "A bridge between projects and community.",
+      ],
+      no: [
+        "An investment fund.",
+        "A payment processor or custodian of funds.",
+        "Legal or financial advice.",
+        "An exchange or trading platform.",
+      ],
+    },
+    coreValues: {
+      sectionTitle: "Values",
+      intro:
+        "Not aspirational. They are entry criteria. Whoever enters the platform —as a project owner or as a member— accepts them as part of the agreement.",
+      cards: {
+        transparency: {
+          title: "Transparency",
+          body: "Periodic reports for every member. Direct communication, no intermediaries. Leadership that is accountable.",
+        },
+        unity: {
+          title: "Unity",
+          body: "For people who share a vision, not just capital. Every member is an active part, not a spectator.",
+        },
+        value: {
+          title: "Value",
+          body: "Tangible or intangible: asset, brand, system, community, traction. Real, verifiable and with responsible people behind it.",
+        },
+        legacy: {
+          title: "Legacy",
+          body: "What's built here is for what comes after. A well-managed participation can be inherited.",
+        },
+      },
+    },
+    glossary: {
+      sectionTitle: "Participation language",
+      intro:
+        "Real assets, accessible language. Familiar to those who know fintech, without excluding those who have never operated in those markets.",
+      terms: {
+        participation: {
+          name: "Participation",
+          body: "A fraction of the project. It's not a stock or a token: it's your place in the community and in the value of the business.",
+        },
+        community: {
+          name: "Community",
+          body: "The group of people that make up an Ajdut project. Transparent, communicated and accountable.",
+        },
+        back: {
+          name: "Backing",
+          body: "What gives substance to a participation: real estate, a brand, a system, a community, an action plan, or business traction. There is always something real behind.",
+        },
+        cultivate: {
+          name: "Cultivate value",
+          body: "Being part of a project: not just waiting for returns, but participating, getting informed and growing.",
+        },
+        legacy: {
+          name: "Legacy",
+          body: "What a well-managed participation can represent for those who come after. We build value that transcends.",
+        },
+      },
     },
   },
 };

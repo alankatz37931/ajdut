@@ -1,19 +1,22 @@
+import type { Metadata } from "next";
 import { requireSession } from "@/lib/auth/session";
 import { getUserPreferences } from "@/lib/preferences";
-import { getDict } from "@/lib/i18n";
+import { getDict, getLocale } from "@/lib/i18n";
 import { getRoleLabel } from "@/components/app/nav-items";
 import { listHeirs, getValidationState } from "@/lib/services/heirs";
 import { SettingsForm } from "./SettingsForm";
 import { HeirsAndValidation } from "./HeirsAndValidation";
 
-export const metadata = {
-  title: "Configuración · AJDUT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.settings.metaTitle };
+}
 
 export default async function SettingsPage() {
   const user = await requireSession();
   const prefs = await getUserPreferences();
   const dict = await getDict();
+  const locale = await getLocale();
   const roleLabel = await getRoleLabel(user.role);
 
   const [heirs, validation] = await Promise.all([
@@ -59,6 +62,8 @@ export default async function SettingsPage() {
               }
             : null,
         }}
+        dict={dict.heirs}
+        locale={locale}
       />
     </div>
   );

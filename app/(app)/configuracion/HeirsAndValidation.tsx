@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import {
   addHeirAction,
   removeHeirAction,
@@ -27,18 +28,14 @@ export type ValidationStateView = {
   pendingCheck: { id: string; sentAt: string } | null;
 };
 
+type HeirsDict = Dict["heirs"];
+
 type Props = {
   initialHeirs: HeirRow[];
   initialValidation: ValidationStateView;
+  dict: HeirsDict;
+  locale: string;
 };
-
-const FREQUENCY_OPTIONS: Array<{ value: number; label: string }> = [
-  { value: 0, label: "Desactivada" },
-  { value: 1, label: "Mensual" },
-  { value: 3, label: "Cada 3 meses" },
-  { value: 6, label: "Cada 6 meses" },
-  { value: 12, label: "Anual" },
-];
 
 const emptyHeir: HeirRow = {
   id: "",
@@ -48,7 +45,12 @@ const emptyHeir: HeirRow = {
   sharePercent: 0,
 };
 
-export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
+export function HeirsAndValidation({
+  initialHeirs,
+  initialValidation,
+  dict,
+  locale,
+}: Props) {
   const [heirs, setHeirs] = useState<HeirRow[]>(initialHeirs);
   const [validation, setValidation] = useState<ValidationStateView>(
     initialValidation
@@ -59,9 +61,17 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  const FREQUENCY_OPTIONS: Array<{ value: number; label: string }> = [
+    { value: 0, label: dict.validation.freqOptions["0"] },
+    { value: 1, label: dict.validation.freqOptions["1"] },
+    { value: 3, label: dict.validation.freqOptions["3"] },
+    { value: 6, label: dict.validation.freqOptions["6"] },
+    { value: 12, label: dict.validation.freqOptions["12"] },
+  ];
+
   const totalShare = heirs.reduce((s, h) => s + h.sharePercent, 0);
-  const totalLabel = `${totalShare.toFixed(2)}% asignado`;
-  const remainingLabel = `${Math.max(0, 100 - totalShare).toFixed(2)}% restante`;
+  const totalLabel = `${totalShare.toFixed(2)}${dict.allocatedSuffix}`;
+  const remainingLabel = `${Math.max(0, 100 - totalShare).toFixed(2)}${dict.remainingSuffix}`;
   const overAllocated = totalShare > 100;
 
   function flashOk() {
@@ -84,14 +94,15 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
     startTransition(async () => {
       const r = await addHeirAction(fd);
       applyResult(r, () => {
-        // Optimista: agregamos al estado lo que mandó el form.
         const newRow: HeirRow = {
           id: `tmp-${Date.now()}`,
           fullName: String(fd.get("fullName") ?? ""),
-          email: (String(fd.get("email") ?? "") || null),
-          relationship: (String(fd.get("relationship") ?? "") || null),
+          email: String(fd.get("email") ?? "") || null,
+          relationship: String(fd.get("relationship") ?? "") || null,
           sharePercent:
-            Number.parseFloat(String(fd.get("sharePercent") ?? "0").replace(",", ".")) || 0,
+            Number.parseFloat(
+              String(fd.get("sharePercent") ?? "0").replace(",", ".")
+            ) || 0,
         };
         setHeirs((prev) => [...prev, newRow]);
         setShowNew(false);
@@ -151,18 +162,14 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
   }
 
   const lastConfirmedLabel = validation.lastConfirmedAt
-    ? `Última confirmación: ${fmtDate(validation.lastConfirmedAt)} — ${humanAgo(
-        validation.lastConfirmedAt
-      )}`
-    : "Todavía no confirmaste ninguna verificación.";
+    ? `${dict.validation.lastConfirmedPrefix} ${fmtDate(validation.lastConfirmedAt, locale)} — ${humanAgo(validation.lastConfirmedAt, dict.validation.ago)}`
+    : dict.validation.emptyLastConfirmed;
 
   return (
     <div className="mt-12 space-y-12">
       <header>
-        <p className="eyebrow">— Sucesión</p>
-        <h2 className="font-sans mt-3 text-h2 text-navy">
-          Herederos y validación de vida
-        </h2>
+        <p className="eyebrow">{dict.eyebrow}</p>
+        <h2 className="font-sans mt-3 text-h2 text-navy">{dict.title}</h2>
       </header>
 
       {error && (
@@ -172,18 +179,14 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
       )}
       {saved && !error && (
         <p className="eyebrow !text-gold" aria-live="polite">
-          ✓ Guardado
+          {dict.savedTick}
         </p>
       )}
 
-      {/* ─── Subsección: Herederos ─────────────────────────────────── */}
+      {/* ─── Herederos ─────────────────────────────────────────────── */}
       <section>
-        <h3 className="font-sans text-xl text-navy">Herederos</h3>
-        <p className="mt-2 text-navy/70 leading-relaxed">
-          Definí quiénes recibirán tu participación. Solo el equipo de AJDUT verá
-          estos datos, y se contactará a estas personas si dejás de responder
-          nuestras verificaciones por más de 3 ciclos consecutivos.
-        </p>
+        <h3 className="font-sans text-xl text-navy">{dict.section1Title}</h3>
+        <p className="mt-2 text-navy/70 leading-relaxed">{dict.section1Desc}</p>
 
         <div className="mt-5 hairline p-4 bg-paper flex flex-wrap items-center justify-between gap-3">
           <p className="eyebrow">
@@ -206,15 +209,14 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
               className="eyebrow hover:!text-gold"
               disabled={isPending}
             >
-              + Agregar heredero
+              {dict.addHeirBtn}
             </button>
           )}
         </div>
 
         {overAllocated && (
           <p className="mt-3 eyebrow !text-navy hairline p-3 bg-paper">
-            La suma de % supera 100. Ajustá los valores antes de guardar nuevos
-            cambios.
+            {dict.overAllocatedWarning}
           </p>
         )}
 
@@ -226,6 +228,7 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
               onSubmit={onAdd}
               onCancel={() => setShowNew(false)}
               isPending={isPending}
+              dict={dict.form}
             />
           </div>
         )}
@@ -239,6 +242,7 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
                   onSubmit={(fd) => onUpdate(h.id, fd)}
                   onCancel={() => setEditingId(null)}
                   isPending={isPending}
+                  dict={dict.form}
                 />
               ) : (
                 <div className="grid grid-cols-12 items-center gap-3">
@@ -263,11 +267,11 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
                       className="eyebrow hover:!text-gold"
                       disabled={isPending}
                     >
-                      Editar
+                      {dict.editBtn}
                     </button>
                     <InlineConfirm
-                      label="Eliminar"
-                      question="¿Eliminar este heredero?"
+                      label={dict.removeBtn}
+                      question={dict.removeConfirm}
                       onConfirm={() => onRemove(h.id)}
                       disabled={isPending}
                     />
@@ -279,25 +283,19 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
         </ul>
 
         {heirs.length === 0 && !showNew && (
-          <p className="mt-4 text-navy/60">
-            Todavía no cargaste herederos.
-          </p>
+          <p className="mt-4 text-navy/60">{dict.emptyHeirs}</p>
         )}
       </section>
 
-      {/* ─── Subsección: Validación de vida ────────────────────────── */}
+      {/* ─── Validación de vida ────────────────────────────────────── */}
       <section>
-        <h3 className="font-sans text-xl text-navy">Validación de vida</h3>
-        <p className="mt-2 text-navy/70 leading-relaxed">
-          Cada cierto tiempo te enviaremos un email para confirmar que seguís
-          activo. Si no respondés 3 veces seguidas, nuestro equipo se pondrá en
-          contacto con tus herederos.
-        </p>
+        <h3 className="font-sans text-xl text-navy">{dict.validation.title}</h3>
+        <p className="mt-2 text-navy/70 leading-relaxed">{dict.validation.desc}</p>
 
         <div className="mt-5 max-w-xs">
           <FloatingSelect
             id="frequencyMonths"
-            label="Frecuencia"
+            label={dict.validation.frequencyLabel}
             value={String(validation.frequencyMonths)}
             onChange={(v) => onFrequencyChange(Number.parseInt(v, 10))}
             options={FREQUENCY_OPTIONS.map((o) => ({
@@ -314,8 +312,8 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
           </p>
           {validation.pendingCheck && (
             <p className="eyebrow !text-gold">
-              Pendiente de responder desde el{" "}
-              {fmtDate(validation.pendingCheck.sentAt)}
+              {dict.validation.pendingSincePrefix}{" "}
+              {fmtDate(validation.pendingCheck.sentAt, locale)}
             </p>
           )}
         </div>
@@ -325,16 +323,16 @@ export function HeirsAndValidation({ initialHeirs, initialValidation }: Props) {
             <p className="eyebrow !text-gold">
               ⚠ {validation.missedCount}{" "}
               {validation.missedCount === 1
-                ? "verificación sin responder"
-                : "verificaciones sin responder"}
+                ? dict.validation.missedSingle
+                : dict.validation.missedPlural}
               .
             </p>
             <p className="mt-2 text-sm text-navy/75">
               {validation.heirsEscalated
-                ? "Nuestro equipo ya fue alertado y va a contactar a tus herederos."
+                ? dict.validation.escalated
                 : validation.missedCount >= 2
-                ? "Una más y se contactará a tus herederos."
-                : "Si seguís sin responder, se contactará a tus herederos después de la tercera consecutiva."}
+                ? dict.validation.almostEscalated
+                : dict.validation.keepResponding}
             </p>
           </div>
         )}
@@ -349,12 +347,14 @@ function HeirForm({
   onSubmit,
   onCancel,
   isPending,
+  dict,
 }: {
   heir: HeirRow;
   isNew?: boolean;
   onSubmit: (fd: FormData) => void;
   onCancel: () => void;
   isPending: boolean;
+  dict: HeirsDict["form"];
 }) {
   const [fullName, setFullName] = useState(heir.fullName);
   const [email, setEmail] = useState(heir.email ?? "");
@@ -368,7 +368,7 @@ function HeirForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
         <FloatingInput
           id="fullName"
-          label="Nombre completo"
+          label={dict.fullName}
           value={fullName}
           onChange={setFullName}
           autoFocus={isNew}
@@ -378,20 +378,20 @@ function HeirForm({
           id="email"
           type="email"
           inputMode="email"
-          label="Email (opcional)"
+          label={dict.email}
           value={email}
           onChange={setEmail}
         />
         <FloatingInput
           id="relationship"
-          label="Relación (opcional)"
+          label={dict.relationship}
           value={relationship}
           onChange={setRelationship}
         />
         <FloatingInput
           id="sharePercent"
           inputMode="decimal"
-          label="Porcentaje asignado"
+          label={dict.sharePercent}
           value={sharePercent}
           onChange={setSharePercent}
           required
@@ -404,39 +404,49 @@ function HeirForm({
           disabled={isPending}
           className="eyebrow hover:!text-gold"
         >
-          Cancelar
+          {dict.cancelBtn}
         </button>
         <button
           type="submit"
           disabled={isPending}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Guardando…" : isNew ? "Agregar" : "Guardar"}
+          {isPending ? dict.savingBtn : isNew ? dict.addBtn : dict.saveBtn}
         </button>
       </div>
     </form>
   );
 }
 
-function fmtDate(iso: string): string {
+function fmtDate(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return new Intl.DateTimeFormat("es-MX", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   }).format(d);
 }
 
-function humanAgo(iso: string): string {
+function humanAgo(iso: string, ago: HeirsDict["validation"]["ago"]): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const diffMs = Date.now() - d.getTime();
   const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-  if (days < 1) return "hace unas horas";
-  if (days < 30) return `hace ${days} día${days === 1 ? "" : "s"}`;
+  if (days < 1) return ago.hours;
+  if (days < 30) {
+    return days === 1
+      ? ago.daySingle
+      : ago.daysPlural.replace("{n}", String(days));
+  }
   const months = Math.floor(days / 30);
-  if (months < 12) return `hace ${months} mes${months === 1 ? "" : "es"}`;
+  if (months < 12) {
+    return months === 1
+      ? ago.monthSingle
+      : ago.monthsPlural.replace("{n}", String(months));
+  }
   const years = Math.floor(months / 12);
-  return `hace ${years} año${years === 1 ? "" : "s"}`;
+  return years === 1
+    ? ago.yearSingle
+    : ago.yearsPlural.replace("{n}", String(years));
 }

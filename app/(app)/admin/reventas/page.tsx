@@ -1,25 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { Route } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { ResaleTransferActions } from "./ResaleTransferActions";
 
-export const metadata = { title: "Reventas · AJDUT" };
-
-const FILTER_LABEL: Record<string, string> = {
-  pending: "Pendientes",
-  completed: "Aprobadas",
-  all: "Todas",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  LISTED: "En el tablón",
-  IN_CONVERSATION: "En conversación",
-  AWAITING_VALIDATION: "Esperando aprobación",
-  COMPLETED: "Aprobada",
-  CANCELLED: "Cancelada",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.adminReventas.metaTitle };
+}
 
 function fmtInt(n: number): string {
   return n.toLocaleString("es-MX");
@@ -31,6 +22,9 @@ export default async function AdminResalesPage({
   searchParams: Promise<{ filter?: string }>;
 }) {
   await requireRole(["ADMIN"]);
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.adminReventas;
   const sp = await searchParams;
   const filter = sp.filter ?? "pending";
 
@@ -88,16 +82,15 @@ export default async function AdminResalesPage({
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Admin</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
-          Reventas de acciones
-        </h1>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
         <p className="mt-3 font-mono text-sm text-navy/75">
           {pendingCount === 0
-            ? "Sin traspasos pendientes de aprobar."
-            : `${pendingCount} traspaso${
-                pendingCount === 1 ? "" : "s"
-              } esperando aprobación.`}
+            ? t.emptyInbox
+            : (pendingCount === 1
+                ? t.pendingCountSingle
+                : t.pendingCountPlural
+              ).replace("{n}", String(pendingCount))}
         </p>
       </header>
 
@@ -113,7 +106,7 @@ export default async function AdminResalesPage({
                 active ? "!text-navy" : "!text-navy/40 hover:!text-navy"
               }`}
             >
-              {FILTER_LABEL[key]}{" "}
+              {t.filters[key]}{" "}
               <span className={active ? "text-gold" : "text-navy/30"}>
                 ({count})
               </span>
@@ -126,10 +119,10 @@ export default async function AdminResalesPage({
         {listings.length === 0 ? (
           <p className="text-navy/60">
             {filter === "completed"
-              ? "Todavía no aprobaste ningún traspaso."
+              ? t.emptyByFilter.completed
               : filter === "all"
-              ? "Todavía no hay reventas registradas."
-              : "Bandeja al día — no hay traspasos pendientes."}
+              ? t.emptyByFilter.all
+              : t.emptyByFilter.pending}
           </p>
         ) : (
           <ul className="space-y-6">
@@ -140,13 +133,15 @@ export default async function AdminResalesPage({
                 : null;
               const buyerName = buyer
                 ? buyer.alias ?? buyer.fullName
-                : "Sin designar";
+                : t.row.noBuyer;
               const isPending = l.status === "AWAITING_VALIDATION";
               const railClass = isPending
                 ? "bg-gold"
                 : l.status === "COMPLETED"
                 ? "bg-navy/60"
                 : "bg-navy/20";
+              const statusLabel =
+                (t.status as Record<string, string>)[l.status] ?? l.status;
 
               return (
                 <li key={l.id} className="flex gap-4">
@@ -163,31 +158,31 @@ export default async function AdminResalesPage({
                         {l.project.name}
                       </Link>
                       <p className="eyebrow shrink-0 !text-navy/40">
-                        {formatDate(l.createdAt)}
+                        {formatDate(l.createdAt, locale)}
                       </p>
                     </div>
 
                     <p className="mt-1 eyebrow">
                       <span className={isPending ? "!text-gold" : "!text-navy/50"}>
-                        {STATUS_LABEL[l.status] ?? l.status}
+                        {statusLabel}
                       </span>
                     </p>
 
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-sm">
                       <div>
-                        <p className="eyebrow !text-navy/40">Vendedor</p>
+                        <p className="eyebrow !text-navy/40">{t.row.seller}</p>
                         <p className="mt-1 text-navy">{sellerName}</p>
                         <p className="text-navy/60 text-xs">{l.seller.email}</p>
                       </div>
                       <div>
-                        <p className="eyebrow !text-navy/40">Comprador</p>
+                        <p className="eyebrow !text-navy/40">{t.row.buyer}</p>
                         <p className="mt-1 text-navy">{buyerName}</p>
                         {buyer && (
                           <p className="text-navy/60 text-xs">{buyer.email}</p>
                         )}
                       </div>
                       <div>
-                        <p className="eyebrow !text-navy/40">Acciones</p>
+                        <p className="eyebrow !text-navy/40">{t.row.shares}</p>
                         <p className="mt-1 text-navy">
                           {fmtInt(l.participation.shareCount)}
                         </p>
@@ -203,7 +198,7 @@ export default async function AdminResalesPage({
                       </p>
                     )}
                     <p className="mt-2 eyebrow !text-navy/40">
-                      Contacto del vendedor:{" "}
+                      {t.row.contact}{" "}
                       <span className="!text-navy/70">{l.contactChannel}</span>
                     </p>
 
@@ -214,6 +209,7 @@ export default async function AdminResalesPage({
                           sellerName={sellerName}
                           buyerName={buyerName}
                           shareCount={l.participation.shareCount}
+                          dict={t.actions}
                         />
                       </div>
                     )}

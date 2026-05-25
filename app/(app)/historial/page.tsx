@@ -1,9 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict, getLocale } from "@/lib/i18n";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
 
-export const metadata = { title: "Historial · AJDUT" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.historial.metaTitle };
+}
 
 type Cat = "all" | "dividendo" | "compra" | "venta";
 type Periodo = "all" | "30" | "90" | "365";
@@ -17,32 +22,15 @@ type Movement = {
   amount: { value: number; currency: string } | null;
 };
 
-const TYPE_LABEL: Record<Movement["type"], string> = {
-  dividendo: "Dividendo cobrado",
-  compra: "Compra de acciones",
-  venta: "Venta de acciones",
-};
-
-const CAT_OPTIONS: { value: Cat; label: string }[] = [
-  { value: "all", label: "Todos" },
-  { value: "dividendo", label: "Dividendos" },
-  { value: "compra", label: "Compras" },
-  { value: "venta", label: "Ventas" },
-];
-
-const PERIODO_OPTIONS: { value: Periodo; label: string }[] = [
-  { value: "all", label: "Todo el tiempo" },
-  { value: "30", label: "Últimos 30 días" },
-  { value: "90", label: "Últimos 90 días" },
-  { value: "365", label: "Últimos 12 meses" },
-];
-
 export default async function HistorialPage({
   searchParams,
 }: {
   searchParams: Promise<{ cat?: string; periodo?: string }>;
 }) {
   const user = await requireSession();
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.historial;
   const sp = await searchParams;
 
   const catParam = sp.cat ?? "";
@@ -55,6 +43,19 @@ export default async function HistorialPage({
     periodoParam === "30" || periodoParam === "90" || periodoParam === "365"
       ? periodoParam
       : "all";
+
+  const CAT_OPTIONS: { value: Cat; label: string }[] = [
+    { value: "all", label: t.cats.all },
+    { value: "dividendo", label: t.cats.dividendo },
+    { value: "compra", label: t.cats.compra },
+    { value: "venta", label: t.cats.venta },
+  ];
+  const PERIODO_OPTIONS: { value: Periodo; label: string }[] = [
+    { value: "all", label: t.periods.all },
+    { value: "30", label: t.periods["30"] },
+    { value: "90", label: t.periods["90"] },
+    { value: "365", label: t.periods["365"] },
+  ];
 
   const [dividends, participations, sales] = await Promise.all([
     prisma.dividendPayment.findMany({
@@ -154,12 +155,9 @@ export default async function HistorialPage({
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Tu actividad</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Historial</h1>
-        <p className="mt-3 text-navy/75 leading-relaxed max-w-2xl">
-          Todos tus movimientos en AJDUT — dividendos cobrados, compras y
-          ventas de acciones.
-        </p>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
+        <p className="mt-3 text-navy/75 leading-relaxed">{t.intro}</p>
       </header>
 
       <div className="mt-2 space-y-3">
@@ -190,9 +188,7 @@ export default async function HistorialPage({
       <div className="mt-8">
         {filtered.length === 0 ? (
           <p className="text-navy/60">
-            {movements.length === 0
-              ? "Todavía no tenés movimientos registrados."
-              : "No hay movimientos para ese filtro."}
+            {movements.length === 0 ? t.empty : t.emptyFiltered}
           </p>
         ) : (
           <ul className="hairline-t">
@@ -207,18 +203,23 @@ export default async function HistorialPage({
                       m.type === "dividendo" ? "!text-gold" : "!text-navy/50"
                     }`}
                   >
-                    {TYPE_LABEL[m.type]}
+                    {t.types[m.type]}
                   </p>
                   <p className="mt-1 text-navy break-words">{m.projectName}</p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-mono text-navy">
                     {m.amount
-                      ? formatCurrency(m.amount.value, m.amount.currency)
-                      : `${formatNumber(m.shares ?? 0)} acc.`}
+                      ? formatCurrency(
+                          m.amount.value,
+                          m.amount.currency,
+                          2,
+                          locale
+                        )
+                      : `${formatNumber(m.shares ?? 0, undefined, locale)} ${t.sharesSuffix}`}
                   </p>
                   <p className="mt-1 eyebrow !text-navy/40">
-                    {formatDate(m.date)}
+                    {formatDate(m.date, locale)}
                   </p>
                 </div>
               </li>
