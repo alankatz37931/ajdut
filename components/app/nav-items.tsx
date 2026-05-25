@@ -55,12 +55,15 @@ export async function navItemsFor(
   const SEC_ACCOUNT = n.sectionAccount;
 
   // Cualquier rol que tenga acciones asignadas ve "Mis participaciones",
-  // igual que un socio. PARTNER ya lo tiene fijo en su menú.
-  const ownsShares =
-    !!userId &&
-    (await prisma.participation.count({
+  // igual que un socio. PARTNER ya lo tiene fijo en su menú. Lo computamos
+  // dentro de cada Promise.all por rol para no serializar y agotar el pool.
+  async function fetchOwnsShares(): Promise<boolean> {
+    if (!userId) return false;
+    const n = await prisma.participation.count({
       where: { currentOwnerId: userId },
-    })) > 0;
+    });
+    return n > 0;
+  }
 
   const misParticipacionesItem: NavItem = {
     label: n.myParticipations,
@@ -113,19 +116,25 @@ export async function navItemsFor(
   };
 
   if (role === "ADMIN") {
-    const [pendingApps, pendingAssignmentsCount, escalatedHeirs, pendingResales] =
-      await Promise.all([
-        prisma.application.count({
-          where: { status: { in: ["PENDING", "UNDER_REVIEW"] } },
-        }),
-        prisma.pendingAssignment.count({ where: { status: "PENDING" } }),
-        prisma.user.count({
-          where: { heirsEscalated: true, isActive: true, deletedAt: null },
-        }),
-        prisma.resaleListing.count({
-          where: { status: "AWAITING_VALIDATION" },
-        }),
-      ]);
+    const [
+      pendingApps,
+      pendingAssignmentsCount,
+      escalatedHeirs,
+      pendingResales,
+      ownsShares,
+    ] = await Promise.all([
+      prisma.application.count({
+        where: { status: { in: ["PENDING", "UNDER_REVIEW"] } },
+      }),
+      prisma.pendingAssignment.count({ where: { status: "PENDING" } }),
+      prisma.user.count({
+        where: { heirsEscalated: true, isActive: true, deletedAt: null },
+      }),
+      prisma.resaleListing.count({
+        where: { status: "AWAITING_VALIDATION" },
+      }),
+      fetchOwnsShares(),
+    ]);
     return [
       // PORTAFOLIO
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
@@ -174,6 +183,7 @@ export async function navItemsFor(
     ];
   }
   if (role === "PROJECT_OWNER") {
+    const ownsShares = await fetchOwnsShares();
     return [
       { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
       { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
@@ -199,6 +209,7 @@ export async function navItemsFor(
     ];
   }
   if (role === "CO_ADMIN") {
+    const ownsShares = await fetchOwnsShares();
     return [
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
       ...(ownsShares ? [misParticipacionesItem, documentosItem, historialItem] : []),
