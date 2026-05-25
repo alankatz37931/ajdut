@@ -43,6 +43,8 @@ export async function AppShell({
           openMenu: dict.nav.openMenu,
           closeMenu: dict.nav.closeMenu,
           logout: dict.nav.logout,
+          brandTagline: dict.brand.tagline,
+          brandAriaLabel: dict.brand.ariaLabel,
         }}
       />
       <div className="md:ml-64">

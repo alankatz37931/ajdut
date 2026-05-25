@@ -210,6 +210,11 @@ export const dict: Dict = {
     saved: "✓ Saved",
   },
 
+  brand: {
+    tagline: "A business community",
+    ariaLabel: "AJDUT — A business community — home",
+  },
+
   profile: {
     metaTitle: "Profile · AJDUT",
     eyebrow: "— Your account",

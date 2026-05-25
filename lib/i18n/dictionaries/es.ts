@@ -214,6 +214,11 @@ export const dict = {
     saved: "✓ Guardado",
   },
 
+  brand: {
+    tagline: "Comunidades de negocio",
+    ariaLabel: "AJDUT — Comunidades de negocio — inicio",
+  },
+
   profile: {
     metaTitle: "Perfil · AJDUT",
     eyebrow: "— Tu cuenta",

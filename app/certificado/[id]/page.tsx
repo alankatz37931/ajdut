@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { BrandMark } from "@/components/landing/BrandMark";
 import { BackLink } from "@/components/app/BackLink";
 import { formatDate, formatNumber } from "@/lib/utils/format";
@@ -12,6 +13,7 @@ type Params = { params: Promise<{ id: string }> };
 
 export default async function CertificatePage({ params }: Params) {
   const user = await requireSession();
+  const dict = await getDict();
   const { id } = await params;
 
   const cert = await prisma.certificate.findUnique({
@@ -48,7 +50,7 @@ export default async function CertificatePage({ params }: Params) {
 
       <article className="mt-6 hairline bg-paper-light p-8 sm:p-12">
         <header className="flex items-start justify-between gap-6 hairline-b pb-6">
-          <BrandMark />
+          <BrandMark tagline={dict.brand.tagline} ariaLabel={dict.brand.ariaLabel} />
           <p className="eyebrow !text-navy/40 text-right">
             Certificado de
             <br />

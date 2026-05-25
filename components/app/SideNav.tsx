@@ -27,6 +27,8 @@ export type SideNavLabels = {
   openMenu: string;
   closeMenu: string;
   logout: string;
+  brandTagline: string;
+  brandAriaLabel: string;
 };
 
 type Props = {
@@ -161,7 +163,7 @@ export function SideNav({ user, navItems, labels }: Props) {
           >
             ☰
           </button>
-          <BrandMark />
+          <BrandMark tagline={labels.brandTagline} ariaLabel={labels.brandAriaLabel} />
           <span className="eyebrow truncate max-w-[100px] leading-none">{compactName}</span>
         </div>
       </div>
@@ -186,7 +188,11 @@ export function SideNav({ user, navItems, labels }: Props) {
             tenga claro desde qué rol está navegando. */}
         <div className="px-6 py-5 border-b border-paper/10">
           <div className="flex items-baseline justify-between gap-3">
-            <BrandMark variant="paper" />
+            <BrandMark
+              variant="paper"
+              tagline={labels.brandTagline}
+              ariaLabel={labels.brandAriaLabel}
+            />
             <button
               type="button"
               onClick={close}
