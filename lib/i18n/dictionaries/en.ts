@@ -215,6 +215,18 @@ export const dict: Dict = {
     ariaLabel: "AJDUT — A business community — home",
   },
 
+  fileUpload: {
+    uploadingFmt: "Uploading… {n}%",
+    imageLoaded: "Image loaded",
+    viewFile: "view file ↗",
+    remove: "remove ×",
+    dropHere: "Drop the file here",
+    dragOrPick: "Drag a file or click to choose",
+    tooBigFmt: "File exceeds {n}MB.",
+    uploadError: "Couldn't upload the file. Try again.",
+    previewAlt: "Preview",
+  },
+
   metaTitles: {
     adminAsignaciones: "Pending assignments · AJDUT",
     adminAuditoria: "Audit log · AJDUT",
@@ -426,6 +438,15 @@ export const dict: Dict = {
     pwChangedFlag: "✓ Password updated",
     showPasswordAria: "Show password",
     hidePasswordAria: "Hide password",
+    empty: "—",
+    passwordRow: "Password",
+    passwordMask: "•••••••",
+    uploadingFmt: "Uploading {n}%",
+    removePhoto: "remove",
+    uploadAriaNew: "Upload profile photo",
+    uploadAriaChange: "Change profile photo",
+    uploadTooBig: "File exceeds {n}MB.",
+    uploadFailed: "Upload failed. Try again.",
     errors: {
       nameTooShort: "Name must be at least 2 characters.",
       aliasTooShort:

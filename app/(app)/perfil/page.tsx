@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getDict, getLocale } from "@/lib/i18n";
 import { getRoleLabel } from "@/components/app/nav-items";
-import { ProfileForm } from "./ProfileForm";
+import { ProfileSurface } from "./ProfileSurface";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
@@ -45,7 +45,7 @@ export default async function ProfilePage() {
         </p>
       </header>
 
-      <ProfileForm
+      <ProfileSurface
         initialName={user.fullName}
         initialAlias={user.alias ?? ""}
         initialAvatarUrl={user.avatarUrl ?? ""}

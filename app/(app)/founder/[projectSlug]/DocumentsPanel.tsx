@@ -14,6 +14,7 @@ type Doc = {
 };
 
 type PanelDict = Dict["documentsPanel"];
+type UploadDict = Dict["fileUpload"];
 
 const DOC_ACCEPT =
   ".pdf,.xlsx,.xls,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword";
@@ -22,11 +23,13 @@ export function DocumentsPanel({
   projectSlug,
   documents,
   dict,
+  uploadDict,
   locale,
 }: {
   projectSlug: string;
   documents: Doc[];
   dict: PanelDict;
+  uploadDict: UploadDict;
   locale: string;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -60,6 +63,7 @@ export function DocumentsPanel({
           projectSlug={projectSlug}
           onClose={() => setModalOpen(false)}
           dict={dict}
+          uploadDict={uploadDict}
         />
       )}
     </div>
@@ -129,10 +133,12 @@ function UploadModal({
   projectSlug,
   onClose,
   dict,
+  uploadDict,
 }: {
   projectSlug: string;
   onClose: () => void;
   dict: PanelDict;
+  uploadDict: UploadDict;
 }) {
   const m = dict.modal;
   const [fileUrl, setFileUrl] = useState("");
@@ -192,6 +198,7 @@ function UploadModal({
             label={m.fileLabel}
             helperText={m.fileHelper}
             subtle
+            dict={uploadDict}
           />
         </div>
 

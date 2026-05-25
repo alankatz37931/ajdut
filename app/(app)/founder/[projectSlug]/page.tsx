@@ -430,6 +430,7 @@ export default async function FounderDashboardPage({ params }: Params) {
               createdAt: d.createdAt.toISOString(),
             }))}
             dict={dict.documentsPanel}
+            uploadDict={dict.fileUpload}
             locale={locale}
           />
         </FounderSection>

@@ -219,6 +219,18 @@ export const dict = {
     ariaLabel: "AJDUT — Comunidades de negocio — inicio",
   },
 
+  fileUpload: {
+    uploadingFmt: "Subiendo… {n}%",
+    imageLoaded: "Imagen cargada",
+    viewFile: "ver archivo ↗",
+    remove: "quitar ×",
+    dropHere: "Soltá el archivo acá",
+    dragOrPick: "Arrastrá un archivo o hacé clic para elegir",
+    tooBigFmt: "El archivo supera {n}MB.",
+    uploadError: "No se pudo subir el archivo. Probá de nuevo.",
+    previewAlt: "Vista previa",
+  },
+
   metaTitles: {
     adminAsignaciones: "Asignaciones pendientes · AJDUT",
     adminAuditoria: "Auditoría · AJDUT",
@@ -432,6 +444,15 @@ export const dict = {
     pwChangedFlag: "✓ Contraseña cambiada",
     showPasswordAria: "Mostrar contraseña",
     hidePasswordAria: "Ocultar contraseña",
+    empty: "—",
+    passwordRow: "Contraseña",
+    passwordMask: "•••••••",
+    uploadingFmt: "Subiendo {n}%",
+    removePhoto: "quitar",
+    uploadAriaNew: "Subir foto de perfil",
+    uploadAriaChange: "Cambiar foto de perfil",
+    uploadTooBig: "El archivo supera {n}MB.",
+    uploadFailed: "Error al subir. Probá de nuevo.",
     errors: {
       nameTooShort: "El nombre debe tener al menos 2 caracteres.",
       aliasTooShort:

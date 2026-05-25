@@ -19,7 +19,23 @@
 import { useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 import { GoldUnderline } from "@/components/ui/Floating";
+import type { Dict } from "@/lib/i18n";
 import type { UploadScope } from "@/lib/storage/scopes";
+
+type FileUploadDict = Dict["fileUpload"];
+
+/** Strings por defecto (español) para no romper callers que aún no pasan dict. */
+const DEFAULT_DICT: FileUploadDict = {
+  uploadingFmt: "Subiendo… {n}%",
+  imageLoaded: "Imagen cargada",
+  viewFile: "ver archivo ↗",
+  remove: "quitar ×",
+  dropHere: "Soltá el archivo acá",
+  dragOrPick: "Arrastrá un archivo o hacé clic para elegir",
+  tooBigFmt: "El archivo supera {n}MB.",
+  uploadError: "No se pudo subir el archivo. Probá de nuevo.",
+  previewAlt: "Vista previa",
+};
 
 export type FileUploadProps = {
   scope: UploadScope;
@@ -39,6 +55,8 @@ export type FileUploadProps = {
   showImagePreview?: boolean;
   /** Dropzone más fino y elegante: borde 0.5px discontinuo + ícono en disco. */
   subtle?: boolean;
+  /** Strings i18n. Si no se pasa, cae al diccionario por defecto en español. */
+  dict?: FileUploadDict;
 };
 
 type UploadState =
@@ -73,6 +91,7 @@ export function FileUpload({
   helperText,
   showImagePreview = false,
   subtle = false,
+  dict = DEFAULT_DICT,
 }: FileUploadProps) {
   const [state, setState] = useState<UploadState>({ kind: "idle" });
   const [value, setValue] = useState(currentUrl ?? "");
@@ -96,7 +115,10 @@ export function FileUpload({
     // Validación cliente — el server valida igual.
     const maxBytes = maxSizeMb * 1024 * 1024;
     if (file.size > maxBytes) {
-      setState({ kind: "error", message: `El archivo supera ${maxSizeMb}MB.` });
+      setState({
+        kind: "error",
+        message: dict.tooBigFmt.replace("{n}", String(maxSizeMb)),
+      });
       return;
     }
 
@@ -116,9 +138,7 @@ export function FileUpload({
       onUploaded(blob.url, file.name);
     } catch (err) {
       const message =
-        err instanceof Error
-          ? err.message
-          : "No se pudo subir el archivo. Probá de nuevo.";
+        err instanceof Error ? err.message : dict.uploadError;
       setState({ kind: "error", message });
     }
   }
@@ -139,7 +159,9 @@ export function FileUpload({
       {state.kind === "uploading" ? (
         /* ─── Subiendo ──────────────────────────────────────────── */
         <div className="hairline bg-paper-light p-3.5 space-y-2">
-          <p className="eyebrow !text-navy/60">Subiendo… {state.progress}%</p>
+          <p className="eyebrow !text-navy/60">
+            {dict.uploadingFmt.replace("{n}", String(state.progress))}
+          </p>
           <div className="h-1 w-full bg-paper-dark relative overflow-hidden">
             <div
               className="absolute inset-y-0 left-0 bg-gold transition-[width] duration-150"
@@ -154,7 +176,7 @@ export function FileUpload({
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={value}
-              alt="Vista previa"
+              alt={dict.previewAlt}
               onError={() => setPreviewBroken(true)}
               className="w-12 h-12 object-cover hairline shrink-0 bg-paper"
             />
@@ -163,7 +185,7 @@ export function FileUpload({
           )}
           <div className="min-w-0 flex-1">
             <p className="font-sans text-sm text-navy truncate">
-              {fileName ?? (showImagePreview ? "Imagen cargada" : value)}
+              {fileName ?? (showImagePreview ? dict.imageLoaded : value)}
             </p>
             <a
               href={value}
@@ -171,7 +193,7 @@ export function FileUpload({
               rel="noopener noreferrer"
               className="eyebrow !text-navy/50 hover:!text-gold"
             >
-              ver archivo ↗
+              {dict.viewFile}
             </a>
           </div>
           <button
@@ -179,7 +201,7 @@ export function FileUpload({
             onClick={clear}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
           >
-            quitar ×
+            {dict.remove}
           </button>
         </div>
       ) : (
@@ -210,9 +232,7 @@ export function FileUpload({
           >
             <UploadGlyph active={dragActive} subtle={subtle} />
             <span className="font-sans text-sm text-navy/70 pointer-events-none">
-              {dragActive
-                ? "Soltá el archivo acá"
-                : "Arrastrá un archivo o hacé clic para elegir"}
+              {dragActive ? dict.dropHere : dict.dragOrPick}
             </span>
           </button>
           {helperText && (
