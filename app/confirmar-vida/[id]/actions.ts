@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getDict } from "@/lib/i18n";
 import { markValidationConfirmed } from "@/lib/services/heirs";
 
 export type ConfirmActionResult =
@@ -21,8 +22,9 @@ export async function confirmValidationAction(
     revalidatePath(`/confirmar-vida/${checkId}`);
     return { ok: true };
   }
+  const dict = await getDict();
   if (result.reason === "ALREADY_RESPONDED") {
-    return { ok: false, error: "Esta verificación ya fue respondida." };
+    return { ok: false, error: dict.confirmarVida.errAlreadyResponded };
   }
-  return { ok: false, error: "Link inválido." };
+  return { ok: false, error: dict.confirmarVida.errInvalidLink };
 }

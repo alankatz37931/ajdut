@@ -3,10 +3,20 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import type { Dict } from "@/lib/i18n";
 import { setPasswordAction } from "./actions";
 import { FloatingInput } from "@/components/ui/Floating";
 
-export function SetPasswordForm({ token }: { token: string; email: string }) {
+type SetDict = Dict["setPassword"];
+
+export function SetPasswordForm({
+  token,
+  dict,
+}: {
+  token: string;
+  email: string;
+  dict: SetDict;
+}) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -45,7 +55,7 @@ export function SetPasswordForm({ token }: { token: string; email: string }) {
       });
 
       if (loginResult?.error) {
-        setError("Contraseña establecida, pero falló el login automático. Probá entrar en /acceder.");
+        setError(dict.autoLoginFailed);
         return;
       }
 
@@ -62,7 +72,7 @@ export function SetPasswordForm({ token }: { token: string; email: string }) {
         <FloatingInput
           id="password"
           type="password"
-          label="Contraseña"
+          label={dict.passwordLabel}
           value={password}
           onChange={setPassword}
           autoComplete="new-password"
@@ -70,7 +80,7 @@ export function SetPasswordForm({ token }: { token: string; email: string }) {
           required
         />
         <p className={`mt-2 eyebrow ${checks.lengthOk ? "!text-navy" : ""}`}>
-          {checks.lengthOk ? "✓ " : ""}Mínimo 10 caracteres
+          {checks.lengthOk ? "✓ " : ""}{dict.minLength}
         </p>
       </div>
 
@@ -78,7 +88,7 @@ export function SetPasswordForm({ token }: { token: string; email: string }) {
         <FloatingInput
           id="passwordConfirm"
           type="password"
-          label="Repetir contraseña"
+          label={dict.repeatLabel}
           value={passwordConfirm}
           onChange={setPasswordConfirm}
           autoComplete="new-password"
@@ -86,7 +96,7 @@ export function SetPasswordForm({ token }: { token: string; email: string }) {
         />
         {passwordConfirm.length > 0 && (
           <p className={`mt-2 eyebrow ${checks.match ? "!text-navy" : ""}`}>
-            {checks.match ? "✓ coinciden" : "no coinciden"}
+            {checks.match ? dict.pwMatch : dict.pwNoMatch}
           </p>
         )}
       </div>
@@ -103,10 +113,10 @@ export function SetPasswordForm({ token }: { token: string; email: string }) {
         className="btn-primary w-full disabled:opacity-50"
       >
         {stage === "submitting"
-          ? "Estableciendo…"
+          ? dict.submittingBtn
           : stage === "logging-in"
-          ? "Entrando…"
-          : "Establecer y entrar"}
+          ? dict.loggingInBtn
+          : dict.submitBtn}
       </button>
     </form>
   );

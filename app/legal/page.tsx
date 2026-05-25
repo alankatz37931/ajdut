@@ -3,9 +3,10 @@ import { getDict } from "@/lib/i18n";
 import { BackLink } from "@/components/app/BackLink";
 import { getOptionalSession } from "@/lib/auth/session";
 
-export const metadata: Metadata = {
-  title: "Aviso legal · AJDUT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.legal.metaTitle };
+}
 
 export default async function LegalPage() {
   const dict = await getDict();

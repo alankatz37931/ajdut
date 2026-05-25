@@ -1,13 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 import { BackLink } from "@/components/app/BackLink";
 import { getDict } from "@/lib/i18n";
 
-// Metadata estática: se compone en build / en español por defecto. El
-// metaTitle traducible vive en el dict para el JSX visible.
-export const metadata = {
-  title: "Acceder · AJDUT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.login.metaTitle };
+}
 
 export default async function AccederPage() {
   const dict = await getDict();

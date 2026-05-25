@@ -219,6 +219,174 @@ export const dict = {
     ariaLabel: "AJDUT — Comunidades de negocio — inicio",
   },
 
+  recoveryPassword: {
+    metaTitle: "Recuperar contraseña · AJDUT",
+    back: "Recuperar contraseña",
+    title: "¿Olvidaste tu contraseña?",
+    intro: "Te enviamos un link a tu email.",
+    emailLabel: "Email de tu cuenta",
+    submitBtn: "Enviar link de recuperación",
+    submittingBtn: "Enviando…",
+    errEmailInvalid: "Ingresá un email válido.",
+    submittedEyebrow: "Solicitud recibida",
+    submittedTitle: "Revisá tu email.",
+    submittedBody:
+      "Si {email} está registrado en AJDUT, te enviamos un link de un solo uso para restablecer tu contraseña. El link es válido por 1 hora.",
+    submittedDisclaimer:
+      "Por seguridad no confirmamos si una dirección existe o no.",
+  },
+
+  setPassword: {
+    metaTitle: "Establecer contraseña · AJDUT",
+    back: "Acceso aprobado",
+    helloName: "Hola, {name}.",
+    intro:
+      "Tu aplicación fue aprobada. Establecé tu contraseña para entrar a AJDUT.",
+    accountLabel: "Cuenta:",
+    passwordLabel: "Contraseña",
+    repeatLabel: "Repetir contraseña",
+    minLength: "Mínimo 10 caracteres",
+    pwMatch: "✓ coinciden",
+    pwNoMatch: "no coinciden",
+    submittingBtn: "Estableciendo…",
+    loggingInBtn: "Entrando…",
+    submitBtn: "Establecer y entrar",
+    autoLoginFailed:
+      "Contraseña establecida, pero falló el login automático. Probá entrar en /acceder.",
+    errPasswordMismatch: "Las contraseñas no coinciden.",
+    invalid: {
+      back: "Link inválido",
+      notFoundTitle: "Link no válido",
+      notFoundBody:
+        "El link que usaste no corresponde a ningún registro. Si te aprobaron recientemente, revisá tu email por el link más reciente.",
+      usedTitle: "Link ya utilizado",
+      usedBody:
+        "Este link de un solo uso ya fue consumido. Si necesitás restablecer tu contraseña, contactá al equipo de AJDUT.",
+      expiredTitle: "Link expirado",
+      expiredBody:
+        "Pasaron más de 72 horas desde la aprobación. Pedile al admin de AJDUT que te envíe un link nuevo.",
+    },
+  },
+
+  confirmarVida: {
+    metaTitle: "Verificación de vida · AJDUT",
+    back: "Verificación de vida",
+    greeting: "Hola, {name}. ¿Seguís todo bien?",
+    fallbackName: "amigo",
+    body:
+      "Esta es una verificación periódica de AJDUT. Solo necesitamos que toques el botón para confirmar que seguís activo. Si no respondés en los próximos días, contactaremos a los herederos que cargaste en tu cuenta.",
+    confirmBtn: "Sí, sigo activo →",
+    confirmingBtn: "Confirmando…",
+    doneEyebrow: "✓ Confirmado",
+    doneTitle: "Gracias.",
+    doneBody:
+      "Quedó registrado que seguís activo. La próxima verificación llegará según la frecuencia que configuraste.",
+    invalidLinkTitle: "Link no válido",
+    invalidLinkBody:
+      "El link que usaste no corresponde a ninguna verificación.",
+    alreadyTitle: "Verificación ya respondida",
+    alreadyConfirmedBody:
+      "Esta verificación ya fue confirmada. No hace falta que hagas nada más.",
+    alreadyExpiredBody:
+      "Esta verificación venció. Si recibís otra en los próximos días, respondé esa.",
+    errAlreadyResponded: "Esta verificación ya fue respondida.",
+    errInvalidLink: "Link inválido.",
+  },
+
+  certificate: {
+    metaTitle: "Certificado de participación · AJDUT",
+    back: "Certificado",
+    headerLine1: "Certificado de",
+    headerLine2: "participación",
+    revoked: "✕ Certificado revocado",
+    statement:
+      "AJDUT certifica que {holder} es miembro de la comunidad del proyecto {project} con la participación detallada a continuación.",
+    fields: {
+      member: "Miembro",
+      project: "Proyecto",
+      shares: "Acciones",
+      totalIssued: "Total emitido",
+      assigned: "Asignada",
+      validity: "Validez",
+      noExpiry: "Sin vencimiento",
+      serial: "Serial",
+    },
+    validationEyebrow: "Validación de plataforma",
+    validationBody:
+      "AJDUT valida y registra esta participación accionaria y el titular actual. Todo cambio de propietario requiere autorización del control de administración de AJDUT.",
+    disclaimer:
+      "Este certificado es un documento de membresía comunitaria, no un contrato. AJDUT no procesa pagos, no custodia fondos y no ofrece asesoría legal ni financiera. El acuerdo y la firma corresponden al miembro y al responsable del proyecto, por fuera de la plataforma.",
+    printBtn: "Imprimir / Guardar PDF",
+    holderFallback: "—",
+  },
+
+  chat: {
+    metaTitle: "Chat · AJDUT",
+    back: "Chat del proyecto",
+    subtitle:
+      "Conversación interna entre el project owner, los co-admins y los socios. Los miembros se ven con alias cuando lo configuraron. Sin tiempo real: actualizá la página para ver mensajes nuevos.",
+    sectionConversation: "Conversación",
+    sectionNewMessage: "Nuevo mensaje",
+    sectionNewPoll: "Nueva encuesta",
+    feed: {
+      empty:
+        "Todavía no hay nada por acá. Empezá la conversación con un mensaje o creá la primera encuesta.",
+      you: "(vos)",
+      deleted: "Mensaje ocultado por moderación",
+      confirmDelete:
+        "¿Ocultar este mensaje? Quedará visible solo para el equipo del proyecto.",
+      deleteBtn: "Borrar",
+      deletingBtn: "Ocultando…",
+    },
+    composer: {
+      bodyLabel: "Mensaje",
+      linkLabel: "Adjuntar link (opcional)",
+      errEmpty: "Escribí un mensaje o adjuntá un link.",
+      errBadUrl: "El link debe empezar con http:// o https://",
+      sendBtn: "Enviar",
+      sendingBtn: "Enviando…",
+    },
+    poll: {
+      createBtn: "Crear encuesta +",
+      newTitle: "Nueva encuesta",
+      cancelBtn: "Cancelar",
+      questionLabel: "Pregunta",
+      optionsLabel: "Opciones",
+      optionPlaceholder: "Opción {n}",
+      removeOptAria: "Quitar opción {n}",
+      addOptBtn: "Agregar opción +",
+      multipleLabel: "Permitir múltiples respuestas",
+      closesLabel: "Cierra el",
+      closesOptional: "(opcional)",
+      errEmptyQuestion: "La pregunta no puede estar vacía.",
+      errTooFewOpts: "Agregá al menos 2 opciones con contenido.",
+      submitBtn: "Crear encuesta",
+      submittingBtn: "Creando…",
+      pollLabel: "Encuesta",
+      you: "(vos)",
+      votesSingle: "{n} voto",
+      votesPlural: "{n} votos",
+      multipleSuffix: " · selección múltiple",
+      singleSuffix: " · respuesta única",
+      expiredOn: "Venció {date}",
+      closesOn: "Cierra {date}",
+      closedOn: "Cerrada {date}",
+      confirmBtn: "Confirmar",
+      keepVoteBtn: "Mantener voto",
+      voteBtn: "Votar esta opción",
+      closePollConfirm:
+        "¿Cerrar esta encuesta? No se podrán emitir más votos.",
+      closePollBtn: "Cerrar encuesta",
+      closingBtn: "Cerrando…",
+    },
+    errors: {
+      projectNotFound: "Proyecto no encontrado.",
+      forbidden: "No tenés acceso al chat de este proyecto.",
+      internal: "Error interno.",
+      invalidCloseDate: "Fecha de cierre inválida.",
+    },
+  },
+
   profile: {
     metaTitle: "Perfil · AJDUT",
     eyebrow: "— Tu cuenta",

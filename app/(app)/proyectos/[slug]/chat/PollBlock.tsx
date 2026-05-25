@@ -1,17 +1,21 @@
 "use client";
 
 import { useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import type { FeedItem } from "@/lib/services/chat";
 import { votePollAction, closePollAction } from "./actions";
 import { formatDate } from "@/lib/utils/format";
 
 type Poll = Extract<FeedItem, { kind: "poll" }>;
+type PollDict = Dict["chat"]["poll"];
 
 type Props = {
   poll: Poll;
   viewerId: string;
   viewerIsPrivileged: boolean;
   projectSlug: string;
+  dict: PollDict;
+  locale: string;
 };
 
 function timeOf(d: Date | string): string {
@@ -19,7 +23,14 @@ function timeOf(d: Date | string): string {
   return date.toISOString().slice(11, 16);
 }
 
-export function PollBlock({ poll, viewerId, viewerIsPrivileged, projectSlug }: Props) {
+export function PollBlock({
+  poll,
+  viewerId,
+  viewerIsPrivileged,
+  projectSlug,
+  dict,
+  locale,
+}: Props) {
   const [isPending, startTransition] = useTransition();
 
   const isExpired = poll.closesAt
@@ -41,22 +52,27 @@ export function PollBlock({ poll, viewerId, viewerIsPrivileged, projectSlug }: P
   }
 
   function close() {
-    if (!confirm("¿Cerrar esta encuesta? No se podrán emitir más votos.")) return;
+    if (!confirm(dict.closePollConfirm)) return;
     startTransition(async () => {
       const r = await closePollAction(projectSlug, poll.id);
       if (!r.ok) alert(r.error);
     });
   }
 
+  const votesText = (poll.totalVotes === 1
+    ? dict.votesSingle
+    : dict.votesPlural
+  ).replace("{n}", String(poll.totalVotes));
+
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3">
         <p className="eyebrow">
-          Encuesta · {displayName}
-          {isOwnAuthor && <span className="ml-2 !text-navy/40">(vos)</span>}
+          {dict.pollLabel} · {displayName}
+          {isOwnAuthor && <span className="ml-2 !text-navy/40">{dict.you}</span>}
         </p>
         <p className="eyebrow font-mono shrink-0 !text-navy/40">
-          {formatDate(poll.createdAt)} · {timeOf(poll.createdAt)}
+          {formatDate(poll.createdAt, locale)} · {timeOf(poll.createdAt)}
         </p>
       </div>
 
@@ -66,19 +82,19 @@ export function PollBlock({ poll, viewerId, viewerIsPrivileged, projectSlug }: P
 
       <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <p className="eyebrow !text-navy/60">
-          {poll.totalVotes} voto{poll.totalVotes === 1 ? "" : "s"}
-          {poll.multiple ? " · selección múltiple" : " · respuesta única"}
+          {votesText}
+          {poll.multiple ? dict.multipleSuffix : dict.singleSuffix}
         </p>
         {poll.closesAt && !poll.closedAt && (
           <p className="eyebrow !text-navy/40">
             {isExpired
-              ? `Venció ${formatDate(poll.closesAt)}`
-              : `Cierra ${formatDate(poll.closesAt)}`}
+              ? dict.expiredOn.replace("{date}", formatDate(poll.closesAt, locale))
+              : dict.closesOn.replace("{date}", formatDate(poll.closesAt, locale))}
           </p>
         )}
         {poll.closedAt && (
           <p className="eyebrow !text-navy/40">
-            Cerrada {formatDate(poll.closedAt)}
+            {dict.closedOn.replace("{date}", formatDate(poll.closedAt, locale))}
           </p>
         )}
       </div>
@@ -123,9 +139,9 @@ export function PollBlock({ poll, viewerId, viewerIsPrivileged, projectSlug }: P
                   >
                     {voted
                       ? poll.multiple
-                        ? "Confirmar"
-                        : "Mantener voto"
-                      : "Votar esta opción"}
+                        ? dict.confirmBtn
+                        : dict.keepVoteBtn
+                      : dict.voteBtn}
                   </button>
                 </div>
               )}
@@ -142,7 +158,7 @@ export function PollBlock({ poll, viewerId, viewerIsPrivileged, projectSlug }: P
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
           >
-            {isPending ? "Cerrando…" : "Cerrar encuesta"}
+            {isPending ? dict.closingBtn : dict.closePollBtn}
           </button>
         </div>
       )}

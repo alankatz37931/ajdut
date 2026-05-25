@@ -1,16 +1,23 @@
 "use client";
 
 import { useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import type { FeedItem } from "@/lib/services/chat";
 import { deleteMessageAction } from "./actions";
 import { PollBlock } from "./PollBlock";
 import { formatDate } from "@/lib/utils/format";
+
+type FeedDict = Dict["chat"]["feed"];
+type PollDict = Dict["chat"]["poll"];
 
 type Props = {
   items: FeedItem[];
   viewerId: string;
   viewerIsPrivileged: boolean;
   projectSlug: string;
+  feedDict: FeedDict;
+  pollDict: PollDict;
+  locale: string;
 };
 
 function timeOf(d: Date | string): string {
@@ -18,14 +25,17 @@ function timeOf(d: Date | string): string {
   return date.toISOString().slice(11, 16);
 }
 
-export function ChatFeed({ items, viewerId, viewerIsPrivileged, projectSlug }: Props) {
+export function ChatFeed({
+  items,
+  viewerId,
+  viewerIsPrivileged,
+  projectSlug,
+  feedDict,
+  pollDict,
+  locale,
+}: Props) {
   if (items.length === 0) {
-    return (
-      <p className="text-navy/60 italic">
-        Todavía no hay nada por acá. Empezá la conversación con un mensaje
-        o creá la primera encuesta.
-      </p>
-    );
+    return <p className="text-navy/60 italic">{feedDict.empty}</p>;
   }
 
   return (
@@ -39,6 +49,8 @@ export function ChatFeed({ items, viewerId, viewerIsPrivileged, projectSlug }: P
               viewerId={viewerId}
               viewerIsPrivileged={viewerIsPrivileged}
               projectSlug={projectSlug}
+              dict={feedDict}
+              locale={locale}
             />
           );
         }
@@ -49,6 +61,8 @@ export function ChatFeed({ items, viewerId, viewerIsPrivileged, projectSlug }: P
               viewerId={viewerId}
               viewerIsPrivileged={viewerIsPrivileged}
               projectSlug={projectSlug}
+              dict={pollDict}
+              locale={locale}
             />
           </li>
         );
@@ -62,11 +76,15 @@ function MessageRow({
   viewerId,
   viewerIsPrivileged,
   projectSlug,
+  dict,
+  locale,
 }: {
   item: Extract<FeedItem, { kind: "message" }>;
   viewerId: string;
   viewerIsPrivileged: boolean;
   projectSlug: string;
+  dict: FeedDict;
+  locale: string;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -82,7 +100,7 @@ function MessageRow({
   const canDelete = viewerIsPrivileged && !isDeleted;
 
   function onDelete() {
-    if (!confirm("¿Ocultar este mensaje? Quedará visible solo para el equipo del proyecto.")) {
+    if (!confirm(dict.confirmDelete)) {
       return;
     }
     startTransition(async () => {
@@ -99,18 +117,18 @@ function MessageRow({
         <p className="font-sans text-navy">
           {displayName}
           {isOwnAuthor && (
-            <span className="ml-2 eyebrow !text-navy/40">(vos)</span>
+            <span className="ml-2 eyebrow !text-navy/40">{dict.you}</span>
           )}
         </p>
         <p className="eyebrow font-mono shrink-0 !text-navy/40">
-          {formatDate(item.createdAt)} · {timeOf(item.createdAt)}
+          {formatDate(item.createdAt, locale)} · {timeOf(item.createdAt)}
         </p>
       </div>
 
       {isDeleted ? (
         <div className="mt-2">
           <p className="eyebrow !text-navy/40 italic">
-            Mensaje ocultado por moderación
+            {dict.deleted}
             {item.deletedBy && ` · ${item.deletedBy.fullName}`}
           </p>
           {viewerIsPrivileged && item.body && (
@@ -149,7 +167,7 @@ function MessageRow({
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
           >
-            {isPending ? "Ocultando…" : "Borrar"}
+            {isPending ? dict.deletingBtn : dict.deleteBtn}
           </button>
         </div>
       )}

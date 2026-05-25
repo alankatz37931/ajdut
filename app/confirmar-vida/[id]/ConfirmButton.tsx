@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { confirmValidationAction } from "./actions";
 
-export function ConfirmButton({ checkId }: { checkId: string }) {
+type CVDict = Dict["confirmarVida"];
+
+export function ConfirmButton({ checkId, dict }: { checkId: string; dict: CVDict }) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -23,12 +26,9 @@ export function ConfirmButton({ checkId }: { checkId: string }) {
   if (done) {
     return (
       <div className="mt-8 hairline p-6 bg-paper">
-        <p className="eyebrow !text-gold">✓ Confirmado</p>
-        <h2 className="font-sans mt-3 text-h2 text-navy">Gracias.</h2>
-        <p className="mt-3 text-navy/75 leading-relaxed">
-          Quedó registrado que seguís activo. La próxima verificación llegará
-          según la frecuencia que configuraste.
-        </p>
+        <p className="eyebrow !text-gold">{dict.doneEyebrow}</p>
+        <h2 className="font-sans mt-3 text-h2 text-navy">{dict.doneTitle}</h2>
+        <p className="mt-3 text-navy/75 leading-relaxed">{dict.doneBody}</p>
       </div>
     );
   }
@@ -46,7 +46,7 @@ export function ConfirmButton({ checkId }: { checkId: string }) {
         disabled={isPending}
         className="btn-primary disabled:opacity-50"
       >
-        {isPending ? "Confirmando…" : "Sí, sigo activo →"}
+        {isPending ? dict.confirmingBtn : dict.confirmBtn}
       </button>
     </div>
   );

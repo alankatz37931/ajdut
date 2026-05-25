@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { requestPasswordResetAction } from "./actions";
 import { FloatingInput } from "@/components/ui/Floating";
 
-export function RecoveryForm() {
+type RecoveryDict = Dict["recoveryPassword"];
+
+export function RecoveryForm({ dict }: { dict: RecoveryDict }) {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,16 +31,19 @@ export function RecoveryForm() {
   if (submitted) {
     return (
       <div>
-        <p className="eyebrow">Solicitud recibida</p>
-        <p className="mt-3 font-sans text-h2 text-navy">Revisá tu email.</p>
+        <p className="eyebrow">{dict.submittedEyebrow}</p>
+        <p className="mt-3 font-sans text-h2 text-navy">{dict.submittedTitle}</p>
         <p className="mt-3 text-navy/75 leading-relaxed">
-          Si <span className="font-mono text-navy">{email}</span> está registrado en AJDUT, te
-          enviamos un link de un solo uso para restablecer tu contraseña. El link es válido por 1
-          hora.
+          {dict.submittedBody.split("{email}").map((part, i, arr) => (
+            <span key={i}>
+              {part}
+              {i < arr.length - 1 && (
+                <span className="font-mono text-navy">{email}</span>
+              )}
+            </span>
+          ))}
         </p>
-        <p className="mt-3 eyebrow">
-          Por seguridad no confirmamos si una dirección existe o no.
-        </p>
+        <p className="mt-3 eyebrow">{dict.submittedDisclaimer}</p>
       </div>
     );
   }
@@ -47,7 +53,7 @@ export function RecoveryForm() {
       <FloatingInput
         id="email"
         type="email"
-        label="Email de tu cuenta"
+        label={dict.emailLabel}
         value={email}
         onChange={setEmail}
         autoComplete="email"
@@ -66,7 +72,7 @@ export function RecoveryForm() {
         disabled={isPending}
         className="btn-primary w-full disabled:opacity-50"
       >
-        {isPending ? "Enviando…" : "Enviar link de recuperación"}
+        {isPending ? dict.submittingBtn : dict.submitBtn}
       </button>
     </form>
   );

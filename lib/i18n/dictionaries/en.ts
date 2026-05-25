@@ -215,6 +215,172 @@ export const dict: Dict = {
     ariaLabel: "AJDUT — A business community — home",
   },
 
+  recoveryPassword: {
+    metaTitle: "Recover password · AJDUT",
+    back: "Recover password",
+    title: "Forgot your password?",
+    intro: "We'll send a link to your email.",
+    emailLabel: "Your account email",
+    submitBtn: "Send recovery link",
+    submittingBtn: "Sending…",
+    errEmailInvalid: "Enter a valid email.",
+    submittedEyebrow: "Request received",
+    submittedTitle: "Check your email.",
+    submittedBody:
+      "If {email} is registered with AJDUT, we sent a single-use link to reset your password. The link is valid for 1 hour.",
+    submittedDisclaimer:
+      "For security reasons we don't confirm whether an address exists.",
+  },
+
+  setPassword: {
+    metaTitle: "Set password · AJDUT",
+    back: "Access approved",
+    helloName: "Hi, {name}.",
+    intro:
+      "Your application was approved. Set your password to enter AJDUT.",
+    accountLabel: "Account:",
+    passwordLabel: "Password",
+    repeatLabel: "Repeat password",
+    minLength: "At least 10 characters",
+    pwMatch: "✓ match",
+    pwNoMatch: "don't match",
+    submittingBtn: "Setting…",
+    loggingInBtn: "Signing in…",
+    submitBtn: "Set and sign in",
+    autoLoginFailed:
+      "Password set, but automatic sign-in failed. Try signing in at /acceder.",
+    errPasswordMismatch: "Passwords don't match.",
+    invalid: {
+      back: "Invalid link",
+      notFoundTitle: "Invalid link",
+      notFoundBody:
+        "The link you used doesn't match any record. If you were approved recently, check your inbox for the most recent link.",
+      usedTitle: "Link already used",
+      usedBody:
+        "This single-use link has already been consumed. If you need to reset your password, contact the AJDUT team.",
+      expiredTitle: "Link expired",
+      expiredBody:
+        "More than 72 hours passed since the approval. Ask the AJDUT admin to send you a new link.",
+    },
+  },
+
+  confirmarVida: {
+    metaTitle: "Liveness check · AJDUT",
+    back: "Liveness check",
+    greeting: "Hi, {name}. Everything still okay?",
+    fallbackName: "friend",
+    body:
+      "This is a periodic AJDUT check-in. We just need you to tap the button to confirm you're still active. If you don't respond in the coming days, we'll contact the heirs you set up in your account.",
+    confirmBtn: "Yes, I'm still active →",
+    confirmingBtn: "Confirming…",
+    doneEyebrow: "✓ Confirmed",
+    doneTitle: "Thank you.",
+    doneBody:
+      "We registered that you're still active. The next check-in will arrive according to the frequency you configured.",
+    invalidLinkTitle: "Invalid link",
+    invalidLinkBody: "The link you used doesn't match any check-in.",
+    alreadyTitle: "Check-in already answered",
+    alreadyConfirmedBody:
+      "This check-in was already confirmed. You don't need to do anything else.",
+    alreadyExpiredBody:
+      "This check-in expired. If you receive another one in the coming days, respond to that one.",
+    errAlreadyResponded: "This check-in was already answered.",
+    errInvalidLink: "Invalid link.",
+  },
+
+  certificate: {
+    metaTitle: "Participation certificate · AJDUT",
+    back: "Certificate",
+    headerLine1: "Participation",
+    headerLine2: "certificate",
+    revoked: "✕ Certificate revoked",
+    statement:
+      "AJDUT certifies that {holder} is a member of the {project} project community with the participation detailed below.",
+    fields: {
+      member: "Member",
+      project: "Project",
+      shares: "Shares",
+      totalIssued: "Total issued",
+      assigned: "Assigned",
+      validity: "Validity",
+      noExpiry: "No expiry",
+      serial: "Serial",
+    },
+    validationEyebrow: "Platform validation",
+    validationBody:
+      "AJDUT validates and registers this share participation and its current holder. Any change of owner requires authorization from AJDUT's administration control.",
+    disclaimer:
+      "This certificate is a community membership document, not a contract. AJDUT does not process payments, hold funds, or provide legal or financial advice. The agreement and signature are between the member and the project lead, outside the platform.",
+    printBtn: "Print / Save PDF",
+    holderFallback: "—",
+  },
+
+  chat: {
+    metaTitle: "Chat · AJDUT",
+    back: "Project chat",
+    subtitle:
+      "Internal conversation between the project owner, co-admins and members. Members appear with their alias when set. No real-time updates — refresh the page to see new messages.",
+    sectionConversation: "Conversation",
+    sectionNewMessage: "New message",
+    sectionNewPoll: "New poll",
+    feed: {
+      empty:
+        "Nothing here yet. Start the conversation with a message or create the first poll.",
+      you: "(you)",
+      deleted: "Message hidden by moderation",
+      confirmDelete:
+        "Hide this message? It will only remain visible to the project team.",
+      deleteBtn: "Delete",
+      deletingBtn: "Hiding…",
+    },
+    composer: {
+      bodyLabel: "Message",
+      linkLabel: "Attach link (optional)",
+      errEmpty: "Write a message or attach a link.",
+      errBadUrl: "The link must start with http:// or https://",
+      sendBtn: "Send",
+      sendingBtn: "Sending…",
+    },
+    poll: {
+      createBtn: "Create poll +",
+      newTitle: "New poll",
+      cancelBtn: "Cancel",
+      questionLabel: "Question",
+      optionsLabel: "Options",
+      optionPlaceholder: "Option {n}",
+      removeOptAria: "Remove option {n}",
+      addOptBtn: "Add option +",
+      multipleLabel: "Allow multiple answers",
+      closesLabel: "Closes on",
+      closesOptional: "(optional)",
+      errEmptyQuestion: "Question cannot be empty.",
+      errTooFewOpts: "Add at least 2 options with content.",
+      submitBtn: "Create poll",
+      submittingBtn: "Creating…",
+      pollLabel: "Poll",
+      you: "(you)",
+      votesSingle: "{n} vote",
+      votesPlural: "{n} votes",
+      multipleSuffix: " · multiple choice",
+      singleSuffix: " · single answer",
+      expiredOn: "Expired {date}",
+      closesOn: "Closes {date}",
+      closedOn: "Closed {date}",
+      confirmBtn: "Confirm",
+      keepVoteBtn: "Keep vote",
+      voteBtn: "Vote this option",
+      closePollConfirm: "Close this poll? No more votes can be cast.",
+      closePollBtn: "Close poll",
+      closingBtn: "Closing…",
+    },
+    errors: {
+      projectNotFound: "Project not found.",
+      forbidden: "You don't have access to this project's chat.",
+      internal: "Internal error.",
+      invalidCloseDate: "Invalid close date.",
+    },
+  },
+
   profile: {
     metaTitle: "Profile · AJDUT",
     eyebrow: "— Your account",

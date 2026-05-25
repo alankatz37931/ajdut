@@ -1,18 +1,22 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { createPollAction } from "./actions";
 import { FloatingInput, GoldUnderline } from "@/components/ui/Floating";
 
+type PollDict = Dict["chat"]["poll"];
+
 type Props = {
   projectSlug: string;
+  dict: PollDict;
 };
 
 const MAX_OPTIONS = 20;
 const MAX_QUESTION = 500;
 const MAX_OPTION_LABEL = 200;
 
-export function PollComposer({ projectSlug }: Props) {
+export function PollComposer({ projectSlug, dict }: Props) {
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
@@ -45,12 +49,12 @@ export function PollComposer({ projectSlug }: Props) {
     setError(null);
     const q = question.trim();
     if (!q) {
-      setError("La pregunta no puede estar vacía.");
+      setError(dict.errEmptyQuestion);
       return;
     }
     const cleaned = options.map((o) => o.trim()).filter((o) => o.length > 0);
     if (cleaned.length < 2) {
-      setError("Agregá al menos 2 opciones con contenido.");
+      setError(dict.errTooFewOpts);
       return;
     }
     // Limpiamos el FormData y lo armamos a mano para evitar mandar opciones vacías.
@@ -81,7 +85,7 @@ export function PollComposer({ projectSlug }: Props) {
         onClick={() => setOpen(true)}
         className="btn-outline"
       >
-        Crear encuesta +
+        {dict.createBtn}
       </button>
     );
   }
@@ -89,7 +93,7 @@ export function PollComposer({ projectSlug }: Props) {
   return (
     <form action={submit} className="hairline p-4 bg-paper-light">
       <div className="flex items-center justify-between gap-3">
-        <p className="eyebrow">Nueva encuesta</p>
+        <p className="eyebrow">{dict.newTitle}</p>
         <button
           type="button"
           onClick={() => {
@@ -99,14 +103,14 @@ export function PollComposer({ projectSlug }: Props) {
           disabled={isPending}
           className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
         >
-          Cancelar
+          {dict.cancelBtn}
         </button>
       </div>
 
       <div className="mt-2">
         <FloatingInput
           id="poll-question"
-          label="Pregunta"
+          label={dict.questionLabel}
           value={question}
           onChange={setQuestion}
           maxLength={MAX_QUESTION}
@@ -114,7 +118,7 @@ export function PollComposer({ projectSlug }: Props) {
       </div>
 
       <div className="mt-5">
-        <p className="eyebrow mb-2">Opciones</p>
+        <p className="eyebrow mb-2">{dict.optionsLabel}</p>
         <ul className="space-y-3">
           {options.map((opt, idx) => (
             <li key={idx} className="flex items-center gap-3">
@@ -127,7 +131,10 @@ export function PollComposer({ projectSlug }: Props) {
                   maxLength={MAX_OPTION_LABEL}
                   value={opt}
                   onChange={(e) => setOpt(idx, e.target.value)}
-                  placeholder={`Opción ${idx + 1}`}
+                  placeholder={dict.optionPlaceholder.replace(
+                    "{n}",
+                    String(idx + 1)
+                  )}
                   className="peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-sm text-navy outline-none placeholder:text-navy/30"
                 />
                 <GoldUnderline />
@@ -138,7 +145,10 @@ export function PollComposer({ projectSlug }: Props) {
                   onClick={() => removeOpt(idx)}
                   disabled={isPending}
                   className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
-                  aria-label={`Quitar opción ${idx + 1}`}
+                  aria-label={dict.removeOptAria.replace(
+                    "{n}",
+                    String(idx + 1)
+                  )}
                 >
                   ×
                 </button>
@@ -153,7 +163,7 @@ export function PollComposer({ projectSlug }: Props) {
             disabled={isPending}
             className="mt-3 eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Agregar opción +
+            {dict.addOptBtn}
           </button>
         )}
       </div>
@@ -166,12 +176,13 @@ export function PollComposer({ projectSlug }: Props) {
             onChange={(e) => setMultiple(e.target.checked)}
             className="accent-navy"
           />
-          Permitir múltiples respuestas
+          {dict.multipleLabel}
         </label>
 
         <div>
           <label htmlFor="poll-closes" className="eyebrow block mb-1.5">
-            Cierra el <span className="!text-navy/40">(opcional)</span>
+            {dict.closesLabel}{" "}
+            <span className="!text-navy/40">{dict.closesOptional}</span>
           </label>
           <input
             id="poll-closes"
@@ -195,7 +206,7 @@ export function PollComposer({ projectSlug }: Props) {
           disabled={isPending}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Creando…" : "Crear encuesta"}
+          {isPending ? dict.submittingBtn : dict.submitBtn}
         </button>
       </div>
     </form>

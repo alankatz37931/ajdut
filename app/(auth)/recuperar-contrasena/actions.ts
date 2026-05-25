@@ -2,6 +2,7 @@
 
 import { after } from "next/server";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { createPasswordSetupToken } from "@/lib/services/password-setup";
 import { notifyPasswordReset } from "@/lib/email/notifications";
 
@@ -21,7 +22,8 @@ export async function requestPasswordResetAction(
 ): Promise<RecoveryResult> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!email || !email.includes("@")) {
-    return { ok: false, error: "Ingresá un email válido." };
+    const dict = await getDict();
+    return { ok: false, error: dict.recoveryPassword.errEmailInvalid };
   }
 
   const user = await prisma.user.findUnique({

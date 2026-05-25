@@ -1,16 +1,20 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { postMessageAction } from "./actions";
 import { FloatingInput, FloatingTextarea } from "@/components/ui/Floating";
 
+type ComposerDict = Dict["chat"]["composer"];
+
 type Props = {
   projectSlug: string;
+  dict: ComposerDict;
 };
 
 const MAX_BODY = 4000;
 
-export function MessageComposer({ projectSlug }: Props) {
+export function MessageComposer({ projectSlug, dict }: Props) {
   const [body, setBody] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,11 +25,11 @@ export function MessageComposer({ projectSlug }: Props) {
     const trimmedBody = body.trim();
     const trimmedUrl = attachmentUrl.trim();
     if (!trimmedBody && !trimmedUrl) {
-      setError("Escribí un mensaje o adjuntá un link.");
+      setError(dict.errEmpty);
       return;
     }
     if (trimmedUrl && !/^https?:\/\//i.test(trimmedUrl)) {
-      setError("El link debe empezar con http:// o https://");
+      setError(dict.errBadUrl);
       return;
     }
     formData.set("body", trimmedBody);
@@ -45,7 +49,7 @@ export function MessageComposer({ projectSlug }: Props) {
     <form action={submit} className="hairline p-4 bg-paper-light">
       <FloatingTextarea
         id="chat-body"
-        label="Mensaje"
+        label={dict.bodyLabel}
         value={body}
         onChange={setBody}
         rows={3}
@@ -58,7 +62,7 @@ export function MessageComposer({ projectSlug }: Props) {
           id="chat-url"
           type="url"
           inputMode="url"
-          label="Adjuntar link (opcional)"
+          label={dict.linkLabel}
           value={attachmentUrl}
           onChange={setAttachmentUrl}
         />
@@ -76,7 +80,7 @@ export function MessageComposer({ projectSlug }: Props) {
           disabled={isPending}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Enviando…" : "Enviar"}
+          {isPending ? dict.sendingBtn : dict.sendBtn}
         </button>
       </div>
     </form>

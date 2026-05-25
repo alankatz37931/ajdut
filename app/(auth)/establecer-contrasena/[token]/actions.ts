@@ -1,5 +1,6 @@
 "use server";
 
+import { getDict } from "@/lib/i18n";
 import { setPasswordFromToken } from "@/lib/services/password-setup";
 
 export type SetPasswordResult =
@@ -14,7 +15,8 @@ export async function setPasswordAction(
   const passwordConfirm = String(formData.get("passwordConfirm") ?? "");
 
   if (password !== passwordConfirm) {
-    return { ok: false, error: "Las contraseñas no coinciden.", code: "PASSWORD_MISMATCH" };
+    const dict = await getDict();
+    return { ok: false, error: dict.setPassword.errPasswordMismatch, code: "PASSWORD_MISMATCH" };
   }
 
   const res = await setPasswordFromToken({

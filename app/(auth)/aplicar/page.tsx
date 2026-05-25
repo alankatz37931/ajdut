@@ -1,10 +1,12 @@
+import type { Metadata } from "next";
 import { ApplicationForm } from "./ApplicationForm";
 import { BackLink } from "@/components/app/BackLink";
 import { getDict, getLocale } from "@/lib/i18n";
 
-export const metadata = {
-  title: "Aplicar · AJDUT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.apply.metaTitle };
+}
 
 export default async function AplicarPage() {
   const dict = await getDict();

@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import {
   ensureChannelForProject,
   postMessage,
@@ -27,7 +28,8 @@ async function resolveProjectOrFail(slug: string) {
     select: { id: true, slug: true, name: true, ownerId: true },
   });
   if (!project) {
-    return { ok: false as const, error: "Proyecto no encontrado.", code: "NOT_FOUND" };
+    const dict = await getDict();
+    return { ok: false as const, error: dict.chat.errors.projectNotFound, code: "NOT_FOUND" };
   }
   return { ok: true as const, project };
 }
@@ -51,7 +53,8 @@ export async function postMessageAction(
   const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim();
 
   if (!(await isChannelMember(project.id, user.id))) {
-    return { ok: false, error: "No tenés acceso al chat de este proyecto.", code: "FORBIDDEN" };
+    const dict = await getDict();
+    return { ok: false, error: dict.chat.errors.forbidden, code: "FORBIDDEN" };
   }
 
   const channel = await ensureChannelForProject(project.id);
@@ -67,7 +70,8 @@ export async function postMessageAction(
   } catch (e) {
     if (e instanceof DomainError) return { ok: false, error: e.message, code: e.code };
     console.error(e);
-    return { ok: false, error: "Error interno." };
+    const dict = await getDict();
+    return { ok: false, error: dict.chat.errors.internal };
   }
 
   revalidateChat(projectSlug);
@@ -115,7 +119,8 @@ export async function deleteMessageAction(
   } catch (e) {
     if (e instanceof DomainError) return { ok: false, error: e.message, code: e.code };
     console.error(e);
-    return { ok: false, error: "Error interno." };
+    const dict = await getDict();
+    return { ok: false, error: dict.chat.errors.internal };
   }
 
   revalidateChat(projectSlug);
@@ -144,7 +149,8 @@ export async function createPollAction(
   if (closesAtRaw) {
     const parsed = new Date(closesAtRaw);
     if (Number.isNaN(parsed.getTime())) {
-      return { ok: false, error: "Fecha de cierre inválida.", code: "VALIDATION" };
+      const dict = await getDict();
+      return { ok: false, error: dict.chat.errors.invalidCloseDate, code: "VALIDATION" };
     }
     closesAt = parsed;
   }
@@ -163,7 +169,8 @@ export async function createPollAction(
   } catch (e) {
     if (e instanceof DomainError) return { ok: false, error: e.message, code: e.code };
     console.error(e);
-    return { ok: false, error: "Error interno." };
+    const dict = await getDict();
+    return { ok: false, error: dict.chat.errors.internal };
   }
 
   revalidateChat(projectSlug);
@@ -184,7 +191,8 @@ export async function votePollAction(
   } catch (e) {
     if (e instanceof DomainError) return { ok: false, error: e.message, code: e.code };
     console.error(e);
-    return { ok: false, error: "Error interno." };
+    const dict = await getDict();
+    return { ok: false, error: dict.chat.errors.internal };
   }
 
   revalidateChat(projectSlug);
@@ -204,7 +212,8 @@ export async function closePollAction(
   } catch (e) {
     if (e instanceof DomainError) return { ok: false, error: e.message, code: e.code };
     console.error(e);
-    return { ok: false, error: "Error interno." };
+    const dict = await getDict();
+    return { ok: false, error: dict.chat.errors.internal };
   }
 
   revalidateChat(projectSlug);
