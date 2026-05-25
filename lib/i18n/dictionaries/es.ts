@@ -975,6 +975,7 @@ export const dict = {
 
   documentsPanel: {
     addBtn: "+ Agregar documento",
+    newDocEyebrow: "Nuevo documento",
     empty: "Todavía no compartiste ningún documento con tus miembros.",
     deleteConfirm:
       "¿Eliminar \"{title}\"? Esta acción no se puede deshacer.",

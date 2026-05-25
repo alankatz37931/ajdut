@@ -420,7 +420,13 @@ export default async function FounderDashboardPage({ params }: Params) {
         </FounderSection>
 
         {/* ─── 06 · Documentos ──────────────────────────────────── */}
-        <FounderSection n="06" title="Documentos" id="documentos">
+        <FounderSection
+          n="06"
+          title="Documentos"
+          id="documentos"
+          editHref={`/founder/${project.slug}?addDoc=1#documentos` as Route}
+          editLabel={dict.documentsPanel.newDocEyebrow}
+        >
           <DocumentsPanel
             projectSlug={project.slug}
             documents={project.documents.map((d) => ({

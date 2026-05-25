@@ -43,16 +43,13 @@ export function DocumentsPanel({
 
   return (
     <div>
-      <div className="flex justify-end">
-        <button onClick={() => setModalOpen(true)} className="btn-outline">
-          {dict.addBtn}
-        </button>
-      </div>
-
+      {/* El CTA "Nuevo documento →" vive en el FounderSection (top-right),
+          mismo estilo que las otras secciones (Métricas, Avisos, etc.).
+          Llega como ?addDoc=1 y se atrapa en el useEffect de arriba. */}
       {documents.length === 0 ? (
-        <p className="mt-5 text-navy/60">{dict.empty}</p>
+        <p className="text-navy/60">{dict.empty}</p>
       ) : (
-        <ul className="mt-5 hairline-t">
+        <ul className="hairline-t">
           {documents.map((d) => (
             <DocRow
               key={d.id}

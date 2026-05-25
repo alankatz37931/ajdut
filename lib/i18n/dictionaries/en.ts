@@ -969,6 +969,7 @@ export const dict: Dict = {
 
   documentsPanel: {
     addBtn: "+ Add document",
+    newDocEyebrow: "New document",
     empty: "You haven't shared any documents with your members yet.",
     deleteConfirm: "Remove \"{title}\"? This cannot be undone.",
     deleteBtn: "Remove",
