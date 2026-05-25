@@ -1,22 +1,29 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import {
   approvePendingAssignmentAction,
   rejectPendingAssignmentAction,
 } from "./actions";
 import { FloatingTextarea } from "@/components/ui/Floating";
 
+type ActionsDict = Dict["adminAsignaciones"]["actions"];
+
 type Props = {
   pendingId: string;
   recipientLabel: string;
   shareCount: number;
+  dict: ActionsDict;
+  locale: string;
 };
 
 export function PendingAssignmentActions({
   pendingId,
   recipientLabel,
   shareCount,
+  dict,
+  locale,
 }: Props) {
   const [mode, setMode] = useState<
     "idle" | "confirming-approve" | "rejecting" | "done-approved" | "done-rejected"
@@ -40,7 +47,7 @@ export function PendingAssignmentActions({
   function reject() {
     setError(null);
     if (note.trim().length < 10) {
-      setError("La nota debe tener al menos 10 caracteres.");
+      setError(dict.noteTooShort);
       return;
     }
     startTransition(async () => {
@@ -56,14 +63,14 @@ export function PendingAssignmentActions({
   if (mode === "done-approved") {
     return (
       <p className="eyebrow !text-gold" role="status">
-        Asignación aprobada. Participación y certificado emitidos.
+        {dict.doneApproved}
       </p>
     );
   }
   if (mode === "done-rejected") {
     return (
       <p className="eyebrow !text-navy/60" role="status">
-        Asignación rechazada. El project owner recibió la nota.
+        {dict.doneRejected}
       </p>
     );
   }
@@ -71,15 +78,11 @@ export function PendingAssignmentActions({
   if (mode === "confirming-approve") {
     return (
       <div className="hairline p-4 bg-paper-light space-y-3">
-        <p className="eyebrow !text-gold">Confirmar aprobación</p>
+        <p className="eyebrow !text-gold">{dict.confirmTitle}</p>
         <p className="text-navy/85 text-sm leading-relaxed">
-          Vas a ejecutar la asignación de{" "}
-          <span className="font-mono text-navy">
-            {shareCount.toLocaleString("es-MX")}
-          </span>{" "}
-          acciones a <span className="text-navy">{recipientLabel}</span>. Se
-          decrementa el pool, se crea la Participation y se emite el
-          Certificate. Es <strong>irreversible</strong>.
+          {dict.confirmDescription
+            .replace("{shares}", shareCount.toLocaleString(locale))
+            .replace("{recipient}", recipientLabel)}
         </p>
         {error && (
           <p className="eyebrow !text-navy" role="alert">
@@ -92,14 +95,14 @@ export function PendingAssignmentActions({
             disabled={isPending}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Aprobando…" : "Sí, aprobar y ejecutar"}
+            {isPending ? dict.approvingBtn : dict.confirmApproveBtn}
           </button>
           <button
             onClick={() => setMode("idle")}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cancelar
+            {dict.cancelBtn}
           </button>
         </div>
       </div>
@@ -111,7 +114,7 @@ export function PendingAssignmentActions({
       <div className="hairline p-4 bg-paper-light space-y-3">
         <FloatingTextarea
           id="note"
-          label="Nota de rechazo (mínimo 10 caracteres)"
+          label={dict.noteLabel}
           value={note}
           onChange={setNote}
           rows={4}
@@ -129,7 +132,7 @@ export function PendingAssignmentActions({
             disabled={isPending}
             className="btn-primary disabled:opacity-50"
           >
-            {isPending ? "Rechazando…" : "Confirmar rechazo"}
+            {isPending ? dict.rejectingBtn : dict.confirmRejectBtn}
           </button>
           <button
             onClick={() => {
@@ -139,7 +142,7 @@ export function PendingAssignmentActions({
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cancelar
+            {dict.cancelBtn}
           </button>
         </div>
       </div>
@@ -153,14 +156,14 @@ export function PendingAssignmentActions({
         disabled={isPending}
         className="btn-primary disabled:opacity-50"
       >
-        Aprobar →
+        {dict.approveBtn}
       </button>
       <button
         onClick={() => setMode("rejecting")}
         disabled={isPending}
         className="eyebrow hover:!text-navy !text-navy/40 p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
       >
-        Rechazar
+        {dict.rejectBtn}
       </button>
       {error && (
         <span className="eyebrow !text-navy" role="alert">

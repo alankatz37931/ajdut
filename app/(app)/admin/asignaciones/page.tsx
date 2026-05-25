@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { getDict } from "@/lib/i18n";
+import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { PendingAssignmentActions } from "./PendingAssignmentActions";
 
@@ -12,33 +12,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: dict.metaTitles.adminAsignaciones };
 }
 
-const FILTER_LABEL: Record<string, string> = {
-  pending: "Pendientes",
-  approved: "Aprobadas",
-  rejected: "Rechazadas",
-  all: "Todas",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: "Pendiente",
-  APPROVED: "Aprobada",
-  REJECTED: "Rechazada",
-};
-
 const STATUS_SYMBOL: Record<string, string> = {
   PENDING: "○",
   APPROVED: "●",
   REJECTED: "✕",
 };
-
-const SOURCE_LABEL: Record<string, string> = {
-  LEAD: "Lead aceptado",
-  INVITE: "Invitación directa",
-};
-
-function fmtInt(n: number): string {
-  return n.toLocaleString("es-MX");
-}
 
 export default async function AdminPendingAssignmentsPage({
   searchParams,
@@ -46,8 +24,27 @@ export default async function AdminPendingAssignmentsPage({
   searchParams: Promise<{ filter?: string }>;
 }) {
   await requireRole(["ADMIN"]);
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.adminAsignaciones;
   const sp = await searchParams;
   const filter = sp.filter ?? "pending";
+
+  function fmtInt(n: number): string {
+    return n.toLocaleString(locale);
+  }
+
+  const SOURCE_LABEL: Record<string, string> = {
+    LEAD: t.sourceLead,
+    INVITE: t.sourceInvite,
+  };
+
+  const FILTER_LABEL: Record<string, string> = {
+    pending: t.filters.pending,
+    approved: t.filters.approved,
+    rejected: t.filters.rejected,
+    all: t.filters.all,
+  };
 
   const where =
     filter === "all"
@@ -94,14 +91,15 @@ export default async function AdminPendingAssignmentsPage({
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Admin</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
-          Asignaciones pendientes
-        </h1>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
         <p className="mt-3 font-mono text-sm text-navy/75">
           {pendingCount === 0
-            ? "Bandeja al día."
-            : `${pendingCount} pendiente${pendingCount === 1 ? "" : "s"} de validar.`}
+            ? t.summaryEmpty
+            : (pendingCount === 1
+                ? t.summaryPendingSingle
+                : t.summaryPendingPlural
+              ).replace("{n}", String(pendingCount))}
         </p>
       </header>
 
@@ -131,7 +129,15 @@ export default async function AdminPendingAssignmentsPage({
 
       <div className="mt-10">
         {items.length === 0 ? (
-          <p className="text-navy/60">{emptyMessageFor(filter)}</p>
+          <p className="text-navy/60">
+            {filter === "approved"
+              ? t.emptyApproved
+              : filter === "rejected"
+              ? t.emptyRejected
+              : filter === "all"
+              ? t.emptyAll
+              : t.emptyPending}
+          </p>
         ) : (
           <ul className="space-y-6">
             {items.map((p) => {
@@ -139,10 +145,10 @@ export default async function AdminPendingAssignmentsPage({
                 p.proposedBy.alias ?? p.proposedBy.fullName;
               const targetName = p.targetUser
                 ? p.targetUser.alias ?? p.targetUser.fullName
-                : p.inviteFullName ?? "(sin nombre)";
+                : p.inviteFullName ?? t.noName;
               const targetEmail = p.targetUser
                 ? p.targetUser.email
-                : p.inviteEmail ?? "(sin email)";
+                : p.inviteEmail ?? t.noEmail;
               const recipientLabel = `${targetName} · ${targetEmail}`;
 
               const isOpen = p.status === "PENDING";
@@ -168,7 +174,7 @@ export default async function AdminPendingAssignmentsPage({
                         {p.project.name}
                       </Link>
                       <p className="eyebrow shrink-0 !text-navy/40">
-                        {formatDate(p.createdAt)}
+                        {formatDate(p.createdAt, locale)}
                       </p>
                     </div>
 
@@ -185,30 +191,28 @@ export default async function AdminPendingAssignmentsPage({
                         <span aria-hidden className="text-base leading-none">
                           {STATUS_SYMBOL[p.status] ?? "·"}
                         </span>
-                        {STATUS_LABEL[p.status] ?? p.status}
+                        {t.status[p.status] ?? p.status}
                       </span>
                     </p>
 
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-sm">
                       <div className="sm:col-span-1">
-                        <p className="eyebrow !text-navy/40">Project owner</p>
+                        <p className="eyebrow !text-navy/40">{t.colOwner}</p>
                         <p className="mt-1 text-navy">{proposerName}</p>
                         <p className="text-navy/60 text-xs">
                           {p.proposedBy.email}
                         </p>
                       </div>
                       <div className="sm:col-span-1">
-                        <p className="eyebrow !text-navy/40">Destinatario</p>
+                        <p className="eyebrow !text-navy/40">{t.colRecipient}</p>
                         <p className="mt-1 text-navy">{targetName}</p>
                         <p className="text-navy/60 text-xs">{targetEmail}</p>
                         {!p.targetUser && p.source === "INVITE" && (
-                          <p className="eyebrow !text-gold mt-1">
-                            Usuario nuevo
-                          </p>
+                          <p className="eyebrow !text-gold mt-1">{t.newUserBadge}</p>
                         )}
                       </div>
                       <div className="sm:col-span-1">
-                        <p className="eyebrow !text-navy/40">Acciones</p>
+                        <p className="eyebrow !text-navy/40">{t.colShares}</p>
                         <p className="mt-1 text-navy">{fmtInt(p.shareCount)}</p>
                       </div>
                     </div>
@@ -226,9 +230,7 @@ export default async function AdminPendingAssignmentsPage({
 
                     {p.status === "REJECTED" && p.reviewNote && (
                       <div className="mt-3">
-                        <p className="eyebrow !text-navy/40">
-                          Nota del revisor
-                        </p>
+                        <p className="eyebrow !text-navy/40">{t.reviewerNote}</p>
                         <p className="mt-1 text-sm text-navy/85 whitespace-pre-line">
                           {p.reviewNote}
                         </p>
@@ -237,9 +239,9 @@ export default async function AdminPendingAssignmentsPage({
 
                     {p.status !== "PENDING" && p.reviewedBy && p.reviewedAt && (
                       <p className="mt-3 eyebrow !text-navy/40">
-                        {p.status === "APPROVED" ? "Aprobada por" : "Rechazada por"}{" "}
+                        {p.status === "APPROVED" ? t.approvedBy : t.rejectedBy}{" "}
                         {p.reviewedBy.alias ?? p.reviewedBy.fullName} ·{" "}
-                        {formatDate(p.reviewedAt)}
+                        {formatDate(p.reviewedAt, locale)}
                       </p>
                     )}
 
@@ -249,6 +251,8 @@ export default async function AdminPendingAssignmentsPage({
                           pendingId={p.id}
                           recipientLabel={recipientLabel}
                           shareCount={p.shareCount}
+                          dict={t.actions}
+                          locale={locale}
                         />
                       </div>
                     )}
@@ -263,16 +267,3 @@ export default async function AdminPendingAssignmentsPage({
   );
 }
 
-function emptyMessageFor(filter: string): string {
-  switch (filter) {
-    case "approved":
-      return "Aún no aprobaste ninguna asignación.";
-    case "rejected":
-      return "Aún no rechazaste ninguna asignación.";
-    case "all":
-      return "Todavía no hay propuestas de asignación.";
-    case "pending":
-    default:
-      return "Bandeja al día — no hay asignaciones pendientes.";
-  }
-}

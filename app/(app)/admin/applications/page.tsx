@@ -1,21 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { Route } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 
-const FILTER_LABEL: Record<string, string> = {
-  all: "Todas",
-  pending: "Pendientes",
-  resolved: "Resueltas",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: "Pendiente",
-  // UNDER_REVIEW se conserva en el enum por compatibilidad, pero ya no se usa.
-  UNDER_REVIEW: "Pendiente",
-  APPROVED: "Aprobada",
-  REJECTED: "Rechazada",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.adminApplications.metaTitle };
+}
 
 // Símbolos geométricos para cada estado
 const STATUS_SYMBOL: Record<string, string> = {
@@ -33,6 +26,8 @@ export default async function ApplicationsListPage({
   searchParams: Promise<{ filter?: string }>;
 }) {
   await requireRole(["ADMIN"]);
+  const dict = await getDict();
+  const t = dict.adminApplications;
   const sp = await searchParams;
   const filter = sp.filter ?? "pending";
 
@@ -66,30 +61,50 @@ export default async function ApplicationsListPage({
 
   const summaryParts: string[] = [];
   if (pendingCount > 0) {
-    summaryParts.push(`${pendingCount} pendiente${pendingCount === 1 ? "" : "s"}`);
+    summaryParts.push(
+      (pendingCount === 1 ? t.summaryPendingSingle : t.summaryPendingPlural).replace(
+        "{n}",
+        String(pendingCount)
+      )
+    );
   }
   if (resolvedCount > 0) {
     summaryParts.push(
-      `${resolvedCount} resuelta${resolvedCount === 1 ? "" : "s"}`
+      (resolvedCount === 1 ? t.summaryResolvedSingle : t.summaryResolvedPlural).replace(
+        "{n}",
+        String(resolvedCount)
+      )
     );
+  }
+
+  const filterEntries: Array<[string, string]> = [
+    ["all", t.filters.all],
+    ["pending", t.filters.pending],
+    ["resolved", t.filters.resolved],
+  ];
+
+  function emptyMessageFor(f: string): string {
+    if (f === "all") return t.emptyAll;
+    if (f === "resolved") return t.emptyResolved;
+    return t.emptyPending;
   }
 
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Admin</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Aplicaciones</h1>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
         {summaryParts.length > 0 ? (
           <p className="mt-3 font-mono text-sm text-navy/75">
             {summaryParts.join(" · ")}
           </p>
         ) : (
-          <p className="mt-3 font-mono text-sm text-navy/60">Bandeja al día.</p>
+          <p className="mt-3 font-mono text-sm text-navy/60">{t.summaryEmpty}</p>
         )}
       </header>
 
       <nav className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
-        {Object.entries(FILTER_LABEL).map(([key, label]) => {
+        {filterEntries.map(([key, label]) => {
           const active = filter === key;
           const count = countsByFilter[key] ?? 0;
           return (
@@ -132,14 +147,12 @@ export default async function ApplicationsListPage({
                     href={`/admin/applications/${a.id}` as Route}
                     className="group flex gap-4 hover:bg-paper-light transition-colors"
                   >
-                    {/* Rail vertical: oro si abierta, navy/20 si resuelta */}
                     <span
                       aria-hidden
                       className={`shrink-0 w-[3px] self-stretch ${railClass}`}
                     />
 
                     <div className="flex-1 min-w-0 py-3 pr-2">
-                      {/* Línea 1: nombre + tiempo a la derecha */}
                       <div className="flex items-baseline justify-between gap-3">
                         <span className="font-sans text-navy text-lg leading-tight">
                           {a.fullName}
@@ -153,16 +166,13 @@ export default async function ApplicationsListPage({
                         </span>
                       </div>
 
-                      {/* Línea 2: tipo + status + email + país.
-                          El tipo (Empresa / Persona) va al inicio en gold para
-                          que sea identificable de un vistazo en la bandeja. */}
                       <p className="mt-1 eyebrow truncate">
                         <span
                           className={`${
                             a.kind === "COMPANY" ? "!text-gold" : "!text-navy/50"
                           }`}
                         >
-                          {a.kind === "COMPANY" ? "Empresa" : "Persona"}
+                          {a.kind === "COMPANY" ? t.kindCompany : t.kindPerson}
                         </span>
                         <span className="!text-navy/30"> · </span>
                         <span
@@ -173,7 +183,7 @@ export default async function ApplicationsListPage({
                           <span aria-hidden className="text-base leading-none">
                             {STATUS_SYMBOL[a.status] ?? "·"}
                           </span>
-                          {STATUS_LABEL[a.status] ?? a.status}
+                          {t.status[a.status] ?? a.status}
                         </span>
                         <span className="!text-navy/30"> · </span>
                         <span className="!text-navy/70">{a.email}</span>
@@ -181,7 +191,6 @@ export default async function ApplicationsListPage({
                         <span className="!text-navy/70">{a.country}</span>
                       </p>
 
-                      {/* Línea 3: preview de motivación */}
                       <p className="mt-2 text-navy/75 text-sm leading-relaxed line-clamp-2 sm:line-clamp-1">
                         “{motivationPreview}”
                       </p>
@@ -199,16 +208,4 @@ export default async function ApplicationsListPage({
       </div>
     </div>
   );
-}
-
-function emptyMessageFor(filter: string): string {
-  switch (filter) {
-    case "all":
-      return "Aún no llegaron aplicaciones a AJDUT.";
-    case "resolved":
-      return "Aún no resolviste aplicaciones.";
-    case "pending":
-    default:
-      return "Bandeja al día — no hay aplicaciones pendientes.";
-  }
 }
