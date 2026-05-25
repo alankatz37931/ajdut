@@ -1,12 +1,17 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { MilestonesEditor } from "./MilestonesEditor";
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
-export const metadata = { title: "Hitos · AJDUT" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.founderHitos };
+}
 
 export default async function FounderMilestonesPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);

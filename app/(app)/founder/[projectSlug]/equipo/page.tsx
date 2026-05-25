@@ -1,12 +1,17 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { TeamEditor } from "./TeamEditor";
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
-export const metadata = { title: "Equipo · AJDUT" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.founderEquipo };
+}
 
 export default async function FounderTeamPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);

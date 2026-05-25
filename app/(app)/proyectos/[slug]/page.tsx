@@ -213,7 +213,7 @@ export default async function ProjectPage({ params }: Params) {
     if (!latestByKind.has(m.kind)) {
       latestByKind.set(m.kind, {
         kind: m.kind,
-        label: m.customLabel ?? METRIC_LABEL[m.kind] ?? m.kind,
+        label: m.customLabel ?? t.metricLabels[m.kind] ?? m.kind,
         value: Number(m.value).toLocaleString(locale),
         unit: m.unit,
         asOf: m.asOf,
@@ -462,8 +462,7 @@ export default async function ProjectPage({ params }: Params) {
               )}
               {f.references && (
                 <div className="mt-3 hairline-t pt-3">
-                  {/* TODO i18n: campo libre del founder; mantenemos label en es por scope. */}
-                  <p className="eyebrow mb-1">Referencias</p>
+                  <p className="eyebrow mb-1">{t.team.references}</p>
                   <p className="text-navy/85 leading-relaxed whitespace-pre-line">
                     {f.references}
                   </p>
@@ -914,22 +913,6 @@ export default async function ProjectPage({ params }: Params) {
   );
 }
 
-const METRIC_LABEL: Record<string, string> = {
-  // TODO i18n: nombres de métrica admin/internal; quedan en español por scope.
-  MRR: "MRR",
-  ARR: "ARR",
-  GMV: "GMV",
-  ACTIVE_USERS: "Usuarios activos",
-  PAYING_CUSTOMERS: "Clientes de pago",
-  CHURN_RATE: "Churn",
-  BURN_RATE: "Burn rate",
-  RUNWAY_MONTHS: "Runway",
-  CAC: "CAC",
-  LTV: "LTV",
-  GROSS_MARGIN: "Margen bruto",
-  HEADCOUNT: "Headcount",
-  CUSTOM: "Custom",
-};
 
 function backLinkFor(role: string): Route {
   if (role === "ADMIN") return "/admin/projects" as Route;

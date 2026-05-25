@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { listEscalatedUsers } from "@/lib/services/heirs";
+import { getDict } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { RunCronButton } from "./RunCronButton";
 
-export const metadata = { title: "Herederos · AJDUT" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.adminHerederos };
+}
 
 export default async function AdminHerederosPage() {
   await requireRole(["ADMIN"]);

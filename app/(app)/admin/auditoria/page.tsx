@@ -1,12 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { Route } from "next";
 import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { AuditSearch } from "./AuditSearch";
 
-export const metadata = { title: "Auditoría · AJDUT" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.adminAuditoria };
+}
 
 const PAGE_SIZE = 50;
 

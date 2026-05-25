@@ -1,10 +1,13 @@
+import type { Metadata } from "next";
 import { BackLink } from "@/components/app/BackLink";
 import { requireRole } from "@/lib/auth/session";
+import { getDict } from "@/lib/i18n";
 import { NewProjectForm } from "./NewProjectForm";
 
-export const metadata = {
-  title: "Nuevo proyecto · AJDUT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.founderNuevoProyecto };
+}
 
 export default async function NewProjectPage() {
   await requireRole(["PROJECT_OWNER", "ADMIN"]);

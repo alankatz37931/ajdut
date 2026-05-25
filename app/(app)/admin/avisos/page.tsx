@@ -1,10 +1,13 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { AdminAvisoForm } from "./AdminAvisoForm";
 
-export const metadata = {
-  title: "Avisos · Admin · AJDUT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.adminAvisos };
+}
 
 export default async function AdminAvisosPage() {
   await requireRole(["ADMIN"]);

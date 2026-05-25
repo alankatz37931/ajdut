@@ -1,15 +1,18 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { getProjectAccess } from "@/lib/services/project-access";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { AvisoForm } from "./AvisoForm";
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
-export const metadata = {
-  title: "Avisos a miembros · AJDUT",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.founderAvisos };
+}
 
 const ASSIGNED_STATUSES = [
   "ASSIGNED",

@@ -215,6 +215,21 @@ export const dict: Dict = {
     ariaLabel: "AJDUT — A business community — home",
   },
 
+  metaTitles: {
+    adminAsignaciones: "Pending assignments · AJDUT",
+    adminAuditoria: "Audit log · AJDUT",
+    adminAvisos: "Notices · Admin · AJDUT",
+    adminHerederos: "Heirs · AJDUT",
+    founderNuevoProyecto: "New project · AJDUT",
+    founderAvisos: "Notices to members · AJDUT",
+    founderComposicion: "Shareholder composition · AJDUT",
+    founderEditar: "Edit project · AJDUT",
+    founderEquipo: "Team · AJDUT",
+    founderHitos: "Milestones · AJDUT",
+    founderInvitar: "Invite member · AJDUT",
+    founderMetricas: "Metrics · AJDUT",
+  },
+
   recoveryPassword: {
     metaTitle: "Recover password · AJDUT",
     back: "Recover password",
@@ -541,6 +556,24 @@ export const dict: Dict = {
       assetBacking: "Asset backing",
       equityStructure: "Equity structure",
     },
+    team: {
+      references: "References",
+    },
+    metricLabels: {
+      MRR: "MRR",
+      ARR: "ARR",
+      GMV: "GMV",
+      ACTIVE_USERS: "Active users",
+      PAYING_CUSTOMERS: "Paying customers",
+      CHURN_RATE: "Churn",
+      BURN_RATE: "Burn rate",
+      RUNWAY_MONTHS: "Runway",
+      CAC: "CAC",
+      LTV: "LTV",
+      GROSS_MARGIN: "Gross margin",
+      HEADCOUNT: "Headcount",
+      CUSTOM: "Custom",
+    } as Record<string, string>,
     policies: {
       shares: "Share policy",
       dividends: "Dividend policy",

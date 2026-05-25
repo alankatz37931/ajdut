@@ -1,11 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { Route } from "next";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { PendingAssignmentActions } from "./PendingAssignmentActions";
 
-export const metadata = { title: "Asignaciones pendientes · AJDUT" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.adminAsignaciones };
+}
 
 const FILTER_LABEL: Record<string, string> = {
   pending: "Pendientes",
