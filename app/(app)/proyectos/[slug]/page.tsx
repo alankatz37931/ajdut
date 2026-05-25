@@ -278,15 +278,32 @@ export default async function ProjectPage({ params }: Params) {
     access.role === "ADMIN";
 
   const heroCtas: HeroCta[] = [];
-  if (canCtaShow) {
-    heroCtas.push({ kind: "primary", label: t.interest, href: "#comprar" });
-  }
-  if (hasChatAccess) {
+  if (access.canEdit) {
+    // Founder / admin en su propia ficha: Editar información como primario
+    // (acción principal del dueño), Abrir chat como outline a la derecha.
     heroCtas.push({
-      kind: "outline",
-      label: t.openChat,
-      href: `/proyectos/${project.slug}/chat`,
+      kind: "primary",
+      label: t.editInfo,
+      href: `/founder/${project.slug}/editar`,
     });
+    if (hasChatAccess) {
+      heroCtas.push({
+        kind: "outline",
+        label: t.openChat,
+        href: `/proyectos/${project.slug}/chat`,
+      });
+    }
+  } else {
+    if (canCtaShow) {
+      heroCtas.push({ kind: "primary", label: t.interest, href: "#comprar" });
+    }
+    if (hasChatAccess) {
+      heroCtas.push({
+        kind: "outline",
+        label: t.openChat,
+        href: `/proyectos/${project.slug}/chat`,
+      });
+    }
   }
 
   // "Quiero más información" — CTA secundario que se renderiza en el
@@ -302,16 +319,10 @@ export default async function ProjectPage({ params }: Params) {
         : { pending: false, label: t.requestInfo, href: "#info-request" }
       : null;
 
-  // Acción satélite — solo Editar (utilidad del owner), link liviano.
+  // Editar información ahora vive en heroCtas como primario para el owner —
+  // se quitó del satellite para no duplicar el botón abajo del hero.
   type SatAct = { kind: "outline" | "ghost"; label: string; href?: string };
   const satellite: SatAct[] = [];
-  if (access.canEdit) {
-    satellite.push({
-      kind: "outline",
-      label: t.editInfo,
-      href: `/founder/${project.slug}/editar`,
-    });
-  }
 
   // ───────────── Stats de la banda unificada ────────────────────────
   const fundingStats: { label: string; value: string; hint?: string }[] = [
