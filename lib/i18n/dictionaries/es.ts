@@ -65,6 +65,10 @@ export const dict = {
     titleLine1: "Conectamos capital, proyectos y",
     titleLine2: "comunidades de alto impacto.",
     pillarsEyebrow: "Transparencia · Unidad · Valor",
+    valueTransparency: "Transparencia",
+    valueUnity: "Unidad",
+    valueValue: "Valor",
+    valueLegacy: "Legado",
     description:
       "AJDUT une a emprendedores visionarios con miembros que buscan respaldar iniciativas de alto valor: desde startups tecnológicas hasta desarrollos inmobiliarios y comercio. Todo respaldado, certificado y transparente.",
     ctaSignIn: "Acceder",
@@ -1096,7 +1100,7 @@ export const dict = {
     title: "Coordinamos comunidades de negocios.",
     intro:
       "“Ajdut” proviene del hebreo antiguo y significa unidad, hermandad, acuerdo. Es un espacio donde proyectos con visión —respaldados por su tracción, su comunidad, sus sistemas, su marca o sus activos— encuentran a las personas correctas para crecer.",
-    values: "Transparencia · Unidad · Valor",
+    values: "Transparencia · Unidad · Valor · Legado",
     origin: {
       title: "Origen",
       body1:

@@ -25,22 +25,22 @@ export default async function HomePage() {
           <div className="mt-4 sm:mt-5 flex items-center flex-wrap gap-x-2 gap-y-1 eyebrow !text-navy/60">
             <span className="inline-flex items-center gap-1.5">
               <TransparencyIcon />
-              Transparencia
+              {t.valueTransparency}
             </span>
             <span className="text-gold">·</span>
             <span className="inline-flex items-center gap-1.5">
               <UnityIcon />
-              Unidad
+              {t.valueUnity}
             </span>
             <span className="text-gold">·</span>
             <span className="inline-flex items-center gap-1.5">
               <ValueIcon />
-              Valor
+              {t.valueValue}
             </span>
             <span className="text-gold">·</span>
             <span className="inline-flex items-center gap-1.5">
               <LegacyIcon />
-              Legado
+              {t.valueLegacy}
             </span>
           </div>
 

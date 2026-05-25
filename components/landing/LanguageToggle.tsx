@@ -24,7 +24,7 @@ export function LanguageToggle({ current }: { current: Language }) {
 
   const baseBtn =
     "p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors";
-  const activeCls = "!text-navy font-bold";
+  const activeCls = "!text-navy/80 font-bold";
   const idleCls =
     "!text-navy/40 font-medium hover:!text-gold disabled:hover:!text-navy/40";
 
