@@ -54,12 +54,14 @@ export default async function ProfilePage() {
             aria-hidden
             className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-paper-dark/40 hairline flex items-center justify-center font-mono text-navy/60 text-lg"
           >
-            {initialsOf(user.alias ?? user.fullName)}
+            {initialsOf(user.fullName)}
           </span>
         )}
         <div>
           <p className="eyebrow">{t.eyebrow}</p>
-          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
+          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
+            {user.fullName}
+          </h1>
           <p className="mt-3 text-navy/75 leading-relaxed">
             {t.roleLine}{" "}
             <span className="font-mono text-navy">{roleLabel}</span>

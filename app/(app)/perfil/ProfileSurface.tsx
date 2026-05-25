@@ -3,8 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { upload } from "@vercel/blob/client";
 import type { Dict } from "@/lib/i18n";
-import { FloatingInput } from "@/components/ui/Floating";
-import { ToggleRow } from "@/components/ui/ToggleRow";
+import { FloatingInput, GoldUnderline } from "@/components/ui/Floating";
 import { changePasswordAction, updateNameAction } from "./actions";
 
 type ProfileDict = Dict["profile"];
@@ -19,11 +18,13 @@ type Props = {
 };
 
 /**
- * Superficie completa del perfil — todos los campos viven como filas
- * minimalistas con el mismo lenguaje que /configuracion: label izquierda,
- * valor/input derecha, hairline-b, altura fija 4.75rem. Cada campo guarda
- * en blur (auto-save). Contraseña va en un ToggleRow porque requiere
- * confirmación explícita y dos inputs visibles a la vez.
+ * Superficie del perfil — cada campo vive como una FieldRow apilada:
+ * label arriba (eyebrow), valor abajo (font-sans), y un icono a la
+ * derecha (lápiz para editar, check para guardar). Al click del lápiz
+ * el valor se reemplaza por un input con underline gold al focus
+ * (mismo patrón que FloatingInput). Auto-save al check, blur, o Enter.
+ * Esc cancela. Contraseña va expandible (chevron) porque requiere
+ * confirmación con dos inputs y botón explícito.
  */
 export function ProfileSurface({
   initialName,
@@ -33,26 +34,15 @@ export function ProfileSurface({
   initialAvatarUrl,
   dict,
 }: Props) {
-  // Estado de los campos básicos.
   const [name, setName] = useState(initialName);
   const [alias, setAlias] = useState(initialAlias);
   const [country, setCountry] = useState(initialCountry);
   const [phone, setPhone] = useState(initialPhone);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
 
-  // Snapshots de lo guardado en server — base para detectar cambios y
-  // revertir si la acción falla.
-  const [savedName, setSavedName] = useState(initialName);
-  const [savedAlias, setSavedAlias] = useState(initialAlias);
-  const [savedCountry, setSavedCountry] = useState(initialCountry);
-  const [savedPhone, setSavedPhone] = useState(initialPhone);
-  const [savedAvatarUrl, setSavedAvatarUrl] = useState(initialAvatarUrl);
-
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-
-  const [openPassword, setOpenPassword] = useState(false);
 
   function flashSaved() {
     setError(null);
@@ -61,107 +51,79 @@ export function ProfileSurface({
   }
 
   /**
-   * Persiste el snapshot actual de campos básicos (con un override puntual
-   * para el campo que está cambiando). Si el server rechaza, revierte solo
-   * ese campo a su último valor guardado.
+   * Persiste el snapshot completo (con un override puntual para el campo
+   * que se está guardando) y actualiza el estado local optimistamente. Si
+   * el server falla, revierte solo ese campo.
    */
-  function persistBasics(override: {
-    fullName?: string;
-    alias?: string;
-    country?: string;
-    phone?: string;
-    avatarUrl?: string;
-  }) {
+  function persistField(
+    key: "fullName" | "alias" | "country" | "phone" | "avatarUrl",
+    newValue: string
+  ) {
+    const setters = {
+      fullName: setName,
+      alias: setAlias,
+      country: setCountry,
+      phone: setPhone,
+      avatarUrl: setAvatarUrl,
+    } as const;
+    const prev = { fullName: name, alias, country, phone, avatarUrl };
+    const next = { ...prev, [key]: newValue };
+    setters[key](newValue);
+
     const fd = new FormData();
-    fd.set("fullName", override.fullName ?? name);
-    fd.set("alias", override.alias ?? alias);
-    fd.set("country", override.country ?? country);
-    fd.set("phone", override.phone ?? phone);
-    fd.set("avatarUrl", override.avatarUrl ?? avatarUrl);
+    fd.set("fullName", next.fullName);
+    fd.set("alias", next.alias);
+    fd.set("country", next.country);
+    fd.set("phone", next.phone);
+    fd.set("avatarUrl", next.avatarUrl);
 
     startTransition(async () => {
       const r = await updateNameAction(fd);
-      if (r.ok) {
-        // Sincronizar snapshots con lo enviado.
-        setSavedName(override.fullName ?? name);
-        setSavedAlias(override.alias ?? alias);
-        setSavedCountry(override.country ?? country);
-        setSavedPhone(override.phone ?? phone);
-        setSavedAvatarUrl(override.avatarUrl ?? avatarUrl);
-        flashSaved();
-      } else {
+      if (r.ok) flashSaved();
+      else {
         setError(r.error);
-        // Revertir el campo que se intentó guardar.
-        if (override.fullName !== undefined) setName(savedName);
-        if (override.alias !== undefined) setAlias(savedAlias);
-        if (override.country !== undefined) setCountry(savedCountry);
-        if (override.phone !== undefined) setPhone(savedPhone);
-        if (override.avatarUrl !== undefined) setAvatarUrl(savedAvatarUrl);
+        setters[key](prev[key]);
       }
     });
-  }
-
-  function onBlurField(
-    current: string,
-    saved: string,
-    key: "fullName" | "alias" | "country" | "phone"
-  ) {
-    const trimmed = current.trim();
-    if (trimmed === saved) return;
-    persistBasics({ [key]: trimmed });
   }
 
   return (
     <div>
       <div className="hairline-t">
-        <InlineRow
+        <FieldRow
           label={dict.fullNameLabel}
           value={name}
-          onChange={setName}
-          onBlur={() => onBlurField(name, savedName, "fullName")}
           required
+          onSave={(v) => persistField("fullName", v.trim())}
+          dict={dict}
         />
-        <InlineRow
+        <FieldRow
           label={dict.aliasLabel}
           value={alias}
-          onChange={setAlias}
-          onBlur={() => onBlurField(alias, savedAlias, "alias")}
-          placeholder={dict.empty}
+          onSave={(v) => persistField("alias", v.trim())}
+          dict={dict}
         />
-        <InlineRow
+        <FieldRow
           label={dict.countryLabel}
           value={country}
-          onChange={setCountry}
-          onBlur={() => onBlurField(country, savedCountry, "country")}
-          placeholder={dict.empty}
+          onSave={(v) => persistField("country", v.trim())}
+          dict={dict}
         />
-        <InlineRow
+        <FieldRow
           label={dict.phoneLabel}
           value={phone}
-          onChange={setPhone}
-          onBlur={() => onBlurField(phone, savedPhone, "phone")}
-          placeholder={dict.empty}
           type="tel"
+          onSave={(v) => persistField("phone", v.trim())}
+          dict={dict}
         />
-        <PhotoRow
+        <PhotoFieldRow
           label={dict.photoLabel}
           value={avatarUrl}
-          onChange={(url) => {
-            setAvatarUrl(url);
-            persistBasics({ avatarUrl: url });
-          }}
+          onChange={(url) => persistField("avatarUrl", url)}
           onError={setError}
           dict={dict}
         />
-        <ToggleRow
-          label={dict.passwordRow}
-          summary={dict.passwordMask}
-          open={openPassword}
-          onToggle={() => setOpenPassword((v) => !v)}
-          ariaLabel={dict.changePasswordTitle}
-        >
-          <PasswordPanel dict={dict} onSaved={flashSaved} onError={setError} />
-        </ToggleRow>
+        <PasswordFieldRow dict={dict} onSaved={flashSaved} onError={setError} />
       </div>
 
       <div className="mt-6 h-4">
@@ -180,50 +142,172 @@ export function ProfileSurface({
   );
 }
 
+/* ─────────────────────── Iconos ─────────────────────── */
+
+function PencilIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+      aria-hidden
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+/* ──────────────────────── Filas ──────────────────────── */
+
 /**
- * Fila editable inline: label izquierda + input transparente right-aligned.
- * Mismo h-[4.75rem] que las Row de configuración. Al focus el input sigue
- * sin borde — el cursor del usuario indica edición. Auto-save en blur.
+ * Fila apilada: label eyebrow arriba, valor (o input) abajo, lápiz/check
+ * a la derecha. En idle muestra el valor como texto; al click del lápiz
+ * pasa a edición con underline gold y autofocus. Guarda en blur, Enter
+ * o click del check. Esc cancela.
  */
-function InlineRow({
+function FieldRow({
   label,
   value,
-  onChange,
-  onBlur,
+  onSave,
   placeholder,
   type = "text",
   required = false,
+  dict,
 }: {
   label: string;
   value: string;
-  onChange: (v: string) => void;
-  onBlur: () => void;
+  onSave: (v: string) => void;
   placeholder?: string;
   type?: string;
   required?: boolean;
+  dict: ProfileDict;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function startEdit() {
+    setDraft(value);
+    setEditing(true);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  function commit() {
+    setEditing(false);
+    if (draft.trim() !== value.trim()) onSave(draft);
+  }
+
+  function abandon() {
+    setDraft(value);
+    setEditing(false);
+  }
+
+  const displayValue = value.trim() || dict.empty;
+
   return (
-    <div className="hairline-b flex items-center justify-between h-[4.75rem] gap-6">
-      <label className="text-navy shrink-0">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        placeholder={placeholder}
-        required={required}
-        className="min-w-0 flex-1 text-right bg-transparent border-0 outline-none text-navy placeholder:text-navy/30"
-      />
+    <div className="hairline-b py-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <label className="eyebrow !text-navy/50">{label}</label>
+        <button
+          type="button"
+          onClick={editing ? commit : startEdit}
+          aria-label={(editing ? dict.saveAriaFmt : dict.editAriaFmt).replace(
+            "{field}",
+            label
+          )}
+          className="text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
+        >
+          {editing ? <CheckIcon /> : <PencilIcon />}
+        </button>
+      </div>
+
+      <div className="mt-2 relative">
+        {editing ? (
+          <>
+            <input
+              ref={inputRef}
+              type={type}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  commit();
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  abandon();
+                }
+              }}
+              required={required}
+              placeholder={placeholder}
+              className="peer w-full bg-transparent border-0 outline-none text-navy font-sans placeholder:text-navy/30"
+            />
+            <GoldUnderline />
+          </>
+        ) : (
+          <p
+            className={`font-sans ${
+              value.trim() ? "text-navy" : "text-navy/30"
+            }`}
+          >
+            {displayValue}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
 /**
- * Fila de foto: label izquierda + avatar (o "+") derecha + acción "quitar"
- * cuando hay foto. Click sobre el avatar abre el file picker; sube directo
- * a Vercel Blob y notifica `onChange` con la URL pública.
+ * Foto de perfil — mismo lenguaje que FieldRow pero el "valor" es el
+ * avatar circular. El lápiz abre el file picker; un × overlay (hover)
+ * sobre el avatar quita la foto.
  */
-function PhotoRow({
+function PhotoFieldRow({
   label,
   value,
   onChange,
@@ -287,36 +371,39 @@ function PhotoRow({
   const hasPhoto = value !== "" && !previewBroken;
 
   return (
-    <div className="hairline-b flex items-center justify-between h-[4.75rem] gap-4">
-      <span className="text-navy">{label}</span>
-      <span className="flex items-center gap-3">
+    <div className="hairline-b py-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="eyebrow !text-navy/50">{label}</span>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          aria-label={hasPhoto ? dict.uploadAriaChange : dict.uploadAriaNew}
+          className="text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
+        >
+          <PencilIcon />
+        </button>
+      </div>
+
+      <div className="mt-2">
         {uploading ? (
-          <span className="eyebrow !text-navy/40 normal-case tracking-normal">
+          <p className="eyebrow !text-navy/40 normal-case tracking-normal">
             {dict.uploadingFmt.replace("{n}", String(progress))}
-          </span>
+          </p>
         ) : (
-          /* Wrap del avatar — group para revelar el × al hover, relative para anclarlo. */
           <span className="group relative inline-block">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label={hasPhoto ? dict.uploadAriaChange : dict.uploadAriaNew}
-              className="block p-0 m-0 border-0 bg-transparent cursor-pointer"
-            >
-              {hasPhoto ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={value}
-                  alt=""
-                  onError={() => setPreviewBroken(true)}
-                  className="w-9 h-9 rounded-full object-cover hairline"
-                />
-              ) : (
-                <span className="w-9 h-9 rounded-full bg-paper-dark/40 hairline flex items-center justify-center text-navy/40 font-mono text-lg leading-none">
-                  +
-                </span>
-              )}
-            </button>
+            {hasPhoto ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={value}
+                alt=""
+                onError={() => setPreviewBroken(true)}
+                className="w-12 h-12 rounded-full object-cover hairline"
+              />
+            ) : (
+              <span className="w-12 h-12 rounded-full bg-paper-dark/40 hairline flex items-center justify-center text-navy/40 font-mono text-lg leading-none">
+                +
+              </span>
+            )}
             {hasPhoto && (
               <button
                 type="button"
@@ -335,7 +422,8 @@ function PhotoRow({
             )}
           </span>
         )}
-      </span>
+      </div>
+
       <input
         ref={fileInputRef}
         type="file"
@@ -352,9 +440,52 @@ function PhotoRow({
 }
 
 /**
- * Panel de cambio de contraseña — vive dentro del ToggleRow. NO auto-save:
- * requiere ambos campos válidos + confirmación explícita con botón.
+ * Contraseña — fila apilada con chevron para expandir el panel de cambio.
+ * Cuando está colapsada se ve `•••••••` como valor. Al expandir aparece
+ * abajo el form con Current/New + botón explícito (no auto-save por
+ * tratarse de un cambio crítico).
  */
+function PasswordFieldRow({
+  dict,
+  onSaved,
+  onError,
+}: {
+  dict: ProfileDict;
+  onSaved: () => void;
+  onError: (msg: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="hairline-b py-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="eyebrow !text-navy/50">{dict.passwordRow}</span>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={(open ? dict.collapseAriaFmt : dict.expandAriaFmt).replace(
+            "{field}",
+            dict.passwordRow
+          )}
+          className="text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
+        >
+          <ChevronIcon open={open} />
+        </button>
+      </div>
+
+      <div className="mt-2">
+        {!open ? (
+          <p className="font-sans text-navy">{dict.passwordMask}</p>
+        ) : (
+          <div className="pt-2">
+            <PasswordPanel dict={dict} onSaved={onSaved} onError={onError} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PasswordPanel({
   dict,
   onSaved,

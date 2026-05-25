@@ -416,7 +416,7 @@ export const dict = {
 
   profile: {
     metaTitle: "Perfil · AJDUT",
-    eyebrow: "— Tu cuenta",
+    eyebrow: "— Perfil",
     title: "Mi perfil",
     roleLine: "Rol:",
     memberSince: "Miembro desde",
@@ -449,6 +449,10 @@ export const dict = {
     passwordMask: "•••••••",
     uploadingFmt: "Subiendo {n}%",
     removePhoto: "quitar",
+    editAriaFmt: "Editar {field}",
+    saveAriaFmt: "Guardar {field}",
+    expandAriaFmt: "Expandir {field}",
+    collapseAriaFmt: "Colapsar {field}",
     uploadAriaNew: "Subir foto de perfil",
     uploadAriaChange: "Cambiar foto de perfil",
     uploadTooBig: "El archivo supera {n}MB.",

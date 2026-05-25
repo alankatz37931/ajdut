@@ -410,7 +410,7 @@ export const dict: Dict = {
 
   profile: {
     metaTitle: "Profile · AJDUT",
-    eyebrow: "— Your account",
+    eyebrow: "— Profile",
     title: "Profile",
     roleLine: "Role:",
     memberSince: "Member since",
@@ -443,6 +443,10 @@ export const dict: Dict = {
     passwordMask: "•••••••",
     uploadingFmt: "Uploading {n}%",
     removePhoto: "remove",
+    editAriaFmt: "Edit {field}",
+    saveAriaFmt: "Save {field}",
+    expandAriaFmt: "Expand {field}",
+    collapseAriaFmt: "Collapse {field}",
     uploadAriaNew: "Upload profile photo",
     uploadAriaChange: "Change profile photo",
     uploadTooBig: "File exceeds {n}MB.",
