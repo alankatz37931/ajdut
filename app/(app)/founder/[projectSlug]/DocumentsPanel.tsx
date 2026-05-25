@@ -225,13 +225,6 @@ function UploadModal({
           >
             {isPending ? m.publishingBtn : m.publishBtn}
           </button>
-          <button
-            onClick={onClose}
-            disabled={isPending}
-            className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
-          >
-            {m.cancelBtn}
-          </button>
         </div>
       </div>
     </div>
