@@ -73,13 +73,14 @@ export function AssignmentsIcon() {
 }
 
 export function ResalesIcon() {
-  // Arrow-right-left (Lucide) — transferencia/intercambio entre miembros.
+  // Repeat-2 (Lucide) — flechas circulares que sugieren reventa / traspaso.
+  // Visualmente distinto del clipboard de Asignaciones.
   return (
     <svg {...BASE_PROPS}>
-      <path d="m16 3 4 4-4 4" />
-      <path d="M20 7H4" />
-      <path d="m8 21-4-4 4-4" />
-      <path d="M4 17h16" />
+      <path d="m2 9 3-3 3 3" />
+      <path d="M13 18H7a2 2 0 0 1-2-2V6" />
+      <path d="m22 15-3 3-3-3" />
+      <path d="M11 6h6a2 2 0 0 1 2 2v10" />
     </svg>
   );
 }
