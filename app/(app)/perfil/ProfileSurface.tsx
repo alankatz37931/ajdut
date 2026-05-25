@@ -295,24 +295,13 @@ function PhotoRow({
             {dict.uploadingFmt.replace("{n}", String(progress))}
           </span>
         ) : (
-          <>
-            {hasPhoto && (
-              <button
-                type="button"
-                onClick={() => {
-                  onChange("");
-                  setPreviewBroken(false);
-                }}
-                className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
-              >
-                {dict.removePhoto}
-              </button>
-            )}
+          /* Wrap del avatar — relative para anclar el × overlay cuando hay foto. */
+          <span className="relative inline-block">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               aria-label={hasPhoto ? dict.uploadAriaChange : dict.uploadAriaNew}
-              className="p-0 m-0 border-0 bg-transparent cursor-pointer"
+              className="block p-0 m-0 border-0 bg-transparent cursor-pointer"
             >
               {hasPhoto ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -328,7 +317,23 @@ function PhotoRow({
                 </span>
               )}
             </button>
-          </>
+            {hasPhoto && (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange("");
+                  setPreviewBroken(false);
+                }}
+                aria-label={dict.removePhoto}
+                title={dict.removePhoto}
+                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-paper hairline flex items-center justify-center text-navy/60 hover:text-navy hover:border-navy p-0 m-0 cursor-pointer leading-none transition-colors"
+              >
+                <span aria-hidden className="font-sans text-[10px] leading-none">
+                  ×
+                </span>
+              </button>
+            )}
+          </span>
         )}
       </span>
       <input
