@@ -59,10 +59,17 @@ export async function navItemsFor(
   // dentro de cada Promise.all por rol para no serializar y agotar el pool.
   async function fetchOwnsShares(): Promise<boolean> {
     if (!userId) return false;
-    const n = await prisma.participation.count({
-      where: { currentOwnerId: userId },
-    });
-    return n > 0;
+    try {
+      const n = await prisma.participation.count({
+        where: { currentOwnerId: userId },
+      });
+      return n > 0;
+    } catch {
+      // Pool agotado o cualquier error de DB: el sidebar no es crítico,
+      // preferimos que la página renderee a tirar todo abajo. En el peor
+      // caso el viewer no ve "Mis participaciones" hasta el próximo render.
+      return false;
+    }
   }
 
   const misParticipacionesItem: NavItem = {
