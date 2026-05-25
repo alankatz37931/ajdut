@@ -4,8 +4,7 @@ import { getUserPreferences } from "@/lib/preferences";
 import { getDict, getLocale } from "@/lib/i18n";
 import { getRoleLabel } from "@/components/app/nav-items";
 import { listHeirs, getValidationState } from "@/lib/services/heirs";
-import { SettingsForm } from "./SettingsForm";
-import { HeirsAndValidation } from "./HeirsAndValidation";
+import { SettingsSurface } from "./SettingsSurface";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
@@ -33,14 +32,10 @@ export default async function SettingsPage() {
         </h1>
       </header>
 
-      <SettingsForm
+      <SettingsSurface
         initialLanguage={prefs.language}
         initialCurrency={prefs.currency}
         roleLabel={roleLabel}
-        dict={dict.settings}
-      />
-
-      <HeirsAndValidation
         initialHeirs={heirs.map((h) => ({
           id: h.id,
           fullName: h.fullName,
@@ -62,7 +57,8 @@ export default async function SettingsPage() {
               }
             : null,
         }}
-        dict={dict.heirs}
+        settingsDict={dict.settings}
+        heirsDict={dict.heirs}
         locale={locale}
       />
     </div>

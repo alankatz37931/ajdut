@@ -35,6 +35,10 @@ type Props = {
   initialValidation: ValidationStateView;
   dict: HeirsDict;
   locale: string;
+  /** Notifica al wrapper para flash del indicador "✓ Guardado". */
+  onSaved?: () => void;
+  /** Reporta errores al wrapper para que los muestre abajo del todo. */
+  onError?: (msg: string | null) => void;
 };
 
 const emptyHeir: HeirRow = {
@@ -50,6 +54,8 @@ export function HeirsAndValidation({
   initialValidation,
   dict,
   locale,
+  onSaved,
+  onError,
 }: Props) {
   const [heirs, setHeirs] = useState<HeirRow[]>(initialHeirs);
   const [validation, setValidation] = useState<ValidationStateView>(
@@ -57,11 +63,16 @@ export function HeirsAndValidation({
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [openHeirs, setOpenHeirs] = useState(false);
   const [openValidation, setOpenValidation] = useState(false);
+
+  function setError(msg: string | null) {
+    onError?.(msg);
+  }
+  function flashOk() {
+    onSaved?.();
+  }
 
   const FREQUENCY_OPTIONS: Array<{ value: number; label: string }> = [
     { value: 0, label: dict.validation.freqOptions["0"] },
@@ -75,11 +86,6 @@ export function HeirsAndValidation({
   const totalLabel = `${totalShare.toFixed(2)}${dict.allocatedSuffix}`;
   const remainingLabel = `${Math.max(0, 100 - totalShare).toFixed(2)}${dict.remainingSuffix}`;
   const overAllocated = totalShare > 100;
-
-  function flashOk() {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1800);
-  }
 
   function applyResult(r: HeirActionResult, onOk: () => void) {
     if (r.ok) {
@@ -352,18 +358,6 @@ export function HeirsAndValidation({
         </ToggleRow>
       </div>
 
-      <div className="mt-4 h-4">
-        {error && (
-          <span className="eyebrow !text-navy" role="alert">
-            {error}
-          </span>
-        )}
-        {saved && !error && (
-          <span className="eyebrow !text-gold" aria-live="polite">
-            {dict.savedTick}
-          </span>
-        )}
-      </div>
     </div>
   );
 }

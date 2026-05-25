@@ -11,6 +11,8 @@ type Props = {
   initialCurrency: PreferredCurrency;
   roleLabel: string;
   dict: Dict["settings"];
+  /** Notifica al wrapper para que muestre el indicador "✓ Guardado". */
+  onSaved?: () => void;
 };
 
 export function SettingsForm({
@@ -18,11 +20,11 @@ export function SettingsForm({
   initialCurrency,
   roleLabel,
   dict,
+  onSaved,
 }: Props) {
   const router = useRouter();
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [currency, setCurrency] = useState<PreferredCurrency>(initialCurrency);
-  const [saved, setSaved] = useState(false);
   const [, startTransition] = useTransition();
 
   // Guardado instantáneo: cada cambio persiste solo (sin botón). Mismo
@@ -39,8 +41,7 @@ export function SettingsForm({
     startTransition(async () => {
       const r = await savePreferencesAction(fd);
       if (r.ok) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+        onSaved?.();
         // Si cambió el idioma, refresheamos el server tree para que los
         // diccionarios cargados en server components se recalculen con la
         // nueva cookie.
@@ -89,10 +90,6 @@ export function SettingsForm({
             onChange={(v) => pickLanguage(v as Language)}
           />
         </Row>
-      </div>
-
-      <div className="mt-4 h-4">
-        {saved && <span className="eyebrow !text-gold">{dict.saved}</span>}
       </div>
     </div>
   );
