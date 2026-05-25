@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Dict } from "@/lib/i18n";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { formatDate } from "@/lib/utils/format";
@@ -33,6 +34,12 @@ export function DocumentsPanel({
   locale: string;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+  // Si la URL trae ?addDoc=1 (deep-link desde el checklist del founder),
+  // abrimos el modal apenas montamos.
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams?.get("addDoc") === "1") setModalOpen(true);
+  }, [searchParams]);
 
   return (
     <div>
@@ -181,9 +188,11 @@ function UploadModal({
           </button>
         </div>
 
-        <p className="mt-4 text-sm text-navy/65 leading-relaxed">
-          {m.description}
-        </p>
+        {m.description && (
+          <p className="mt-4 text-sm text-navy/65 leading-relaxed">
+            {m.description}
+          </p>
+        )}
 
         <div className="mt-4">
           <FileUpload

@@ -142,7 +142,7 @@ export default async function FounderDashboardPage({ params }: Params) {
     {
       label: "Primer documento compartido",
       done: project.documents.length > 0,
-      href: `/founder/${project.slug}` as Route,
+      href: `/founder/${project.slug}?addDoc=1#documentos` as Route,
       hint: "Reportes, estados financieros, lo que quieras compartir.",
     },
     {
@@ -420,7 +420,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         </FounderSection>
 
         {/* ─── 06 · Documentos ──────────────────────────────────── */}
-        <FounderSection n="06" title="Documentos">
+        <FounderSection n="06" title="Documentos" id="documentos">
           <DocumentsPanel
             projectSlug={project.slug}
             documents={project.documents.map((d) => ({
@@ -600,6 +600,7 @@ function FounderSection({
   title,
   editHref,
   editLabel,
+  id,
   children,
 }: {
   n: string;
@@ -607,10 +608,11 @@ function FounderSection({
   editHref?: Route;
   editLabel?: string;
   urgent?: boolean;
+  id?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="py-8 sm:py-10 hairline-b last:border-b-0">
+    <section id={id} className="py-8 sm:py-10 hairline-b last:border-b-0">
       <div className="flex items-baseline justify-between gap-4">
         <WidgetHeader n={n} title={title} />
         {editHref && editLabel && (

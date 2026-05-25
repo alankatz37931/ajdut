@@ -978,8 +978,8 @@ export const dict: Dict = {
       title: "Add document",
       closeBtn: "Close ×",
       description:
-        "Upload the file. All information — period, figures, progress — lives inside the document. Your members will see it in their \"Documents\" section.",
-      fileLabel: "Document file",
+        "",
+      fileLabel: "",
       fileHelper: "PDF, Excel or Word · 25 MB max.",
       errNoFile: "Upload a file first.",
       publishBtn: "Publish document →",

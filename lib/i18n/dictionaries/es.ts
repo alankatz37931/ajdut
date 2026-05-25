@@ -984,9 +984,8 @@ export const dict = {
     modal: {
       title: "Agregar documento",
       closeBtn: "Cerrar ×",
-      description:
-        "Subí el archivo. Toda la información — período, cifras, avances — va dentro del documento. Tus miembros lo van a ver en su sección \"Documentos\".",
-      fileLabel: "Archivo del documento",
+      description: "",
+      fileLabel: "",
       fileHelper: "PDF, Excel o Word · máximo 25 MB.",
       errNoFile: "Subí un archivo primero.",
       publishBtn: "Publicar documento →",
