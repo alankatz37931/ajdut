@@ -224,6 +224,10 @@ export const dict: Dict = {
       "Optional — if you leave it empty, other members see your full name.",
     aliasFootnote:
       "Appears on the project cap tables. Your real name is still used on your own certificate and portfolio.",
+    countryLabel: "Country",
+    phoneLabel: "Phone",
+    photoLabel: "Profile photo",
+    photoHelper: "PNG, JPG or WebP. 5MB max.",
     saveBtn: "Save",
     savingBtn: "Saving…",
     savedFlag: "✓ Saved",
@@ -236,6 +240,18 @@ export const dict: Dict = {
     pwChangedFlag: "✓ Password updated",
     showPasswordAria: "Show password",
     hidePasswordAria: "Hide password",
+    errors: {
+      nameTooShort: "Name must be at least 2 characters.",
+      aliasTooShort:
+        "Alias must be at least 2 characters (or leave it empty).",
+      aliasTooLong: "Alias cannot exceed 60 characters.",
+      avatarInvalid: "The profile photo URL is not valid.",
+      countryTooLong: "Country cannot exceed 60 characters.",
+      phoneTooLong: "Phone cannot exceed 40 characters.",
+      pwTooShort: "New password must be at least 10 characters.",
+      pwUnavailable: "You can't change your password right now.",
+      pwCurrentWrong: "Current password is incorrect.",
+    },
   },
 
   projectList: {

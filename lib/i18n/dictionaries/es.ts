@@ -228,6 +228,10 @@ export const dict = {
       "Opcional — si lo dejás vacío, otros miembros ven tu nombre completo.",
     aliasFootnote:
       "Aparece en el cap table de los proyectos. Tu nombre real se sigue usando en tu propio certificado y portafolio.",
+    countryLabel: "País",
+    phoneLabel: "Teléfono",
+    photoLabel: "Foto de perfil",
+    photoHelper: "PNG, JPG o WebP. Máximo 5MB.",
     saveBtn: "Guardar",
     savingBtn: "Guardando…",
     savedFlag: "✓ Guardado",
@@ -240,6 +244,18 @@ export const dict = {
     pwChangedFlag: "✓ Contraseña cambiada",
     showPasswordAria: "Mostrar contraseña",
     hidePasswordAria: "Ocultar contraseña",
+    errors: {
+      nameTooShort: "El nombre debe tener al menos 2 caracteres.",
+      aliasTooShort:
+        "El alias debe tener al menos 2 caracteres (o dejarlo vacío).",
+      aliasTooLong: "El alias no puede superar los 60 caracteres.",
+      avatarInvalid: "La URL de la foto de perfil no es válida.",
+      countryTooLong: "El país no puede superar los 60 caracteres.",
+      phoneTooLong: "El teléfono no puede superar los 40 caracteres.",
+      pwTooShort: "La nueva contraseña debe tener al menos 10 caracteres.",
+      pwUnavailable: "No podés cambiar la contraseña en este momento.",
+      pwCurrentWrong: "La contraseña actual es incorrecta.",
+    },
   },
 
   projectList: {

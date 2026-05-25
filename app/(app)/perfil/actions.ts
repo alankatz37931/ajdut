@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { recordAudit } from "@/lib/services/audit";
 
 export type ProfileResult =
@@ -30,9 +31,12 @@ function normalizeOptionalUrl(raw: unknown): string | null | "INVALID" {
 
 export async function updateNameAction(formData: FormData): Promise<ProfileResult> {
   const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.profile.errors;
+
   const fullName = String(formData.get("fullName") ?? "").trim();
   if (fullName.length < 2) {
-    return { ok: false, error: "El nombre debe tener al menos 2 caracteres.", field: "fullName" };
+    return { ok: false, error: e.nameTooShort, field: "fullName" };
   }
 
   // Alias es opcional. String vacío se persiste como null para caer al fullName
@@ -41,10 +45,10 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
   const alias = aliasRaw.length === 0 ? null : aliasRaw;
   if (alias !== null) {
     if (alias.length < 2) {
-      return { ok: false, error: "El alias debe tener al menos 2 caracteres (o dejarlo vacío).", field: "alias" };
+      return { ok: false, error: e.aliasTooShort, field: "alias" };
     }
     if (alias.length > 60) {
-      return { ok: false, error: "El alias no puede superar los 60 caracteres.", field: "alias" };
+      return { ok: false, error: e.aliasTooLong, field: "alias" };
     }
   }
 
@@ -52,7 +56,7 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
   // FileUpload con la URL pública del archivo subido a R2.
   const avatar = normalizeOptionalUrl(formData.get("avatarUrl"));
   if (avatar === "INVALID") {
-    return { ok: false, error: "La URL de la foto de perfil no es válida.", field: "avatarUrl" };
+    return { ok: false, error: e.avatarInvalid, field: "avatarUrl" };
   }
 
   // Contacto: país + teléfono — campos editables post-aplicación.
@@ -60,12 +64,12 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
   const countryRaw = String(formData.get("country") ?? "").trim();
   const country = countryRaw.length === 0 ? null : countryRaw;
   if (country !== null && country.length > 60) {
-    return { ok: false, error: "El país no puede superar los 60 caracteres.", field: "country" };
+    return { ok: false, error: e.countryTooLong, field: "country" };
   }
   const phoneRaw = String(formData.get("phone") ?? "").trim();
   const phone = phoneRaw.length === 0 ? null : phoneRaw;
   if (phone !== null && phone.length > 40) {
-    return { ok: false, error: "El teléfono no puede superar los 40 caracteres.", field: "phone" };
+    return { ok: false, error: e.phoneTooLong, field: "phone" };
   }
 
   await prisma.user.update({
@@ -84,11 +88,14 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
 
 export async function changePasswordAction(formData: FormData): Promise<ProfileResult> {
   const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.profile.errors;
+
   const current = String(formData.get("currentPassword") ?? "");
   const next = String(formData.get("newPassword") ?? "");
 
   if (next.length < 10) {
-    return { ok: false, error: "La nueva contraseña debe tener al menos 10 caracteres.", field: "newPassword" };
+    return { ok: false, error: e.pwTooShort, field: "newPassword" };
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -96,11 +103,11 @@ export async function changePasswordAction(formData: FormData): Promise<ProfileR
     select: { passwordHash: true },
   });
   if (!dbUser?.passwordHash) {
-    return { ok: false, error: "No podés cambiar la contraseña en este momento." };
+    return { ok: false, error: e.pwUnavailable };
   }
   const ok = await bcrypt.compare(current, dbUser.passwordHash);
   if (!ok) {
-    return { ok: false, error: "La contraseña actual es incorrecta.", field: "currentPassword" };
+    return { ok: false, error: e.pwCurrentWrong, field: "currentPassword" };
   }
 
   const hash = await bcrypt.hash(next, 10);

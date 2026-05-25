@@ -104,12 +104,10 @@ export function ProfileForm({
           />
         </div>
 
-        {/* Contacto — país + teléfono. Heredados de la Application al
-            aprobar, editables por el dueño. */}
         <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6">
           <FloatingInput
             id="country"
-            label="País"
+            label={dict.countryLabel}
             value={country}
             onChange={setCountry}
             maxLength={60}
@@ -117,14 +115,13 @@ export function ProfileForm({
           <FloatingInput
             id="phone"
             type="tel"
-            label="Teléfono"
+            label={dict.phoneLabel}
             value={phone}
             onChange={setPhone}
             maxLength={40}
           />
         </div>
 
-        {/* Foto de perfil */}
         <div className="pt-4">
           <FileUpload
             scope="profile-photo"
@@ -132,8 +129,8 @@ export function ProfileForm({
             maxSizeMb={5}
             currentUrl={avatarUrl || undefined}
             onUploaded={(url) => setAvatarUrl(url)}
-            label="Foto de perfil"
-            helperText="PNG, JPG o WebP. Máximo 5MB."
+            label={dict.photoLabel}
+            helperText={dict.photoHelper}
             showImagePreview
           />
           <input type="hidden" name="avatarUrl" value={avatarUrl} />
