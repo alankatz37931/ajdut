@@ -880,6 +880,10 @@ export const dict: Dict = {
     eyebrow: "— Succession",
     title: "Heirs and life verification",
     savedTick: "✓ Saved",
+    summaryNone: "Not set up",
+    summaryHeirsSingle: "1 heir · {pct}%",
+    summaryHeirsPlural: "{n} heirs · {pct}%",
+    toggleAria: "Show or hide {section}",
     section1Title: "Heirs",
     section1Desc:
       "Define who will inherit your participation. Only the AJDUT team sees this data, and these people will be contacted if you stop responding to our verifications for more than 3 consecutive cycles.",

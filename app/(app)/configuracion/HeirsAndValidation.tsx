@@ -60,6 +60,8 @@ export function HeirsAndValidation({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [openHeirs, setOpenHeirs] = useState(false);
+  const [openValidation, setOpenValidation] = useState(false);
 
   const FREQUENCY_OPTIONS: Array<{ value: number; label: string }> = [
     { value: 0, label: dict.validation.freqOptions["0"] },
@@ -165,178 +167,252 @@ export function HeirsAndValidation({
     ? `${dict.validation.lastConfirmedPrefix} ${fmtDate(validation.lastConfirmedAt, locale)} — ${humanAgo(validation.lastConfirmedAt, dict.validation.ago)}`
     : dict.validation.emptyLastConfirmed;
 
+  // Resúmenes mostrados a la derecha de cada toggle (cerrado).
+  const heirsSummary =
+    heirs.length === 0
+      ? dict.summaryNone
+      : (heirs.length === 1
+          ? dict.summaryHeirsSingle
+          : dict.summaryHeirsPlural
+        )
+          .replace("{n}", String(heirs.length))
+          .replace("{pct}", totalShare.toFixed(0));
+
+  const validationSummary =
+    dict.validation.freqOptions[
+      String(validation.frequencyMonths) as keyof HeirsDict["validation"]["freqOptions"]
+    ] ?? dict.summaryNone;
+
   return (
-    <div className="mt-12 space-y-12">
-      <header>
-        <p className="eyebrow">{dict.eyebrow}</p>
-        <h2 className="font-sans mt-3 text-h2 text-navy">{dict.title}</h2>
-      </header>
+    <div>
+      <div>
+        <ToggleRow
+          label={dict.section1Title}
+          summary={heirsSummary}
+          open={openHeirs}
+          onToggle={() => setOpenHeirs((v) => !v)}
+          ariaLabel={dict.toggleAria.replace("{section}", dict.section1Title)}
+        >
+          <p className="text-sm text-navy/65 leading-relaxed">{dict.section1Desc}</p>
 
-      {error && (
-        <p className="eyebrow !text-navy hairline p-3 bg-paper" role="alert">
-          {error}
-        </p>
-      )}
-      {saved && !error && (
-        <p className="eyebrow !text-gold" aria-live="polite">
-          {dict.savedTick}
-        </p>
-      )}
+          <div className="mt-5 hairline p-4 bg-paper flex flex-wrap items-center justify-between gap-3">
+            <p className="eyebrow">
+              <span className="font-mono text-navy">{totalLabel}</span>
+              <span className="!text-navy/40"> · </span>
+              <span
+                className={
+                  overAllocated
+                    ? "font-mono !text-navy"
+                    : "font-mono !text-navy/60"
+                }
+              >
+                {remainingLabel}
+              </span>
+            </p>
+            {!showNew && !editingId && (
+              <button
+                type="button"
+                onClick={() => setShowNew(true)}
+                className="eyebrow hover:!text-gold"
+                disabled={isPending}
+              >
+                {dict.addHeirBtn}
+              </button>
+            )}
+          </div>
 
-      {/* ─── Herederos ─────────────────────────────────────────────── */}
-      <section>
-        <h3 className="font-sans text-xl text-navy">{dict.section1Title}</h3>
-        <p className="mt-2 text-navy/70 leading-relaxed">{dict.section1Desc}</p>
-
-        <div className="mt-5 hairline p-4 bg-paper flex flex-wrap items-center justify-between gap-3">
-          <p className="eyebrow">
-            <span className="font-mono text-navy">{totalLabel}</span>
-            <span className="!text-navy/40"> · </span>
-            <span
-              className={
-                overAllocated
-                  ? "font-mono !text-navy"
-                  : "font-mono !text-navy/60"
-              }
-            >
-              {remainingLabel}
-            </span>
-          </p>
-          {!showNew && !editingId && (
-            <button
-              type="button"
-              onClick={() => setShowNew(true)}
-              className="eyebrow hover:!text-gold"
-              disabled={isPending}
-            >
-              {dict.addHeirBtn}
-            </button>
+          {overAllocated && (
+            <p className="mt-3 eyebrow !text-navy hairline p-3 bg-paper">
+              {dict.overAllocatedWarning}
+            </p>
           )}
-        </div>
 
-        {overAllocated && (
-          <p className="mt-3 eyebrow !text-navy hairline p-3 bg-paper">
-            {dict.overAllocatedWarning}
+          {showNew && (
+            <div className="mt-4 hairline p-4 bg-paper">
+              <HeirForm
+                heir={emptyHeir}
+                isNew
+                onSubmit={onAdd}
+                onCancel={() => setShowNew(false)}
+                isPending={isPending}
+                dict={dict.form}
+              />
+            </div>
+          )}
+
+          <ul className="mt-4 space-y-3">
+            {heirs.map((h) => (
+              <li key={h.id} className="hairline p-4 bg-paper">
+                {editingId === h.id ? (
+                  <HeirForm
+                    heir={h}
+                    onSubmit={(fd) => onUpdate(h.id, fd)}
+                    onCancel={() => setEditingId(null)}
+                    isPending={isPending}
+                    dict={dict.form}
+                  />
+                ) : (
+                  <div className="grid grid-cols-12 items-center gap-3">
+                    <div className="col-span-12 sm:col-span-5 min-w-0">
+                      <p className="font-sans text-navy">{h.fullName}</p>
+                      {h.email && (
+                        <p className="mt-1 eyebrow truncate normal-case tracking-normal !text-navy/60">
+                          {h.email}
+                        </p>
+                      )}
+                      {h.relationship && (
+                        <p className="mt-1 eyebrow">{h.relationship}</p>
+                      )}
+                    </div>
+                    <div className="col-span-6 sm:col-span-4 font-mono text-navy">
+                      {h.sharePercent.toFixed(2)}%
+                    </div>
+                    <div className="col-span-6 sm:col-span-3 flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(h.id)}
+                        className="eyebrow hover:!text-gold"
+                        disabled={isPending}
+                      >
+                        {dict.editBtn}
+                      </button>
+                      <InlineConfirm
+                        label={dict.removeBtn}
+                        question={dict.removeConfirm}
+                        onConfirm={() => onRemove(h.id)}
+                        disabled={isPending}
+                      />
+                    </div>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {heirs.length === 0 && !showNew && (
+            <p className="mt-4 text-navy/60">{dict.emptyHeirs}</p>
+          )}
+        </ToggleRow>
+
+        <ToggleRow
+          label={dict.validation.title}
+          summary={validationSummary}
+          open={openValidation}
+          onToggle={() => setOpenValidation((v) => !v)}
+          ariaLabel={dict.toggleAria.replace("{section}", dict.validation.title)}
+        >
+          <p className="text-sm text-navy/65 leading-relaxed">
+            {dict.validation.desc}
           </p>
-        )}
 
-        {showNew && (
-          <div className="mt-4 hairline p-4 bg-paper">
-            <HeirForm
-              heir={emptyHeir}
-              isNew
-              onSubmit={onAdd}
-              onCancel={() => setShowNew(false)}
-              isPending={isPending}
-              dict={dict.form}
+          <div className="mt-5 max-w-xs">
+            <FloatingSelect
+              id="frequencyMonths"
+              label={dict.validation.frequencyLabel}
+              value={String(validation.frequencyMonths)}
+              onChange={(v) => onFrequencyChange(Number.parseInt(v, 10))}
+              options={FREQUENCY_OPTIONS.map((o) => ({
+                value: String(o.value),
+                label: o.label,
+              }))}
+              disabled={isPending}
             />
           </div>
-        )}
 
-        <ul className="mt-4 space-y-3">
-          {heirs.map((h) => (
-            <li key={h.id} className="hairline p-4 bg-paper">
-              {editingId === h.id ? (
-                <HeirForm
-                  heir={h}
-                  onSubmit={(fd) => onUpdate(h.id, fd)}
-                  onCancel={() => setEditingId(null)}
-                  isPending={isPending}
-                  dict={dict.form}
-                />
-              ) : (
-                <div className="grid grid-cols-12 items-center gap-3">
-                  <div className="col-span-12 sm:col-span-5 min-w-0">
-                    <p className="font-sans text-navy">{h.fullName}</p>
-                    {h.email && (
-                      <p className="mt-1 eyebrow truncate normal-case tracking-normal !text-navy/60">
-                        {h.email}
-                      </p>
-                    )}
-                    {h.relationship && (
-                      <p className="mt-1 eyebrow">{h.relationship}</p>
-                    )}
-                  </div>
-                  <div className="col-span-6 sm:col-span-4 font-mono text-navy">
-                    {h.sharePercent.toFixed(2)}%
-                  </div>
-                  <div className="col-span-6 sm:col-span-3 flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(h.id)}
-                      className="eyebrow hover:!text-gold"
-                      disabled={isPending}
-                    >
-                      {dict.editBtn}
-                    </button>
-                    <InlineConfirm
-                      label={dict.removeBtn}
-                      question={dict.removeConfirm}
-                      onConfirm={() => onRemove(h.id)}
-                      disabled={isPending}
-                    />
-                  </div>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-
-        {heirs.length === 0 && !showNew && (
-          <p className="mt-4 text-navy/60">{dict.emptyHeirs}</p>
-        )}
-      </section>
-
-      {/* ─── Validación de vida ────────────────────────────────────── */}
-      <section>
-        <h3 className="font-sans text-xl text-navy">{dict.validation.title}</h3>
-        <p className="mt-2 text-navy/70 leading-relaxed">{dict.validation.desc}</p>
-
-        <div className="mt-5 max-w-xs">
-          <FloatingSelect
-            id="frequencyMonths"
-            label={dict.validation.frequencyLabel}
-            value={String(validation.frequencyMonths)}
-            onChange={(v) => onFrequencyChange(Number.parseInt(v, 10))}
-            options={FREQUENCY_OPTIONS.map((o) => ({
-              value: String(o.value),
-              label: o.label,
-            }))}
-            disabled={isPending}
-          />
-        </div>
-
-        <div className="mt-6 hairline p-4 bg-paper space-y-2">
-          <p className="eyebrow">
-            <span className="!text-navy/60">{lastConfirmedLabel}</span>
-          </p>
-          {validation.pendingCheck && (
-            <p className="eyebrow !text-gold">
-              {dict.validation.pendingSincePrefix}{" "}
-              {fmtDate(validation.pendingCheck.sentAt, locale)}
+          <div className="mt-6 hairline p-4 bg-paper space-y-2">
+            <p className="eyebrow">
+              <span className="!text-navy/60">{lastConfirmedLabel}</span>
             </p>
-          )}
-        </div>
-
-        {validation.missedCount > 0 && (
-          <div className="mt-4 hairline p-4 bg-paper">
-            <p className="eyebrow !text-gold">
-              ⚠ {validation.missedCount}{" "}
-              {validation.missedCount === 1
-                ? dict.validation.missedSingle
-                : dict.validation.missedPlural}
-              .
-            </p>
-            <p className="mt-2 text-sm text-navy/75">
-              {validation.heirsEscalated
-                ? dict.validation.escalated
-                : validation.missedCount >= 2
-                ? dict.validation.almostEscalated
-                : dict.validation.keepResponding}
-            </p>
+            {validation.pendingCheck && (
+              <p className="eyebrow !text-gold">
+                {dict.validation.pendingSincePrefix}{" "}
+                {fmtDate(validation.pendingCheck.sentAt, locale)}
+              </p>
+            )}
           </div>
+
+          {validation.missedCount > 0 && (
+            <div className="mt-4 hairline p-4 bg-paper">
+              <p className="eyebrow !text-gold">
+                ⚠ {validation.missedCount}{" "}
+                {validation.missedCount === 1
+                  ? dict.validation.missedSingle
+                  : dict.validation.missedPlural}
+                .
+              </p>
+              <p className="mt-2 text-sm text-navy/75">
+                {validation.heirsEscalated
+                  ? dict.validation.escalated
+                  : validation.missedCount >= 2
+                  ? dict.validation.almostEscalated
+                  : dict.validation.keepResponding}
+              </p>
+            </div>
+          )}
+        </ToggleRow>
+      </div>
+
+      <div className="mt-4 h-4">
+        {error && (
+          <span className="eyebrow !text-navy" role="alert">
+            {error}
+          </span>
         )}
-      </section>
+        {saved && !error && (
+          <span className="eyebrow !text-gold" aria-live="polite">
+            {dict.savedTick}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Fila colapsable que sigue el mismo lenguaje visual que las Row de
+ * SettingsForm: label a la izquierda, resumen + chevron a la derecha,
+ * hairline-b debajo. Al expandir, el contenido cae abajo con respiración.
+ */
+function ToggleRow({
+  label,
+  summary,
+  open,
+  onToggle,
+  ariaLabel,
+  children,
+}: {
+  label: string;
+  summary: string;
+  open: boolean;
+  onToggle: () => void;
+  ariaLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="hairline-b">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        className="w-full flex items-center justify-between py-5 text-left bg-transparent border-0 cursor-pointer p-0 m-0 hover:[&_.toggle-chevron]:text-navy"
+      >
+        <span className="text-navy">{label}</span>
+        <span className="flex items-center gap-3">
+          <span className="eyebrow !text-navy/40 normal-case tracking-normal">
+            {summary}
+          </span>
+          <span
+            aria-hidden
+            className={`toggle-chevron font-mono text-navy/40 leading-none transition-transform duration-150 ${
+              open ? "rotate-90" : ""
+            }`}
+          >
+            ›
+          </span>
+        </span>
+      </button>
+      {open && <div className="pb-6">{children}</div>}
     </div>
   );
 }

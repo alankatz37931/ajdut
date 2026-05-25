@@ -886,6 +886,10 @@ export const dict = {
     eyebrow: "— Sucesión",
     title: "Herederos y validación de vida",
     savedTick: "✓ Guardado",
+    summaryNone: "Sin configurar",
+    summaryHeirsSingle: "1 heredero · {pct}%",
+    summaryHeirsPlural: "{n} herederos · {pct}%",
+    toggleAria: "Mostrar u ocultar {section}",
     section1Title: "Herederos",
     section1Desc:
       "Definí quiénes recibirán tu participación. Solo el equipo de AJDUT verá estos datos, y se contactará a estas personas si dejás de responder nuestras verificaciones por más de 3 ciclos consecutivos.",
