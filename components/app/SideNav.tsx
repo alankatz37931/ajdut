@@ -60,7 +60,17 @@ function initialsOf(name: string): string {
 
 export function SideNav({ user, navItems, labels }: Props) {
   const [open, setOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const pathname = usePathname() ?? "";
+
+  function toggleGroup(name: string) {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -218,18 +228,38 @@ export function SideNav({ user, navItems, labels }: Props) {
               · sobre nosotros  (faded)
               · aviso legal     (faded)
             El bloque de usuario queda fuera de <nav>, fijo abajo. */}
-        <nav className="flex-1 overflow-y-auto pt-4 pb-2 flex flex-col">
+        <nav
+          className="flex-1 overflow-y-auto pt-4 pb-2 flex flex-col [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
           <div className="space-y-6">
-            {Array.from(grouped.entries()).map(([groupName, items], idx) => (
-              <div key={groupName || `g-${idx}`}>
-                {groupName && (
-                  <p className="font-sans font-bold text-[10px] tracking-[0.2em] uppercase !text-paper/40 px-6 mb-2">
-                    {groupName}
-                  </p>
-                )}
-                <ul>{items.map((item) => renderItem(item))}</ul>
-              </div>
-            ))}
+            {Array.from(grouped.entries()).map(([groupName, items], idx) => {
+              const collapsed = groupName ? collapsedGroups.has(groupName) : false;
+              return (
+                <div key={groupName || `g-${idx}`}>
+                  {groupName && (
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(groupName)}
+                      aria-expanded={!collapsed}
+                      className="w-full flex items-center justify-between gap-2 px-6 mb-2 p-0 m-0 border-0 bg-transparent cursor-pointer"
+                    >
+                      <span className="font-sans font-bold text-[10px] tracking-[0.2em] uppercase !text-paper/40">
+                        {groupName}
+                      </span>
+                      <span
+                        aria-hidden
+                        className={`!text-paper/40 leading-none font-mono text-[10px] transition-transform duration-150 ${
+                          collapsed ? "" : "rotate-180"
+                        }`}
+                      >
+                        ▾
+                      </span>
+                    </button>
+                  )}
+                  {!collapsed && <ul>{items.map((item) => renderItem(item))}</ul>}
+                </div>
+              );
+            })}
           </div>
 
           {bottomItems.length > 0 && (

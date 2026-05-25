@@ -307,7 +307,7 @@ export default async function ProjectPage({ params }: Params) {
   const satellite: SatAct[] = [];
   if (access.canEdit) {
     satellite.push({
-      kind: "ghost",
+      kind: "outline",
       label: t.editInfo,
       href: `/founder/${project.slug}/editar`,
     });

@@ -177,7 +177,9 @@ export async function navItemsFor(
     return [
       { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
       { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
-      ...(ownsShares ? [misParticipacionesItem, documentosItem, historialItem] : []),
+      ...(ownsShares ? [misParticipacionesItem] : []),
+      documentosItem,
+      historialItem,
       profileItem,
       settingsItem,
       nosotrosItem,
