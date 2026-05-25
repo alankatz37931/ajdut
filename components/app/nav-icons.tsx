@@ -72,6 +72,18 @@ export function AssignmentsIcon() {
   );
 }
 
+export function ResalesIcon() {
+  // Arrow-right-left (Lucide) — transferencia/intercambio entre miembros.
+  return (
+    <svg {...BASE_PROPS}>
+      <path d="m16 3 4 4-4 4" />
+      <path d="M20 7H4" />
+      <path d="m8 21-4-4 4-4" />
+      <path d="M4 17h16" />
+    </svg>
+  );
+}
+
 export function HeirsIcon() {
   // Dos personas — herederos / vínculos familiares.
   return (

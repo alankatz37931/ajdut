@@ -9,6 +9,7 @@ import {
   ParticipationsIcon,
   ApplicationsIcon,
   AssignmentsIcon,
+  ResalesIcon,
   HeirsIcon,
   AuditIcon,
   NoticesIcon,
@@ -57,6 +58,16 @@ export async function navItemsFor(
   // Cualquier rol que tenga acciones asignadas ve "Mis participaciones",
   // igual que un socio. PARTNER ya lo tiene fijo en su menú. Lo computamos
   // dentro de cada Promise.all por rol para no serializar y agotar el pool.
+  /** Cuenta protegida: si la DB falla devuelve 0 — el badge desaparece pero
+   *  el sidebar igual renderea. Pensado para connection_limit=1 + concurrencia. */
+  async function safeCount(fn: () => Promise<number>): Promise<number> {
+    try {
+      return await fn();
+    } catch {
+      return 0;
+    }
+  }
+
   async function fetchOwnsShares(): Promise<boolean> {
     if (!userId) return false;
     try {
@@ -123,25 +134,29 @@ export async function navItemsFor(
   };
 
   if (role === "ADMIN") {
-    const [
-      pendingApps,
-      pendingAssignmentsCount,
-      escalatedHeirs,
-      pendingResales,
-      ownsShares,
-    ] = await Promise.all([
+    // Sequential awaits — con connection_limit=1 paralelizar tira timeout
+    // (todos los queries quedan esperando la única conexión). Cada query va
+    // envuelta en safeCount: si una falla, las demás siguen y el sidebar
+    // renderea aunque sea sin el badge correspondiente.
+    const pendingApps = await safeCount(() =>
       prisma.application.count({
         where: { status: { in: ["PENDING", "UNDER_REVIEW"] } },
-      }),
-      prisma.pendingAssignment.count({ where: { status: "PENDING" } }),
+      })
+    );
+    const pendingAssignmentsCount = await safeCount(() =>
+      prisma.pendingAssignment.count({ where: { status: "PENDING" } })
+    );
+    const escalatedHeirs = await safeCount(() =>
       prisma.user.count({
         where: { heirsEscalated: true, isActive: true, deletedAt: null },
-      }),
+      })
+    );
+    const pendingResales = await safeCount(() =>
       prisma.resaleListing.count({
         where: { status: "AWAITING_VALIDATION" },
-      }),
-      fetchOwnsShares(),
-    ]);
+      })
+    );
+    const ownsShares = await fetchOwnsShares();
     return [
       // PORTAFOLIO
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
@@ -169,7 +184,7 @@ export async function navItemsFor(
         badge: pendingResales,
         badgeHighlight: true,
         group: SEC_ADMIN,
-        icon: <AssignmentsIcon />,
+        icon: <ResalesIcon />,
       },
       {
         label: n.heirs,
