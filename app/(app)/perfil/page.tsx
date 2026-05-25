@@ -3,21 +3,12 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getDict, getLocale } from "@/lib/i18n";
 import { getRoleLabel } from "@/components/app/nav-items";
+import { HeaderAvatar } from "./HeaderAvatar";
 import { ProfileSurface } from "./ProfileSurface";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
   return { title: dict.profile.metaTitle };
-}
-
-/** Iniciales para el fallback del avatar cuando no hay foto. Máx 2 chars. */
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter((p) => p.length > 0);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return (parts[0]?.[0] ?? "?").toUpperCase();
-  const first = parts[0]?.[0] ?? "";
-  const last = parts[parts.length - 1]?.[0] ?? "";
-  return (first + last).toUpperCase();
 }
 
 export default async function ProfilePage() {
@@ -42,21 +33,7 @@ export default async function ProfilePage() {
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7 flex items-center gap-5 sm:gap-6">
-        {user.avatarUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={user.avatarUrl}
-            alt=""
-            className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover hairline"
-          />
-        ) : (
-          <span
-            aria-hidden
-            className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-paper-dark/40 hairline flex items-center justify-center font-mono text-navy/60 text-lg"
-          >
-            {initialsOf(user.fullName)}
-          </span>
-        )}
+        <HeaderAvatar initialUrl={user.avatarUrl ?? ""} dict={t} />
         <div>
           <p className="eyebrow">{t.eyebrow}</p>
           <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
@@ -77,7 +54,6 @@ export default async function ProfilePage() {
       <ProfileSurface
         initialName={user.fullName}
         initialAlias={user.alias ?? ""}
-        initialAvatarUrl={user.avatarUrl ?? ""}
         initialCountry={user.country ?? ""}
         initialPhone={user.phone ?? ""}
         dict={t}

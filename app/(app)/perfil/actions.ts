@@ -52,13 +52,6 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
     }
   }
 
-  // avatarUrl es opcional. Viene de un hidden input llenado por el componente
-  // FileUpload con la URL pública del archivo subido a R2.
-  const avatar = normalizeOptionalUrl(formData.get("avatarUrl"));
-  if (avatar === "INVALID") {
-    return { ok: false, error: e.avatarInvalid, field: "avatarUrl" };
-  }
-
   // Contacto: país + teléfono — campos editables post-aplicación.
   // Vacío se persiste como null para que la UI muestre "—" en vez de "".
   const countryRaw = String(formData.get("country") ?? "").trim();
@@ -77,10 +70,32 @@ export async function updateNameAction(formData: FormData): Promise<ProfileResul
     data: {
       fullName,
       alias,
-      avatarUrl: avatar,
       country,
       phone,
     },
+  });
+  revalidatePath("/perfil");
+  return { ok: true };
+}
+
+/**
+ * Actualiza solo el avatar — separado de updateNameAction porque el
+ * HeaderAvatar vive en otro client component y no puede sincronizar el
+ * snapshot completo de campos. Acepta "" para quitar la foto.
+ */
+export async function updateAvatarAction(rawUrl: string): Promise<ProfileResult> {
+  const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.profile.errors;
+
+  const normalized = normalizeOptionalUrl(rawUrl);
+  if (normalized === "INVALID") {
+    return { ok: false, error: e.avatarInvalid, field: "avatarUrl" };
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { avatarUrl: normalized },
   });
   revalidatePath("/perfil");
   return { ok: true };

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { upload } from "@vercel/blob/client";
 import type { Dict } from "@/lib/i18n";
 import { FloatingInput, GoldUnderline } from "@/components/ui/Floating";
 import { changePasswordAction, updateNameAction } from "./actions";
@@ -13,7 +12,6 @@ type Props = {
   initialAlias: string;
   initialCountry: string;
   initialPhone: string;
-  initialAvatarUrl: string;
   dict: ProfileDict;
 };
 
@@ -31,14 +29,12 @@ export function ProfileSurface({
   initialAlias,
   initialCountry,
   initialPhone,
-  initialAvatarUrl,
   dict,
 }: Props) {
   const [name, setName] = useState(initialName);
   const [alias, setAlias] = useState(initialAlias);
   const [country, setCountry] = useState(initialCountry);
   const [phone, setPhone] = useState(initialPhone);
-  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
 
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,10 +49,11 @@ export function ProfileSurface({
   /**
    * Persiste el snapshot completo (con un override puntual para el campo
    * que se está guardando) y actualiza el estado local optimistamente. Si
-   * el server falla, revierte solo ese campo.
+   * el server falla, revierte solo ese campo. La foto vive aparte en el
+   * HeaderAvatar (action dedicada updateAvatarAction).
    */
   function persistField(
-    key: "fullName" | "alias" | "country" | "phone" | "avatarUrl",
+    key: "fullName" | "alias" | "country" | "phone",
     newValue: string
   ) {
     const setters = {
@@ -64,9 +61,8 @@ export function ProfileSurface({
       alias: setAlias,
       country: setCountry,
       phone: setPhone,
-      avatarUrl: setAvatarUrl,
     } as const;
-    const prev = { fullName: name, alias, country, phone, avatarUrl };
+    const prev = { fullName: name, alias, country, phone };
     const next = { ...prev, [key]: newValue };
     setters[key](newValue);
 
@@ -75,7 +71,6 @@ export function ProfileSurface({
     fd.set("alias", next.alias);
     fd.set("country", next.country);
     fd.set("phone", next.phone);
-    fd.set("avatarUrl", next.avatarUrl);
 
     startTransition(async () => {
       const r = await updateNameAction(fd);
@@ -114,13 +109,6 @@ export function ProfileSurface({
           value={phone}
           type="tel"
           onSave={(v) => persistField("phone", v.trim())}
-          dict={dict}
-        />
-        <PhotoFieldRow
-          label={dict.photoLabel}
-          value={avatarUrl}
-          onChange={(url) => persistField("avatarUrl", url)}
-          onError={setError}
           dict={dict}
         />
         <PasswordFieldRow dict={dict} onSaved={flashSaved} onError={setError} />
@@ -248,193 +236,55 @@ function FieldRow({
   const displayValue = value.trim() || dict.empty;
 
   return (
-    <div className="hairline-b py-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <label className="eyebrow !text-navy/50">{label}</label>
-        <button
-          type="button"
-          onClick={editing ? commit : startEdit}
-          aria-label={(editing ? dict.saveAriaFmt : dict.editAriaFmt).replace(
-            "{field}",
-            label
-          )}
-          className="text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
-        >
-          {editing ? <CheckIcon /> : <PencilIcon />}
-        </button>
-      </div>
-
-      <div className="mt-2 relative">
-        {editing ? (
-          <>
-            <input
-              ref={inputRef}
-              type={type}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={commit}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  commit();
-                } else if (e.key === "Escape") {
-                  e.preventDefault();
-                  abandon();
-                }
-              }}
-              required={required}
-              placeholder={placeholder}
-              className="peer w-full bg-transparent border-0 outline-none text-navy font-sans placeholder:text-navy/30"
-            />
-            <GoldUnderline />
-          </>
-        ) : (
-          <p
-            className={`font-sans ${
-              value.trim() ? "text-navy" : "text-navy/30"
-            }`}
-          >
-            {displayValue}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Foto de perfil — mismo lenguaje que FieldRow pero el "valor" es el
- * avatar circular. El lápiz abre el file picker; un × overlay (hover)
- * sobre el avatar quita la foto.
- */
-function PhotoFieldRow({
-  label,
-  value,
-  onChange,
-  onError,
-  dict,
-}: {
-  label: string;
-  value: string;
-  onChange: (url: string) => void;
-  onError: (msg: string | null) => void;
-  dict: ProfileDict;
-}) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [previewBroken, setPreviewBroken] = useState(false);
-
-  const MAX_MB = 5;
-
-  function slugifyName(original: string): string {
-    const dot = original.lastIndexOf(".");
-    const name = dot > 0 ? original.slice(0, dot) : original;
-    const ext = dot > 0 ? original.slice(dot + 1) : "";
-    const clean = (s: string) =>
-      s
-        .normalize("NFKD")
-        .replace(/[̀-ͯ]/g, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-    const base = clean(name).slice(0, 80) || "archivo";
-    const e = clean(ext).slice(0, 10);
-    return e ? `${base}.${e}` : base;
-  }
-
-  async function handleFile(file: File) {
-    onError(null);
-    const maxBytes = MAX_MB * 1024 * 1024;
-    if (file.size > maxBytes) {
-      onError(dict.uploadTooBig.replace("{n}", String(MAX_MB)));
-      return;
-    }
-    setUploading(true);
-    setProgress(0);
-    try {
-      const blob = await upload(`profile-photo/${slugifyName(file.name)}`, file, {
-        access: "public",
-        handleUploadUrl: "/api/uploads/presign",
-        clientPayload: JSON.stringify({ scope: "profile-photo" }),
-        onUploadProgress: (e) => setProgress(Math.round(e.percentage)),
-      });
-      setPreviewBroken(false);
-      onChange(blob.url);
-    } catch {
-      onError(dict.uploadFailed);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  const hasPhoto = value !== "" && !previewBroken;
-
-  return (
-    <div className="hairline-b py-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="eyebrow !text-navy/50">{label}</span>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          aria-label={hasPhoto ? dict.uploadAriaChange : dict.uploadAriaNew}
-          className="text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
-        >
-          <PencilIcon />
-        </button>
-      </div>
-
-      <div className="mt-2">
-        {uploading ? (
-          <p className="eyebrow !text-navy/40 normal-case tracking-normal">
-            {dict.uploadingFmt.replace("{n}", String(progress))}
-          </p>
-        ) : (
-          <span className="group relative inline-block">
-            {hasPhoto ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={value}
-                alt=""
-                onError={() => setPreviewBroken(true)}
-                className="w-12 h-12 rounded-full object-cover hairline"
-              />
-            ) : (
-              <span className="w-12 h-12 rounded-full bg-paper-dark/40 hairline flex items-center justify-center text-navy/40 font-mono text-lg leading-none">
-                +
-              </span>
-            )}
-            {hasPhoto && (
-              <button
-                type="button"
-                onClick={() => {
-                  onChange("");
-                  setPreviewBroken(false);
+    <div className="hairline-b py-5 flex items-center justify-between gap-4">
+      <div className="min-w-0 flex-1">
+        <label className="eyebrow !text-navy/50 block">{label}</label>
+        <div className="mt-2 relative">
+          {editing ? (
+            <>
+              <input
+                ref={inputRef}
+                type={type}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commit}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commit();
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    abandon();
+                  }
                 }}
-                aria-label={dict.removePhoto}
-                title={dict.removePhoto}
-                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-paper hairline flex items-center justify-center text-navy/60 hover:text-navy hover:border-navy p-0 m-0 cursor-pointer leading-none transition-opacity duration-150 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-              >
-                <span aria-hidden className="font-sans text-[10px] leading-none">
-                  ×
-                </span>
-              </button>
-            )}
-          </span>
-        )}
+                required={required}
+                placeholder={placeholder}
+                className="peer w-full bg-transparent border-0 outline-none text-navy font-sans placeholder:text-navy/30"
+              />
+              <GoldUnderline />
+            </>
+          ) : (
+            <p
+              className={`font-sans ${
+                value.trim() ? "text-navy" : "text-navy/30"
+              }`}
+            >
+              {displayValue}
+            </p>
+          )}
+        </div>
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void handleFile(f);
-          e.target.value = "";
-        }}
-      />
+      <button
+        type="button"
+        onClick={editing ? commit : startEdit}
+        aria-label={(editing ? dict.saveAriaFmt : dict.editAriaFmt).replace(
+          "{field}",
+          label
+        )}
+        className="shrink-0 text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
+      >
+        {editing ? <CheckIcon /> : <PencilIcon />}
+      </button>
     </div>
   );
 }
@@ -457,8 +307,11 @@ function PasswordFieldRow({
   const [open, setOpen] = useState(false);
   return (
     <div className="hairline-b py-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="eyebrow !text-navy/50">{dict.passwordRow}</span>
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <span className="eyebrow !text-navy/50 block">{dict.passwordRow}</span>
+          <p className="mt-2 font-sans text-navy">{dict.passwordMask}</p>
+        </div>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -467,21 +320,17 @@ function PasswordFieldRow({
             "{field}",
             dict.passwordRow
           )}
-          className="text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
+          className="shrink-0 text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
         >
           <ChevronIcon open={open} />
         </button>
       </div>
 
-      <div className="mt-2">
-        {!open ? (
-          <p className="font-sans text-navy">{dict.passwordMask}</p>
-        ) : (
-          <div className="pt-2">
-            <PasswordPanel dict={dict} onSaved={onSaved} onError={onError} />
-          </div>
-        )}
-      </div>
+      {open && (
+        <div className="mt-4">
+          <PasswordPanel dict={dict} onSaved={onSaved} onError={onError} />
+        </div>
+      )}
     </div>
   );
 }
