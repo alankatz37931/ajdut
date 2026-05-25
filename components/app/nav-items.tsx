@@ -187,9 +187,10 @@ export async function navItemsFor(
     return [
       { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
       { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
-      ...(ownsShares ? [misParticipacionesItem] : []),
-      documentosItem,
-      historialItem,
+      // Documentos / Historial solo si el founder tiene shares de algún otro
+      // proyecto (rol mixto). Como dueño del proyecto los ve dentro de la
+      // propia ficha founder, no globalmente.
+      ...(ownsShares ? [misParticipacionesItem, documentosItem, historialItem] : []),
       profileItem,
       settingsItem,
       nosotrosItem,
