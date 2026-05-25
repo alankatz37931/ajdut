@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { BrandMark } from "./BrandMark";
-import { getDict } from "@/lib/i18n";
+import { LanguageToggle } from "./LanguageToggle";
+import { getDict, getLanguage } from "@/lib/i18n";
 
 export async function PublicNav() {
   const dict = await getDict();
+  const lang = await getLanguage();
   const t = dict.publicNav;
   return (
     <nav className="hairline-b">
@@ -23,6 +25,7 @@ export async function PublicNav() {
           >
             {t.signIn}
           </Link>
+          <LanguageToggle current={lang} />
         </div>
       </div>
     </nav>
