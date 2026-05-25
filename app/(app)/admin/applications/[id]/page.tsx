@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getDict, getLocale } from "@/lib/i18n";
 import { Section } from "@/components/ui/Section";
+import { BackLink } from "@/components/app/BackLink";
 import { formatDateTime } from "@/lib/utils/format";
 import { ApplicationReviewActions } from "./ReviewActions";
 
@@ -30,7 +31,7 @@ export default async function ApplicationDetailPage({ params }: Params) {
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">{t.eyebrow}</p>
+        <BackLink fallback="/admin/applications">{t.title}</BackLink>
         <div className="mt-3 sm:mt-4 flex items-center gap-3 flex-wrap">
           {/* Badge del tipo de aplicante: Empresa (proyect owner) vs Persona. */}
           <span
