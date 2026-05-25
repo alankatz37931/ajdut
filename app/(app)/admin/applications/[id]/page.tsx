@@ -1,23 +1,19 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict, getLocale } from "@/lib/i18n";
 import { Section } from "@/components/ui/Section";
 import { formatDateTime } from "@/lib/utils/format";
 import { ApplicationReviewActions } from "./ReviewActions";
 
 type Params = { params: Promise<{ id: string }> };
 
-// Labels para el tipo de proyecto declarado por aplicantes COMPANY.
-// Mirror del enum ProjectKind — mantener sincronizado con NewProjectForm.
-const COMPANY_KIND_LABEL: Record<string, string> = {
-  STARTUP: "Startup",
-  REAL_ESTATE: "Inmobiliario",
-  MERCHANDISE: "Mercancía",
-  OTHER: "Otro",
-};
-
 export default async function ApplicationDetailPage({ params }: Params) {
   await requireRole(["ADMIN"]);
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.adminApplications;
+  const d = t.detail;
   const { id } = await params;
 
   const app = await prisma.application.findUnique({
@@ -29,11 +25,12 @@ export default async function ApplicationDetailPage({ params }: Params) {
   const daysOld = Math.floor((Date.now() - app.createdAt.getTime()) / (1000 * 60 * 60 * 24));
   const canAct = app.status === "PENDING" || app.status === "UNDER_REVIEW";
   const isCompany = app.kind === "COMPANY";
+  const statusLabel = t.status[app.status] ?? app.status;
 
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Admin</p>
+        <p className="eyebrow">{t.eyebrow}</p>
         <div className="mt-3 sm:mt-4 flex items-center gap-3 flex-wrap">
           {/* Badge del tipo de aplicante: Empresa (proyect owner) vs Persona. */}
           <span
@@ -41,63 +38,69 @@ export default async function ApplicationDetailPage({ params }: Params) {
               isCompany ? "!text-gold" : "!text-navy/60"
             }`}
           >
-            {isCompany ? "Empresa" : "Persona"}
+            {isCompany ? t.kindCompany : t.kindPerson}
           </span>
           <h1 className="font-sans text-h1 text-navy">{app.fullName}</h1>
         </div>
         <p className="mt-2 eyebrow">
-          {app.status} · enviada hace {daysOld}d
+          {statusLabel} · {d.sentAgoFmt.replace("{n}", String(daysOld))}
         </p>
       </header>
 
-      <Section title="Datos">
+      <Section title={d.sectionData}>
         <dl className="grid grid-cols-12 gap-4">
-          <Row label="Email" value={app.email} />
-          <Row label="Teléfono" value={app.phone} />
-          <Row label="País" value={app.country} />
-          {app.referredBy && <Row label="Referido por" value={app.referredBy} />}
-          <Row label="Recibida" value={formatDateTime(app.createdAt)} />
+          <Row label={d.fieldEmail} value={app.email} />
+          <Row label={d.fieldPhone} value={app.phone} />
+          <Row label={d.fieldCountry} value={app.country} />
+          {app.referredBy && <Row label={d.fieldReferredBy} value={app.referredBy} />}
+          <Row label={d.fieldReceived} value={formatDateTime(app.createdAt, locale)} />
           {app.reviewedAt && (
-            <Row label="Revisada" value={`${formatDateTime(app.reviewedAt)} por ${app.reviewedBy?.fullName ?? "—"}`} />
+            <Row
+              label={d.fieldReviewed}
+              value={d.reviewedByFmt
+                .replace("{date}", formatDateTime(app.reviewedAt, locale))
+                .replace("{name}", app.reviewedBy?.fullName ?? d.reviewedByUnknown)}
+            />
           )}
         </dl>
       </Section>
 
       {isCompany && (app.companyName || app.companyKind || app.companyDescription) && (
-        <Section title="Empresa / proyecto">
+        <Section title={d.sectionCompany}>
           <dl className="grid grid-cols-12 gap-4">
-            {app.companyName && <Row label="Nombre" value={app.companyName} />}
+            {app.companyName && <Row label={d.companyName} value={app.companyName} />}
             {app.companyKind && (
               <Row
-                label="Tipo de proyecto"
-                value={COMPANY_KIND_LABEL[app.companyKind] ?? app.companyKind}
+                label={d.companyKind}
+                value={d.kinds[app.companyKind] ?? app.companyKind}
               />
             )}
             {app.companyDescription && (
-              <Row label="Descripción" value={app.companyDescription} />
+              <Row label={d.companyDescription} value={app.companyDescription} />
             )}
           </dl>
         </Section>
       )}
 
-      <Section title="Motivación">
+      <Section title={d.sectionMotivation}>
         <p className="whitespace-pre-line text-navy/85 leading-relaxed">{app.motivation}</p>
       </Section>
 
       {app.rejectionNote && (
-        <Section title="Nota de rechazo">
+        <Section title={d.sectionRejection}>
           <p className="text-navy/85 leading-relaxed">{app.rejectionNote}</p>
         </Section>
       )}
 
       {canAct && (
-        <Section title="Acciones">
+        <Section title={d.sectionActions}>
           {/* Pre-seleccionamos PROJECT_OWNER si la aplicación es de Empresa,
               PARTNER si es Persona. El admin puede cambiar el rol antes de
               confirmar. */}
           <ApplicationReviewActions
             applicationId={app.id}
             defaultRole={isCompany ? "PROJECT_OWNER" : "PARTNER"}
+            dict={t.review}
           />
         </Section>
       )}

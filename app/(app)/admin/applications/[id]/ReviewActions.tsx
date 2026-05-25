@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { Route } from "next";
+import type { Dict } from "@/lib/i18n";
 import {
   approveApplicationAction,
   rejectApplicationAction,
@@ -10,15 +11,12 @@ import {
 } from "./actions";
 import { FloatingTextarea } from "@/components/ui/Floating";
 
-const ROLE_LABEL: Record<"PARTNER" | "PROJECT_OWNER" | "CO_ADMIN", string> = {
-  PARTNER: "Miembro",
-  PROJECT_OWNER: "Project owner",
-  CO_ADMIN: "Co-admin",
-};
+type ReviewDict = Dict["adminApplications"]["review"];
 
 export function ApplicationReviewActions({
   applicationId,
   defaultRole = "PARTNER",
+  dict,
 }: {
   applicationId: string;
   /**
@@ -29,6 +27,7 @@ export function ApplicationReviewActions({
    * El admin puede cambiarlo manualmente antes de confirmar.
    */
   defaultRole?: "PARTNER" | "PROJECT_OWNER" | "CO_ADMIN";
+  dict: ReviewDict;
 }) {
   const [mode, setMode] = useState<
     "idle" | "approving" | "rejecting" | "approved" | "rejected"
@@ -56,7 +55,7 @@ export function ApplicationReviewActions({
   function reject() {
     setError(null);
     if (rejectionNote.trim().length < 10) {
-      setError("La nota debe tener al menos 10 caracteres.");
+      setError(dict.noteTooShort);
       return;
     }
     startTransition(async () => {
@@ -77,20 +76,25 @@ export function ApplicationReviewActions({
     );
     return (
       <div className="space-y-4 hairline p-6 bg-paper-light">
-        <p className="eyebrow">Aplicación aprobada</p>
+        <p className="eyebrow">{dict.approvedTitle}</p>
         <p className="text-navy">
-          Le enviamos a <span className="font-mono">{result.email}</span> un email con un link
-          de un solo uso para que establezca su propia contraseña.
+          {dict.approvedBodyFmt.split("{email}").map((part, i, arr) => (
+            <span key={i}>
+              {part}
+              {i < arr.length - 1 && (
+                <span className="font-mono">{result.email}</span>
+              )}
+            </span>
+          ))}
         </p>
         <p className="eyebrow">
-          El link expira en {hours} horas. Si el usuario no lo recibe, podés reenviarlo desde el
-          panel de usuarios.
+          {dict.approvedExpiresFmt.replace("{hours}", String(hours))}
         </p>
         <Link
           href={"/admin/applications" as Route}
           className="eyebrow !text-gold hover:!text-navy inline-block"
         >
-          Volver a aplicaciones →
+          {dict.backLink}
         </Link>
       </div>
     );
@@ -99,15 +103,13 @@ export function ApplicationReviewActions({
   if (mode === "rejected") {
     return (
       <div className="space-y-4 hairline p-6 bg-paper-light">
-        <p className="eyebrow">Aplicación rechazada</p>
-        <p className="text-navy">
-          El aplicante recibió un email con la nota que escribiste. La aplicación queda archivada.
-        </p>
+        <p className="eyebrow">{dict.rejectedTitle}</p>
+        <p className="text-navy">{dict.rejectedBody}</p>
         <Link
           href={"/admin/applications" as Route}
           className="eyebrow !text-gold hover:!text-navy inline-block"
         >
-          Volver a aplicaciones →
+          {dict.backLink}
         </Link>
       </div>
     );
@@ -118,17 +120,17 @@ export function ApplicationReviewActions({
       {mode === "idle" && (
         <div className="flex flex-wrap gap-3">
           <button onClick={() => setMode("approving")} className="btn-primary" disabled={isPending}>
-            Aprobar
+            {dict.approveBtn}
           </button>
           <button onClick={() => setMode("rejecting")} className="btn-outline" disabled={isPending}>
-            Rechazar
+            {dict.rejectBtn}
           </button>
         </div>
       )}
 
       {mode === "approving" && (
         <div className="space-y-4 hairline p-6">
-          <p className="eyebrow">— Rol asignado</p>
+          <p className="eyebrow">{dict.roleEyebrow}</p>
           <div className="flex flex-wrap gap-3">
             {(["PARTNER", "PROJECT_OWNER", "CO_ADMIN"] as const).map((r) => (
               <label
@@ -143,20 +145,17 @@ export function ApplicationReviewActions({
                   onChange={() => setApprovedRole(r)}
                   className="sr-only"
                 />
-                <span className="eyebrow">{ROLE_LABEL[r]}</span>
+                <span className="eyebrow">{dict.roleLabels[r] ?? r}</span>
               </label>
             ))}
           </div>
-          <p className="eyebrow">
-            Al confirmar, le enviaremos al aplicante un email con un link de un solo uso para que
-            establezca su propia contraseña. Vos no vas a ver esa contraseña.
-          </p>
+          <p className="eyebrow">{dict.approveDisclaimer}</p>
           <div className="flex gap-3">
             <button onClick={approve} disabled={isPending} className="btn-primary">
-              {isPending ? "Aprobando…" : "Confirmar aprobación"}
+              {isPending ? dict.approvingBtn : dict.confirmApproveBtn}
             </button>
             <button onClick={() => setMode("idle")} disabled={isPending} className="btn-outline">
-              Cancelar
+              {dict.cancelBtn}
             </button>
           </div>
         </div>
@@ -166,7 +165,7 @@ export function ApplicationReviewActions({
         <div className="space-y-4 hairline p-6">
           <FloatingTextarea
             id="rejectionNote"
-            label="Nota de rechazo (mínimo 10 caracteres)"
+            label={dict.noteLabel}
             value={rejectionNote}
             onChange={setRejectionNote}
             rows={4}
@@ -175,10 +174,10 @@ export function ApplicationReviewActions({
           />
           <div className="flex gap-3">
             <button onClick={reject} disabled={isPending} className="btn-primary">
-              {isPending ? "Rechazando…" : "Confirmar rechazo"}
+              {isPending ? dict.rejectingBtn : dict.confirmRejectBtn}
             </button>
             <button onClick={() => setMode("idle")} disabled={isPending} className="btn-outline">
-              Cancelar
+              {dict.cancelBtn}
             </button>
           </div>
         </div>
