@@ -295,8 +295,8 @@ function PhotoRow({
             {dict.uploadingFmt.replace("{n}", String(progress))}
           </span>
         ) : (
-          /* Wrap del avatar — relative para anclar el × overlay cuando hay foto. */
-          <span className="relative inline-block">
+          /* Wrap del avatar — group para revelar el × al hover, relative para anclarlo. */
+          <span className="group relative inline-block">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -326,7 +326,7 @@ function PhotoRow({
                 }}
                 aria-label={dict.removePhoto}
                 title={dict.removePhoto}
-                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-paper hairline flex items-center justify-center text-navy/60 hover:text-navy hover:border-navy p-0 m-0 cursor-pointer leading-none transition-colors"
+                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-paper hairline flex items-center justify-center text-navy/60 hover:text-navy hover:border-navy p-0 m-0 cursor-pointer leading-none transition-opacity duration-150 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               >
                 <span aria-hidden className="font-sans text-[10px] leading-none">
                   ×
