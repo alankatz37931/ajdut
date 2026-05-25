@@ -395,7 +395,7 @@ function ToggleRow({
         onClick={onToggle}
         aria-expanded={open}
         aria-label={ariaLabel}
-        className="w-full flex items-center justify-between min-h-[4.75rem] py-5 text-left bg-transparent border-0 m-0 cursor-pointer hover:[&_.toggle-chevron]:text-navy"
+        className="w-full flex items-center justify-between h-[4.75rem] text-left bg-transparent border-0 m-0 p-0 cursor-pointer hover:[&_.toggle-chevron]:text-navy"
       >
         <span className="text-navy">{label}</span>
         <span className="flex items-center gap-3">

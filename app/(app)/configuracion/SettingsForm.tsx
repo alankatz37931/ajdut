@@ -106,7 +106,7 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="hairline-b flex items-center justify-between min-h-[4.75rem] py-5">
+    <div className="hairline-b flex items-center justify-between h-[4.75rem]">
       <span className="text-navy">{label}</span>
       {children}
     </div>
