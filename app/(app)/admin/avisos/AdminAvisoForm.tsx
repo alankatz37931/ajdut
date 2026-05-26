@@ -71,39 +71,41 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
     !isSending && subject.trim().length > 0 && body.trim().length > 0;
 
   return (
-    <form onSubmit={onSubmit} className="max-w-2xl space-y-6">
-      <FloatingSelect
-        id="role"
-        label={dict.rolesLabelSingle}
-        value={role}
-        onChange={(v) => {
-          clearStatus();
-          setRole(v);
-        }}
-        disabled={isSending}
-        options={[
-          { value: "", label: dict.rolesAll },
-          { value: "ADMIN", label: dict.roleAdmin },
-          { value: "PROJECT_OWNER", label: dict.roleProjectOwner },
-          { value: "CO_ADMIN", label: dict.roleCoAdmin },
-          { value: "PARTNER", label: dict.rolePartner },
-        ]}
-      />
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+        <FloatingSelect
+          id="role"
+          label={dict.rolesLabelSingle}
+          value={role}
+          onChange={(v) => {
+            clearStatus();
+            setRole(v);
+          }}
+          disabled={isSending}
+          options={[
+            { value: "", label: dict.rolesAll },
+            { value: "ADMIN", label: dict.roleAdmin },
+            { value: "PROJECT_OWNER", label: dict.roleProjectOwner },
+            { value: "CO_ADMIN", label: dict.roleCoAdmin },
+            { value: "PARTNER", label: dict.rolePartner },
+          ]}
+        />
 
-      <FloatingSelect
-        id="projectId"
-        label={dict.projectLabel}
-        value={projectId}
-        onChange={(v) => {
-          clearStatus();
-          setProjectId(v);
-        }}
-        disabled={isSending}
-        options={[
-          { value: "", label: dict.projectAll },
-          ...projects.map((p) => ({ value: p.id, label: p.name })),
-        ]}
-      />
+        <FloatingSelect
+          id="projectId"
+          label={dict.projectLabel}
+          value={projectId}
+          onChange={(v) => {
+            clearStatus();
+            setProjectId(v);
+          }}
+          disabled={isSending}
+          options={[
+            { value: "", label: dict.projectAll },
+            ...projects.map((p) => ({ value: p.id, label: p.name })),
+          ]}
+        />
+      </div>
 
       <FloatingInput
         id="subject"
