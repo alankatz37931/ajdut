@@ -1,21 +1,13 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { LeadActions } from "./LeadActions";
 import { InfoRequestActions } from "./InfoRequestActions";
 
 type Params = { params: Promise<{ projectSlug: string }> };
-
-const STATUS_LABEL: Record<string, string> = {
-  OPEN: "Sin contactar",
-  CONTACTED: "Contactado",
-  INTERVIEWING: "En entrevista",
-  CONVERTED: "Convertido",
-  DISMISSED: "Descartado",
-  EXPIRED: "Expirado",
-};
 
 const STATUS_SYMBOL: Record<string, string> = {
   OPEN: "○",
@@ -26,16 +18,11 @@ const STATUS_SYMBOL: Record<string, string> = {
   EXPIRED: "▪",
 };
 
-const SUPPORT_KIND_LABEL: Record<string, string> = {
-  CAPITAL: "Capital",
-  SPONSOR: "Sponsor",
-  AMBASSADOR: "Embajador",
-  ADVISOR: "Advisor",
-  OTHER: "Otro",
-};
-
 export default async function FounderLeadsPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.founderLeads;
   const { projectSlug } = await params;
 
   const project = await prisma.project.findUnique({
@@ -80,14 +67,14 @@ export default async function FounderLeadsPage({ params }: Params) {
     valuation && project.totalShares > 0 ? valuation / project.totalShares : null;
 
   function fmtMoney(amt: number) {
-    return new Intl.NumberFormat("es-MX", {
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       maximumFractionDigits: 2,
     }).format(amt);
   }
   function fmtInt(n: number): string {
-    return n.toLocaleString("es-MX");
+    return n.toLocaleString(locale);
   }
 
   const openCount = leads.filter((l) => l.status === "OPEN").length;
@@ -102,33 +89,33 @@ export default async function FounderLeadsPage({ params }: Params) {
         projectName={project.name}
         projectSlug={project.slug}
         projectStatus={project.status}
-        section="Interés de compra"
-        description="Quienes piden información primero y quienes ya quieren participar. Aprobá solicitudes, contactá leads y proponé al admin las asignaciones."
+        section={t.section}
+        description={t.description}
       />
 
       {/* ─── Banda de stats compacta ───────────────────────────────── */}
       <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-px bg-line">
         <LeadStat
-          label="Solicitudes"
+          label={t.statRequests}
           value={infoRequests.length}
           urgent={infoRequests.length > 0}
-          hint="pendientes"
+          hint={t.statRequestsHint}
         />
         <LeadStat
-          label="Sin contactar"
+          label={t.statOpen}
           value={openCount}
           urgent={openCount > 0}
-          hint="leads abiertos"
+          hint={t.statOpenHint}
         />
         <LeadStat
-          label="En conversación"
+          label={t.statInConv}
           value={contactedCount}
-          hint="ya contactaste"
+          hint={t.statInConvHint}
         />
         <LeadStat
-          label="Resueltos"
+          label={t.statResolved}
           value={resolvedCount}
-          hint="convertidos o cerrados"
+          hint={t.statResolvedHint}
         />
       </div>
 
@@ -137,9 +124,9 @@ export default async function FounderLeadsPage({ params }: Params) {
         <section className="mt-12">
           <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
             <p className="eyebrow !text-navy">
-              01 · Solicitudes de información ({infoRequests.length})
+              {t.infoSectionFmt.replace("{n}", String(infoRequests.length))}
             </p>
-            <p className="eyebrow !text-navy/40">Etapa 1 — antes del interés</p>
+            <p className="eyebrow !text-navy/40">{t.infoStageNote}</p>
           </div>
 
           <ul className="space-y-4">
@@ -166,7 +153,10 @@ export default async function FounderLeadsPage({ params }: Params) {
                       </p>
                     )}
                     <div className="mt-4">
-                      <InfoRequestActions infoRequestId={r.id} />
+                      <InfoRequestActions
+                        infoRequestId={r.id}
+                        dict={t.infoActions}
+                      />
                     </div>
                   </div>
                 </li>
@@ -180,19 +170,20 @@ export default async function FounderLeadsPage({ params }: Params) {
       <section className="mt-12">
         <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
           <p className="eyebrow !text-navy">
-            {infoRequests.length > 0 ? "02 · " : ""}Leads de compra
-            {leads.length > 0 ? ` (${leads.length})` : ""}
+            {leads.length > 0
+              ? (infoRequests.length > 0
+                  ? t.leadsSectionStartFmt
+                  : t.leadsSectionAloneFmt
+                ).replace("{n}", String(leads.length))
+              : t.leadsSectionAlone}
           </p>
           {leads.length > 0 && (
-            <p className="eyebrow !text-navy/40">Etapa 2 — interés concreto</p>
+            <p className="eyebrow !text-navy/40">{t.leadsStageNote}</p>
           )}
         </div>
 
         {leads.length === 0 ? (
-          <p className="text-navy/60">
-            Cuando alguien diga “me interesa participar” en tu proyecto, va a aparecer
-            acá con el detalle del monto que pide.
-          </p>
+          <p className="text-navy/60">{t.emptyLeads}</p>
         ) : (
           <ul className="space-y-4">
             {leads.map((l) => {
@@ -230,13 +221,13 @@ export default async function FounderLeadsPage({ params }: Params) {
                         <span aria-hidden className="text-base leading-none">
                           {STATUS_SYMBOL[l.status] ?? "·"}
                         </span>
-                        {STATUS_LABEL[l.status] ?? l.status}
+                        {t.status[l.status] ?? l.status}
                       </span>
                       {l.supportKind && (
                         <>
                           <span className="!text-navy/30"> · </span>
                           <span className="!text-navy">
-                            {SUPPORT_KIND_LABEL[l.supportKind] ?? l.supportKind}
+                            {t.supportKind[l.supportKind] ?? l.supportKind}
                           </span>
                         </>
                       )}
@@ -246,18 +237,18 @@ export default async function FounderLeadsPage({ params }: Params) {
 
                     <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-sm">
                       <div>
-                        <p className="eyebrow !text-navy/40">Acciones</p>
+                        <p className="eyebrow !text-navy/40">{t.colShares}</p>
                         <p className="mt-1 text-navy">{fmtInt(l.shareCountRequested)}</p>
                       </div>
                       {amount !== null && (
                         <div>
-                          <p className="eyebrow !text-navy/40">Equivalente</p>
+                          <p className="eyebrow !text-navy/40">{t.colEquivalent}</p>
                           <p className="mt-1 text-navy">{fmtMoney(amount)}</p>
                         </div>
                       )}
                       <div>
-                        <p className="eyebrow !text-navy/40">Recibido</p>
-                        <p className="mt-1 text-navy">{formatDate(l.createdAt)}</p>
+                        <p className="eyebrow !text-navy/40">{t.colReceived}</p>
+                        <p className="mt-1 text-navy">{formatDate(l.createdAt, locale)}</p>
                       </div>
                     </div>
 
@@ -270,15 +261,13 @@ export default async function FounderLeadsPage({ params }: Params) {
                     {!isClosed && l.pendingAssignments[0] && (
                       <div className="mt-4 hairline p-3 bg-paper-light">
                         <p className="eyebrow !text-gold">
-                          Asignación propuesta — esperando validación del admin
+                          {t.proposalPendingEyebrow}
                         </p>
                         <p className="mt-2 text-sm text-navy/75">
-                          Le propusiste al equipo de AJDUT asignar{" "}
-                          <span className="font-mono text-navy">
-                            {fmtInt(l.pendingAssignments[0].shareCount)}
-                          </span>{" "}
-                          acciones. Cuando lo aprueben, se va a emitir el
-                          certificado y vas a recibir un email.
+                          {t.proposalPendingBodyFmt.replace(
+                            "{n}",
+                            fmtInt(l.pendingAssignments[0].shareCount)
+                          )}
                         </p>
                       </div>
                     )}
@@ -290,6 +279,8 @@ export default async function FounderLeadsPage({ params }: Params) {
                           status={l.status}
                           shareCountRequested={l.shareCountRequested}
                           investorName={l.user.fullName}
+                          dict={t.actions}
+                          locale={locale}
                         />
                       </div>
                     )}

@@ -1,14 +1,22 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import {
   approveInfoRequestAction,
   rejectInfoRequestAction,
 } from "./actions";
 
+type InfoActionsDict = Dict["founderLeads"]["infoActions"];
 type Mode = "idle" | "approving" | "rejecting";
 
-export function InfoRequestActions({ infoRequestId }: { infoRequestId: string }) {
+export function InfoRequestActions({
+  infoRequestId,
+  dict,
+}: {
+  infoRequestId: string;
+  dict: InfoActionsDict;
+}) {
   const [mode, setMode] = useState<Mode>("idle");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +30,6 @@ export function InfoRequestActions({ infoRequestId }: { infoRequestId: string })
         setError(r.error);
         return;
       }
-      // server revalidatePath refresca
     });
   }
 
@@ -42,19 +49,17 @@ export function InfoRequestActions({ infoRequestId }: { infoRequestId: string })
     return (
       <div className="hairline p-4 bg-paper-light space-y-3">
         <p className="eyebrow !text-gold">
-          {isApprove ? "Aprobar solicitud" : "Rechazar solicitud"}
+          {isApprove ? dict.approveTitle : dict.rejectTitle}
         </p>
         <p className="text-navy/85 text-sm leading-relaxed">
-          {isApprove
-            ? "Al aprobar, el usuario va a poder ver documentos / reportes del proyecto y podrá manifestar interés con un monto concreto."
-            : "Podés dejar una nota explicando el motivo. El usuario va a verla en su email y en la ficha del proyecto."}
+          {isApprove ? dict.approveDesc : dict.rejectDesc}
         </p>
         <textarea
           rows={2}
           maxLength={2000}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Nota (opcional)"
+          placeholder={dict.notePlaceholder}
           className="w-full resize-none border-hairline border-navy/40 bg-paper px-3 py-2 font-sans text-sm text-navy focus:outline-none focus:border-navy"
         />
         {error && (
@@ -70,11 +75,11 @@ export function InfoRequestActions({ infoRequestId }: { infoRequestId: string })
           >
             {isPending
               ? isApprove
-                ? "Aprobando…"
-                : "Rechazando…"
+                ? dict.approvingBtn
+                : dict.rejectingBtn
               : isApprove
-                ? "Sí, aprobar"
-                : "Sí, rechazar"}
+              ? dict.confirmApproveBtn
+              : dict.confirmRejectBtn}
           </button>
           <button
             onClick={() => {
@@ -85,7 +90,7 @@ export function InfoRequestActions({ infoRequestId }: { infoRequestId: string })
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cancelar
+            {dict.cancelBtn}
           </button>
         </div>
       </div>
@@ -99,14 +104,14 @@ export function InfoRequestActions({ infoRequestId }: { infoRequestId: string })
         disabled={isPending}
         className="btn-primary disabled:opacity-50"
       >
-        Aprobar →
+        {dict.approveBtn}
       </button>
       <button
         onClick={() => setMode("rejecting")}
         disabled={isPending}
         className="eyebrow hover:!text-navy !text-navy/40 p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
       >
-        Rechazar
+        {dict.rejectBtn}
       </button>
       {error && (
         <span className="eyebrow !text-navy" role="alert">

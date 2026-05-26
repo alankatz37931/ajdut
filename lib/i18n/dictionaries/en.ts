@@ -1317,6 +1317,86 @@ export const dict: Dict = {
     },
   },
 
+  founderLeads: {
+    section: "Purchase interest",
+    description:
+      "Those who request information first, and those ready to participate. Approve requests, contact leads, and propose assignments to the admin.",
+    statRequests: "Requests",
+    statRequestsHint: "pending",
+    statOpen: "Not contacted",
+    statOpenHint: "open leads",
+    statInConv: "In conversation",
+    statInConvHint: "already contacted",
+    statResolved: "Resolved",
+    statResolvedHint: "converted or closed",
+    status: {
+      OPEN: "Not contacted",
+      CONTACTED: "Contacted",
+      INTERVIEWING: "In interview",
+      CONVERTED: "Converted",
+      DISMISSED: "Dismissed",
+      EXPIRED: "Expired",
+    } as Record<string, string>,
+    supportKind: {
+      CAPITAL: "Capital",
+      SPONSOR: "Sponsor",
+      AMBASSADOR: "Ambassador",
+      ADVISOR: "Advisor",
+      OTHER: "Other",
+    } as Record<string, string>,
+    infoSectionFmt: "01 · Information requests ({n})",
+    infoStageNote: "Stage 1 — before interest",
+    leadsSectionStartFmt: "02 · Purchase leads ({n})",
+    leadsSectionAloneFmt: "Purchase leads ({n})",
+    leadsSectionAlone: "Purchase leads",
+    leadsStageNote: "Stage 2 — concrete interest",
+    emptyLeads:
+      "When someone says “I want to participate” in your project, they'll appear here with the amount they're requesting.",
+    colShares: "Shares",
+    colEquivalent: "Equivalent",
+    colReceived: "Received",
+    proposalPendingEyebrow: "Assignment proposed — awaiting admin validation",
+    proposalPendingBodyFmt:
+      "You proposed assigning {n} shares to the AJDUT team. When approved, the certificate will be issued and you'll receive an email.",
+    actions: {
+      proposeTitle: "Propose assignment to admin",
+      proposeDescFmt:
+        "You're about to propose assigning {n} shares to {name}. The proposal stays pending validation from the AJDUT team — only when an admin approves it the pool is decremented and the certificate is issued. Make sure to close the payment off-platform first.",
+      proposeSubmitBtn: "Yes, send proposal to admin",
+      proposeSubmittingBtn: "Proposing…",
+      askMoreInfoTitle: "Request more information",
+      askMoreInfoDescFmt:
+        "Write what you need to know before moving forward. {name} gets an email with your question and replies outside the platform.",
+      askMoreInfoPlaceholder:
+        "E.g.: Could you tell me a bit more about your experience in the sector and why this project interests you?",
+      askMoreInfoSendBtn: "Send question",
+      askMoreInfoSendingBtn: "Sending…",
+      acceptBtn: "Accept and propose to admin →",
+      askMoreBtn: "Ask for more info",
+      markContactedBtn: "Mark as contacted",
+      markInterviewingBtn: "Interviewing",
+      dismissBtn: "Dismiss",
+      dismissConfirm: "Dismiss this lead?",
+      cancelBtn: "Cancel",
+    },
+    infoActions: {
+      approveTitle: "Approve request",
+      rejectTitle: "Reject request",
+      approveDesc:
+        "On approval, the user will be able to see project documents / reports and request to participate with a specific amount.",
+      rejectDesc:
+        "You can leave a note explaining the reason. The user will see it in their email and on the project page.",
+      notePlaceholder: "Note (optional)",
+      approvingBtn: "Approving…",
+      rejectingBtn: "Rejecting…",
+      confirmApproveBtn: "Yes, approve",
+      confirmRejectBtn: "Yes, reject",
+      approveBtn: "Approve →",
+      rejectBtn: "Reject",
+      cancelBtn: "Cancel",
+    },
+  },
+
   adminAvisos: {
     eyebrow: "— Admin",
     title: "Notices to users",

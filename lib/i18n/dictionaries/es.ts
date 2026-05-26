@@ -1325,6 +1325,87 @@ export const dict = {
     },
   },
 
+  founderLeads: {
+    section: "Interés de compra",
+    description:
+      "Quienes piden información primero y quienes ya quieren participar. Aprobá solicitudes, contactá leads y proponé al admin las asignaciones.",
+    statRequests: "Solicitudes",
+    statRequestsHint: "pendientes",
+    statOpen: "Sin contactar",
+    statOpenHint: "leads abiertos",
+    statInConv: "En conversación",
+    statInConvHint: "ya contactaste",
+    statResolved: "Resueltos",
+    statResolvedHint: "convertidos o cerrados",
+    status: {
+      OPEN: "Sin contactar",
+      CONTACTED: "Contactado",
+      INTERVIEWING: "En entrevista",
+      CONVERTED: "Convertido",
+      DISMISSED: "Descartado",
+      EXPIRED: "Expirado",
+    } as Record<string, string>,
+    supportKind: {
+      CAPITAL: "Capital",
+      SPONSOR: "Sponsor",
+      AMBASSADOR: "Embajador",
+      ADVISOR: "Advisor",
+      OTHER: "Otro",
+    } as Record<string, string>,
+    infoSectionFmt: "01 · Solicitudes de información ({n})",
+    infoStageNote: "Etapa 1 — antes del interés",
+    leadsSectionStartFmt: "02 · Leads de compra ({n})",
+    leadsSectionAloneFmt: "Leads de compra ({n})",
+    leadsSectionAlone: "Leads de compra",
+    leadsStageNote: "Etapa 2 — interés concreto",
+    emptyLeads:
+      "Cuando alguien diga “me interesa participar” en tu proyecto, va a aparecer acá con el detalle del monto que pide.",
+    colShares: "Acciones",
+    colEquivalent: "Equivalente",
+    colReceived: "Recibido",
+    proposalPendingEyebrow:
+      "Asignación propuesta — esperando validación del admin",
+    proposalPendingBodyFmt:
+      "Le propusiste al equipo de AJDUT asignar {n} acciones. Cuando lo aprueben, se va a emitir el certificado y vas a recibir un email.",
+    actions: {
+      proposeTitle: "Proponer asignación al admin",
+      proposeDescFmt:
+        "Vas a proponer la asignación de {n} acciones a {name}. La propuesta queda pendiente de validación por el equipo de AJDUT — recién cuando un admin la apruebe se decrementa el pool y se emite el certificado. Asegurate de haber cerrado el pago por fuera antes.",
+      proposeSubmitBtn: "Sí, enviar propuesta al admin",
+      proposeSubmittingBtn: "Proponiendo…",
+      askMoreInfoTitle: "Pedir más información",
+      askMoreInfoDescFmt:
+        "Escribí qué necesitás saber antes de avanzar. {name} recibe un email con tu pregunta y responde por fuera de la plataforma.",
+      askMoreInfoPlaceholder:
+        "Ej: ¿Podrías contarme un poco más sobre tu experiencia en el sector y por qué te interesa este proyecto?",
+      askMoreInfoSendBtn: "Enviar pregunta",
+      askMoreInfoSendingBtn: "Enviando…",
+      acceptBtn: "Aceptar y proponer al admin →",
+      askMoreBtn: "Pedir más info",
+      markContactedBtn: "Marcar como contactado",
+      markInterviewingBtn: "En entrevista",
+      dismissBtn: "Descartar",
+      dismissConfirm: "¿Descartar este lead?",
+      cancelBtn: "Cancelar",
+    },
+    infoActions: {
+      approveTitle: "Aprobar solicitud",
+      rejectTitle: "Rechazar solicitud",
+      approveDesc:
+        "Al aprobar, el usuario va a poder ver documentos / reportes del proyecto y podrá manifestar interés con un monto concreto.",
+      rejectDesc:
+        "Podés dejar una nota explicando el motivo. El usuario va a verla en su email y en la ficha del proyecto.",
+      notePlaceholder: "Nota (opcional)",
+      approvingBtn: "Aprobando…",
+      rejectingBtn: "Rechazando…",
+      confirmApproveBtn: "Sí, aprobar",
+      confirmRejectBtn: "Sí, rechazar",
+      approveBtn: "Aprobar →",
+      rejectBtn: "Rechazar",
+      cancelBtn: "Cancelar",
+    },
+  },
+
   adminAvisos: {
     eyebrow: "— Admin",
     title: "Avisos a usuarios",
