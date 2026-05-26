@@ -216,6 +216,150 @@ export function FloatingSelect({
 }
 
 /**
+ * FloatingMultiSelect — versión multi-select del FloatingSelect. Mismo
+ * estilo visual; cada opción tiene un checkbox y click toggle. Cuando no
+ * hay nada seleccionado se muestra `placeholder` (típicamente "All X").
+ */
+export function FloatingMultiSelect({
+  id,
+  label,
+  values,
+  onChange,
+  options,
+  placeholder,
+  autoFocus,
+  disabled,
+}: {
+  id: string;
+  label: string;
+  values: string[];
+  onChange: (v: string[]) => void;
+  options: Array<{ value: string; label: string }>;
+  placeholder: string;
+  autoFocus?: boolean;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (autoFocus) buttonRef.current?.focus();
+  }, [autoFocus]);
+
+  function toggle(val: string) {
+    if (values.includes(val)) {
+      onChange(values.filter((v) => v !== val));
+    } else {
+      onChange([...values, val]);
+    }
+  }
+
+  const display =
+    values.length === 0
+      ? placeholder
+      : options
+          .filter((o) => values.includes(o.value))
+          .map((o) => o.label)
+          .join(", ");
+
+  return (
+    <div className="pt-2" ref={wrapperRef}>
+      <label htmlFor={id} className="block eyebrow !text-navy mb-1.5">
+        {label}
+      </label>
+      <div className="relative">
+        <button
+          ref={buttonRef}
+          id={id}
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className={`peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none flex items-center justify-between gap-3 transition-colors ${
+            disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+          }`}
+        >
+          <span className={`truncate ${values.length === 0 ? "text-navy/40" : ""}`}>
+            {display}
+          </span>
+          <span
+            aria-hidden
+            className={`text-navy/40 text-sm transition-transform duration-200 shrink-0 ${
+              open ? "rotate-180" : ""
+            }`}
+          >
+            ▾
+          </span>
+        </button>
+        <GoldUnderline />
+
+        {open && (
+          <ul
+            role="listbox"
+            aria-labelledby={id}
+            aria-multiselectable
+            className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 bg-paper-light hairline shadow-sm overflow-hidden max-h-72 overflow-y-auto"
+          >
+            {options.map((o, i) => {
+              const isSelected = values.includes(o.value);
+              const isLast = i === options.length - 1;
+              return (
+                <li key={o.value} role="option" aria-selected={isSelected}>
+                  <button
+                    type="button"
+                    onClick={() => toggle(o.value)}
+                    className={`relative w-full text-left px-4 py-2.5 font-sans text-navy hover:bg-paper transition-colors cursor-pointer flex items-center gap-3 ${
+                      !isLast ? "border-b-[0.5px] border-line" : ""
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      className={`inline-flex h-4 w-4 shrink-0 hairline items-center justify-center transition-colors ${
+                        isSelected ? "bg-navy" : "bg-paper"
+                      }`}
+                    >
+                      {isSelected && (
+                        <span className="text-paper text-[10px] leading-none">
+                          ✓
+                        </span>
+                      )}
+                    </span>
+                    <span className={isSelected ? "text-navy" : "text-navy/85"}>
+                      {o.label}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
  * FloatingTextarea — para multi-línea NO usamos floating label (queda
  * raro). Patrón igual al select: eyebrow estático arriba, hairline
  * estática + trazo gold animado debajo. La hairline base vive en un

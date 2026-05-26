@@ -8,9 +8,9 @@ import { notifyAdminBroadcast } from "@/lib/email/notifications";
 import { recordAudit } from "@/lib/services/audit";
 
 export type BroadcastFilters = {
-  roles: UserRole[];        // [] = todos los roles
+  roles: UserRole[];       // [] = todos los roles
   onlyActive: boolean;
-  projectId: string | null; // null = sin filtro de proyecto
+  projectIds: string[];    // [] = sin filtro de proyecto
 };
 
 export type CountResult =
@@ -34,9 +34,11 @@ function parseFilters(formData: FormData): BroadcastFilters {
   const rawRoles = formData.getAll("roles").map((v) => String(v));
   const roles = VALID_ROLES.filter((r) => rawRoles.includes(r));
   const onlyActive = String(formData.get("onlyActive") ?? "") === "true";
-  const projectIdRaw = String(formData.get("projectId") ?? "").trim();
-  const projectId = projectIdRaw.length > 0 ? projectIdRaw : null;
-  return { roles, onlyActive, projectId };
+  const projectIds = formData
+    .getAll("projectId")
+    .map((v) => String(v).trim())
+    .filter((v) => v.length > 0);
+  return { roles, onlyActive, projectIds };
 }
 
 /**
@@ -57,10 +59,10 @@ async function resolveRecipients(
   if (filters.onlyActive) {
     where.isActive = true;
   }
-  if (filters.projectId) {
+  if (filters.projectIds.length > 0) {
     where.participationsOwned = {
       some: {
-        projectId: filters.projectId,
+        projectId: { in: filters.projectIds },
         isPlatformStake: false,
         status: { in: [...MEMBER_STATUSES] },
       },
@@ -125,7 +127,7 @@ export async function sendAdminBroadcastAction(formData: FormData): Promise<Send
       filters: {
         roles: filters.roles,
         onlyActive: filters.onlyActive,
-        projectId: filters.projectId,
+        projectIds: filters.projectIds,
       },
     },
   });

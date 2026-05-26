@@ -5,7 +5,7 @@ import type { Dict } from "@/lib/i18n";
 import { sendAdminBroadcastAction } from "./actions";
 import {
   FloatingInput,
-  FloatingSelect,
+  FloatingMultiSelect,
   FloatingTextarea,
 } from "@/components/ui/Floating";
 
@@ -19,14 +19,15 @@ type Props = {
 };
 
 /**
- * Form de avisos — diseño minimalista con Role + Project como FloatingSelects
- * uniformes, mensaje compacto, sin línea separadora entre filtros y mensaje.
+ * Form de avisos — Role + Project como FloatingMultiSelects (multi-select
+ * con checkboxes en el dropdown). Empty selection = "todos" (la query no
+ * filtra por ese campo).
  */
 export function AdminAvisoForm({ projects, dict, locale }: Props) {
   void locale;
 
-  const [role, setRole] = useState("");
-  const [projectId, setProjectId] = useState("");
+  const [roles, setRoles] = useState<string[]>([]);
+  const [projectIds, setProjectIds] = useState<string[]>([]);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
 
@@ -47,9 +48,9 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
       return;
     }
     const fd = new FormData();
-    if (role) fd.append("roles", role);
+    roles.forEach((r) => fd.append("roles", r));
+    projectIds.forEach((id) => fd.append("projectId", id));
     fd.set("onlyActive", "true");
-    if (projectId) fd.set("projectId", projectId);
     fd.set("subject", subject);
     fd.set("body", body);
 
@@ -62,8 +63,8 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
       setSuccess(r.count);
       setSubject("");
       setBody("");
-      setRole("");
-      setProjectId("");
+      setRoles([]);
+      setProjectIds([]);
     });
   }
 
@@ -73,17 +74,17 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-        <FloatingSelect
+        <FloatingMultiSelect
           id="role"
           label={dict.rolesLabelSingle}
-          value={role}
+          values={roles}
           onChange={(v) => {
             clearStatus();
-            setRole(v);
+            setRoles(v);
           }}
           disabled={isSending}
+          placeholder={dict.rolesAll}
           options={[
-            { value: "", label: dict.rolesAll },
             { value: "ADMIN", label: dict.roleAdmin },
             { value: "PROJECT_OWNER", label: dict.roleProjectOwner },
             { value: "CO_ADMIN", label: dict.roleCoAdmin },
@@ -91,19 +92,17 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
           ]}
         />
 
-        <FloatingSelect
+        <FloatingMultiSelect
           id="projectId"
           label={dict.projectLabel}
-          value={projectId}
+          values={projectIds}
           onChange={(v) => {
             clearStatus();
-            setProjectId(v);
+            setProjectIds(v);
           }}
           disabled={isSending}
-          options={[
-            { value: "", label: dict.projectAll },
-            ...projects.map((p) => ({ value: p.id, label: p.name })),
-          ]}
+          placeholder={dict.projectAll}
+          options={projects.map((p) => ({ value: p.id, label: p.name }))}
         />
       </div>
 
