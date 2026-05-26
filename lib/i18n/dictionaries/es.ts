@@ -844,6 +844,8 @@ export const dict = {
     title: "Historial",
     intro:
       "Todos tus movimientos en AJDUT — dividendos cobrados, compras y ventas de acciones.",
+    catLabel: "Tipo",
+    periodLabel: "Período",
     cats: {
       all: "Todos",
       dividendo: "Dividendos",

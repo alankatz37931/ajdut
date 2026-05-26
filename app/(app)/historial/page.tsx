@@ -1,9 +1,9 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
+import { HistoryFilters } from "./HistoryFilters";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
@@ -140,18 +140,6 @@ export default async function HistorialPage({
     return true;
   });
 
-  const chipClass = (active: boolean) =>
-    `eyebrow whitespace-nowrap transition-colors ${
-      active ? "!text-navy" : "!text-navy/40 hover:!text-navy"
-    }`;
-
-  const hrefFor = (nextCat: Cat, nextPeriodo: Periodo) => {
-    const query: Record<string, string> = {};
-    if (nextCat !== "all") query.cat = nextCat;
-    if (nextPeriodo !== "all") query.periodo = nextPeriodo;
-    return { pathname: "/historial", query };
-  };
-
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
@@ -160,30 +148,14 @@ export default async function HistorialPage({
         <p className="mt-3 text-navy/75 leading-relaxed">{t.intro}</p>
       </header>
 
-      <div className="mt-2 space-y-3">
-        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          {CAT_OPTIONS.map((o) => (
-            <Link
-              key={o.value}
-              href={hrefFor(o.value, periodo)}
-              className={chipClass(cat === o.value)}
-            >
-              {o.label}
-            </Link>
-          ))}
-        </nav>
-        <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          {PERIODO_OPTIONS.map((o) => (
-            <Link
-              key={o.value}
-              href={hrefFor(cat, o.value)}
-              className={chipClass(periodo === o.value)}
-            >
-              {o.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
+      <HistoryFilters
+        cat={cat}
+        periodo={periodo}
+        catOptions={CAT_OPTIONS}
+        periodOptions={PERIODO_OPTIONS}
+        catLabel={t.catLabel}
+        periodLabel={t.periodLabel}
+      />
 
       <div className="mt-8">
         {filtered.length === 0 ? (

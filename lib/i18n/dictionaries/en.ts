@@ -838,6 +838,8 @@ export const dict: Dict = {
     title: "History",
     intro:
       "All your activity on AJDUT — dividends received, share purchases and sales.",
+    catLabel: "Type",
+    periodLabel: "Period",
     cats: {
       all: "All",
       dividendo: "Dividends",
