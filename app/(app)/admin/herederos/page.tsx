@@ -20,21 +20,18 @@ export default async function AdminHerederosPage() {
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <div className="flex items-baseline justify-between gap-4">
-          <div className="min-w-0">
-            <p className="eyebrow">{t.eyebrow}</p>
-            <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
-          </div>
-          <RunCronButton dict={t.cron} locale={locale} />
-        </div>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
         <p className="mt-3 text-navy/75 leading-relaxed max-w-3xl">{t.intro}</p>
       </header>
+
+      <RunCronButton dict={t.cron} locale={locale} />
 
       <div className="mt-8">
         {escalated.length === 0 ? (
           <p className="text-navy/60">{t.emptyAll}</p>
         ) : (
-          <ul className="hairline-t">
+          <ul>
             {escalated.map((u) => {
               const totalShare = u.heirs.reduce(
                 (s, h) => s + h.sharePercent,
