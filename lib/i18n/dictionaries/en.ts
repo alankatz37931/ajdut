@@ -1183,6 +1183,33 @@ export const dict: Dict = {
     },
   },
 
+  adminHerederos: {
+    eyebrow: "— Admin",
+    title: "Heirs",
+    summaryEmpty: "Inbox cleared.",
+    summaryPendingSingle: "{n} member pending contact.",
+    summaryPendingPlural: "{n} members pending contact.",
+    emptyAll: "No members with escalated liveness checks. Everything in order.",
+    missedFmt: "{n} unanswered",
+    lastConfirmedFmt: "Last confirmed: {date}",
+    heirsLoadedFmt: "Heirs configured — {pct}% allocated",
+    noHeirsLoaded:
+      "This member hasn't configured heirs. Contact them via their registered email or review the account directly.",
+    noEmail: "No email",
+    cron: {
+      eyebrow: "Manual operation",
+      runBtn: "Run checks now",
+      runningBtn: "Running…",
+      description:
+        "Expires PENDING checks older than 15 days and creates new ones that are due.",
+      statUsers: "Users",
+      statNew: "New",
+      statPending: "Pending",
+      statMissed: "Missed",
+      statEscalated: "Escalated",
+    },
+  },
+
   adminAuditoria: {
     eyebrow: "— Admin",
     title: "System audit log",

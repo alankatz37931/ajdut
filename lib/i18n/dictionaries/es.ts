@@ -1191,6 +1191,33 @@ export const dict = {
     },
   },
 
+  adminHerederos: {
+    eyebrow: "— Admin",
+    title: "Herederos",
+    summaryEmpty: "Bandeja al día.",
+    summaryPendingSingle: "{n} miembro pendiente de contactar.",
+    summaryPendingPlural: "{n} miembros pendientes de contactar.",
+    emptyAll: "No hay miembros con verificaciones de vida escaladas. Todo en orden.",
+    missedFmt: "{n} sin responder",
+    lastConfirmedFmt: "Última confirmación: {date}",
+    heirsLoadedFmt: "Herederos cargados — {pct}% asignado",
+    noHeirsLoaded:
+      "Este miembro no cargó herederos. Contactalo por su email registrado o reviendo la cuenta directamente.",
+    noEmail: "Sin email",
+    cron: {
+      eyebrow: "Operación manual",
+      runBtn: "Ejecutar verificaciones ahora",
+      runningBtn: "Ejecutando…",
+      description:
+        "Vence checks PENDING de más de 15 días y crea los nuevos que toquen.",
+      statUsers: "Usuarios",
+      statNew: "Nuevos",
+      statPending: "Pendientes",
+      statMissed: "Vencidos",
+      statEscalated: "Escalados",
+    },
+  },
+
   adminAuditoria: {
     eyebrow: "— Admin",
     title: "Bitácora del sistema",
