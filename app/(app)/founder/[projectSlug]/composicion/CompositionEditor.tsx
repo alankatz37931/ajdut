@@ -371,7 +371,13 @@ function HolderLine({
   const pct = totalShares > 0 ? (holder.shares / totalShares) * 100 : 0;
   const sharesText = sharesAndPctFmt
     .replace("{n}", holder.shares.toLocaleString(locale))
-    .replace("{pct}", pct.toFixed(1));
+    .replace(
+      "{pct}",
+      pct.toLocaleString(locale, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      })
+    );
   return (
     <li className="hairline-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 py-3">
       <div className="min-w-0">
@@ -436,7 +442,15 @@ function ExternalLine({
       <div className="flex items-center gap-4 shrink-0">
         <span className="font-mono text-sm text-navy">
           {row.shareCount.toLocaleString(locale)}
-          <span className="text-navy/40"> · {pct.toFixed(1)}%</span>
+          <span className="text-navy/40">
+            {" "}
+            ·{" "}
+            {pct.toLocaleString(locale, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            %
+          </span>
         </span>
         <button
           type="button"

@@ -79,7 +79,10 @@ export default async function AdminHerederosPage() {
                         .map((part, i) =>
                           part === "{pct}" ? (
                             <span key={i} className="font-mono text-navy">
-                              {totalShare.toFixed(2)}
+                              {totalShare.toLocaleString(locale, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
                             </span>
                           ) : (
                             <span key={i}>{part}</span>
@@ -123,7 +126,11 @@ export default async function AdminHerederosPage() {
                               )}
                             </div>
                             <div className="col-span-12 sm:col-span-2 font-mono text-navy sm:text-right">
-                              {h.sharePercent.toFixed(2)}%
+                              {h.sharePercent.toLocaleString(locale, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                              %
                             </div>
                           </li>
                         ))}

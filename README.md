@@ -10,12 +10,11 @@ Sistema de gestión de comunidades de negocio. Cero transacciones, máxima traza
 
 - **Next.js 15** (App Router, TypeScript estricto, React 19 RC)
 - **Prisma 5** + **PostgreSQL** (sugerido Neon para dev y prod)
-- **Auth.js v5** (email + password + TOTP)
+- **Auth.js v5** (email + password)
 - **Tailwind CSS 3** con tokens de diseño AJDUT (paleta Sello de Unión)
 - **Decimal.js** para todas las cifras monetarias
 - **Zod** para validación de entrada
 - **bcryptjs** para hashing de contraseñas
-- **otplib** para TOTP
 
 ---
 
@@ -52,14 +51,12 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 ### Credenciales de demo (tras el seed)
 
-El script de seed imprime en consola los secretos TOTP y los URIs `otpauth://` que puedes escanear con Google Authenticator / Authy / 1Password.
-
-| Rol      | Email                  | Contraseña            | TOTP |
-| -------- | ---------------------- | --------------------- | ---- |
-| Admin    | `admin@ajdut.io`       | `cambia-esto-tras-primer-login` | Sí |
-| Admin 2  | `admin2@ajdut.io`      | `cambia-esto-tras-primer-login` | Sí |
-| Founder  | `lucia@pushka.demo`    | `ajdut-demo-2026`     | Sí |
-| Socios   | `ana@socios.demo`, `diego@socios.demo`, `mariana@socios.demo`, `carlos@socios.demo`, `valeria@socios.demo` | `ajdut-demo-2026` | No |
+| Rol      | Email                  | Contraseña            |
+| -------- | ---------------------- | --------------------- |
+| Admin    | `admin@ajdut.io`       | `cambia-esto-tras-primer-login` |
+| Admin 2  | `admin2@ajdut.io`      | `cambia-esto-tras-primer-login` |
+| Founder  | `lucia@pushka.demo`    | `ajdut-demo-2026`     |
+| Socios   | `ana@socios.demo`, `diego@socios.demo`, `mariana@socios.demo`, `carlos@socios.demo`, `valeria@socios.demo` | `ajdut-demo-2026` |
 
 ---
 

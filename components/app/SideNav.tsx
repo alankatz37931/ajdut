@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
@@ -30,6 +31,10 @@ export type SideNavLabels = {
   logout: string;
   brandTagline: string;
   brandAriaLabel: string;
+  /** Aria-label del link al perfil cuando hay nombre. `{name}` se sustituye. */
+  profileAriaFmt: string;
+  /** Aria-label del link al perfil cuando no hay nombre. */
+  profileAriaDefault: string;
 };
 
 type Props = {
@@ -176,7 +181,7 @@ export function SideNav({ user, navItems, labels }: Props) {
             type="button"
             onClick={() => setOpen(true)}
             aria-label={labels.openMenu}
-            className="text-navy text-xl leading-none p-0 m-0 border-0 bg-transparent cursor-pointer"
+            className="text-navy text-xl leading-none p-2 -m-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center border-0 bg-transparent cursor-pointer"
           >
             ☰
           </button>
@@ -222,7 +227,7 @@ export function SideNav({ user, navItems, labels }: Props) {
               type="button"
               onClick={close}
               aria-label={labels.closeMenu}
-              className="md:hidden text-paper text-lg leading-none p-0 m-0 border-0 bg-transparent cursor-pointer"
+              className="md:hidden text-paper text-lg leading-none p-2 -m-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center border-0 bg-transparent cursor-pointer"
             >
               ✕
             </button>
@@ -292,13 +297,18 @@ export function SideNav({ user, navItems, labels }: Props) {
             href={"/perfil" as Route}
             onClick={close}
             className="flex items-center gap-2.5 group cursor-pointer"
-            aria-label={user.name ? `Ir al perfil de ${user.name}` : "Ir al perfil"}
+            aria-label={
+              user.name
+                ? labels.profileAriaFmt.replace("{name}", user.name)
+                : labels.profileAriaDefault
+            }
           >
             {user.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={user.avatarUrl}
                 alt=""
+                width={28}
+                height={28}
                 className="rounded-full w-7 h-7 object-cover border-hairline border-paper/20 shrink-0"
               />
             ) : (

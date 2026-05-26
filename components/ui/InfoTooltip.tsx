@@ -9,13 +9,20 @@
  * Sin dependencias: usamos `group` + `group-hover:block / group-focus-within:block`
  * para mostrar el cuadrito.
  */
-export function InfoTooltip({ text }: { text: string }) {
+export function InfoTooltip({
+  text,
+  ariaLabel,
+}: {
+  text: string;
+  /** Etiqueta accesible para el botón. Default ES por compat con call sites antiguos. */
+  ariaLabel?: string;
+}) {
   return (
     <span className="relative inline-block group align-middle ml-1.5">
       <button
         type="button"
         tabIndex={0}
-        aria-label="Más información"
+        aria-label={ariaLabel ?? "Más información"}
         /* Nudge sub-pixel: con leading-none en el eyebrow la caja abraza
            el texto, así que el desfase restante es mínimo. Ajustable en
            pasos de 0.25px. */

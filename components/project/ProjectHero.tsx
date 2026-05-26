@@ -29,6 +29,8 @@ type Props = {
     sector?: string | null;
     stage?: { key: string; label: string } | null;
     stageInfo?: StageInfoMap;
+    /** Etiqueta accesible para el ícono "info" de la etapa (i18n). */
+    stageInfoAriaLabel?: string;
     location?: string | null;
   };
   name: string;
@@ -113,7 +115,9 @@ export function ProjectHero({
       // verticalmente entre sí, sin desfase de baseline.
       <span key="st" className="inline-flex items-center">
         {eyebrow.stage.label}
-        {info && <InfoTooltip text={info} />}
+        {info && (
+          <InfoTooltip text={info} ariaLabel={eyebrow.stageInfoAriaLabel} />
+        )}
       </span>
     );
   }

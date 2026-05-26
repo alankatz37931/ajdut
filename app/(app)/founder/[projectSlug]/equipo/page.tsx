@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { getDict } from "@/lib/i18n";
+import { getDict, getLocale } from "@/lib/i18n";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { TeamEditor } from "./TeamEditor";
 
@@ -16,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function FounderTeamPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
   const dict = await getDict();
+  const locale = await getLocale();
   const t = dict.founderEquipo;
   const { projectSlug } = await params;
 
@@ -55,7 +56,12 @@ export default async function FounderTeamPage({ params }: Params) {
         description={t.description}
       />
 
-      <TeamEditor projectSlug={projectSlug} initialFounders={founders} dict={t} />
+      <TeamEditor
+        projectSlug={projectSlug}
+        initialFounders={founders}
+        dict={t}
+        locale={locale}
+      />
     </div>
   );
 }

@@ -736,6 +736,7 @@ export default async function ProjectPage({ params }: Params) {
                 }
               : null,
             stageInfo: t.stageInfo,
+            stageInfoAriaLabel: dict.common.moreInfo,
             location: project.startupProfile?.location,
           }}
           name={project.name}

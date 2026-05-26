@@ -37,6 +37,8 @@ export function ProjectVideo({
           title={`${titlePrefix} ${projectName}`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
           className="absolute inset-0 w-full h-full"
         />
       </div>

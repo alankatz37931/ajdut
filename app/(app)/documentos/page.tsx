@@ -84,7 +84,7 @@ export default async function DocumentosPage({
       : [[] as DocumentosProjectRow[], [] as DocumentosDocRow[]];
 
   const chipClass = (active: boolean) =>
-    `eyebrow whitespace-nowrap transition-colors ${
+    `eyebrow whitespace-nowrap transition-colors inline-flex items-center py-2 px-3 min-h-[44px] ${
       active ? "!text-navy" : "!text-navy/40 hover:!text-navy"
     }`;
 

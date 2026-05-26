@@ -290,7 +290,7 @@ export default async function ProjectsDiscoveryPage({
             page={page - 1}
             disabled={page <= 1}
             q={q}
-            label="← Previous"
+            label={dict.common.pagPrev}
           />
           <p className="eyebrow font-mono">
             {page} / {totalPages}
@@ -299,7 +299,7 @@ export default async function ProjectsDiscoveryPage({
             page={page + 1}
             disabled={page >= totalPages}
             q={q}
-            label="Next →"
+            label={dict.common.pagNext}
           />
         </div>
       )}

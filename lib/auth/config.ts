@@ -4,9 +4,9 @@ import type { NextAuthConfig } from "next-auth";
  * Config base de Auth.js — Edge-safe.
  *
  * Esta config NO incluye el provider de Credentials porque éste depende de
- * bcryptjs y otplib (APIs de Node.js no soportadas en Edge Runtime). El
- * middleware importa solo esta config; los handlers de la API y los server
- * actions usan la config extendida en `lib/auth/index.ts`.
+ * bcryptjs (API de Node.js no soportada en Edge Runtime). El middleware
+ * importa solo esta config; los handlers de la API y los server actions usan
+ * la config extendida en `lib/auth/index.ts`.
  */
 export type UserRoleLiteral = "ADMIN" | "PROJECT_OWNER" | "CO_ADMIN" | "PARTNER" | "PLATFORM";
 

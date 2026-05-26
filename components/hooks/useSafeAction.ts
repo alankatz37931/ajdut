@@ -11,7 +11,14 @@ import { useCallback, useRef, useState, useTransition } from "react";
  * retornan al cliente (la promesa resuelve a `undefined`).
  */
 export type ActionSuccess = { ok: true; [k: string]: unknown };
-export type ActionFailure = { ok: false; error: string };
+export type ActionFailure = {
+  ok: false;
+  error: string;
+  /** Código semántico opcional (e.g., `NOT_FOUND`, `VALIDATION`, `FORBIDDEN`). */
+  code?: string;
+  /** Nombre del campo del form que disparó el error, para resaltarlo en UI. */
+  field?: string;
+};
 export type ActionResult<TSuccess extends ActionSuccess = ActionSuccess> =
   | TSuccess
   | ActionFailure;

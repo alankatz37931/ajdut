@@ -135,7 +135,7 @@ export default async function ApplicationsListPage({
             <Link
               key={key}
               href={{ pathname: "/admin/applications", query: { filter: key } }}
-              className={`eyebrow whitespace-nowrap transition-colors ${
+              className={`eyebrow whitespace-nowrap transition-colors inline-flex items-center py-2 px-3 min-h-[44px] ${
                 active ? "!text-navy" : "!text-navy/40 hover:!text-navy"
               }`}
             >

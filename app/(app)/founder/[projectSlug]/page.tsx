@@ -309,7 +309,7 @@ export default async function FounderDashboardPage({ params }: Params) {
                     {f.role}
                   </span>
                   <span className="col-span-12 sm:col-span-2 font-mono text-navy text-right">
-                    {formatPercent(Number(f.equityPercent))}
+                    {formatPercent(Number(f.equityPercent), 2, locale)}
                   </span>
                 </li>
               ))}
@@ -429,10 +429,10 @@ export default async function FounderDashboardPage({ params }: Params) {
                   </p>
                   <p className="mt-2 font-mono text-lg text-navy">
                     {m.unit === "CURRENCY"
-                      ? formatCurrency(Number(m.value), sp.valuationCurrency)
+                      ? formatCurrency(Number(m.value), sp.valuationCurrency, 2, locale)
                       : m.unit === "PERCENT"
-                        ? `${Number(m.value).toFixed(1)}%`
-                        : formatNumber(Number(m.value))}
+                        ? formatPercent(Number(m.value), 1, locale)
+                        : formatNumber(Number(m.value), undefined, locale)}
                   </p>
                   <p className="mt-1 eyebrow !text-navy/40">
                     {formatDate(m.asOf, locale)}
@@ -502,8 +502,8 @@ export default async function FounderDashboardPage({ params }: Params) {
             <div className="mt-4">
               <p className="eyebrow !text-navy/50">{t.funding.placedLabel}</p>
               <p className="mt-1.5 font-mono text-2xl text-navy leading-none">
-                {formatNumber(assigned)}
-                <span className="text-navy/30"> / {formatNumber(totalShares)}</span>
+                {formatNumber(assigned, undefined, locale)}
+                <span className="text-navy/30"> / {formatNumber(totalShares, undefined, locale)}</span>
               </p>
             </div>
             {/* Barra de progreso: contenedor pill h-2 con relleno gold. */}
@@ -835,7 +835,7 @@ function CapHolderRow({
           {gold && <span className="ml-2 text-gold">◆</span>}
         </span>
         <span className="flex items-baseline gap-2 shrink-0 font-mono">
-          <span className="text-navy/40 text-xs">{pct.toFixed(1)}%</span>
+          <span className="text-navy/40 text-xs">{formatPercent(pct, 1, locale)}</span>
           <span className="text-navy">{formatNumber(shares, undefined, locale)}</span>
         </span>
       </div>

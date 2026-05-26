@@ -41,10 +41,12 @@ export function TeamEditor({
   projectSlug,
   initialFounders,
   dict,
+  locale,
 }: {
   projectSlug: string;
   initialFounders: Founder[];
   dict: EquipoDict;
+  locale: string;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(initialFounders.length === 0);
@@ -73,6 +75,11 @@ export function TeamEditor({
   }
 
   const totalEquity = initialFounders.reduce((s, f) => s + f.equityPercent, 0);
+  const fmtPct2 = (n: number) =>
+    n.toLocaleString(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   return (
     <div className="mt-8 space-y-6">
@@ -87,7 +94,7 @@ export function TeamEditor({
           {dict.equityTotalFmt.split(/(\{pct\})/).map((part, i) =>
             part === "{pct}" ? (
               <span key={i} className="font-mono text-navy">
-                {totalEquity.toFixed(2)}
+                {fmtPct2(totalEquity)}
               </span>
             ) : (
               <span key={i}>{part}</span>
@@ -143,7 +150,7 @@ export function TeamEditor({
                   )}
                 </div>
                 <div className="col-span-4 sm:col-span-2 font-mono text-navy">
-                  {f.equityPercent.toFixed(2)}%
+                  {fmtPct2(f.equityPercent)}%
                 </div>
                 <div className="col-span-4 sm:col-span-2 eyebrow">
                   {f.isActive ? dict.active : dict.inactive}

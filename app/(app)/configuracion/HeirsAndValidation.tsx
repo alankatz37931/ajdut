@@ -84,8 +84,13 @@ export function HeirsAndValidation({
   ];
 
   const totalShare = heirs.reduce((s, h) => s + h.sharePercent, 0);
-  const totalLabel = `${totalShare.toFixed(2)}${dict.allocatedSuffix}`;
-  const remainingLabel = `${Math.max(0, 100 - totalShare).toFixed(2)}${dict.remainingSuffix}`;
+  const fmtPct2 = (n: number) =>
+    n.toLocaleString(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  const totalLabel = `${fmtPct2(totalShare)}${dict.allocatedSuffix}`;
+  const remainingLabel = `${fmtPct2(Math.max(0, 100 - totalShare))}${dict.remainingSuffix}`;
   const overAllocated = totalShare > 100;
 
   function applyResult(r: HeirActionResult, onOk: () => void) {
@@ -183,7 +188,13 @@ export function HeirsAndValidation({
           : dict.summaryHeirsPlural
         )
           .replace("{n}", String(heirs.length))
-          .replace("{pct}", totalShare.toFixed(0));
+          .replace(
+            "{pct}",
+            totalShare.toLocaleString(locale, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })
+          );
 
   const validationSummary =
     dict.validation.freqOptions[
@@ -272,7 +283,7 @@ export function HeirsAndValidation({
                       )}
                     </div>
                     <div className="col-span-6 sm:col-span-4 font-mono text-navy">
-                      {h.sharePercent.toFixed(2)}%
+                      {fmtPct2(h.sharePercent)}%
                     </div>
                     <div className="col-span-6 sm:col-span-3 flex justify-end gap-3">
                       <button

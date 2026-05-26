@@ -4,7 +4,11 @@ const nextConfig = {
   poweredByHeader: false,
   typedRoutes: true,
   images: {
-    remotePatterns: [],
+    remotePatterns: [
+      // Vercel Blob — avatares de usuario y documentos de proyecto.
+      // Hostname real: <store-id-hash>.public.blob.vercel-storage.com
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+    ],
   },
   experimental: {
     // Cache cliente del router más agresivo: páginas recién visitadas

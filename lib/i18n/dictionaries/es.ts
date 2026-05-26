@@ -26,6 +26,9 @@ export const dict = {
     optional: "(opcional)",
     notDeclared: "No declarada",
     dash: "—",
+    moreInfo: "Más información",
+    pagPrev: "← Anterior",
+    pagNext: "Siguiente →",
   },
 
   nav: {
@@ -40,6 +43,8 @@ export const dict = {
     logout: "Cerrar sesión",
     openMenu: "Abrir menú",
     closeMenu: "Cerrar menú",
+    profileAriaFmt: "Ir al perfil de {name}",
+    profileAriaDefault: "Ir al perfil",
     applications: "Aplicaciones",
     assignments: "Asignaciones",
     heirs: "Herederos",

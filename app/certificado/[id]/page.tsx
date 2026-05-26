@@ -97,8 +97,8 @@ export default async function CertificatePage({ params }: Params) {
         <dl className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
           <Cell label={t.fields.member} value={holderName} />
           <Cell label={t.fields.project} value={projectName} />
-          <Cell label={t.fields.shares} value={formatNumber(shares)} mono />
-          <Cell label={t.fields.totalIssued} value={formatNumber(totalShares)} mono />
+          <Cell label={t.fields.shares} value={formatNumber(shares, undefined, locale)} mono />
+          <Cell label={t.fields.totalIssued} value={formatNumber(totalShares, undefined, locale)} mono />
           <Cell label={t.fields.assigned} value={formatDate(acquired, locale)} mono />
           <Cell
             label={t.fields.validity}

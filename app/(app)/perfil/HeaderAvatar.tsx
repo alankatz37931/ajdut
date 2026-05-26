@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { upload } from "@vercel/blob/client";
 import type { Dict } from "@/lib/i18n";
 import { updateAvatarAction } from "./actions";
@@ -109,10 +110,11 @@ export function HeaderAvatar({ initialUrl, dict, onSaved }: Props) {
           className="block p-0 m-0 border-0 bg-transparent cursor-pointer disabled:cursor-wait"
         >
           {hasPhoto ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <Image
               src={url}
               alt=""
+              width={80}
+              height={80}
               onError={() => setPreviewBroken(true)}
               className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover hairline"
             />

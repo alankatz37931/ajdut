@@ -114,7 +114,9 @@ model User {
   applicationId String?      @unique
   application   Application? @relation("ApplicationOrigin", fields: [applicationId], references: [id])
 
-  // 2FA (TOTP obligatorio para ADMIN y PROJECT_OWNER)
+  // 2FA (TOTP) — TODO: 2FA feature deferred — schema fields kept for forward compat.
+  // No hay código que lea/escriba estos campos hoy; eliminarlos sería destructivo
+  // para data existente. Mantenidos hasta que se reactive la feature de TOTP.
   totpSecret  String?
   totpEnabled Boolean @default(false)
 

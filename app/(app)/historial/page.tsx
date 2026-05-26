@@ -344,7 +344,7 @@ export default async function HistorialPage({
             disabled={page <= 1}
             cat={cat}
             periodo={periodo}
-            label="← Previous"
+            label={dict.common.pagPrev}
           />
           <p className="eyebrow font-mono">
             {page} / {totalPages}
@@ -354,7 +354,7 @@ export default async function HistorialPage({
             disabled={page >= totalPages}
             cat={cat}
             periodo={periodo}
-            label="Next →"
+            label={dict.common.pagNext}
           />
         </div>
       )}

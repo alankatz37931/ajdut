@@ -22,6 +22,9 @@ export const dict: Dict = {
     optional: "(optional)",
     notDeclared: "Not declared",
     dash: "—",
+    moreInfo: "More information",
+    pagPrev: "← Previous",
+    pagNext: "Next →",
   },
 
   nav: {
@@ -36,6 +39,8 @@ export const dict: Dict = {
     logout: "Sign out",
     openMenu: "Open menu",
     closeMenu: "Close menu",
+    profileAriaFmt: "Go to {name}'s profile",
+    profileAriaDefault: "Go to profile",
     applications: "Applications",
     assignments: "Assignments",
     heirs: "Heirs",

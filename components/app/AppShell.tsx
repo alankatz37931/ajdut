@@ -45,6 +45,8 @@ export async function AppShell({
           logout: dict.nav.logout,
           brandTagline: dict.brand.tagline,
           brandAriaLabel: dict.brand.ariaLabel,
+          profileAriaFmt: dict.nav.profileAriaFmt,
+          profileAriaDefault: dict.nav.profileAriaDefault,
         }}
       />
       <div className="md:ml-64">
