@@ -1191,6 +1191,8 @@ export const dict: Dict = {
     sectionSend: "Send",
     rolesLabel: "Roles",
     rolesHelper: "Empty = all roles.",
+    rolesAll: "All",
+    projectAllChip: "All projects",
     roleAdmin: "Admin",
     roleProjectOwner: "Project owner",
     roleCoAdmin: "Co-admin",

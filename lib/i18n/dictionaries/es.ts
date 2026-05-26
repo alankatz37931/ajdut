@@ -1199,6 +1199,8 @@ export const dict = {
     sectionSend: "Envío",
     rolesLabel: "Roles",
     rolesHelper: "Vacío = todos los roles.",
+    rolesAll: "Todos",
+    projectAllChip: "Todos los proyectos",
     roleAdmin: "Admin",
     roleProjectOwner: "Project owner",
     roleCoAdmin: "Co-admin",
