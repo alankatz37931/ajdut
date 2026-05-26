@@ -1317,6 +1317,36 @@ export const dict: Dict = {
     },
   },
 
+  founderEquipo: {
+    section: "Founding team",
+    description:
+      "Who the founders behind the project are. Shown on the public project page to those with access.",
+    equityTotalFmt: "Total equity assigned: {pct}%",
+    addBtn: "+ Add member",
+    empty: "You haven't added anyone to the team yet.",
+    linkedin: "LinkedIn →",
+    active: "● Active",
+    inactive: "○ Inactive",
+    editBtn: "Edit",
+    removeBtn: "Remove",
+    removeConfirm: "Remove this member?",
+    form: {
+      fullNameLabel: "Full name",
+      roleLabel: "Role",
+      equityLabel: "Equity %",
+      joinedAtLabel: "Joined (optional)",
+      linkedinLabel: "LinkedIn (optional)",
+      bioLabel: "Bio / experience (optional)",
+      referencesLabel: "References (3) — optional",
+      statusLabel: "Status",
+      statusActive: "Active",
+      statusInactive: "Inactive (historical)",
+      cancelBtn: "Cancel",
+      saveBtn: "Save",
+      savingBtn: "Saving…",
+    },
+  },
+
   founderHitos: {
     section: "Roadmap milestones",
     description:

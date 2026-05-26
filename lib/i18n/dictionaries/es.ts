@@ -1325,6 +1325,36 @@ export const dict = {
     },
   },
 
+  founderEquipo: {
+    section: "Equipo fundador",
+    description:
+      "Quiénes son los founders detrás del proyecto. Se muestra en la ficha pública a quienes tengan acceso.",
+    equityTotalFmt: "Equity asignado total: {pct}%",
+    addBtn: "+ Agregar miembro",
+    empty: "Todavía no agregaste a nadie al equipo.",
+    linkedin: "LinkedIn →",
+    active: "● Activo",
+    inactive: "○ Inactivo",
+    editBtn: "Editar",
+    removeBtn: "Eliminar",
+    removeConfirm: "¿Eliminar este miembro?",
+    form: {
+      fullNameLabel: "Nombre completo",
+      roleLabel: "Rol",
+      equityLabel: "Equity %",
+      joinedAtLabel: "Se unió (opcional)",
+      linkedinLabel: "LinkedIn (opcional)",
+      bioLabel: "Bio / experiencia (opcional)",
+      referencesLabel: "Referencias (3) — opcional",
+      statusLabel: "Estado",
+      statusActive: "Activo",
+      statusInactive: "Inactivo (histórico)",
+      cancelBtn: "Cancelar",
+      saveBtn: "Guardar",
+      savingBtn: "Guardando…",
+    },
+  },
+
   founderHitos: {
     section: "Hitos del roadmap",
     description:

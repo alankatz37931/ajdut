@@ -15,6 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function FounderTeamPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
+  const dict = await getDict();
+  const t = dict.founderEquipo;
   const { projectSlug } = await params;
 
   const project = await prisma.project.findUnique({
@@ -49,11 +51,11 @@ export default async function FounderTeamPage({ params }: Params) {
         projectName={project.name}
         projectSlug={project.slug}
         projectStatus={project.status}
-        section="Equipo fundador"
-        description="Quiénes son los founders detrás del proyecto. Se muestra en la ficha pública a quienes tengan acceso."
+        section={t.section}
+        description={t.description}
       />
 
-      <TeamEditor projectSlug={projectSlug} initialFounders={founders} />
+      <TeamEditor projectSlug={projectSlug} initialFounders={founders} dict={t} />
     </div>
   );
 }

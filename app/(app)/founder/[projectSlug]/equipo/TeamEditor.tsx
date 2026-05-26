@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { upsertFounderAction, removeFounderAction } from "./actions";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
 import {
@@ -10,6 +11,8 @@ import {
   FloatingDate,
 } from "@/components/ui/Floating";
 
+type EquipoDict = Dict["founderEquipo"];
+
 type Founder = {
   id: string;
   fullName: string;
@@ -18,7 +21,7 @@ type Founder = {
   references: string;
   linkedinUrl: string;
   equityPercent: number;
-  joinedAt: string; // YYYY-MM-DD
+  joinedAt: string;
   isActive: boolean;
 };
 
@@ -37,9 +40,11 @@ const empty: Founder = {
 export function TeamEditor({
   projectSlug,
   initialFounders,
+  dict,
 }: {
   projectSlug: string;
   initialFounders: Founder[];
+  dict: EquipoDict;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(initialFounders.length === 0);
@@ -79,7 +84,15 @@ export function TeamEditor({
 
       <div className="hairline p-4 bg-paper flex items-center justify-between">
         <p className="eyebrow">
-          Equity asignado total: <span className="font-mono text-navy">{totalEquity.toFixed(2)}%</span>
+          {dict.equityTotalFmt.split(/(\{pct\})/).map((part, i) =>
+            part === "{pct}" ? (
+              <span key={i} className="font-mono text-navy">
+                {totalEquity.toFixed(2)}
+              </span>
+            ) : (
+              <span key={i}>{part}</span>
+            )
+          )}
         </p>
         {!showNew && !editingId && (
           <button
@@ -87,7 +100,7 @@ export function TeamEditor({
             onClick={() => setShowNew(true)}
             className="eyebrow hover:!text-gold"
           >
-            + Agregar miembro
+            {dict.addBtn}
           </button>
         )}
       </div>
@@ -98,6 +111,7 @@ export function TeamEditor({
           onSubmit={onSubmit}
           onCancel={() => setShowNew(false)}
           isPending={isPending}
+          dict={dict}
         />
       )}
 
@@ -110,6 +124,7 @@ export function TeamEditor({
                 onSubmit={onSubmit}
                 onCancel={() => setEditingId(null)}
                 isPending={isPending}
+                dict={dict}
               />
             ) : (
               <div className="grid grid-cols-12 items-center gap-3">
@@ -123,7 +138,7 @@ export function TeamEditor({
                       rel="noreferrer"
                       className="mt-1 eyebrow !text-gold inline-block"
                     >
-                      LinkedIn →
+                      {dict.linkedin}
                     </a>
                   )}
                 </div>
@@ -131,7 +146,7 @@ export function TeamEditor({
                   {f.equityPercent.toFixed(2)}%
                 </div>
                 <div className="col-span-4 sm:col-span-2 eyebrow">
-                  {f.isActive ? "● Activo" : "○ Inactivo"}
+                  {f.isActive ? dict.active : dict.inactive}
                 </div>
                 <div className="col-span-4 sm:col-span-3 flex justify-end gap-3">
                   <button
@@ -139,11 +154,11 @@ export function TeamEditor({
                     onClick={() => setEditingId(f.id)}
                     className="eyebrow hover:!text-gold"
                   >
-                    Editar
+                    {dict.editBtn}
                   </button>
                   <InlineConfirm
-                    label="Eliminar"
-                    question="¿Eliminar este miembro?"
+                    label={dict.removeBtn}
+                    question={dict.removeConfirm}
                     onConfirm={() => onRemove(f.id)}
                     disabled={isPending}
                   />
@@ -155,7 +170,7 @@ export function TeamEditor({
       </ul>
 
       {initialFounders.length === 0 && !showNew && (
-        <p className="text-navy/60">Todavía no agregaste a nadie al equipo.</p>
+        <p className="text-navy/60">{dict.empty}</p>
       )}
     </div>
   );
@@ -166,11 +181,13 @@ function FounderForm({
   onSubmit,
   onCancel,
   isPending,
+  dict,
 }: {
   founder: Founder;
   onSubmit: (fd: FormData) => void;
   onCancel: () => void;
   isPending: boolean;
+  dict: EquipoDict;
 }) {
   const [fullName, setFullName] = useState(founder.fullName);
   const [role, setRole] = useState(founder.role);
@@ -189,14 +206,14 @@ function FounderForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
         <FloatingInput
           id="fullName"
-          label="Nombre completo"
+          label={dict.form.fullNameLabel}
           value={fullName}
           onChange={setFullName}
           required
         />
         <FloatingInput
           id="role"
-          label="Rol"
+          label={dict.form.roleLabel}
           value={role}
           onChange={setRole}
           required
@@ -207,13 +224,13 @@ function FounderForm({
           id="equityPercent"
           type="number"
           step="any"
-          label="Equity %"
+          label={dict.form.equityLabel}
           value={equityPercent}
           onChange={setEquityPercent}
         />
         <FloatingDate
           id="joinedAt"
-          label="Se unió (opcional)"
+          label={dict.form.joinedAtLabel}
           value={joinedAt}
           onChange={setJoinedAt}
         />
@@ -222,20 +239,20 @@ function FounderForm({
         id="linkedinUrl"
         type="url"
         inputMode="url"
-        label="LinkedIn (opcional)"
+        label={dict.form.linkedinLabel}
         value={linkedinUrl}
         onChange={setLinkedinUrl}
       />
       <FloatingTextarea
         id="bio"
-        label="Bio / experiencia (opcional)"
+        label={dict.form.bioLabel}
         value={bio}
         onChange={setBio}
         rows={3}
       />
       <FloatingTextarea
         id="references"
-        label="Referencias (3) — opcional"
+        label={dict.form.referencesLabel}
         value={references}
         onChange={setReferences}
         rows={3}
@@ -243,12 +260,12 @@ function FounderForm({
       <div>
         <FloatingSelect
           id="isActive"
-          label="Estado"
+          label={dict.form.statusLabel}
           value={isActive}
           onChange={setIsActive}
           options={[
-            { value: "true", label: "Activo" },
-            { value: "false", label: "Inactivo (histórico)" },
+            { value: "true", label: dict.form.statusActive },
+            { value: "false", label: dict.form.statusInactive },
           ]}
         />
         <input type="hidden" name="isActive" value={isActive} />
@@ -260,10 +277,10 @@ function FounderForm({
           disabled={isPending}
           className="eyebrow hover:!text-gold"
         >
-          Cancelar
+          {dict.form.cancelBtn}
         </button>
         <button type="submit" disabled={isPending} className="btn-primary disabled:opacity-50">
-          {isPending ? "Guardando…" : "Guardar"}
+          {isPending ? dict.form.savingBtn : dict.form.saveBtn}
         </button>
       </div>
     </form>
