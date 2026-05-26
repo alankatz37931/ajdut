@@ -20,6 +20,7 @@ vi.mock("bcryptjs", () => ({
 }));
 
 import { validateCredentials } from "@/lib/auth/credentials";
+import { _resetRateLimits } from "@/lib/utils/rate-limit";
 
 function makeUser(overrides: Partial<{
   id: string;
@@ -46,6 +47,9 @@ beforeEach(() => {
   mocks.user.findUnique.mockReset();
   mocks.user.update.mockReset();
   mocks.bcryptCompare.mockReset();
+  // Reseteamos el rate-limiter para que las suites de tests no se
+  // contaminen entre sí — comparten estado del módulo.
+  _resetRateLimits();
 });
 
 describe("validateCredentials — schema (rechazos sin tocar DB)", () => {

@@ -14,6 +14,7 @@
  */
 
 import { Prisma } from "@prisma/client";
+import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { recordAudit } from "./audit";
 import {
@@ -32,6 +33,21 @@ export const VALIDATION_WINDOW_DAYS = 15;
 
 /** Cantidad de MISSED consecutivos que disparan la escalación al admin. */
 export const ESCALATION_THRESHOLD = 3;
+
+/**
+ * Días que vive el token del email de verificación de vida. Más largo que
+ * VALIDATION_WINDOW_DAYS porque el miembro puede clickear con delay (correo
+ * en spam, vacaciones, etc.). 30 días = 2x la ventana de respuesta.
+ */
+export const LIFE_CONFIRM_TOKEN_TTL_DAYS = 30;
+
+/** Bytes random para el token. 32 bytes (~43 chars base64url) = unguessable. */
+const LIFE_CONFIRM_TOKEN_BYTES = 32;
+
+/** SHA-256 hex del token plano. Mismo patrón que PasswordSetupToken. */
+function hashLifeConfirmToken(plain: string): string {
+  return createHash("sha256").update(plain).digest("hex");
+}
 
 /** Frecuencias permitidas (en meses). 0 = deshabilitado. */
 export const ALLOWED_FREQUENCIES = [0, 1, 3, 6, 12] as const;
@@ -330,6 +346,15 @@ export async function scheduleValidationCheck(
     return { checkId: "", status: "DISABLED" };
   }
 
+  // Generamos el token PLANO fuera de la transacción y guardamos solo el
+  // hash. El plano viaja únicamente en el email. Mismo patrón que
+  // PasswordSetupToken — ver lib/services/password-setup.ts.
+  const plainToken = randomBytes(LIFE_CONFIRM_TOKEN_BYTES).toString("base64url");
+  const tokenHash = hashLifeConfirmToken(plainToken);
+  const tokenExpiresAt = new Date(
+    Date.now() + LIFE_CONFIRM_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000
+  );
+
   const result = await prisma.$transaction(async (tx) => {
     const pending = await tx.validationCheck.findFirst({
       where: { userId, status: "PENDING" },
@@ -340,7 +365,12 @@ export async function scheduleValidationCheck(
       return { checkId: pending.id, status: "ALREADY_PENDING" as const };
     }
     const created = await tx.validationCheck.create({
-      data: { userId, status: "PENDING" },
+      data: {
+        userId,
+        status: "PENDING",
+        tokenHash,
+        tokenExpiresAt,
+      },
     });
     await recordAudit(tx, {
       actorId: null,
@@ -354,11 +384,12 @@ export async function scheduleValidationCheck(
 
   if (result.status === "CREATED") {
     // Fire-and-forget: si el email falla, el check ya existe; el cron lo
-    // marcará MISSED igual y el audit registra el fallo.
+    // marcará MISSED igual y el audit registra el fallo. El email recibe
+    // el token PLANO — la DB solo conoce el hash.
     await notifyUserValidationCheck({
       to: user.email,
       fullName: user.alias ?? user.fullName,
-      checkId: result.checkId,
+      token: plainToken,
       windowDays: VALIDATION_WINDOW_DAYS,
     });
   }
@@ -369,31 +400,103 @@ export async function scheduleValidationCheck(
 
 export type ConfirmResult =
   | { ok: true; confirmedAt: Date }
-  | { ok: false; reason: "NOT_FOUND" | "ALREADY_RESPONDED" };
+  | { ok: false; reason: "NOT_FOUND" | "ALREADY_RESPONDED" | "EXPIRED" };
+
+/**
+ * Lookup de un check por su token plano (sin consumirlo). Lo usa la página
+ * /confirmar-vida/[token] para decidir qué vista renderizar (form, ya
+ * respondida, expirada o link inválido). Mismo patrón que inspectToken
+ * en lib/services/password-setup.ts.
+ */
+export type InspectValidationResult =
+  | {
+      ok: true;
+      check: {
+        id: string;
+        userId: string;
+        user: { fullName: string; alias: string | null };
+      };
+    }
+  | {
+      ok: false;
+      reason: "NOT_FOUND" | "ALREADY_RESPONDED" | "EXPIRED";
+    };
+
+export async function inspectValidationToken(
+  plainToken: string
+): Promise<InspectValidationResult> {
+  if (!plainToken || plainToken.length < 10) {
+    return { ok: false as const, reason: "NOT_FOUND" as const };
+  }
+  const tokenHash = hashLifeConfirmToken(plainToken);
+  const check = await prisma.validationCheck.findUnique({
+    where: { tokenHash },
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      tokenExpiresAt: true,
+      user: { select: { fullName: true, alias: true } },
+    },
+  });
+  if (!check) return { ok: false as const, reason: "NOT_FOUND" as const };
+  if (check.status !== "PENDING") {
+    return { ok: false as const, reason: "ALREADY_RESPONDED" as const };
+  }
+  if (check.tokenExpiresAt && check.tokenExpiresAt.getTime() < Date.now()) {
+    return { ok: false as const, reason: "EXPIRED" as const };
+  }
+  return {
+    ok: true as const,
+    check: { id: check.id, userId: check.userId, user: check.user },
+  };
+}
 
 /**
  * Marca el check PENDING como CONFIRMED y resetea los contadores. Se usa
- * desde la ruta pública /confirmar-vida/[id]. Si el check ya está respondido
- * (CONFIRMED o MISSED) devolvemos un resultado neutro — la pantalla muestra
- * "ya confirmaste" sin filtrar info sensible.
+ * desde la ruta pública /confirmar-vida/[token] después de que el miembro
+ * toca el botón. Recibe el token PLANO — lo hashea para hacer el lookup
+ * y luego invalida el token (tokenHash = null) para evitar reuso.
+ *
+ * Si el check ya está respondido (CONFIRMED o MISSED) o el token expiró,
+ * devolvemos un resultado neutro — la pantalla muestra el mensaje genérico
+ * sin filtrar info sensible.
  */
 export async function markValidationConfirmed(
-  checkId: string
+  plainToken: string
 ): Promise<ConfirmResult> {
+  if (!plainToken || plainToken.length < 10) {
+    return { ok: false as const, reason: "NOT_FOUND" as const };
+  }
+  const tokenHash = hashLifeConfirmToken(plainToken);
   return prisma.$transaction(async (tx) => {
     const check = await tx.validationCheck.findUnique({
-      where: { id: checkId },
-      select: { id: true, userId: true, status: true },
+      where: { tokenHash },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        tokenExpiresAt: true,
+      },
     });
     if (!check) return { ok: false as const, reason: "NOT_FOUND" as const };
     if (check.status !== "PENDING") {
       return { ok: false as const, reason: "ALREADY_RESPONDED" as const };
     }
+    if (check.tokenExpiresAt && check.tokenExpiresAt.getTime() < Date.now()) {
+      return { ok: false as const, reason: "EXPIRED" as const };
+    }
 
     const now = new Date();
     await tx.validationCheck.update({
       where: { id: check.id },
-      data: { status: "CONFIRMED", respondedAt: now },
+      data: {
+        status: "CONFIRMED",
+        respondedAt: now,
+        // Invalidamos el token: cualquier intento futuro de reusarlo cae en
+        // el branch NOT_FOUND. tokenExpiresAt se deja como auditoría.
+        tokenHash: null,
+      },
     });
     await tx.user.update({
       where: { id: check.userId },
@@ -479,7 +582,10 @@ export async function markValidationMissed(input: {
 
     await tx.validationCheck.update({
       where: { id: check.id },
-      data: { status: "MISSED", respondedAt: null },
+      // Invalidamos el token al marcar MISSED (defense in depth: si el
+      // atacante interceptó el email pero el cron ya venció el check,
+      // tampoco puede reusarlo).
+      data: { status: "MISSED", respondedAt: null, tokenHash: null },
     });
     const updatedUser = await tx.user.update({
       where: { id: check.userId },

@@ -10,6 +10,28 @@ import type { NextAuthConfig } from "next-auth";
  */
 export type UserRoleLiteral = "ADMIN" | "PROJECT_OWNER" | "CO_ADMIN" | "PARTNER" | "PLATFORM";
 
+/**
+ * Rutas de pagina publicas — el resto requiere session activa via la
+ * lógica default-deny de `authorized`. Coincide por igualdad exacta o
+ * por prefijo `path.startsWith(p + "/")` (asi `/legal/terminos` queda
+ * cubierto por `/legal`).
+ *
+ * Notas:
+ *   - `/api/auth/*` y assets estaticos ya estan excluidos en el matcher
+ *     de `middleware.ts`, no van aca.
+ *   - `/establecer-contrasena/[token]` y `/confirmar-vida/[token]` usan
+ *     un token capability-based — no requieren session.
+ */
+const PUBLIC_PAGES = [
+  "/nosotros",
+  "/legal",
+  "/acceder",
+  "/aplicar",
+  "/recuperar-contrasena",
+  "/establecer-contrasena",
+  "/confirmar-vida",
+] as const;
+
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   pages: {
@@ -32,13 +54,25 @@ export const authConfig: NextAuthConfig = {
       return session;
     },
     authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const isProtected =
-        nextUrl.pathname.startsWith("/founder") ||
-        nextUrl.pathname.startsWith("/partner") ||
-        nextUrl.pathname.startsWith("/admin");
+      // Default-deny: TODO route que no esta en `PUBLIC_PAGES` requiere
+      // session activa. Antes era allowlist (solo /founder/, /partner/,
+      // /admin/) lo que era frágil — cada nueva ruta protegida tenia que
+      // acordarse de actualizar este array. Ahora al revés: cada ruta
+      // PUBLICA explícita acá; lo nuevo queda protegido por defecto.
+      //
+      // El matcher de middleware.ts ya excluye /api, /_next y assets, asi
+      // que esta función solo corre sobre rutas de pagina.
+      const path = nextUrl.pathname;
+      const isPublic =
+        path === "/" ||
+        PUBLIC_PAGES.some(
+          (p) => path === p || path.startsWith(p + "/")
+        );
 
-      if (isProtected && !isLoggedIn) {
+      if (isPublic) return true;
+
+      const isLoggedIn = !!auth?.user;
+      if (!isLoggedIn) {
         return Response.redirect(new URL("/acceder", nextUrl));
       }
       return true;

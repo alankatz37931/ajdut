@@ -6,7 +6,7 @@ import { confirmValidationAction } from "./actions";
 
 type CVDict = Dict["confirmarVida"];
 
-export function ConfirmButton({ checkId, dict }: { checkId: string; dict: CVDict }) {
+export function ConfirmButton({ token, dict }: { token: string; dict: CVDict }) {
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -14,7 +14,7 @@ export function ConfirmButton({ checkId, dict }: { checkId: string; dict: CVDict
   function onClick() {
     setError(null);
     startTransition(async () => {
-      const r = await confirmValidationAction(checkId);
+      const r = await confirmValidationAction(token);
       if (r.ok) {
         setDone(true);
       } else {

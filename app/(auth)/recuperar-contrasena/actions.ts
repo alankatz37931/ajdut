@@ -1,14 +1,37 @@
 "use server";
 
+import { headers } from "next/headers";
 import { after } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { getDict } from "@/lib/i18n";
 import { createPasswordSetupToken } from "@/lib/services/password-setup";
 import { notifyPasswordReset } from "@/lib/email/notifications";
+import { consumeRateLimit } from "@/lib/utils/rate-limit";
 
 export type RecoveryResult =
   | { ok: true }
   | { ok: false; error: string };
+
+// Password reset: 3 por email/hora + 10 por IP/hora.
+// Cuando se excede el límite NO se lo decimos al cliente: devolvemos
+// `ok:true` igual que el camino feliz. Así un atacante no puede usar el
+// endpoint para enumerar emails ni para calibrar su ritmo.
+const PWRESET_EMAIL_LIMIT = 3;
+const PWRESET_EMAIL_WINDOW_MS = 60 * 60 * 1000;
+const PWRESET_IP_LIMIT = 10;
+const PWRESET_IP_WINDOW_MS = 60 * 60 * 1000;
+
+async function getClientIp(): Promise<string> {
+  const h = await headers();
+  const xff = h.get("x-forwarded-for");
+  if (xff) {
+    const first = xff.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  const xRealIp = h.get("x-real-ip");
+  if (xRealIp) return xRealIp;
+  return "unknown";
+}
 
 /**
  * Inicia el flujo de recuperación de contraseña.
@@ -24,6 +47,23 @@ export async function requestPasswordResetAction(
   if (!email || !email.includes("@")) {
     const dict = await getDict();
     return { ok: false, error: dict.recoveryPassword.errEmailInvalid };
+  }
+
+  // Rate limits: si se exceden, devolvemos ok:true sin enviar nada.
+  // No queremos revelar al atacante que está siendo throttled.
+  const ip = await getClientIp();
+  const ipCheck = consumeRateLimit(
+    `pwreset:ip:${ip}`,
+    PWRESET_IP_LIMIT,
+    PWRESET_IP_WINDOW_MS
+  );
+  const emailCheck = consumeRateLimit(
+    `pwreset:email:${email}`,
+    PWRESET_EMAIL_LIMIT,
+    PWRESET_EMAIL_WINDOW_MS
+  );
+  if (!ipCheck.ok || !emailCheck.ok) {
+    return { ok: true };
   }
 
   const user = await prisma.user.findUnique({

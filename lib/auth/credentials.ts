@@ -1,6 +1,7 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db/client";
+import { consumeRateLimit } from "@/lib/utils/rate-limit";
 import type { UserRoleLiteral } from "./config";
 
 const credentialsSchema = z.object({
@@ -14,6 +15,13 @@ export type ValidatedUser = {
   name: string;
   role: UserRoleLiteral;
 };
+
+// Login: 10 intentos por email cada 10 minutos.
+// El límite por IP se aplica aguas arriba en el handler de NextAuth
+// (ver app/api/auth/[...nextauth]/route.ts) porque acá no tenemos
+// contexto de request.
+const LOGIN_EMAIL_LIMIT = 10;
+const LOGIN_EMAIL_WINDOW_MS = 10 * 60 * 1000;
 
 /**
  * Lógica de autenticación pura — extraída del callback de NextAuth para que sea
@@ -30,9 +38,20 @@ export async function validateCredentials(
   if (!parsed.success) return null;
 
   const { email, password } = parsed.data;
+  const normalizedEmail = email.toLowerCase();
+
+  // Anti brute-force: si superó el cupo por email, fallamos exactamente
+  // igual que credenciales inválidas. No revelamos al cliente que está
+  // rate-limited (no queremos ayudar al atacante a calibrar el ritmo).
+  const rl = consumeRateLimit(
+    `login:email:${normalizedEmail}`,
+    LOGIN_EMAIL_LIMIT,
+    LOGIN_EMAIL_WINDOW_MS
+  );
+  if (!rl.ok) return null;
 
   const user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
+    where: { email: normalizedEmail },
   });
 
   if (!user || !user.isActive || user.deletedAt) return null;

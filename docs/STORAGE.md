@@ -69,7 +69,6 @@ permitido.
 | `report-attachment` | 25 MB      | PDF, Excel (xlsx/xls), Word (docx/doc), PNG, JPEG |
 | `project-doc`       | 25 MB      | Idem `report-attachment`                          |
 | `id-photo`          | 5 MB       | PNG, JPEG, PDF — _definido, sin uso actual_        |
-| `chat-attachment`   | 25 MB      | Cualquiera — _definido, sin uso actual_           |
 
 El tamaño y el MIME se validan **en el server** (no solo en el cliente).
 

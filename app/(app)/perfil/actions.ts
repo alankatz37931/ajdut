@@ -6,28 +6,11 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getDict } from "@/lib/i18n";
 import { recordAudit } from "@/lib/services/audit";
+import { normalizeOptionalUrl } from "@/lib/utils/url";
 
 export type ProfileResult =
   | { ok: true }
   | { ok: false; error: string; field?: string };
-
-/**
- * Valida que un valor sea URL absoluta http(s) o null. Usado para el campo
- * avatarUrl, que viene de la URL pública del archivo subido a R2.
- */
-function normalizeOptionalUrl(raw: unknown): string | null | "INVALID" {
-  if (raw === null || raw === undefined) return null;
-  const s = String(raw).trim();
-  if (s.length === 0) return null;
-  try {
-    const u = new URL(s);
-    if (u.protocol !== "http:" && u.protocol !== "https:") return "INVALID";
-    if (s.length > 2048) return "INVALID";
-    return s;
-  } catch {
-    return "INVALID";
-  }
-}
 
 export async function updateNameAction(formData: FormData): Promise<ProfileResult> {
   const user = await requireSession();

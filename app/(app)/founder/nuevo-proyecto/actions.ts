@@ -9,6 +9,7 @@ import { createProject } from "@/lib/services/project";
 import { DomainError } from "@/lib/services/errors";
 import { notifyAdminsNewProjectPending } from "@/lib/email/notifications";
 import { prisma } from "@/lib/db/client";
+import { normalizeOptionalUrl } from "@/lib/utils/url";
 
 export type CreateProjectResult =
   | { ok: true; slug: string }
@@ -39,18 +40,32 @@ export async function createProjectAction(
   const businessModel = get("businessModel");
   const valuationRaw = get("preMoneyValuation");
   const currency = get("valuationCurrency") || "USD";
-  const websiteUrl = get("websiteUrl") || undefined;
-  const videoUrl = get("videoUrl") || undefined;
   const legalName = get("legalName") || name;
   const jurisdiction = get("jurisdiction");
   const assetBackingNote = get("assetBackingNote") || undefined;
   const equityStructureNote = get("equityStructureNote") || undefined;
-  const projectionsUrl = get("projectionsUrl") || undefined;
-  const planNegociosUrl = get("planNegociosUrl") || undefined;
-  const estrategiasPeriodicasUrl = get("estrategiasPeriodicasUrl") || undefined;
-  const estadosFinancierosUrl = get("estadosFinancierosUrl") || undefined;
-  const estrategiaEmisionUrl = get("estrategiaEmisionUrl") || undefined;
   const policyShares = get("policyShares") || undefined;
+
+  // Todas las URLs externas pasan por normalizeOptionalUrl: rechaza
+  // protocolos no-http(s) (javascript:, data:, etc.) que se ejecutarían
+  // al click del viewer. Vacío → undefined para no pisar valores existentes.
+  const urlFields = [
+    "websiteUrl",
+    "videoUrl",
+    "projectionsUrl",
+    "planNegociosUrl",
+    "estrategiasPeriodicasUrl",
+    "estadosFinancierosUrl",
+    "estrategiaEmisionUrl",
+  ] as const;
+  const urls: Partial<Record<(typeof urlFields)[number], string | undefined>> = {};
+  for (const field of urlFields) {
+    const normalized = normalizeOptionalUrl(get(field));
+    if (normalized === "INVALID") {
+      return { ok: false, error: `URL invalida en ${field} — solo http/https.` };
+    }
+    urls[field] = normalized ?? undefined;
+  }
   const policyDividends = get("policyDividends") || undefined;
   const dividendsFrequency = get("dividendsFrequency") || undefined;
 
@@ -98,17 +113,17 @@ export async function createProjectAction(
       businessModel,
       preMoneyValuation: valuation,
       valuationCurrency: currency as "USD" | "MXN",
-      websiteUrl,
-      videoUrl,
+      websiteUrl: urls.websiteUrl,
+      videoUrl: urls.videoUrl,
       legalName,
       jurisdiction,
       assetBackingNote,
       equityStructureNote,
-      projectionsUrl,
-      planNegociosUrl,
-      estrategiasPeriodicasUrl,
-      estadosFinancierosUrl,
-      estrategiaEmisionUrl,
+      projectionsUrl: urls.projectionsUrl,
+      planNegociosUrl: urls.planNegociosUrl,
+      estrategiasPeriodicasUrl: urls.estrategiasPeriodicasUrl,
+      estadosFinancierosUrl: urls.estadosFinancierosUrl,
+      estrategiaEmisionUrl: urls.estrategiaEmisionUrl,
       policyShares,
       policyDividends,
       dividendsFrequency,

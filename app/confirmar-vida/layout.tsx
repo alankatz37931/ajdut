@@ -2,8 +2,9 @@ import { PublicNav } from "@/components/landing/PublicNav";
 import { PublicFooter } from "@/components/landing/PublicFooter";
 
 /**
- * Layout público para /confirmar-vida/[id]. La ruta es accesible sin sesión
- * (la valida un token simple — el id del ValidationCheck), igual que
+ * Layout público para /confirmar-vida/[token]. La ruta es accesible sin
+ * sesión y la valida un token random hasheado (single-use, expira a los
+ * LIFE_CONFIRM_TOKEN_TTL_DAYS días) — mismo patrón que
  * /establecer-contrasena. Usa el chrome público para que el email no
  * descargue al usuario a una pantalla rara.
  */

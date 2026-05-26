@@ -6,7 +6,8 @@ import type { Route } from "next";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { updateProjectInfo, updateAvailableShares } from "@/lib/services/project";
-import { DomainError } from "@/lib/services/errors";
+import { DomainError, ValidationError } from "@/lib/services/errors";
+import { normalizeOptionalUrl } from "@/lib/utils/url";
 
 export type EditProjectResult =
   | { ok: true }
@@ -33,6 +34,19 @@ export async function updateProjectInfoAction(
     if (v === null) return undefined;
     const s = String(v).trim();
     return s === "" ? null : s;
+  };
+
+  // Para URLs: si el campo no se envió → undefined (no tocar). Si vino vacío
+  // → null (limpiar). Si vino con valor → validar http(s); INVALID lanza
+  // ValidationError que el outer catch transforma en respuesta de error.
+  const pickOptionalUrl = (k: string): string | null | undefined => {
+    const v = formData.get(k);
+    if (v === null) return undefined;
+    const normalized = normalizeOptionalUrl(v);
+    if (normalized === "INVALID") {
+      throw new ValidationError(k, "URL invalida — solo http/https");
+    }
+    return normalized;
   };
 
   const stage = pickStr("stage");
@@ -62,17 +76,17 @@ export async function updateProjectInfoAction(
       businessModel: pickStr("businessModel"),
       preMoneyValuation: pickOptionalStr("preMoneyValuation"),
       valuationCurrency: pickStr("valuationCurrency"),
-      websiteUrl: pickOptionalStr("websiteUrl"),
-      videoUrl: pickOptionalStr("videoUrl"),
-      pitchDeckUrl: pickOptionalStr("pitchDeckUrl"),
-      dataRoomUrl: pickOptionalStr("dataRoomUrl"),
+      websiteUrl: pickOptionalUrl("websiteUrl"),
+      videoUrl: pickOptionalUrl("videoUrl"),
+      pitchDeckUrl: pickOptionalUrl("pitchDeckUrl"),
+      dataRoomUrl: pickOptionalUrl("dataRoomUrl"),
       assetBackingNote: pickOptionalStr("assetBackingNote"),
       equityStructureNote: pickOptionalStr("equityStructureNote"),
-      projectionsUrl: pickOptionalStr("projectionsUrl"),
-      planNegociosUrl: pickOptionalStr("planNegociosUrl"),
-      estrategiasPeriodicasUrl: pickOptionalStr("estrategiasPeriodicasUrl"),
-      estadosFinancierosUrl: pickOptionalStr("estadosFinancierosUrl"),
-      estrategiaEmisionUrl: pickOptionalStr("estrategiaEmisionUrl"),
+      projectionsUrl: pickOptionalUrl("projectionsUrl"),
+      planNegociosUrl: pickOptionalUrl("planNegociosUrl"),
+      estrategiasPeriodicasUrl: pickOptionalUrl("estrategiasPeriodicasUrl"),
+      estadosFinancierosUrl: pickOptionalUrl("estadosFinancierosUrl"),
+      estrategiaEmisionUrl: pickOptionalUrl("estrategiaEmisionUrl"),
       policyShares: pickOptionalStr("policyShares"),
       policyDividends: pickOptionalStr("policyDividends"),
       dividendsFrequency: pickOptionalStr("dividendsFrequency"),

@@ -7,6 +7,7 @@ import {
   upsertFounder,
   removeFounder,
 } from "@/lib/services/project-content";
+import { normalizeOptionalUrl } from "@/lib/utils/url";
 
 type Result = { ok: true } | { ok: false; error: string; field?: string };
 
@@ -32,7 +33,14 @@ export async function upsertFounderAction(
   const role = String(formData.get("role") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const references = String(formData.get("references") ?? "").trim();
-  const linkedinUrl = String(formData.get("linkedinUrl") ?? "").trim();
+  const linkedinUrlNormalized = normalizeOptionalUrl(formData.get("linkedinUrl"));
+  if (linkedinUrlNormalized === "INVALID") {
+    return {
+      ok: false,
+      error: "El link de LinkedIn no es válido — solo http/https.",
+      field: "linkedinUrl",
+    };
+  }
   const equityRaw = String(formData.get("equityPercent") ?? "0");
   const equityPercent = Number.parseFloat(equityRaw);
   const joinedAtStr = String(formData.get("joinedAt") ?? "").trim();
@@ -48,7 +56,7 @@ export async function upsertFounderAction(
       role,
       bio: bio || null,
       references: references || null,
-      linkedinUrl: linkedinUrl || null,
+      linkedinUrl: linkedinUrlNormalized,
       equityPercent: Number.isFinite(equityPercent) ? equityPercent : 0,
       joinedAt,
       isActive,

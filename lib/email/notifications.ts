@@ -656,16 +656,17 @@ export async function notifyChannelNewMessage(
 
 /**
  * Manda al miembro un email para que confirme que sigue activo. El link
- * lleva el checkId como token simple — la ruta /confirmar-vida/[id] lo
- * valida y marca la ValidationCheck como CONFIRMED.
+ * lleva un token random (no el id del check) — la DB solo guarda el SHA-256
+ * del token. La ruta /confirmar-vida/[token] hashea el path-param y busca
+ * el check por tokenHash. Single-use: tras confirmar se setea tokenHash=null.
  */
 export async function notifyUserValidationCheck(input: {
   to: string;
   fullName: string;
-  checkId: string;
+  token: string;
   windowDays: number;
 }) {
-  const confirmUrl = `${appUrl()}/confirmar-vida/${input.checkId}`;
+  const confirmUrl = `${appUrl()}/confirmar-vida/${input.token}`;
   const { subject, html } = validationCheckEmail({
     fullName: input.fullName,
     confirmUrl,

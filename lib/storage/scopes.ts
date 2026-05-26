@@ -8,8 +8,7 @@ export type UploadScope =
   | "profile-photo"
   | "id-photo"
   | "report-attachment"
-  | "project-doc"
-  | "chat-attachment";
+  | "project-doc";
 
 export type ScopeRule = {
   maxBytes: number;
@@ -45,10 +44,6 @@ export const SCOPE_RULES: Record<UploadScope, ScopeRule> = {
   "project-doc": {
     maxBytes: 25 * MB,
     mimeTypes: DOC_MIME_TYPES,
-  },
-  "chat-attachment": {
-    maxBytes: 25 * MB,
-    mimeTypes: [], // cualquier tipo
   },
 };
 

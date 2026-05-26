@@ -203,6 +203,15 @@ model ValidationCheck {
   status        ValidationCheckStatus @default(PENDING)
   escalatedAt   DateTime?
 
+  // SHA-256 hash del token plano que viaja en el link del email. El plano
+  // nunca se almacena. Se setea a null al confirmar (invalidación) y al
+  // marcar como MISSED (defense in depth). Nullable porque los registros
+  // creados antes de Ola 7b-security no tienen token.
+  tokenHash      String?              @unique
+  // Fecha de expiración del token. Si null, no expira (legacy). Si pasada,
+  // la ruta /confirmar-vida lo rechaza aunque el status sea PENDING.
+  tokenExpiresAt DateTime?
+
   @@index([userId, sentAt])
 }
 
