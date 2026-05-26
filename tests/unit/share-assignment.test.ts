@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // `vi.hoisted` permite definir el mock object antes del hoisting del vi.mock.
 // Sin esto, el factory de vi.mock falla con "Cannot access 'tx' before initialization".
+//
+// Nota: tras Wave 1 (race-safe atomic pool decrement), el servicio usa
+// `tx.participation.updateMany` para el decremento y `tx.participation.deleteMany`
+// para limpiar pools en 0. `update` y `delete` siguen presentes en el mock
+// porque otros call paths podrían usarlos, pero las assertions del happy path
+// chequean `updateMany`/`deleteMany`.
 const tx = vi.hoisted(() => ({
   lead: {
     findUnique: vi.fn(),
@@ -9,6 +15,8 @@ const tx = vi.hoisted(() => ({
   },
   participation: {
     findFirst: vi.fn(),
+    updateMany: vi.fn(),
+    deleteMany: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
     create: vi.fn(),
@@ -90,6 +98,10 @@ beforeEach(() => {
       }
     }
   }
+  // Defaults sanos para el happy path: el decremento atómico siempre
+  // afecta 1 fila y el cleanup del pool vacío no encuentra nada.
+  tx.participation.updateMany.mockResolvedValue({ count: 1 });
+  tx.participation.deleteMany.mockResolvedValue({ count: 0 });
 });
 
 describe("assignSharesFromLead — autorización", () => {
@@ -106,10 +118,6 @@ describe("assignSharesFromLead — autorización", () => {
 
   it("permite si el actor es el founder", async () => {
     tx.lead.findUnique.mockResolvedValueOnce(makeLead());
-    tx.participation.findFirst.mockResolvedValueOnce({
-      id: "pool-1",
-      shareCount: 1000,
-    });
     tx.participation.create.mockResolvedValueOnce({ id: "part-new" });
     tx.certificate.create.mockResolvedValueOnce({ id: "cert-1" });
 
@@ -147,7 +155,6 @@ describe("assignSharesFromLead — validaciones de estado", () => {
 
   it("acepta lead en CONTACTED (founder ya se había contactado)", async () => {
     tx.lead.findUnique.mockResolvedValueOnce(makeLead({ status: "CONTACTED" }));
-    tx.participation.findFirst.mockResolvedValueOnce({ id: "pool-1", shareCount: 1000 });
     tx.participation.create.mockResolvedValueOnce({ id: "part-new" });
     tx.certificate.create.mockResolvedValueOnce({ id: "cert-1" });
 
@@ -190,9 +197,11 @@ describe("assignSharesFromLead — validaciones de estado", () => {
   });
 });
 
-describe("assignSharesFromLead — validaciones de pool", () => {
+describe("assignSharesFromLead — validaciones de pool (race-safe path)", () => {
   it("rechaza si el proyecto no tiene pool AVAILABLE", async () => {
     tx.lead.findUnique.mockResolvedValueOnce(makeLead());
+    // updateMany no afecta filas → distinguimos vía findFirst posterior.
+    tx.participation.updateMany.mockResolvedValueOnce({ count: 0 });
     tx.participation.findFirst.mockResolvedValueOnce(null);
     await expect(
       assignSharesFromLead({ leadId: "lead-1", actorId: "founder-1" })
@@ -201,7 +210,9 @@ describe("assignSharesFromLead — validaciones de pool", () => {
 
   it("rechaza si el pool tiene menos shares que el pedido", async () => {
     tx.lead.findUnique.mockResolvedValueOnce(makeLead({ shareCountRequested: 200 }));
-    tx.participation.findFirst.mockResolvedValueOnce({ id: "pool-1", shareCount: 100 });
+    // updateMany no afecta porque shareCount: { gte: 200 } no matchea pool de 100
+    tx.participation.updateMany.mockResolvedValueOnce({ count: 0 });
+    tx.participation.findFirst.mockResolvedValueOnce({ shareCount: 100 });
     await expect(
       assignSharesFromLead({ leadId: "lead-1", actorId: "founder-1" })
     ).rejects.toBeInstanceOf(ValidationError);
@@ -218,29 +229,29 @@ describe("assignSharesFromLead — validaciones de pool", () => {
 describe("assignSharesFromLead — efectos del happy path", () => {
   beforeEach(() => {
     tx.lead.findUnique.mockResolvedValue(makeLead({ shareCountRequested: 200 }));
-    tx.participation.findFirst.mockResolvedValue({ id: "pool-1", shareCount: 1000 });
     tx.participation.create.mockResolvedValue({ id: "part-new" });
     tx.certificate.create.mockResolvedValue({ id: "cert-1" });
   });
 
-  it("decrementa el pool en shareCountRequested (no lo borra si queda > 0)", async () => {
+  it("decrementa el pool atómicamente con updateMany + decrement", async () => {
     await assignSharesFromLead({ leadId: "lead-1", actorId: "founder-1" });
 
-    expect(tx.participation.update).toHaveBeenCalledWith({
-      where: { id: "pool-1" },
-      data: { shareCount: 800 }, // 1000 - 200
+    expect(tx.participation.updateMany).toHaveBeenCalledWith({
+      where: {
+        projectId: "project-1",
+        status: "AVAILABLE",
+        shareCount: { gte: 200 },
+      },
+      data: { shareCount: { decrement: 200 } },
     });
-    expect(tx.participation.delete).not.toHaveBeenCalled();
   });
 
-  it("BORRA el pool si queda en 0", async () => {
-    tx.lead.findUnique.mockResolvedValue(makeLead({ shareCountRequested: 1000 }));
-    tx.participation.findFirst.mockResolvedValue({ id: "pool-1", shareCount: 1000 });
-
+  it("limpia pools en 0 con deleteMany post-decremento", async () => {
     await assignSharesFromLead({ leadId: "lead-1", actorId: "founder-1" });
 
-    expect(tx.participation.delete).toHaveBeenCalledWith({ where: { id: "pool-1" } });
-    expect(tx.participation.update).not.toHaveBeenCalled();
+    expect(tx.participation.deleteMany).toHaveBeenCalledWith({
+      where: { projectId: "project-1", status: "AVAILABLE", shareCount: 0 },
+    });
   });
 
   it("crea nueva Participation con status=ASSIGNED al inversor", async () => {
@@ -300,5 +311,14 @@ describe("assignSharesFromLead — efectos del happy path", () => {
     );
     expect(actions).toContain("PARTICIPATION.ASSIGNED");
     expect(actions).toContain("CERTIFICATE.ISSUED");
+  });
+
+  it("serialCode incluye sufijo random (no solo timestamp)", async () => {
+    await assignSharesFromLead({ leadId: "lead-1", actorId: "founder-1" });
+
+    const createCall = tx.participation.create.mock.calls[0]?.[0];
+    const serial = createCall.data.serialCode as string;
+    // Formato: AJDUT-{SLUG}-{timestamp36}-{6 hex random}
+    expect(serial).toMatch(/^AJDUT-PUSHKA-[A-Z0-9]+-[A-F0-9]{6}$/);
   });
 });

@@ -4,6 +4,7 @@ import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict } from "@/lib/i18n";
 import {
   ensureChannelForProject,
@@ -77,14 +78,26 @@ export async function postMessageAction(
   revalidateChat(projectSlug);
 
   // Email a los demás miembros — fire-and-forget, sin spam en dev.
+  // Aunque corre dentro de `after()` (no bloquea la respuesta), seguimos
+  // usando sequentialPrisma: con connection_limit=1, dos lecturas en paralelo
+  // se pisan el pool. Además si una falla queremos seguir con el resto.
   after(async () => {
-    const [author, recipients] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id: user.id },
-        select: { fullName: true, alias: true },
-      }),
-      getChannelMemberEmails(project.id, user.id),
-    ]);
+    const [author, recipients] = await sequentialPrisma([
+      {
+        run: () =>
+          prisma.user.findUnique({
+            where: { id: user.id },
+            select: { fullName: true, alias: true },
+          }),
+        fallback: null as { fullName: string; alias: string | null } | null,
+        tag: "chatActions:postMessage:author",
+      },
+      {
+        run: () => getChannelMemberEmails(project.id, user.id),
+        fallback: [] as string[],
+        tag: "chatActions:postMessage:recipients",
+      },
+    ] as const);
     if (!author || recipients.length === 0) return;
     const displayName = author.alias ?? author.fullName;
     const preview =

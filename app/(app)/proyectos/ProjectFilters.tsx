@@ -22,6 +22,8 @@ export function ProjectFilters({ dict }: { dict: FilterDict }) {
 
   // Búsqueda instantánea: empuja la URL ~250ms después de dejar de tipear.
   // `replace` (no `push`) para no inundar el historial con cada tecla.
+  // Al cambiar la query, descarta `page` — el usuario espera empezar desde la
+  // primera página con el filtro nuevo.
   useEffect(() => {
     const current = params.get("q") ?? "";
     const next = query.trim();

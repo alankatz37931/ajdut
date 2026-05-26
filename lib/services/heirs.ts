@@ -16,6 +16,7 @@
 import { Prisma } from "@prisma/client";
 import { createHash, randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { recordAudit } from "./audit";
 import {
   notifyUserValidationCheck,
@@ -704,14 +705,31 @@ export async function runValidationCronPass(): Promise<CronRunStats> {
     },
   });
 
+  if (users.length === 0) return stats;
+
+  // Antes: por cada user disparábamos `validationCheck.findMany` (N round trips
+  // sólo para detectar quién tenía algún PENDING). A 1k users eso es 1k queries
+  // antes incluso de tocar `markValidationMissed`. Ahora cargamos TODOS los
+  // PENDING en una sola query y los agrupamos por userId en JS. `markValidationMissed`
+  // sigue corriendo su propia tx (correctness) — sólo evitamos el N+1 de
+  // detección.
+  const userIds = users.map((u) => u.id);
+  const allPending = await prisma.validationCheck.findMany({
+    where: { userId: { in: userIds }, status: "PENDING" },
+    select: { id: true, userId: true, sentAt: true },
+  });
+  const pendingByUser = new Map<string, { id: string; sentAt: Date }[]>();
+  for (const c of allPending) {
+    const list = pendingByUser.get(c.userId);
+    if (list) list.push({ id: c.id, sentAt: c.sentAt });
+    else pendingByUser.set(c.userId, [{ id: c.id, sentAt: c.sentAt }]);
+  }
+
   for (const u of users) {
     stats.usersConsidered += 1;
 
-    // 1) Vencer checks PENDING
-    const pendingChecks = await prisma.validationCheck.findMany({
-      where: { userId: u.id, status: "PENDING" },
-      select: { id: true, sentAt: true },
-    });
+    // 1) Vencer checks PENDING (lookup en memoria, sin round trip)
+    const pendingChecks = pendingByUser.get(u.id) ?? [];
     let hasActivePending = false;
     for (const c of pendingChecks) {
       const dueAt = new Date(
@@ -765,22 +783,37 @@ export type ValidationState = {
 };
 
 export async function getValidationState(userId: string): Promise<ValidationState> {
-  const [user, pending] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        validationFrequencyMonths: true,
-        lastValidationConfirmedAt: true,
-        missedValidationCount: true,
-        heirsEscalated: true,
-      },
-    }),
-    prisma.validationCheck.findFirst({
-      where: { userId, status: "PENDING" },
-      orderBy: { sentAt: "desc" },
-      select: { id: true, sentAt: true },
-    }),
-  ]);
+  const [user, pending] = await sequentialPrisma([
+    {
+      run: () =>
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            validationFrequencyMonths: true,
+            lastValidationConfirmedAt: true,
+            missedValidationCount: true,
+            heirsEscalated: true,
+          },
+        }),
+      fallback: null as {
+        validationFrequencyMonths: number;
+        lastValidationConfirmedAt: Date | null;
+        missedValidationCount: number;
+        heirsEscalated: boolean;
+      } | null,
+      tag: "heirs:getValidationState:user",
+    },
+    {
+      run: () =>
+        prisma.validationCheck.findFirst({
+          where: { userId, status: "PENDING" },
+          orderBy: { sentAt: "desc" },
+          select: { id: true, sentAt: true },
+        }),
+      fallback: null as { id: string; sentAt: Date } | null,
+      tag: "heirs:getValidationState:pending",
+    },
+  ] as const);
   if (!user) throw new NotFoundError("User", userId);
   return {
     frequencyMonths: user.validationFrequencyMonths,

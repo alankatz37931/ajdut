@@ -1,11 +1,33 @@
 import { notFound } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { LeadActions } from "./LeadActions";
 import { InfoRequestActions } from "./InfoRequestActions";
+
+const founderLeadsInclude = {
+  user: { select: { id: true, fullName: true, email: true } },
+  pendingAssignments: {
+    where: { status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: { id: true, shareCount: true, createdAt: true },
+  },
+} satisfies Prisma.LeadInclude;
+
+type FounderLeadRow = Prisma.LeadGetPayload<{ include: typeof founderLeadsInclude }>;
+
+const founderInfoRequestInclude = {
+  requester: { select: { id: true, fullName: true, email: true } },
+} satisfies Prisma.InfoRequestInclude;
+
+type FounderInfoRequestRow = Prisma.InfoRequestGetPayload<{
+  include: typeof founderInfoRequestInclude;
+}>;
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
@@ -36,28 +58,28 @@ export default async function FounderLeadsPage({ params }: Params) {
   if (!project) notFound();
   if (project.ownerId !== user.id) notFound();
 
-  const [leads, infoRequests] = await Promise.all([
-    prisma.lead.findMany({
-      where: { projectId: project.id },
-      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-      include: {
-        user: { select: { id: true, fullName: true, email: true } },
-        pendingAssignments: {
-          where: { status: "PENDING" },
+  const [leads, infoRequests] = await sequentialPrisma([
+    {
+      run: () =>
+        prisma.lead.findMany({
+          where: { projectId: project.id },
+          orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+          include: founderLeadsInclude,
+        }),
+      fallback: [] as FounderLeadRow[],
+      tag: "founderLeads:leads",
+    },
+    {
+      run: () =>
+        prisma.infoRequest.findMany({
+          where: { projectId: project.id, status: "PENDING" },
           orderBy: { createdAt: "desc" },
-          take: 1,
-          select: { id: true, shareCount: true, createdAt: true },
-        },
-      },
-    }),
-    prisma.infoRequest.findMany({
-      where: { projectId: project.id, status: "PENDING" },
-      orderBy: { createdAt: "desc" },
-      include: {
-        requester: { select: { id: true, fullName: true, email: true } },
-      },
-    }),
-  ]);
+          include: founderInfoRequestInclude,
+        }),
+      fallback: [] as FounderInfoRequestRow[],
+      tag: "founderLeads:infoRequests",
+    },
+  ] as const);
 
   const valuation = project.startupProfile?.preMoneyValuation
     ? Number(project.startupProfile.preMoneyValuation)

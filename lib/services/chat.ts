@@ -11,9 +11,35 @@
  *    el voto previo del mismo usuario en otras opciones del poll.
  */
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { recordAudit } from "./audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "./errors";
+
+// ─── Reusable Prisma include shapes (so fallbacks tipan limpio) ─────
+
+const feedMessageInclude = {
+  author: { select: { id: true, fullName: true, alias: true } },
+  deletedBy: { select: { id: true, fullName: true } },
+} satisfies Prisma.MessageInclude;
+
+type FeedMessageRow = Prisma.MessageGetPayload<{
+  include: typeof feedMessageInclude;
+}>;
+
+const feedPollInclude = {
+  createdBy: { select: { id: true, fullName: true, alias: true } },
+  options: {
+    orderBy: { order: "asc" },
+    include: {
+      _count: { select: { votes: true } },
+      votes: { select: { voterId: true } },
+    },
+  },
+} satisfies Prisma.PollInclude;
+
+type FeedPollRow = Prisma.PollGetPayload<{ include: typeof feedPollInclude }>;
 
 const MAX_BODY = 4000;
 const MAX_URL = 1000;
@@ -172,38 +198,48 @@ export async function listChannelFeed(
     viewerId
   );
 
-  const [messages, polls] = await Promise.all([
-    prisma.message.findMany({
-      where: {
-        channelId,
-        ...(viewerIsPrivileged ? {} : { deletedAt: null }),
-      },
-      orderBy: { createdAt: "asc" },
-      take: limit,
-      include: {
-        author: { select: { id: true, fullName: true, alias: true } },
-        deletedBy: { select: { id: true, fullName: true } },
-      },
-    }),
-    prisma.poll.findMany({
-      where: { channelId },
-      orderBy: { createdAt: "asc" },
-      take: limit,
-      include: {
-        createdBy: { select: { id: true, fullName: true, alias: true } },
-        options: {
-          orderBy: { order: "asc" },
+  const [messages, polls] = await sequentialPrisma([
+    {
+      run: () =>
+        prisma.message.findMany({
+          where: {
+            channelId,
+            ...(viewerIsPrivileged ? {} : { deletedAt: null }),
+          },
+          orderBy: { createdAt: "asc" },
+          take: limit,
+          include: feedMessageInclude,
+        }),
+      fallback: [] as FeedMessageRow[],
+      tag: "chat:feed:messages",
+    },
+    {
+      run: () =>
+        prisma.poll.findMany({
+          where: { channelId },
+          orderBy: { createdAt: "asc" },
+          take: limit,
           include: {
-            _count: { select: { votes: true } },
-            votes: {
-              where: { voterId: viewerId },
-              select: { voterId: true },
+            createdBy: { select: { id: true, fullName: true, alias: true } },
+            options: {
+              orderBy: { order: "asc" },
+              include: {
+                _count: { select: { votes: true } },
+                // Filtramos por viewer acá (no se puede meter en el shape
+                // reusable porque viewerId cambia por llamada). El tipo
+                // resultante es asignable a FeedPollRow.
+                votes: {
+                  where: { voterId: viewerId },
+                  select: { voterId: true },
+                },
+              },
             },
           },
-        },
-      },
-    }),
-  ]);
+        }),
+      fallback: [] as FeedPollRow[],
+      tag: "chat:feed:polls",
+    },
+  ] as const);
 
   const messageItems: FeedMessage[] = messages.map((m) => ({
     kind: "message",
@@ -607,54 +643,91 @@ export async function closePoll(input: ClosePollInput) {
 
 /**
  * Devuelve los emails de todos los "miembros" del canal (owner + co-admins +
- * holders de shares + admins de plataforma), excluyendo opcionalmente a uno
- * (típicamente el autor del mensaje).
+ * holders de shares), excluyendo opcionalmente a uno (típicamente el autor
+ * del mensaje).
+ *
+ * Antes: 1 sola findUnique con include profundo (project → owner + coAdmins +
+ * participations → currentOwner). Con muchas participations, devolvía N filas
+ * con el User completo cada una (cartesian-ish blow-up).
+ *
+ * Ahora: 3 lecturas chicas vía sequentialPrisma:
+ *   1) project.owner
+ *   2) projectCoAdmin.user del proyecto
+ *   3) participation.currentOwner DISTINCT del proyecto
+ * Se unen en JS y se deduplican por user.id. Si alguna query falla, esa
+ * fuente queda vacía pero el envío de email sigue con el resto.
  */
+type MemberUser = {
+  id: string;
+  email: string;
+  isActive: boolean;
+  deletedAt: Date | null;
+};
+
 export async function getChannelMemberEmails(
   projectId: string,
   excludeUserId?: string
 ): Promise<string[]> {
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    select: {
-      ownerId: true,
-      owner: { select: { id: true, email: true, isActive: true, deletedAt: true } },
-      coAdmins: {
-        include: {
-          user: {
-            select: { id: true, email: true, isActive: true, deletedAt: true },
-          },
-        },
-      },
-      participations: {
-        where: { currentOwnerId: { not: null } },
-        select: {
-          currentOwner: {
-            select: { id: true, email: true, isActive: true, deletedAt: true },
-          },
-        },
-      },
+  const [owner, coAdmins, participationRows] = await sequentialPrisma([
+    {
+      run: () =>
+        prisma.project
+          .findUnique({
+            where: { id: projectId },
+            select: {
+              owner: {
+                select: { id: true, email: true, isActive: true, deletedAt: true },
+              },
+            },
+          })
+          .then((p) => p?.owner ?? null),
+      fallback: null as MemberUser | null,
+      tag: "chat:getMembers:owner",
     },
-  });
-  if (!project) return [];
+    {
+      run: () =>
+        prisma.projectCoAdmin.findMany({
+          where: { projectId },
+          select: {
+            user: {
+              select: { id: true, email: true, isActive: true, deletedAt: true },
+            },
+          },
+        }),
+      fallback: [] as { user: MemberUser }[],
+      tag: "chat:getMembers:coAdmins",
+    },
+    {
+      // DISTINCT por currentOwnerId: si un mismo user tiene 50 participations
+      // en el proyecto, Prisma devuelve 1 sola fila. Antes el include profundo
+      // hidrataba el User completo en cada participation (N copias).
+      run: () =>
+        prisma.participation.findMany({
+          where: { projectId, currentOwnerId: { not: null } },
+          distinct: ["currentOwnerId"],
+          select: {
+            currentOwner: {
+              select: { id: true, email: true, isActive: true, deletedAt: true },
+            },
+          },
+        }),
+      fallback: [] as { currentOwner: MemberUser | null }[],
+      tag: "chat:getMembers:participationOwners",
+    },
+  ] as const);
 
   const byId = new Map<string, string>();
 
-  function maybeAdd(u: {
-    id: string;
-    email: string;
-    isActive: boolean;
-    deletedAt: Date | null;
-  } | null | undefined) {
+  function maybeAdd(u: MemberUser | null | undefined) {
     if (!u) return;
     if (!u.isActive || u.deletedAt) return;
     if (excludeUserId && u.id === excludeUserId) return;
     byId.set(u.id, u.email);
   }
 
-  maybeAdd(project.owner);
-  for (const ca of project.coAdmins) maybeAdd(ca.user);
-  for (const p of project.participations) maybeAdd(p.currentOwner);
+  maybeAdd(owner);
+  for (const ca of coAdmins) maybeAdd(ca.user);
+  for (const p of participationRows) maybeAdd(p.currentOwner);
 
   return Array.from(byId.values());
 }

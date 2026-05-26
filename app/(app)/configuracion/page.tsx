@@ -3,7 +3,13 @@ import { requireSession } from "@/lib/auth/session";
 import { getUserPreferences } from "@/lib/preferences";
 import { getDict, getLocale } from "@/lib/i18n";
 import { getRoleLabel } from "@/components/app/nav-items";
-import { listHeirs, getValidationState } from "@/lib/services/heirs";
+import {
+  listHeirs,
+  getValidationState,
+  type HeirRow,
+  type ValidationState,
+} from "@/lib/services/heirs";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { SettingsSurface } from "./SettingsSurface";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,10 +24,28 @@ export default async function SettingsPage() {
   const locale = await getLocale();
   const roleLabel = await getRoleLabel(user.role);
 
-  const [heirs, validation] = await Promise.all([
-    listHeirs(user.id),
-    getValidationState(user.id),
-  ]);
+  // Defaults defensivos: si listHeirs / getValidationState fallan (DB blip,
+  // user gone), la página entra con valores neutros en vez de crashear. El
+  // user puede recargar; si el problema persiste, el error queda en logs.
+  const validationFallback: ValidationState = {
+    frequencyMonths: 0,
+    lastConfirmedAt: null,
+    missedCount: 0,
+    heirsEscalated: false,
+    pendingCheck: null,
+  };
+  const [heirs, validation] = await sequentialPrisma([
+    {
+      run: () => listHeirs(user.id),
+      fallback: [] as HeirRow[],
+      tag: "configuracion:listHeirs",
+    },
+    {
+      run: () => getValidationState(user.id),
+      fallback: validationFallback,
+      tag: "configuracion:getValidationState",
+    },
+  ] as const);
 
   return (
     <div>

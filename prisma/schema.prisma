@@ -66,102 +66,103 @@ model Application {
   updatedAt          DateTime          @updatedAt
 
   @@index([status, createdAt])
+  @@index([reviewedById])
 }
 
 // Códigos one-time para verificar el email antes de crear la Application.
 // El "payload" guarda los datos del form firmados/serializados — recién creamos
 // la Application cuando el usuario ingresa el código correcto.
 model EmailVerificationCode {
-  id          String    @id @default(cuid())
-  email       String
-  codeHash    String
-  payload     Json
-  attempts    Int       @default(0)
-  expiresAt   DateTime
-  consumedAt  DateTime?
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  payload    Json
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   @@index([email, createdAt])
 }
 
 model User {
-  id              String       @id @default(cuid())
-  email           String       @unique
+  id            String       @id @default(cuid())
+  email         String       @unique
   // passwordHash es nullable: usuarios recién aprobados existen sin contraseña
   // hasta que la establecen vía PasswordSetupToken.
-  passwordHash    String?
-  fullName        String
+  passwordHash  String?
+  fullName      String
   // Alias visible para otros miembros (ej. cap table). Si null, se cae al fullName.
   // El propio dueño siempre ve su nombre real en /partner y /certificado/[id].
-  alias           String?
+  alias         String?
   // ─── Ola 7d — Storage R2 ──────────────────────────────────────────
   // Avatar visible (sidebar, headers de comentarios, etc.). URL pública.
   // Si null se cae a iniciales en círculo. La sube el usuario desde /perfil
   // (FileUpload → presigned R2). En entornos sin R2 configurado, puede ser
   // una URL externa pegada (Drive, etc.).
-  avatarUrl       String?
+  avatarUrl     String?
   // Foto/escaneo del documento de identidad. URL pública dentro del bucket
   // privado (no exponer en feeds; solo se ve desde /perfil del propio dueño
   // y desde el panel admin para KYC). Mismo fallback URL manual que avatar.
-  idPhotoUrl      String?
+  idPhotoUrl    String?
   // Contacto editable post-aplicación. Heredados de la Application al
   // aprobar; el miembro puede actualizarlos desde /perfil cuando cambien.
-  country         String?
-  phone           String?
-  role            UserRole
-  isActive        Boolean      @default(true)
-  applicationId   String?      @unique
-  application     Application? @relation("ApplicationOrigin", fields: [applicationId], references: [id])
+  country       String?
+  phone         String?
+  role          UserRole
+  isActive      Boolean      @default(true)
+  applicationId String?      @unique
+  application   Application? @relation("ApplicationOrigin", fields: [applicationId], references: [id])
 
   // 2FA (TOTP obligatorio para ADMIN y PROJECT_OWNER)
-  totpSecret      String?
-  totpEnabled     Boolean      @default(false)
+  totpSecret  String?
+  totpEnabled Boolean @default(false)
 
-  lastLoginAt     DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  deletedAt       DateTime?
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   // ─── Ola 7b — Herederos y validación de vida ──────────────────────
   // Cada cuántos meses AJDUT le pide al miembro que confirme que sigue activo.
   // Valores permitidos: 0 (deshabilitado), 1, 3 (default), 6, 12.
-  validationFrequencyMonths Int          @default(3)
+  validationFrequencyMonths Int       @default(3)
   // Última vez que el miembro confirmó manualmente. Si null nunca confirmó.
   lastValidationConfirmedAt DateTime?
   // Contador de checks PENDING que vencieron sin respuesta. Se resetea al
   // confirmar. Cuando llega a 3 disparamos heirsEscalated.
-  missedValidationCount     Int          @default(0)
+  missedValidationCount     Int       @default(0)
   // True cuando el admin ya recibió el alerta para contactar a los herederos.
   // Evita re-disparar el alerta en cada cron-pass.
-  heirsEscalated            Boolean      @default(false)
+  heirsEscalated            Boolean   @default(false)
 
   // Relaciones inversas
-  ownedProjects          Project[]               @relation("ProjectOwner")
-  coAdminAssignments     ProjectCoAdmin[]
-  participationsOwned    Participation[]         @relation("CurrentOwner")
-  ownershipFrom          OwnershipHistory[]      @relation("TransferFrom")
-  ownershipTo            OwnershipHistory[]      @relation("TransferTo")
-  ownershipAuthorized    OwnershipHistory[]      @relation("AuthorizedBy")
-  ownershipCoAuthorized  OwnershipHistory[]      @relation("CoAuthorizedBy")
-  leads                  Lead[]
-  resaleListings         ResaleListing[]
-  messages               Message[]
-  messagesDeleted        Message[]               @relation("MessageDeleter")
-  pollsCreated           Poll[]                  @relation("PollCreator")
-  pollVotes              PollVote[]              @relation("PollVoter")
-  applicationsReviewed   Application[]           @relation("ApplicationReviewer")
-  auditEntries           AuditLog[]
-  notifications          Notification[]
-  dividendDeclared       DividendDistribution[]  @relation("DividendDeclarer")
-  dividendPayments       DividendPayment[]
-  passwordSetupTokens    PasswordSetupToken[]
-  infoRequests           InfoRequest[]           @relation("InfoRequester")
-  infoRequestsReviewed   InfoRequest[]           @relation("InfoRequestReviewer")
-  pendingProposed        PendingAssignment[]     @relation("PendingAssignmentProposer")
-  pendingTargeted        PendingAssignment[]     @relation("PendingAssignmentTarget")
-  pendingReviewed        PendingAssignment[]     @relation("PendingAssignmentReviewer")
-  heirs                  Heir[]                  @relation("HeirOwner")
-  validationChecks       ValidationCheck[]       @relation("ValidationUser")
+  ownedProjects         Project[]              @relation("ProjectOwner")
+  coAdminAssignments    ProjectCoAdmin[]
+  participationsOwned   Participation[]        @relation("CurrentOwner")
+  ownershipFrom         OwnershipHistory[]     @relation("TransferFrom")
+  ownershipTo           OwnershipHistory[]     @relation("TransferTo")
+  ownershipAuthorized   OwnershipHistory[]     @relation("AuthorizedBy")
+  ownershipCoAuthorized OwnershipHistory[]     @relation("CoAuthorizedBy")
+  leads                 Lead[]
+  resaleListings        ResaleListing[]
+  messages              Message[]
+  messagesDeleted       Message[]              @relation("MessageDeleter")
+  pollsCreated          Poll[]                 @relation("PollCreator")
+  pollVotes             PollVote[]             @relation("PollVoter")
+  applicationsReviewed  Application[]          @relation("ApplicationReviewer")
+  auditEntries          AuditLog[]
+  notifications         Notification[]
+  dividendDeclared      DividendDistribution[] @relation("DividendDeclarer")
+  dividendPayments      DividendPayment[]
+  passwordSetupTokens   PasswordSetupToken[]
+  infoRequests          InfoRequest[]          @relation("InfoRequester")
+  infoRequestsReviewed  InfoRequest[]          @relation("InfoRequestReviewer")
+  pendingProposed       PendingAssignment[]    @relation("PendingAssignmentProposer")
+  pendingTargeted       PendingAssignment[]    @relation("PendingAssignmentTarget")
+  pendingReviewed       PendingAssignment[]    @relation("PendingAssignmentReviewer")
+  heirs                 Heir[]                 @relation("HeirOwner")
+  validationChecks      ValidationCheck[]      @relation("ValidationUser")
 
   @@index([role, isActive])
 }
@@ -174,15 +175,15 @@ model User {
 // solo notifica al equipo para que actúe humanamente.
 
 model Heir {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation("HeirOwner", fields: [userId], references: [id])
-  fullName      String
-  email         String?
-  relationship  String?  // "hermana", "cónyuge", "hijo", texto libre
-  sharePercent  Decimal  @db.Decimal(5, 2)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation("HeirOwner", fields: [userId], references: [id])
+  fullName     String
+  email        String?
+  relationship String? // "hermana", "cónyuge", "hijo", texto libre
+  sharePercent Decimal  @db.Decimal(5, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@unique([userId, email])
   @@index([userId])
@@ -195,19 +196,19 @@ enum ValidationCheckStatus {
 }
 
 model ValidationCheck {
-  id            String                @id @default(cuid())
-  userId        String
-  user          User                  @relation("ValidationUser", fields: [userId], references: [id])
-  sentAt        DateTime              @default(now())
-  respondedAt   DateTime?
-  status        ValidationCheckStatus @default(PENDING)
-  escalatedAt   DateTime?
+  id          String                @id @default(cuid())
+  userId      String
+  user        User                  @relation("ValidationUser", fields: [userId], references: [id])
+  sentAt      DateTime              @default(now())
+  respondedAt DateTime?
+  status      ValidationCheckStatus @default(PENDING)
+  escalatedAt DateTime?
 
   // SHA-256 hash del token plano que viaja en el link del email. El plano
   // nunca se almacena. Se setea a null al confirmar (invalidación) y al
   // marcar como MISSED (defense in depth). Nullable porque los registros
   // creados antes de Ola 7b-security no tienen token.
-  tokenHash      String?              @unique
+  tokenHash      String?   @unique
   // Fecha de expiración del token. Si null, no expira (legacy). Si pasada,
   // la ruta /confirmar-vida lo rechaza aunque el status sea PENDING.
   tokenExpiresAt DateTime?
@@ -221,21 +222,21 @@ model ValidationCheck {
 // y elige su propia contraseña. Patrón estándar (Stripe, Linear, Vercel).
 
 enum PasswordSetupTokenKind {
-  INITIAL_SETUP      // primera vez tras aprobación de Application
-  RESET              // olvido de contraseña (futuro)
-  BOOTSTRAP          // admin bootstrap inicial (futuro)
+  INITIAL_SETUP // primera vez tras aprobación de Application
+  RESET // olvido de contraseña (futuro)
+  BOOTSTRAP // admin bootstrap inicial (futuro)
 }
 
 model PasswordSetupToken {
-  id          String                  @id @default(cuid())
-  userId      String
-  user        User                    @relation(fields: [userId], references: [id])
+  id        String                 @id @default(cuid())
+  userId    String
+  user      User                   @relation(fields: [userId], references: [id])
   // SHA-256 del token plano. El plano nunca se almacena; solo viaja en el link.
-  tokenHash   String                  @unique
-  kind        PasswordSetupTokenKind  @default(INITIAL_SETUP)
-  expiresAt   DateTime
-  usedAt      DateTime?
-  createdAt   DateTime                @default(now())
+  tokenHash String                 @unique
+  kind      PasswordSetupTokenKind @default(INITIAL_SETUP)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime               @default(now())
 
   @@index([userId, kind])
   @@index([expiresAt])
@@ -260,44 +261,46 @@ enum ProjectStatus {
 }
 
 model Project {
-  id              String         @id @default(cuid())
-  slug            String         @unique
-  name            String
-  kind            ProjectKind    @default(STARTUP)
-  status          ProjectStatus  @default(DRAFT)
-  ownerId         String
-  owner           User           @relation("ProjectOwner", fields: [ownerId], references: [id])
-  shortPitch      String         @db.VarChar(280)
-  description     String
-  totalShares     Int
-  shareUnitLabel  String         @default("participación")
-  coverImageKey   String?
-  startsAt        DateTime?
-  closesAt        DateTime?
-  approvedAt      DateTime?
-  approvedById    String?
-  suspendedAt     DateTime?
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  name             String
+  kind             ProjectKind   @default(STARTUP)
+  status           ProjectStatus @default(DRAFT)
+  ownerId          String
+  owner            User          @relation("ProjectOwner", fields: [ownerId], references: [id])
+  shortPitch       String        @db.VarChar(280)
+  description      String
+  totalShares      Int
+  shareUnitLabel   String        @default("participación")
+  coverImageKey    String?
+  startsAt         DateTime?
+  closesAt         DateTime?
+  approvedAt       DateTime?
+  approvedById     String?
+  suspendedAt      DateTime?
   suspensionReason String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  deletedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
 
-  startupProfile  StartupProfile?
-  coAdmins        ProjectCoAdmin[]
-  participations  Participation[]
-  reports         Report[]
-  documents       Document[]
-  chatChannel     ChatChannel?
-  leads           Lead[]
-  resaleListings  ResaleListing[]
-  distributions   DividendDistribution[]
-  auditEntries    AuditLog[]
-  infoRequests    InfoRequest[]
+  startupProfile     StartupProfile?
+  coAdmins           ProjectCoAdmin[]
+  participations     Participation[]
+  reports            Report[]
+  documents          Document[]
+  chatChannel        ChatChannel?
+  leads              Lead[]
+  resaleListings     ResaleListing[]
+  distributions      DividendDistribution[]
+  auditEntries       AuditLog[]
+  infoRequests       InfoRequest[]
   pendingAssignments PendingAssignment[]
   shareholderClasses ShareholderClass[]
   externalHoldings   ExternalHolding[]
 
   @@index([status, kind])
+  @@index([ownerId])
+  @@index([approvedById])
 }
 
 model ProjectCoAdmin {
@@ -308,6 +311,9 @@ model ProjectCoAdmin {
   user       User     @relation(fields: [userId], references: [id])
 
   @@id([projectId, userId])
+  // userId es la segunda columna del PK compuesto, así que no está cubierto
+  // para lookups por usuario solo (ej. "¿de qué proyectos soy co-admin?").
+  @@index([userId])
 }
 
 // ─── PERFIL DE STARTUP ──────────────────────────────────────────────
@@ -334,84 +340,84 @@ enum FundingRoundType {
 }
 
 model StartupProfile {
-  id                          String        @id @default(cuid())
-  projectId                   String        @unique
-  project                     Project       @relation(fields: [projectId], references: [id])
-  legalName                   String
-  taxId                       String?
-  incorporationDate           DateTime?
-  jurisdiction                String
-  location                    String?
-  targetRaiseAmount           Decimal?      @db.Decimal(18, 2)
-  sector                      String
-  oneLiner                    String        @db.VarChar(160)
-  problemStatement            String
-  solutionStatement           String
-  businessModel               String
-  stage                       StartupStage
-  preMoneyValuation           Decimal?      @db.Decimal(18, 2)
-  valuationCurrency           String        @default("USD")
-  totalEquityShares           Int
+  id                String       @id @default(cuid())
+  projectId         String       @unique
+  project           Project      @relation(fields: [projectId], references: [id])
+  legalName         String
+  taxId             String?
+  incorporationDate DateTime?
+  jurisdiction      String
+  location          String?
+  targetRaiseAmount Decimal?     @db.Decimal(18, 2)
+  sector            String
+  oneLiner          String       @db.VarChar(160)
+  problemStatement  String
+  solutionStatement String
+  businessModel     String
+  stage             StartupStage
+  preMoneyValuation Decimal?     @db.Decimal(18, 2)
+  valuationCurrency String       @default("USD")
+  totalEquityShares Int
 
   // Stake institucional AJDUT
-  platformEquityPercent       Decimal       @default(10.00) @db.Decimal(5, 2)
-  platformEquityAgreementKey  String?
+  platformEquityPercent      Decimal @default(10.00) @db.Decimal(5, 2)
+  platformEquityAgreementKey String?
 
-  websiteUrl                  String?
-  videoUrl                    String?
-  pitchDeckStorageKey         String?
-  dataRoomStorageKey          String?
+  websiteUrl          String?
+  videoUrl            String?
+  pitchDeckStorageKey String?
+  dataRoomStorageKey  String?
 
-  createdAt                   DateTime      @default(now())
-  updatedAt                   DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  founders                    Founder[]
-  fundingRounds               FundingRound[]
-  metrics                     StartupMetric[]
-  milestones                  Milestone[]
+  founders      Founder[]
+  fundingRounds FundingRound[]
+  metrics       StartupMetric[]
+  milestones    Milestone[]
 
   // Estructura y respaldo (texto informativo)
-  assetBackingNote            String?
-  equityStructureNote         String?
+  assetBackingNote    String?
+  equityStructureNote String?
 
   // Documentos opcionales (URLs externas: drive/dropbox/notion/etc.)
-  projectionsUrl              String?
-  planNegociosUrl             String?
-  estrategiasPeriodicasUrl    String?
-  estadosFinancierosUrl       String?
-  estrategiaEmisionUrl        String?
+  projectionsUrl           String?
+  planNegociosUrl          String?
+  estrategiasPeriodicasUrl String?
+  estadosFinancierosUrl    String?
+  estrategiaEmisionUrl     String?
 
   // Políticas (texto libre informativo). Acciones / dividendos / frecuencia.
-  policyShares                String?
-  policyDividends             String?
-  dividendsFrequency          String?
+  policyShares       String?
+  policyDividends    String?
+  dividendsFrequency String?
 }
 
 model Founder {
-  id                String         @id @default(cuid())
-  startupProfileId  String
-  startupProfile    StartupProfile @relation(fields: [startupProfileId], references: [id])
-  fullName          String
-  role              String
-  bio               String?
-  references        String?
-  linkedinUrl       String?
-  equityPercent     Decimal        @db.Decimal(5, 2)
-  joinedAt          DateTime?
-  isActive          Boolean        @default(true)
+  id               String         @id @default(cuid())
+  startupProfileId String
+  startupProfile   StartupProfile @relation(fields: [startupProfileId], references: [id])
+  fullName         String
+  role             String
+  bio              String?
+  references       String?
+  linkedinUrl      String?
+  equityPercent    Decimal        @db.Decimal(5, 2)
+  joinedAt         DateTime?
+  isActive         Boolean        @default(true)
 }
 
 model FundingRound {
-  id                 String           @id @default(cuid())
-  startupProfileId   String
-  startupProfile     StartupProfile   @relation(fields: [startupProfileId], references: [id])
-  type               FundingRoundType
-  announcedAt        DateTime
-  closedAt           DateTime?
-  amountRaised       Decimal          @db.Decimal(18, 2)
-  currency           String           @default("USD")
-  preMoneyValuation  Decimal?         @db.Decimal(18, 2)
-  notes              String?
+  id                String           @id @default(cuid())
+  startupProfileId  String
+  startupProfile    StartupProfile   @relation(fields: [startupProfileId], references: [id])
+  type              FundingRoundType
+  announcedAt       DateTime
+  closedAt          DateTime?
+  amountRaised      Decimal          @db.Decimal(18, 2)
+  currency          String           @default("USD")
+  preMoneyValuation Decimal?         @db.Decimal(18, 2)
+  notes             String?
 
   @@index([startupProfileId, closedAt])
 }
@@ -433,24 +439,24 @@ enum MetricKind {
 }
 
 enum MetricVisibility {
-  PRIVATE          // Solo founder / admin
+  PRIVATE // Solo founder / admin
   PUBLIC_TO_HOLDERS // Visible para socios del proyecto
 }
 
 model StartupMetric {
-  id                String           @id @default(cuid())
-  startupProfileId  String
-  startupProfile    StartupProfile   @relation(fields: [startupProfileId], references: [id])
-  kind              MetricKind
-  customLabel       String?
-  value             Decimal          @db.Decimal(18, 4)
-  unit              String
-  asOf              DateTime
-  reportedById      String
-  sourceReportId    String?
-  sourceReport      Report?          @relation(fields: [sourceReportId], references: [id])
-  visibility        MetricVisibility @default(PUBLIC_TO_HOLDERS)
-  createdAt         DateTime         @default(now())
+  id               String           @id @default(cuid())
+  startupProfileId String
+  startupProfile   StartupProfile   @relation(fields: [startupProfileId], references: [id])
+  kind             MetricKind
+  customLabel      String?
+  value            Decimal          @db.Decimal(18, 4)
+  unit             String
+  asOf             DateTime
+  reportedById     String
+  sourceReportId   String?
+  sourceReport     Report?          @relation(fields: [sourceReportId], references: [id])
+  visibility       MetricVisibility @default(PUBLIC_TO_HOLDERS)
+  createdAt        DateTime         @default(now())
 
   @@index([startupProfileId, kind, asOf])
 }
@@ -464,15 +470,15 @@ enum MilestoneStatus {
 }
 
 model Milestone {
-  id                String          @id @default(cuid())
-  startupProfileId  String
-  startupProfile    StartupProfile  @relation(fields: [startupProfileId], references: [id])
-  title             String
-  description       String
-  targetDate        DateTime?
-  achievedAt        DateTime?
-  status            MilestoneStatus @default(PLANNED)
-  createdAt         DateTime        @default(now())
+  id               String          @id @default(cuid())
+  startupProfileId String
+  startupProfile   StartupProfile  @relation(fields: [startupProfileId], references: [id])
+  title            String
+  description      String
+  targetDate       DateTime?
+  achievedAt       DateTime?
+  status           MilestoneStatus @default(PLANNED)
+  createdAt        DateTime        @default(now())
 }
 
 // ─── PARTICIPACIONES Y CADENA INMUTABLE DE PROPIEDAD ────────────────
@@ -486,60 +492,66 @@ enum ParticipationStatus {
 }
 
 model Participation {
-  id              String              @id @default(cuid())
-  projectId       String
-  project         Project             @relation(fields: [projectId], references: [id])
-  serialCode      String              @unique
-  shareCount      Int
-  status          ParticipationStatus @default(AVAILABLE)
-  currentOwnerId  String?
-  currentOwner    User?               @relation("CurrentOwner", fields: [currentOwnerId], references: [id])
+  id                 String              @id @default(cuid())
+  projectId          String
+  project            Project             @relation(fields: [projectId], references: [id])
+  serialCode         String              @unique
+  shareCount         Int
+  status             ParticipationStatus @default(AVAILABLE)
+  currentOwnerId     String?
+  currentOwner       User?               @relation("CurrentOwner", fields: [currentOwnerId], references: [id])
   // Clase de accionista asignada por el owner — cap table por clases.
   shareholderClassId String?
-  shareholderClass   ShareholderClass? @relation(fields: [shareholderClassId], references: [id])
-  acquiredAt      DateTime?
-  isPlatformStake Boolean             @default(false)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  shareholderClass   ShareholderClass?   @relation(fields: [shareholderClassId], references: [id])
+  acquiredAt         DateTime?
+  isPlatformStake    Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
-  history         OwnershipHistory[]
-  certificates    Certificate[]
-  leads           Lead[]
-  resaleListings  ResaleListing[]
+  history          OwnershipHistory[]
+  certificates     Certificate[]
+  leads            Lead[]
+  resaleListings   ResaleListing[]
   dividendPayments DividendPayment[]
 
   @@index([projectId, status])
   @@index([projectId, isPlatformStake])
   @@index([currentOwnerId])
+  // Hot path: chat.isChannelMember hace participation.count por (projectId, currentOwnerId)
+  // en cada postMessage / createPoll / votePoll. Composite con equality columns.
+  @@index([currentOwnerId, projectId])
 }
 
 model OwnershipHistory {
-  id                String         @id @default(cuid())
-  participationId   String
-  participation     Participation  @relation(fields: [participationId], references: [id])
-  fromUserId        String?
-  fromUser          User?          @relation("TransferFrom", fields: [fromUserId], references: [id])
-  toUserId          String
-  toUser            User           @relation("TransferTo", fields: [toUserId], references: [id])
-  authorizedById    String
-  authorizedBy      User           @relation("AuthorizedBy", fields: [authorizedById], references: [id])
+  id              String        @id @default(cuid())
+  participationId String
+  participation   Participation @relation(fields: [participationId], references: [id])
+  fromUserId      String?
+  fromUser        User?         @relation("TransferFrom", fields: [fromUserId], references: [id])
+  toUserId        String
+  toUser          User          @relation("TransferTo", fields: [toUserId], references: [id])
+  authorizedById  String
+  authorizedBy    User          @relation("AuthorizedBy", fields: [authorizedById], references: [id])
 
   // Doble firma obligatoria cuando la participación es stake institucional
-  coAuthorizedById  String?
-  coAuthorizedBy    User?          @relation("CoAuthorizedBy", fields: [coAuthorizedById], references: [id])
+  coAuthorizedById String?
+  coAuthorizedBy   User?   @relation("CoAuthorizedBy", fields: [coAuthorizedById], references: [id])
 
-  reason            String
-  resaleListingId   String?        @unique
-  resaleListing     ResaleListing? @relation(fields: [resaleListingId], references: [id])
-  effectiveAt       DateTime
-  validatedAt       DateTime       @default(now())
+  reason          String
+  resaleListingId String?        @unique
+  resaleListing   ResaleListing? @relation(fields: [resaleListingId], references: [id])
+  effectiveAt     DateTime
+  validatedAt     DateTime       @default(now())
 
   // Cadena de hashes — cualquier mutación retroactiva la rompe
-  blockHash         String
-  prevHash          String?
+  blockHash String
+  prevHash  String?
 
   @@index([participationId, validatedAt])
   @@index([toUserId])
+  @@index([fromUserId])
+  @@index([authorizedById])
+  @@index([coAuthorizedById])
 }
 
 // ─── COMPOSICIÓN ACCIONARIA POR CLASES ──────────────────────────────
@@ -600,25 +612,26 @@ enum LeadSupportKind {
 }
 
 model Lead {
-  id                   String           @id @default(cuid())
-  projectId            String
-  project              Project          @relation(fields: [projectId], references: [id])
-  participationId      String?
-  participation        Participation?   @relation(fields: [participationId], references: [id])
-  userId               String
-  user                 User             @relation(fields: [userId], references: [id])
-  message              String
-  shareCountRequested  Int              @default(1)
-  supportKind          LeadSupportKind?
-  status               LeadStatus       @default(OPEN)
-  createdAt            DateTime         @default(now())
-  expiresAt            DateTime         // 30 días desde createdAt
-  resolvedAt           DateTime?
+  id                  String           @id @default(cuid())
+  projectId           String
+  project             Project          @relation(fields: [projectId], references: [id])
+  participationId     String?
+  participation       Participation?   @relation(fields: [participationId], references: [id])
+  userId              String
+  user                User             @relation(fields: [userId], references: [id])
+  message             String
+  shareCountRequested Int              @default(1)
+  supportKind         LeadSupportKind?
+  status              LeadStatus       @default(OPEN)
+  createdAt           DateTime         @default(now())
+  expiresAt           DateTime // 30 días desde createdAt
+  resolvedAt          DateTime?
 
-  pendingAssignments   PendingAssignment[]
+  pendingAssignments PendingAssignment[]
 
   @@index([projectId, status])
   @@index([expiresAt, status])
+  @@index([userId])
 }
 
 // ─── Solicitudes de información (etapa 1 del flujo de interés) ─────
@@ -634,18 +647,18 @@ enum InfoRequestStatus {
 }
 
 model InfoRequest {
-  id            String              @id @default(cuid())
-  projectId     String
-  project       Project             @relation(fields: [projectId], references: [id])
-  requesterId   String
-  requester     User                @relation("InfoRequester", fields: [requesterId], references: [id])
-  message       String?
-  status        InfoRequestStatus   @default(PENDING)
-  reviewedAt    DateTime?
-  reviewedById  String?
-  reviewedBy    User?               @relation("InfoRequestReviewer", fields: [reviewedById], references: [id])
-  reviewNote    String?
-  createdAt     DateTime            @default(now())
+  id           String            @id @default(cuid())
+  projectId    String
+  project      Project           @relation(fields: [projectId], references: [id])
+  requesterId  String
+  requester    User              @relation("InfoRequester", fields: [requesterId], references: [id])
+  message      String?
+  status       InfoRequestStatus @default(PENDING)
+  reviewedAt   DateTime?
+  reviewedById String?
+  reviewedBy   User?             @relation("InfoRequestReviewer", fields: [reviewedById], references: [id])
+  reviewNote   String?
+  createdAt    DateTime          @default(now())
 
   @@unique([projectId, requesterId])
   @@index([projectId, status])
@@ -660,34 +673,35 @@ enum ResaleStatus {
 }
 
 model ResaleListing {
-  id                String           @id @default(cuid())
-  participationId   String
-  participation     Participation    @relation(fields: [participationId], references: [id])
-  projectId         String
-  project           Project          @relation(fields: [projectId], references: [id])
-  sellerId          String
-  seller            User             @relation(fields: [sellerId], references: [id])
-  intentNote        String
-  contactChannel    String
-  status            ResaleStatus     @default(LISTED)
+  id              String        @id @default(cuid())
+  participationId String
+  participation   Participation @relation(fields: [participationId], references: [id])
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id])
+  sellerId        String
+  seller          User          @relation(fields: [sellerId], references: [id])
+  intentNote      String
+  contactChannel  String
+  status          ResaleStatus  @default(LISTED)
 
   // Comprador propuesto al cerrar trato offline (cualquier User aprobado de AJDUT)
-  proposedBuyerId   String?
+  proposedBuyerId String?
   // Evidencia de firma electrónica de ambas partes (in-app)
-  sellerSignedAt    DateTime?
-  buyerSignedAt     DateTime?
+  sellerSignedAt  DateTime?
+  buyerSignedAt   DateTime?
 
   // Checkbox obligatorio del founder antes de TRANSFER_PENDING
-  rofrWaivedAt      DateTime?
-  rofrWaivedById    String?
-  rofrWaiverNote    String?
+  rofrWaivedAt   DateTime?
+  rofrWaivedById String?
+  rofrWaiverNote String?
 
-  createdAt         DateTime         @default(now())
-  closedAt          DateTime?
+  createdAt DateTime  @default(now())
+  closedAt  DateTime?
 
-  ownershipRecord   OwnershipHistory?
+  ownershipRecord OwnershipHistory?
 
   @@index([projectId, status])
+  @@index([sellerId])
 }
 
 // ─── DOCUMENTACIÓN, CERTIFICADOS, CHAT ──────────────────────────────
@@ -709,21 +723,21 @@ enum ReportKind {
 }
 
 model Report {
-  id           String          @id @default(cuid())
-  projectId    String
-  project      Project         @relation(fields: [projectId], references: [id])
-  kind         ReportKind      @default(QUARTERLY_FINANCIAL)
-  period       ReportPeriod
-  fiscalYear   Int
-  title        String
-  summary      String
-  storageKey   String
-  fileMime     String
-  fileSizeKb   Int
-  publishedAt  DateTime        @default(now())
-  publishedBy  String
+  id          String       @id @default(cuid())
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id])
+  kind        ReportKind   @default(QUARTERLY_FINANCIAL)
+  period      ReportPeriod
+  fiscalYear  Int
+  title       String
+  summary     String
+  storageKey  String
+  fileMime    String
+  fileSizeKb  Int
+  publishedAt DateTime     @default(now())
+  publishedBy String
 
-  metrics      StartupMetric[]
+  metrics StartupMetric[]
 
   @@unique([projectId, fiscalYear, period, kind])
   @@index([projectId, publishedAt])
@@ -745,6 +759,7 @@ model Document {
   createdAt    DateTime @default(now())
 
   @@index([projectId, createdAt])
+  @@index([uploadedById])
 }
 
 model Certificate {
@@ -762,17 +777,18 @@ model Certificate {
   revocationNote  String?
 
   @@index([participationId])
+  @@index([issuedToUserId])
 }
 
 model ChatChannel {
-  id        String    @id @default(cuid())
-  projectId String    @unique
-  project   Project   @relation(fields: [projectId], references: [id])
-  isLocked  Boolean   @default(false)
-  createdAt DateTime  @default(now())
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id])
+  isLocked  Boolean  @default(false)
+  createdAt DateTime @default(now())
 
-  messages  Message[]
-  polls     Poll[]
+  messages Message[]
+  polls    Poll[]
 }
 
 model Message {
@@ -795,6 +811,10 @@ model Message {
   deletedAt     DateTime?
   deletedById   String?
   deletedBy     User?       @relation("MessageDeleter", fields: [deletedById], references: [id])
+  // TODO partial index on Message.deletedAt IS NULL: el feed del chat filtra
+  // out mensajes soft-deleted en cada read. Un índice completo sobre deletedAt
+  // sería poco eficiente (mayoría son NULL). Requiere raw SQL migration:
+  //   CREATE INDEX ON "Message" ("channelId", "createdAt") WHERE "deletedAt" IS NULL;
 
   @@index([channelId, createdAt])
 }
@@ -816,18 +836,18 @@ model Poll {
   closedAt    DateTime?
   createdAt   DateTime    @default(now())
 
-  options     PollOption[]
+  options PollOption[]
 
   @@index([channelId, createdAt])
 }
 
 model PollOption {
-  id      String     @id @default(cuid())
-  pollId  String
-  poll    Poll       @relation(fields: [pollId], references: [id])
-  label   String
-  order   Int        @default(0)
-  votes   PollVote[]
+  id     String     @id @default(cuid())
+  pollId String
+  poll   Poll       @relation(fields: [pollId], references: [id])
+  label  String
+  order  Int        @default(0)
+  votes  PollVote[]
 }
 
 model PollVote {
@@ -862,31 +882,31 @@ enum DividendPaymentStatus {
 }
 
 model DividendDistribution {
-  id                    String            @id @default(cuid())
-  projectId             String
-  project               Project           @relation(fields: [projectId], references: [id])
-  declaredById          String
-  declaredBy            User              @relation("DividendDeclarer", fields: [declaredById], references: [id])
-  title                 String
-  fiscalPeriod          String?
-  notes                 String?
-  totalAmount           Decimal           @db.Decimal(18, 2)
-  currency              String            @default("USD")
-  recordDate            DateTime
-  totalSharesAtRecord   Int
-  amountPerShare        Decimal           @db.Decimal(18, 8)
-  supportingDocKey      String?
-  disclaimerHash        String
-  status                DividendStatus    @default(DRAFT)
-  announcedAt           DateTime?
-  payoutStartedAt       DateTime?
-  completedAt           DateTime?
-  cancelledAt           DateTime?
-  cancellationReason    String?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  id                  String         @id @default(cuid())
+  projectId           String
+  project             Project        @relation(fields: [projectId], references: [id])
+  declaredById        String
+  declaredBy          User           @relation("DividendDeclarer", fields: [declaredById], references: [id])
+  title               String
+  fiscalPeriod        String?
+  notes               String?
+  totalAmount         Decimal        @db.Decimal(18, 2)
+  currency            String         @default("USD")
+  recordDate          DateTime
+  totalSharesAtRecord Int
+  amountPerShare      Decimal        @db.Decimal(18, 8)
+  supportingDocKey    String?
+  disclaimerHash      String
+  status              DividendStatus @default(DRAFT)
+  announcedAt         DateTime?
+  payoutStartedAt     DateTime?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  cancellationReason  String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
-  payments              DividendPayment[]
+  payments DividendPayment[]
 
   @@index([projectId, status])
   @@index([recordDate])
@@ -907,10 +927,10 @@ model DividendPayment {
   status            DividendPaymentStatus @default(PENDING)
 
   // Marcado por el founder al pagar por fuera
-  sentAt            DateTime?
-  sentChannel       String?
-  sentReference     String?
-  sentNote          String?
+  sentAt        DateTime?
+  sentChannel   String?
+  sentReference String?
+  sentNote      String?
 
   // Confirmado por el holder (o Admin si es payment institucional)
   receivedAt        DateTime?
@@ -919,18 +939,20 @@ model DividendPayment {
   confirmedById     String?
 
   // Disputas
-  disputedAt        DateTime?
-  disputeReason     String?
-  resolvedAt        DateTime?
-  resolutionNote    String?
-  resolvedById      String?
+  disputedAt     DateTime?
+  disputeReason  String?
+  resolvedAt     DateTime?
+  resolutionNote String?
+  resolvedById   String?
 
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([distributionId, status])
   @@index([recipientId, status])
   @@index([participationId])
+  @@index([confirmedById])
+  @@index([resolvedById])
 }
 
 model PlatformPayoutAccount {
@@ -961,10 +983,16 @@ model AuditLog {
   ipAddress  String?
   userAgent  String?
   createdAt  DateTime @default(now())
+  // TODO partial index: idealmente WHERE action <> 'EMAIL.FAILED' para reducir
+  // tamaño del índice (EMAIL.FAILED es el 80%+ de rows). Prisma no expresa
+  // partial indexes; requiere raw SQL migration cuando lo tomemos.
 
   @@index([entityType, entityId])
   @@index([actorId, createdAt])
   @@index([projectId, createdAt])
+  // /admin/auditoria filtra por action != "EMAIL.FAILED" + range por createdAt.
+  // Composite [action, createdAt] permite range-scan eficiente sobre enums.
+  @@index([action, createdAt])
 }
 
 model Notification {
@@ -1000,36 +1028,36 @@ enum PendingAssignmentSource {
 }
 
 model PendingAssignment {
-  id              String                    @id @default(cuid())
-  projectId       String
-  project         Project                   @relation(fields: [projectId], references: [id])
-  proposedById    String
-  proposedBy      User                      @relation("PendingAssignmentProposer", fields: [proposedById], references: [id])
-  source          PendingAssignmentSource
+  id           String                  @id @default(cuid())
+  projectId    String
+  project      Project                 @relation(fields: [projectId], references: [id])
+  proposedById String
+  proposedBy   User                    @relation("PendingAssignmentProposer", fields: [proposedById], references: [id])
+  source       PendingAssignmentSource
 
   // Si viene de un lead existente:
-  leadId          String?
-  lead            Lead?                     @relation(fields: [leadId], references: [id])
+  leadId String?
+  lead   Lead?   @relation(fields: [leadId], references: [id])
 
   // Si viene de invitación directa (founder propone invitar a email):
-  inviteEmail     String?
-  inviteFullName  String?
-  inviteMessage   String?
+  inviteEmail    String?
+  inviteFullName String?
+  inviteMessage  String?
 
   // Destinatario: usuario existente (si lo hay)
-  targetUserId    String?
-  targetUser      User?                     @relation("PendingAssignmentTarget", fields: [targetUserId], references: [id])
+  targetUserId String?
+  targetUser   User?   @relation("PendingAssignmentTarget", fields: [targetUserId], references: [id])
 
-  shareCount      Int
-  reason          String?
+  shareCount Int
+  reason     String?
 
-  status          PendingAssignmentStatus   @default(PENDING)
-  reviewedAt      DateTime?
-  reviewedById    String?
-  reviewedBy      User?                     @relation("PendingAssignmentReviewer", fields: [reviewedById], references: [id])
-  reviewNote      String?
+  status       PendingAssignmentStatus @default(PENDING)
+  reviewedAt   DateTime?
+  reviewedById String?
+  reviewedBy   User?                   @relation("PendingAssignmentReviewer", fields: [reviewedById], references: [id])
+  reviewNote   String?
 
-  createdAt       DateTime                  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([projectId, status])
   @@index([status])

@@ -3,6 +3,7 @@ import type { Route } from "next";
 import type { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { formatCurrency, formatNumber } from "@/lib/utils/format";
 import { getDict, getLocale } from "@/lib/i18n";
 import { ProjectFilters } from "./ProjectFilters";
@@ -17,9 +18,31 @@ const STATUS_RANK: Record<string, number> = {
   ARCHIVED: 5,
 };
 
+// Lista de proyectos — tabla de crecimiento. Sin paginación cada admin con 100+
+// proyectos y sus participaciones tira un payload enorme cada visita.
+const PAGE_SIZE = 30;
+
 type SearchParams = {
   q?: string;
+  page?: string;
 };
+
+type ProjectRow = Prisma.ProjectGetPayload<{
+  include: {
+    owner: { select: { fullName: true } };
+    startupProfile: {
+      select: {
+        oneLiner: true;
+        sector: true;
+        stage: true;
+        preMoneyValuation: true;
+        valuationCurrency: true;
+        targetRaiseAmount: true;
+      };
+    };
+    participations: { select: { status: true; shareCount: true } };
+  };
+}>;
 
 export default async function ProjectsDiscoveryPage({
   searchParams,
@@ -34,6 +57,8 @@ export default async function ProjectsDiscoveryPage({
   const t = dict.projectList;
 
   const q = (sp.q ?? "").trim();
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const skip = (page - 1) * PAGE_SIZE;
 
   const where: Prisma.ProjectWhereInput = {};
 
@@ -46,26 +71,59 @@ export default async function ProjectsDiscoveryPage({
     where.name = { contains: q, mode: "insensitive" };
   }
 
-  const projects = await prisma.project.findMany({
-    where,
-    orderBy: [{ approvedAt: "desc" }, { createdAt: "desc" }],
-    include: {
-      owner: { select: { fullName: true } },
-      startupProfile: {
-        select: {
-          oneLiner: true,
-          sector: true,
-          stage: true,
-          preMoneyValuation: true,
-          valuationCurrency: true,
-          targetRaiseAmount: true,
-        },
-      },
-      participations: { select: { status: true, shareCount: true } },
+  // Para admin queremos el ranking por status (PENDING_APPROVAL arriba) sin
+  // que la paginación lo rompa: ordenamos por status numérico vía un sort
+  // adicional in-memory después de traer la página. Para no-admin solo hay
+  // ACTIVE, así que el orderBy nativo alcanza.
+  // include.participations sigue acá porque el badge "X/Y disponibles" y la
+  // barra de fondeo lo necesitan; con PAGE_SIZE=30 el blast radius es acotado.
+  // Posible slim futuro: derivar de Project._count.participations + un campo
+  // denormalizado fundedShareCount para evitar el join.
+  const [projects, total, pendingCount] = await sequentialPrisma([
+    {
+      run: () =>
+        prisma.project.findMany({
+          where,
+          orderBy: [{ approvedAt: "desc" }, { createdAt: "desc" }],
+          take: PAGE_SIZE,
+          skip,
+          include: {
+            owner: { select: { fullName: true } },
+            startupProfile: {
+              select: {
+                oneLiner: true,
+                sector: true,
+                stage: true,
+                preMoneyValuation: true,
+                valuationCurrency: true,
+                targetRaiseAmount: true,
+              },
+            },
+            participations: { select: { status: true, shareCount: true } },
+          },
+        }),
+      fallback: [] as ProjectRow[],
+      tag: "proyectos:list",
     },
-  });
+    {
+      run: () => prisma.project.count({ where }),
+      fallback: 0,
+      tag: "proyectos:total",
+    },
+    {
+      run: () =>
+        isAdmin
+          ? prisma.project.count({ where: { ...where, status: "PENDING_APPROVAL" } })
+          : Promise.resolve(0),
+      fallback: 0,
+      tag: "proyectos:pendingCount",
+    },
+  ] as const);
 
-  // Para admin: ordenar por status según ranking definido
+  // Para admin: ordenar la página actual por status según ranking definido.
+  // Nota: el orden cross-page no respeta el ranking — buscar PENDING en página
+  // 2 puede dar resultados raros. Aceptable mientras el caso típico sea
+  // "primera página tiene los PENDING".
   if (isAdmin) {
     projects.sort(
       (a, b) =>
@@ -73,7 +131,7 @@ export default async function ProjectsDiscoveryPage({
     );
   }
 
-  const pendingCount = projects.filter((p) => p.status === "PENDING_APPROVAL").length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const hasFilters = Boolean(q);
 
   return (
@@ -225,6 +283,54 @@ export default async function ProjectsDiscoveryPage({
           })}
         </ul>
       )}
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-between hairline-t pt-6">
+          <ProjectsPageLink
+            page={page - 1}
+            disabled={page <= 1}
+            q={q}
+            label="← Previous"
+          />
+          <p className="eyebrow font-mono">
+            {page} / {totalPages}
+          </p>
+          <ProjectsPageLink
+            page={page + 1}
+            disabled={page >= totalPages}
+            q={q}
+            label="Next →"
+          />
+        </div>
+      )}
     </div>
+  );
+}
+
+function ProjectsPageLink({
+  page,
+  disabled,
+  q,
+  label,
+}: {
+  page: number;
+  disabled: boolean;
+  q: string;
+  label: string;
+}) {
+  if (disabled) {
+    return <span className="eyebrow !text-navy/30">{label}</span>;
+  }
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return (
+    <Link
+      href={(qs ? `/proyectos?${qs}` : "/proyectos") as Route}
+      className="eyebrow hover:!text-gold"
+    >
+      {label}
+    </Link>
   );
 }

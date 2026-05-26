@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import type { Route } from "next";
 import type { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
@@ -58,10 +60,20 @@ type Movement = {
   amount: { value: number; currency: string } | null;
 };
 
+// Las filas del historial son densas (timestamps + montos + nombre de proyecto)
+// y el usuario típicamente busca movimientos recientes. 20 alcanza para una
+// vista cómoda sin sobrecargar el render ni la query.
+const PAGE_SIZE = 20;
+
+// Cuando la vista es "todos", repartimos PAGE_SIZE entre los 3 buckets y luego
+// mezclamos por fecha. Ceiling porque preferimos sobre-traer un par de filas
+// (descartamos al cortar) antes que mostrar menos de PAGE_SIZE por redondeo.
+const PER_BUCKET = Math.ceil(PAGE_SIZE / 3);
+
 export default async function HistorialPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cat?: string; periodo?: string }>;
+  searchParams: Promise<{ cat?: string; periodo?: string; page?: string }>;
 }) {
   const user = await requireSession();
   const dict = await getDict();
@@ -79,6 +91,8 @@ export default async function HistorialPage({
     periodoParam === "30" || periodoParam === "90" || periodoParam === "365"
       ? periodoParam
       : "all";
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const skip = (page - 1) * PAGE_SIZE;
 
   const CAT_OPTIONS: { value: Cat; label: string }[] = [
     { value: "all", label: t.cats.all },
@@ -93,38 +107,124 @@ export default async function HistorialPage({
     { value: "365", label: t.periods["365"] },
   ];
 
-  // Secuencial: 3 findMany concurrentes con connection_limit=1 dispara timeout.
-  // Cada bucket cae a [] si la query falla — el historial mostrará menos
-  // movimientos pero la página entra (mejor que crashear /historial completo).
-  const [dividends, participations, sales] = await sequentialPrisma([
-    {
-      run: () =>
-        prisma.dividendPayment.findMany({
-          where: { recipientId: user.id },
-          select: dividendsSelect,
-        }),
-      fallback: [] as DividendRow[],
-      tag: "historial:dividends",
-    },
-    {
-      run: () =>
-        prisma.participation.findMany({
-          where: { currentOwnerId: user.id },
-          select: participationsSelect,
-        }),
-      fallback: [] as ParticipationRow[],
-      tag: "historial:participations",
-    },
-    {
-      run: () =>
-        prisma.ownershipHistory.findMany({
-          where: { fromUserId: user.id },
-          select: salesSelect,
-        }),
-      fallback: [] as SaleRow[],
-      tag: "historial:sales",
-    },
-  ] as const);
+  // Cutoff del filtro periodo — empujado al where de Prisma. Antes filtrábamos
+  // en JS después de traer toda la historia: cargaba años de movimientos para
+  // mostrar 30 días.
+  const cutoff: Date | null =
+    periodo === "all"
+      ? null
+      : new Date(Date.now() - Number(periodo) * 24 * 60 * 60 * 1000);
+
+  // Wheres por bucket — cada modelo tiene su propio campo de fecha:
+  //   - DividendPayment usa receivedAt ?? sentAt ?? createdAt. No hay un único
+  //     campo, así que filtramos por createdAt (el más cercano a "registró el
+  //     movimiento"). Trade-off: un pago muy viejo confirmado hoy igual cae
+  //     bajo "últimos 30 días" si createdAt cae dentro.
+  //   - Participation usa acquiredAt ?? createdAt → filtramos por createdAt
+  //     por la misma razón.
+  //   - OwnershipHistory tiene effectiveAt explícito.
+  const dividendsWhere: Prisma.DividendPaymentWhereInput = {
+    recipientId: user.id,
+    ...(cutoff ? { createdAt: { gte: cutoff } } : {}),
+  };
+  const participationsWhere: Prisma.ParticipationWhereInput = {
+    currentOwnerId: user.id,
+    ...(cutoff ? { createdAt: { gte: cutoff } } : {}),
+  };
+  const salesWhere: Prisma.OwnershipHistoryWhereInput = {
+    fromUserId: user.id,
+    ...(cutoff ? { effectiveAt: { gte: cutoff } } : {}),
+  };
+
+  // Estrategia de paginación:
+  //   - Si cat != "all" → paginamos directo sobre el bucket correspondiente
+  //     (skip/take exactos, total = count).
+  //   - Si cat == "all" → traemos PER_BUCKET (=7) de cada bucket ya filtrados
+  //     por periodo, mezclamos por fecha desc, cortamos a PAGE_SIZE. Para
+  //     paginación de la vista mezclada, multiplicamos por la página: traemos
+  //     (page * PER_BUCKET) y descartamos los (page-1)*PER_BUCKET primeros de
+  //     cada bucket. No es perfecto cross-bucket (un bucket con muchas filas
+  //     recientes "consume" sus PER_BUCKET en página 1 y deja huecos atrás),
+  //     pero es lo más simple sin offset global, y el caso típico es
+  //     "ver últimos N" → página 1.
+  const takePerBucket = cat === "all" ? PER_BUCKET * page : PAGE_SIZE;
+  const skipPerBucket = cat === "all" ? PER_BUCKET * (page - 1) : skip;
+
+  const wantDividends = cat === "all" || cat === "dividendo";
+  const wantParticipations = cat === "all" || cat === "compra";
+  const wantSales = cat === "all" || cat === "venta";
+
+  // sequentialPrisma: connection_limit=1 → no paralelizamos. Cada bucket
+  // que no necesitamos resuelve a fallback sin pegar a la DB.
+  const [dividends, participations, sales, totalDividends, totalParticipations, totalSales] =
+    await sequentialPrisma([
+      {
+        run: () =>
+          wantDividends
+            ? prisma.dividendPayment.findMany({
+                where: dividendsWhere,
+                select: dividendsSelect,
+                orderBy: { createdAt: "desc" },
+                take: takePerBucket,
+                skip: cat === "dividendo" ? skip : 0,
+              })
+            : Promise.resolve([] as DividendRow[]),
+        fallback: [] as DividendRow[],
+        tag: "historial:dividends",
+      },
+      {
+        run: () =>
+          wantParticipations
+            ? prisma.participation.findMany({
+                where: participationsWhere,
+                select: participationsSelect,
+                orderBy: { createdAt: "desc" },
+                take: takePerBucket,
+                skip: cat === "compra" ? skip : 0,
+              })
+            : Promise.resolve([] as ParticipationRow[]),
+        fallback: [] as ParticipationRow[],
+        tag: "historial:participations",
+      },
+      {
+        run: () =>
+          wantSales
+            ? prisma.ownershipHistory.findMany({
+                where: salesWhere,
+                select: salesSelect,
+                orderBy: { effectiveAt: "desc" },
+                take: takePerBucket,
+                skip: cat === "venta" ? skip : 0,
+              })
+            : Promise.resolve([] as SaleRow[]),
+        fallback: [] as SaleRow[],
+        tag: "historial:sales",
+      },
+      {
+        run: () =>
+          wantDividends
+            ? prisma.dividendPayment.count({ where: dividendsWhere })
+            : Promise.resolve(0),
+        fallback: 0,
+        tag: "historial:totalDividends",
+      },
+      {
+        run: () =>
+          wantParticipations
+            ? prisma.participation.count({ where: participationsWhere })
+            : Promise.resolve(0),
+        fallback: 0,
+        tag: "historial:totalParticipations",
+      },
+      {
+        run: () =>
+          wantSales
+            ? prisma.ownershipHistory.count({ where: salesWhere })
+            : Promise.resolve(0),
+        fallback: 0,
+        tag: "historial:totalSales",
+      },
+    ] as const);
 
   const movements: Movement[] = [];
   for (const d of dividends) {
@@ -160,15 +260,20 @@ export default async function HistorialPage({
 
   movements.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-  const cutoff =
-    periodo === "all"
-      ? null
-      : Date.now() - Number(periodo) * 24 * 60 * 60 * 1000;
-  const filtered = movements.filter((m) => {
-    if (cat !== "all" && m.type !== cat) return false;
-    if (cutoff !== null && m.date.getTime() < cutoff) return false;
-    return true;
-  });
+  // En la vista mixta cortamos a PAGE_SIZE después del merge; para una cat
+  // específica el take/skip ya nos dejó la página exacta.
+  const pageMovements =
+    cat === "all" ? movements.slice(0, PAGE_SIZE) : movements;
+
+  const total =
+    cat === "dividendo"
+      ? totalDividends
+      : cat === "compra"
+        ? totalParticipations
+        : cat === "venta"
+          ? totalSales
+          : totalDividends + totalParticipations + totalSales;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <div>
@@ -188,13 +293,15 @@ export default async function HistorialPage({
       />
 
       <div className="mt-8">
-        {filtered.length === 0 ? (
+        {pageMovements.length === 0 ? (
           <p className="text-navy/60">
-            {movements.length === 0 ? t.empty : t.emptyFiltered}
+            {total === 0 && cat === "all" && periodo === "all"
+              ? t.empty
+              : t.emptyFiltered}
           </p>
         ) : (
           <ul className="hairline-t">
-            {filtered.map((m) => (
+            {pageMovements.map((m) => (
               <li
                 key={m.id}
                 className="hairline-b py-4 flex items-baseline justify-between gap-4"
@@ -229,6 +336,59 @@ export default async function HistorialPage({
           </ul>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-between hairline-t pt-6">
+          <HistorialPageLink
+            page={page - 1}
+            disabled={page <= 1}
+            cat={cat}
+            periodo={periodo}
+            label="← Previous"
+          />
+          <p className="eyebrow font-mono">
+            {page} / {totalPages}
+          </p>
+          <HistorialPageLink
+            page={page + 1}
+            disabled={page >= totalPages}
+            cat={cat}
+            periodo={periodo}
+            label="Next →"
+          />
+        </div>
+      )}
     </div>
+  );
+}
+
+function HistorialPageLink({
+  page,
+  disabled,
+  cat,
+  periodo,
+  label,
+}: {
+  page: number;
+  disabled: boolean;
+  cat: Cat;
+  periodo: Periodo;
+  label: string;
+}) {
+  if (disabled) {
+    return <span className="eyebrow !text-navy/30">{label}</span>;
+  }
+  const params = new URLSearchParams();
+  if (cat !== "all") params.set("cat", cat);
+  if (periodo !== "all") params.set("periodo", periodo);
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return (
+    <Link
+      href={(qs ? `/historial?${qs}` : "/historial") as Route}
+      className="eyebrow hover:!text-gold"
+    >
+      {label}
+    </Link>
   );
 }

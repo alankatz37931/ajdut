@@ -1,14 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Tras Wave 1 (race-safe): createInterestLead corre dentro de un
+// prisma.$transaction y delega el calculo de availability a
+// getAvailableSharesForProposal, que hace participation.findFirst +
+// pendingAssignment.aggregate. El mock simula ambos canales.
 const mocks = vi.hoisted(() => ({
   project: { findUnique: vi.fn() },
   user: { findUnique: vi.fn() },
   lead: { create: vi.fn() },
   auditLog: { create: vi.fn() },
+  participation: { findFirst: vi.fn() },
+  pendingAssignment: { aggregate: vi.fn() },
 }));
 
 vi.mock("@/lib/db/client", () => ({
-  prisma: mocks,
+  prisma: {
+    ...mocks,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    $transaction: (cb: any) => cb(mocks),
+  },
 }));
 
 import { createInterestLead } from "@/lib/services/interest";
@@ -29,20 +39,25 @@ function makeProject(
   overrides: Partial<{
     status: string;
     ownerId: string;
-    available: number;
   }> = {}
 ) {
-  const available = overrides.available ?? 1000;
   return {
     id: "project-1",
     status: overrides.status ?? "ACTIVE",
     ownerId: overrides.ownerId ?? "founder-1",
-    totalShares: 1_250_000,
-    participations: [
-      { status: "AVAILABLE", shareCount: available },
-      { status: "ASSIGNED", shareCount: 100_000 },
-    ],
   };
+}
+
+/**
+ * Default mocks para `getAvailableSharesForProposal`:
+ * - pool AVAILABLE con `available` shares
+ * - sin PendingAssignments pendientes (reserved = 0)
+ */
+function mockAvailability(available: number, reserved = 0) {
+  mocks.participation.findFirst.mockResolvedValue({ shareCount: available });
+  mocks.pendingAssignment.aggregate.mockResolvedValue({
+    _sum: { shareCount: reserved },
+  });
 }
 
 beforeEach(() => {
@@ -62,13 +77,15 @@ describe("createInterestLead — validaciones básicas", () => {
   });
 
   it("rechaza si el proyecto NO está ACTIVE", async () => {
-    mocks.project.findUnique.mockResolvedValueOnce(makeProject({ status: "PENDING_APPROVAL" }));
+    mocks.project.findUnique.mockResolvedValueOnce(
+      makeProject({ status: "PENDING_APPROVAL" })
+    );
     await expect(createInterestLead(baseInput)).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("RECHAZA self-purchase (founder no compra su propio proyecto)", async () => {
     mocks.project.findUnique.mockResolvedValueOnce(
-      makeProject({ ownerId: "investor-1" }) // mismo userId que el input
+      makeProject({ ownerId: "investor-1" })
     );
     await expect(createInterestLead(baseInput)).rejects.toBeInstanceOf(ForbiddenError);
   });
@@ -77,6 +94,7 @@ describe("createInterestLead — validaciones básicas", () => {
 describe("createInterestLead — validaciones del usuario", () => {
   beforeEach(() => {
     mocks.project.findUnique.mockResolvedValue(makeProject());
+    mockAvailability(1000);
   });
 
   it("rechaza si el usuario no existe", async () => {
@@ -105,12 +123,13 @@ describe("createInterestLead — validaciones del usuario", () => {
 
 describe("createInterestLead — validaciones del pedido", () => {
   beforeEach(() => {
-    mocks.project.findUnique.mockResolvedValue(makeProject({ available: 500 }));
+    mocks.project.findUnique.mockResolvedValue(makeProject());
     mocks.user.findUnique.mockResolvedValue({
       role: "PARTNER",
       isActive: true,
       deletedAt: null,
     });
+    mockAvailability(500);
   });
 
   it("rechaza shareCount < 1", async () => {
@@ -130,6 +149,14 @@ describe("createInterestLead — validaciones del pedido", () => {
     await expect(
       createInterestLead({ ...baseInput, shareCountRequested: 500 })
     ).resolves.toBeDefined();
+  });
+
+  it("descuenta PendingAssignments pendientes al calcular available", async () => {
+    // pool tiene 500 pero 300 ya estan reservados → solo 200 disponibles
+    mockAvailability(500, 300);
+    await expect(
+      createInterestLead({ ...baseInput, shareCountRequested: 250 })
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 
   it("RECHAZA message > 2000 caracteres (defensiva, también validado en action)", async () => {
@@ -152,6 +179,7 @@ describe("createInterestLead — efectos", () => {
       isActive: true,
       deletedAt: null,
     });
+    mockAvailability(1000);
     mocks.lead.create.mockResolvedValue({ id: "lead-1" });
   });
 
