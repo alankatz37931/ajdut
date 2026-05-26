@@ -36,22 +36,25 @@ describe("derivePriceAndShares", () => {
     it("$25M → $20 × 1.25M (no usa $10 porque daría 2.5M > target)", () => {
       // 25M / 10 = 2.5M, supera el cap → sube a 20
       const r = derivePriceAndShares(25_000_000);
-      expect(r.pricePerShare).toBe(20);
-      expect(r.totalShares).toBe(1_250_000);
+      expect(r).not.toBeNull();
+      expect(r!.pricePerShare).toBe(20);
+      expect(r!.totalShares).toBe(1_250_000);
       // Sanity: el producto reconstruye la valoración
-      expect(r.pricePerShare * r.totalShares).toBe(25_000_000);
+      expect(r!.pricePerShare * r!.totalShares).toBe(25_000_000);
     });
 
     it("$100M → debería usar $50 × 2M acciones", () => {
       const r = derivePriceAndShares(100_000_000);
-      expect(r.pricePerShare).toBe(50);
-      expect(r.totalShares).toBe(2_000_000);
+      expect(r).not.toBeNull();
+      expect(r!.pricePerShare).toBe(50);
+      expect(r!.totalShares).toBe(2_000_000);
     });
 
     it("$1B → $500 × 2M", () => {
       const r = derivePriceAndShares(1_000_000_000);
-      expect(r.pricePerShare).toBe(500);
-      expect(r.totalShares).toBe(2_000_000);
+      expect(r).not.toBeNull();
+      expect(r!.pricePerShare).toBe(500);
+      expect(r!.totalShares).toBe(2_000_000);
     });
   });
 
@@ -59,8 +62,9 @@ describe("derivePriceAndShares", () => {
     it.each([
       1_000_000, 5_000_000, 10_000_000, 50_000_000, 200_000_000, 750_000_000,
     ])("para valoración %i, pricePerShare %% 10 === 0", (val) => {
-      const { pricePerShare } = derivePriceAndShares(val);
-      expect(pricePerShare % 10).toBe(0);
+      const r = derivePriceAndShares(val);
+      expect(r).not.toBeNull();
+      expect(r!.pricePerShare % 10).toBe(0);
     });
   });
 
@@ -68,45 +72,41 @@ describe("derivePriceAndShares", () => {
     it.each([
       1_000_000, 5_000_000, 10_000_000, 50_000_000, 200_000_000, 750_000_000,
     ])("para valoración %i, totalShares ≤ 2M", (val) => {
-      const { totalShares } = derivePriceAndShares(val);
-      expect(totalShares).toBeLessThanOrEqual(2_000_000);
+      const r = derivePriceAndShares(val);
+      expect(r).not.toBeNull();
+      expect(r!.totalShares).toBeLessThanOrEqual(2_000_000);
     });
   });
 
-  describe("valoraciones que NO dividen limpio (fallback)", () => {
-    it("valoración 'rara' usa fallback $10/acción con floor", () => {
-      const odd = 1_234_567; // no es divisible por nada del PRICE_CANDIDATES
-      const r = derivePriceAndShares(odd);
-      // El fallback usa $10 y floor — sanity check
-      expect(r.pricePerShare).toBe(10);
-      expect(r.totalShares).toBe(Math.floor(odd / 10));
+  describe("valoraciones que NO dividen limpio (sin fallback silencioso)", () => {
+    it("valoración 'rara' (no divisible por ningún candidato) → null", () => {
+      // 1_234_567 no es divisible por 10, 20, 50, 100, 200, 500, 1000, etc.
+      // Antes de la fix devolvía { pricePerShare:10, totalShares:floor(val/10) }
+      // que rompía el invariante pricePerShare*totalShares === valuation.
+      // Ahora retorna null para que el caller la rechace explícitamente.
+      expect(derivePriceAndShares(1_234_567)).toBeNull();
+    });
+
+    it("decimales no representables como múltiplo limpio → null", () => {
+      expect(derivePriceAndShares(123.45)).toBeNull();
     });
   });
 
-  describe("inputs inválidos", () => {
-    it("valoración 0 → 0 acciones", () => {
-      expect(derivePriceAndShares(0)).toEqual({ pricePerShare: 10, totalShares: 0 });
+  describe("inputs inválidos → null", () => {
+    it("valoración 0 → null", () => {
+      expect(derivePriceAndShares(0)).toBeNull();
     });
 
-    it("valoración negativa → 0 acciones", () => {
-      expect(derivePriceAndShares(-1_000_000)).toEqual({
-        pricePerShare: 10,
-        totalShares: 0,
-      });
+    it("valoración negativa → null", () => {
+      expect(derivePriceAndShares(-1_000_000)).toBeNull();
     });
 
-    it("NaN → 0 acciones", () => {
-      expect(derivePriceAndShares(Number.NaN)).toEqual({
-        pricePerShare: 10,
-        totalShares: 0,
-      });
+    it("NaN → null", () => {
+      expect(derivePriceAndShares(Number.NaN)).toBeNull();
     });
 
-    it("Infinity → 0 acciones", () => {
-      expect(derivePriceAndShares(Number.POSITIVE_INFINITY)).toEqual({
-        pricePerShare: 10,
-        totalShares: 0,
-      });
+    it("Infinity → null", () => {
+      expect(derivePriceAndShares(Number.POSITIVE_INFINITY)).toBeNull();
     });
   });
 
@@ -120,9 +120,10 @@ describe("derivePriceAndShares", () => {
       "valoración %i: %i × %i = valoración exacta",
       (val, expectedPrice, expectedShares) => {
         const r = derivePriceAndShares(val);
-        expect(r.pricePerShare).toBe(expectedPrice);
-        expect(r.totalShares).toBe(expectedShares);
-        expect(r.pricePerShare * r.totalShares).toBe(val);
+        expect(r).not.toBeNull();
+        expect(r!.pricePerShare).toBe(expectedPrice);
+        expect(r!.totalShares).toBe(expectedShares);
+        expect(r!.pricePerShare * r!.totalShares).toBe(val);
       }
     );
   });

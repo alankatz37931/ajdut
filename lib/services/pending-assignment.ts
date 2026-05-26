@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { recordAudit } from "./audit";
@@ -740,34 +740,38 @@ async function assignSharesFromLeadWithinTx(
     throw new ValidationError("shareCountRequested", "Cantidad inválida en el lead.");
   }
 
-  const pool = await tx.participation.findFirst({
-    where: { projectId: lead.project.id, status: "AVAILABLE" },
+  const effectiveAt = args.effectiveAt ?? new Date();
+
+  // Decremento atómico del pool — race-safe ante aprobaciones concurrentes.
+  const decremented = await tx.participation.updateMany({
+    where: {
+      projectId: lead.project.id,
+      status: "AVAILABLE",
+      shareCount: { gte: lead.shareCountRequested },
+    },
+    data: { shareCount: { decrement: lead.shareCountRequested } },
   });
-  if (!pool) {
-    throw new InvariantViolation(
-      "PA_01_NO_POOL",
-      "Este proyecto no tiene pool de acciones disponibles."
-    );
-  }
-  if (pool.shareCount < lead.shareCountRequested) {
+  if (decremented.count === 0) {
+    const pool = await tx.participation.findFirst({
+      where: { projectId: lead.project.id, status: "AVAILABLE" },
+      select: { shareCount: true },
+    });
+    if (!pool) {
+      throw new InvariantViolation(
+        "PA_01_NO_POOL",
+        "Este proyecto no tiene pool de acciones disponibles."
+      );
+    }
     throw new ValidationError(
       "shareCountRequested",
       `Solo hay ${pool.shareCount} acciones disponibles (pedido: ${lead.shareCountRequested}).`
     );
   }
+  await tx.participation.deleteMany({
+    where: { projectId: lead.project.id, status: "AVAILABLE", shareCount: 0 },
+  });
 
-  const effectiveAt = args.effectiveAt ?? new Date();
-  const remaining = pool.shareCount - lead.shareCountRequested;
-  if (remaining === 0) {
-    await tx.participation.delete({ where: { id: pool.id } });
-  } else {
-    await tx.participation.update({
-      where: { id: pool.id },
-      data: { shareCount: remaining },
-    });
-  }
-
-  const serial = `AJDUT-${lead.project.slug.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+  const serial = `AJDUT-${lead.project.slug.toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString("hex").toUpperCase()}`;
   const participation = await tx.participation.create({
     data: {
       projectId: lead.project.id,

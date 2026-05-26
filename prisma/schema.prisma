@@ -184,6 +184,7 @@ model Heir {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@unique([userId, email])
   @@index([userId])
 }
 

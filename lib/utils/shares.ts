@@ -4,17 +4,24 @@
  *
  * Objetivo: que el inversor siempre vea precios "redondos" (USD 10, 20, 50, 100)
  * y números de acciones razonables (10k - 2M).
+ *
+ * Invariante crítico: `pricePerShare * totalShares === valuation`. Si la
+ * valoración no admite un precio limpio (no divisible por ningún candidato),
+ * la función retorna `null` para que el caller la rechace explícitamente
+ * (en vez de redondear silenciosamente y romper la matemática del cap-table).
  */
 
 const PRICE_CANDIDATES = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 50000, 100000];
 const TARGET_MAX_SHARES = 2_000_000;
 
-export function derivePriceAndShares(valuation: number): {
+export type DeriveResult = {
   pricePerShare: number;
   totalShares: number;
-} {
+};
+
+export function derivePriceAndShares(valuation: number): DeriveResult | null {
   if (!Number.isFinite(valuation) || valuation <= 0) {
-    return { pricePerShare: 10, totalShares: 0 };
+    return null;
   }
 
   // Buscamos el menor precio (de mayor granularidad) que cumpla:
@@ -27,10 +34,6 @@ export function derivePriceAndShares(valuation: number): {
     }
   }
 
-  // Fallback: si la valoración no es divisible limpia por ningún precio,
-  // usamos $10/acción redondeando para abajo.
-  return {
-    pricePerShare: 10,
-    totalShares: Math.floor(valuation / 10),
-  };
+  // Sin divisor limpio: caller debe rechazar la valoración.
+  return null;
 }

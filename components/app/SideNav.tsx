@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { BrandMark } from "@/components/landing/BrandMark";
+import { useFocusTrap } from "@/components/hooks/useFocusTrap";
 
 export type NavItem = {
   label: string;
@@ -90,9 +91,15 @@ export function SideNav({ user, navItems, labels }: Props) {
     return href !== "/" && pathname.startsWith(href + "/");
   }
 
-  function close() {
+  const close = useCallback(() => {
     setOpen(false);
-  }
+  }, []);
+
+  // Atrapa foco + Esc dentro del drawer cuando esta abierto en mobile.
+  // En desktop `open` siempre es false (el aside vive via md:translate-x-0),
+  // asi que el trap NUNCA se activa en desktop — el aside actua como landmark
+  // de nav normal en desktop.
+  const drawerRef = useFocusTrap<HTMLElement>(open, close);
 
   const displayName = user.name ?? user.email;
   const compactName = displayName.split("@")[0] ?? displayName;
@@ -189,6 +196,14 @@ export function SideNav({ user, navItems, labels }: Props) {
 
       {/* ─── Sidebar — fijo en navy, no se intercambia con tema ────── */}
       <aside
+        ref={drawerRef}
+        {...(open
+          ? {
+              role: "dialog",
+              "aria-modal": true,
+              "aria-label": labels.openMenu,
+            }
+          : {})}
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-navy flex flex-col transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}

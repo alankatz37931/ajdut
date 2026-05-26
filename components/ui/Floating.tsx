@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "react";
  */
 
 const FIELD_BASE =
-  "peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 pt-5 pb-1.5 font-sans text-navy outline-none focus:border-navy/30 transition-colors";
+  "peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 pt-5 pb-1.5 font-sans text-navy outline-none focus:border-navy/60 transition-colors";
 
 const LABEL_BASE =
   "absolute left-0 pointer-events-none origin-left transition-all duration-200 ease-out text-navy/40";
@@ -30,12 +30,16 @@ const LABEL_FLOATING =
   "peer-focus:top-0 peer-focus:text-[0.7rem] peer-focus:uppercase peer-focus:tracking-[0.18em] peer-focus:text-navy " +
   "peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:text-[0.7rem] peer-[:not(:placeholder-shown)]:uppercase peer-[:not(:placeholder-shown)]:tracking-[0.18em] peer-[:not(:placeholder-shown)]:text-navy/60";
 
-/** Trazo gold animado debajo del campo al focus. */
+/**
+ * Trazo gold debajo del campo al focus. h-0.5 (2px) para que sea visible
+ * en pantallas estándar y cumpla WCAG 2.4.7 (Focus Visible). El border base
+ * navy/30 también se oscurece a navy/60 al focus, dando doble señal.
+ */
 export function GoldUnderline() {
   return (
     <span
       aria-hidden
-      className="absolute left-0 right-0 bottom-0 h-px bg-gold origin-left scale-x-0 transition-transform duration-200 ease-out peer-focus:scale-x-100"
+      className="absolute left-0 right-0 bottom-0 h-0.5 bg-gold origin-left scale-x-0 transition-transform duration-200 ease-out peer-focus:scale-x-100"
     />
   );
 }
@@ -157,7 +161,7 @@ export function FloatingSelect({
           disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className={`peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none flex items-center justify-between gap-3 transition-colors ${
+          className={`peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none focus:border-navy/60 flex items-center justify-between gap-3 transition-colors ${
             disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
           }`}
         >
@@ -296,7 +300,7 @@ export function FloatingMultiSelect({
           disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className={`peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none flex items-center justify-between gap-3 transition-colors ${
+          className={`peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none focus:border-navy/60 flex items-center justify-between gap-3 transition-colors ${
             disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
           }`}
         >
@@ -407,7 +411,7 @@ export function FloatingTextarea({
         />
         <span
           aria-hidden
-          className="absolute left-0 right-0 bottom-0 h-px bg-navy/30"
+          className="absolute left-0 right-0 bottom-0 h-px bg-navy/30 peer-focus:bg-navy/60 transition-colors"
         />
         <GoldUnderline />
       </div>
@@ -457,7 +461,7 @@ export function FloatingDate({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           required={required}
-          className="peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-mono text-sm text-navy outline-none"
+          className="peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-mono text-sm text-navy outline-none focus:border-navy/60 transition-colors"
         />
         <GoldUnderline />
       </div>

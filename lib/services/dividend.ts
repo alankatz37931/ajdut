@@ -97,22 +97,43 @@ type Snapshot = Array<{
 async function buildHolderSnapshot(tx: Tx, projectId: string, recordDate: Date): Promise<Snapshot> {
   // Estrategia: para cada Participation actual del proyecto, buscar el dueño
   // efectivo al recordDate vía OwnershipHistory.validatedAt <= recordDate.
+  //
+  // Antes había un N+1 (1 findFirst por participation) dentro del $transaction
+  // del announce — con 200 holders eran 201 round-trips serializados y con
+  // connection_limit=1 garantizaba timeout. Ahora: 2 queries totales.
+  //   1) findMany de participations
+  //   2) findMany de ownershipHistory para todas las participations + recordDate
+  //      ordenado desc; agrupamos en JS para tomar la más reciente por participation.
   const participations = await tx.participation.findMany({
     where: { projectId, currentOwnerId: { not: null } },
     select: { id: true, isPlatformStake: true, shareCount: true },
   });
+  if (participations.length === 0) return [];
+
+  const histories = await tx.ownershipHistory.findMany({
+    where: {
+      participationId: { in: participations.map((p) => p.id) },
+      validatedAt: { lte: recordDate },
+    },
+    orderBy: [{ participationId: "asc" }, { validatedAt: "desc" }],
+    select: { participationId: true, toUserId: true },
+  });
+
+  // Primera ocurrencia por participationId (gracias al orderBy desc) es la más reciente.
+  const latestOwnerByPart = new Map<string, string>();
+  for (const h of histories) {
+    if (!latestOwnerByPart.has(h.participationId)) {
+      latestOwnerByPart.set(h.participationId, h.toUserId);
+    }
+  }
 
   const result: Snapshot = [];
   for (const p of participations) {
-    const lastHistory = await tx.ownershipHistory.findFirst({
-      where: { participationId: p.id, validatedAt: { lte: recordDate } },
-      orderBy: { validatedAt: "desc" },
-      select: { toUserId: true },
-    });
-    if (!lastHistory) continue;
+    const ownerId = latestOwnerByPart.get(p.id);
+    if (!ownerId) continue;
     result.push({
       participationId: p.id,
-      ownerId: lastHistory.toUserId,
+      ownerId,
       shareCount: p.shareCount,
       isPlatformStake: p.isPlatformStake,
     });

@@ -344,13 +344,14 @@ export async function createProject(input: CreateProjectInput) {
       throw new ForbiddenError("Solo founders pueden crear proyectos.");
     }
 
-    const { pricePerShare, totalShares } = derivePriceAndShares(input.preMoneyValuation);
-    if (totalShares <= 0) {
+    const derived = derivePriceAndShares(input.preMoneyValuation);
+    if (!derived) {
       throw new ValidationError(
         "preMoneyValuation",
-        "La valoración no permite calcular un total de acciones válido."
+        "La valoración no permite calcular un precio por acción limpio (debe ser divisible por 10/20/50/100/...)."
       );
     }
+    const { pricePerShare, totalShares } = derived;
 
     // Generamos un slug único. Si choca, agregamos sufijo numérico.
     const baseSlug = slugify(input.name);

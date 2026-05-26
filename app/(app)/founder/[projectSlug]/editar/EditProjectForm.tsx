@@ -408,7 +408,11 @@ function DerivedShares({
   if (!Number.isFinite(val) || val <= 0) {
     return <p className="eyebrow !text-navy/40">{dict.valuationHint}</p>;
   }
-  const { pricePerShare, totalShares: derivedShares } = derivePriceAndShares(val);
+  const derived = derivePriceAndShares(val);
+  if (!derived) {
+    return <p className="eyebrow !text-gold">{dict.valuationWarnTitle}</p>;
+  }
+  const { pricePerShare, totalShares: derivedShares } = derived;
   const fmtMoney = (n: number) =>
     new Intl.NumberFormat(locale, {
       style: "currency",

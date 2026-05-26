@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import type { Dict } from "@/lib/i18n";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { formatDate } from "@/lib/utils/format";
+import { useFocusTrap } from "@/components/hooks/useFocusTrap";
 import { uploadDocumentAction, deleteDocumentAction } from "./document-actions";
 
 type Doc = {
@@ -149,6 +150,8 @@ function UploadModal({
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const titleId = "upload-modal-title";
+  const dialogRef = useFocusTrap<HTMLDivElement>(true, onClose);
 
   function publish() {
     setError(null);
@@ -172,11 +175,15 @@ function UploadModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className="bg-paper hairline w-full max-w-md p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-baseline justify-between gap-3 hairline-b pb-3">
-          <p className="eyebrow !text-navy">{m.title}</p>
+          <p id={titleId} className="eyebrow !text-navy">{m.title}</p>
           <button
             onClick={onClose}
             className="eyebrow !text-navy/40 hover:!text-navy p-0 m-0 border-0 bg-transparent cursor-pointer"

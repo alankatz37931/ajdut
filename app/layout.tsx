@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Inter, DM_Mono } from "next/font/google";
 import "../styles/globals.css";
-// NOTE: i18n cookie no se lee acá. El root layout debe permanecer estático
-// para no romper la prerenderización (mismo motivo por el que el tema se
-// inyecta vía script bloqueante en el body). El `lang` queda en "es" — el
-// contenido inglés se sirve correctamente igual; un futuro Ola 7d puede
-// promover esto a dinámico vía generateMetadata / route handler dedicado.
+import { getLanguage } from "@/lib/i18n";
+
+// Root layout es async para leer la cookie de idioma y setear `<html lang>`
+// correctamente. Esto fuerza el rendering dinamico (per-request) en vez del
+// prerender estatico, pero el costo es bajo y el beneficio a11y/SEO/screen-readers
+// vale la pena: un viewer en ingles ahora recibe `<html lang="en">` en vez
+// de "es" hardcoded.
 
 // Modo oscuro deshabilitado a nivel producto. Script que asegura que la
 // clase `dark` jamás esté presente, aunque exista una cookie/clase vieja
@@ -32,14 +34,15 @@ export const metadata: Metadata = {
   robots: "noindex,nofollow",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const lang = await getLanguage();
   return (
     <html
-      lang="es"
+      lang={lang}
       className={`${inter.variable} ${dmMono.variable}`}
       suppressHydrationWarning
     >

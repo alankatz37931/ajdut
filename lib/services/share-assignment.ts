@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { recordAudit } from "./audit";
@@ -82,38 +82,45 @@ export async function assignSharesFromLead(
       throw new ValidationError("shareCountRequested", "Cantidad inválida en el lead.");
     }
 
-    // 1. Encontrar pool AVAILABLE del proyecto
-    const pool = await tx.participation.findFirst({
-      where: { projectId: lead.project.id, status: "AVAILABLE" },
+    const effectiveAt = input.effectiveAt ?? new Date();
+
+    // 1. Decrementar el pool atómicamente. `updateMany` con la cláusula
+    //    `shareCount: { gte: needed }` evita race conditions: dos aprobaciones
+    //    concurrentes no pueden ambas leer el mismo shareCount y restar.
+    //    Si count === 0 ⇒ no había pool o no alcanzaba; distinguimos abajo.
+    const decremented = await tx.participation.updateMany({
+      where: {
+        projectId: lead.project.id,
+        status: "AVAILABLE",
+        shareCount: { gte: lead.shareCountRequested },
+      },
+      data: { shareCount: { decrement: lead.shareCountRequested } },
     });
-    if (!pool) {
-      throw new InvariantViolation(
-        "PA_01_NO_POOL",
-        "Este proyecto no tiene pool de acciones disponibles."
-      );
-    }
-    if (pool.shareCount < lead.shareCountRequested) {
+    if (decremented.count === 0) {
+      const pool = await tx.participation.findFirst({
+        where: { projectId: lead.project.id, status: "AVAILABLE" },
+        select: { shareCount: true },
+      });
+      if (!pool) {
+        throw new InvariantViolation(
+          "PA_01_NO_POOL",
+          "Este proyecto no tiene pool de acciones disponibles."
+        );
+      }
       throw new ValidationError(
         "shareCountRequested",
         `Solo hay ${pool.shareCount} acciones disponibles (pedido: ${lead.shareCountRequested}).`
       );
     }
+    // Si quedó en 0, eliminamos el pool vacío para no contaminar futuras queries
+    await tx.participation.deleteMany({
+      where: { projectId: lead.project.id, status: "AVAILABLE", shareCount: 0 },
+    });
 
-    const effectiveAt = input.effectiveAt ?? new Date();
-
-    // 2. Decrementar el pool (o eliminarlo si queda en 0)
-    const remaining = pool.shareCount - lead.shareCountRequested;
-    if (remaining === 0) {
-      await tx.participation.delete({ where: { id: pool.id } });
-    } else {
-      await tx.participation.update({
-        where: { id: pool.id },
-        data: { shareCount: remaining },
-      });
-    }
-
-    // 3. Crear la Participation asignada al inversor
-    const serial = `AJDUT-${lead.project.slug.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+    // 2. Crear la Participation asignada al inversor.
+    //    Sufijo random para evitar colisiones del serialCode (unique) cuando
+    //    dos asignaciones caen en el mismo milisegundo.
+    const serial = `AJDUT-${lead.project.slug.toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString("hex").toUpperCase()}`;
     const participation = await tx.participation.create({
       data: {
         projectId: lead.project.id,
@@ -263,22 +270,6 @@ export async function assignSharesToInvestor(
     );
   }
 
-  const pool = await tx.participation.findFirst({
-    where: { projectId: project.id, status: "AVAILABLE" },
-  });
-  if (!pool) {
-    throw new InvariantViolation(
-      "PA_01_NO_POOL",
-      "Este proyecto no tiene pool de acciones disponibles."
-    );
-  }
-  if (pool.shareCount < input.shareCount) {
-    throw new ValidationError(
-      "shareCount",
-      `Solo hay ${pool.shareCount} acciones disponibles (pedido: ${input.shareCount}).`
-    );
-  }
-
   const investor = await tx.user.findUnique({
     where: { id: input.toUserId },
     select: { id: true, isActive: true, deletedAt: true },
@@ -290,19 +281,37 @@ export async function assignSharesToInvestor(
 
   const effectiveAt = input.effectiveAt ?? new Date();
 
-  // 1. Decrementar el pool
-  const remaining = pool.shareCount - input.shareCount;
-  if (remaining === 0) {
-    await tx.participation.delete({ where: { id: pool.id } });
-  } else {
-    await tx.participation.update({
-      where: { id: pool.id },
-      data: { shareCount: remaining },
+  // 1. Decremento atómico del pool (race-safe).
+  const decremented = await tx.participation.updateMany({
+    where: {
+      projectId: project.id,
+      status: "AVAILABLE",
+      shareCount: { gte: input.shareCount },
+    },
+    data: { shareCount: { decrement: input.shareCount } },
+  });
+  if (decremented.count === 0) {
+    const pool = await tx.participation.findFirst({
+      where: { projectId: project.id, status: "AVAILABLE" },
+      select: { shareCount: true },
     });
+    if (!pool) {
+      throw new InvariantViolation(
+        "PA_01_NO_POOL",
+        "Este proyecto no tiene pool de acciones disponibles."
+      );
+    }
+    throw new ValidationError(
+      "shareCount",
+      `Solo hay ${pool.shareCount} acciones disponibles (pedido: ${input.shareCount}).`
+    );
   }
+  await tx.participation.deleteMany({
+    where: { projectId: project.id, status: "AVAILABLE", shareCount: 0 },
+  });
 
-  // 2. Crear participation asignada
-  const serial = `AJDUT-${project.slug.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+  // 2. Crear participation asignada (sufijo random anti-colisión del serial).
+  const serial = `AJDUT-${project.slug.toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString("hex").toUpperCase()}`;
   const participation = await tx.participation.create({
     data: {
       projectId: project.id,
