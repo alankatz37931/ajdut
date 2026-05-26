@@ -7,6 +7,11 @@ import type { CronRunStats } from "@/lib/services/heirs";
 
 type CronDict = Dict["adminHerederos"]["cron"];
 
+/**
+ * CTA tipo eyebrow para correr el cron de validaciones (mismo lenguaje visual
+ * que los CTAs del header de cada FounderSection: "ACTUALIZAR →" / "NUEVO
+ * AVISO →"). Tras ejecutar, muestra las stats inline debajo.
+ */
 export function RunCronButton({
   dict,
   locale,
@@ -31,34 +36,36 @@ export function RunCronButton({
   }
 
   return (
-    <div className="hairline p-4 bg-paper">
-      <p className="eyebrow !text-navy/60">{dict.eyebrow}</p>
-      <div className="mt-2 flex items-center gap-4 flex-wrap">
-        <button
-          type="button"
-          onClick={onClick}
-          disabled={isPending}
-          className="btn-primary disabled:opacity-50"
-        >
-          {isPending ? dict.runningBtn : dict.runBtn}
-        </button>
-        <p className="text-sm text-navy/60">{dict.description}</p>
-      </div>
+    <>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={isPending}
+        title={dict.description}
+        className="eyebrow !text-navy/50 hover:!text-gold disabled:opacity-50 transition-colors p-0 m-0 border-0 bg-transparent cursor-pointer shrink-0"
+      >
+        {isPending ? dict.runningEyebrow : dict.runEyebrow}
+      </button>
+
       {error && (
-        <p className="mt-3 eyebrow !text-navy hairline p-3" role="alert">
+        <p
+          className="mt-4 eyebrow !text-navy hairline p-3 bg-paper-light"
+          role="alert"
+        >
           {error}
         </p>
       )}
+
       {stats && (
-        <div className="mt-3 grid grid-cols-2 sm:grid-cols-5 gap-3 font-mono text-sm">
+        <dl className="mt-6 grid grid-cols-2 sm:grid-cols-5 gap-6 hairline-t pt-5">
           <Stat label={dict.statUsers} value={stats.usersConsidered} locale={locale} />
           <Stat label={dict.statNew} value={stats.checksCreated} locale={locale} />
           <Stat label={dict.statPending} value={stats.alreadyPending} locale={locale} />
           <Stat label={dict.statMissed} value={stats.checksMissed} locale={locale} />
           <Stat label={dict.statEscalated} value={stats.escalations} locale={locale} />
-        </div>
+        </dl>
       )}
-    </div>
+    </>
   );
 }
 
@@ -73,8 +80,8 @@ function Stat({
 }) {
   return (
     <div>
-      <p className="eyebrow !text-navy/40">{label}</p>
-      <p className="mt-1 text-navy">{value.toLocaleString(locale)}</p>
+      <dt className="eyebrow !text-navy/40">{label}</dt>
+      <dd className="mt-1 font-mono text-navy">{value.toLocaleString(locale)}</dd>
     </div>
   );
 }

@@ -1186,20 +1186,21 @@ export const dict: Dict = {
   adminHerederos: {
     eyebrow: "— Admin",
     title: "Heirs",
+    intro:
+      "Members whose liveness checks went unanswered for 3 consecutive cycles. Contact their configured heirs to validate the situation.",
     summaryEmpty: "Inbox cleared.",
     summaryPendingSingle: "{n} member pending contact.",
     summaryPendingPlural: "{n} members pending contact.",
-    emptyAll: "No members with escalated liveness checks. Everything in order.",
+    emptyAll: "Inbox cleared — no members with escalated checks.",
     missedFmt: "{n} unanswered",
     lastConfirmedFmt: "Last confirmed: {date}",
-    heirsLoadedFmt: "Heirs configured — {pct}% allocated",
+    heirsLoadedFmt: "Heirs — {pct}% allocated",
     noHeirsLoaded:
-      "This member hasn't configured heirs. Contact them via their registered email or review the account directly.",
+      "This member hasn't configured heirs. Contact them via their registered email.",
     noEmail: "No email",
     cron: {
-      eyebrow: "Manual operation",
-      runBtn: "Run checks now",
-      runningBtn: "Running…",
+      runEyebrow: "Run checks →",
+      runningEyebrow: "Running…",
       description:
         "Expires PENDING checks older than 15 days and creates new ones that are due.",
       statUsers: "Users",

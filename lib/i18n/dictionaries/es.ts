@@ -1194,20 +1194,21 @@ export const dict = {
   adminHerederos: {
     eyebrow: "— Admin",
     title: "Herederos",
+    intro:
+      "Miembros cuyas verificaciones de vida quedaron sin responder por 3 ciclos consecutivos. Contactá a sus herederos cargados para validar la situación.",
     summaryEmpty: "Bandeja al día.",
     summaryPendingSingle: "{n} miembro pendiente de contactar.",
     summaryPendingPlural: "{n} miembros pendientes de contactar.",
-    emptyAll: "No hay miembros con verificaciones de vida escaladas. Todo en orden.",
+    emptyAll: "Bandeja al día — no hay miembros con verificaciones escaladas.",
     missedFmt: "{n} sin responder",
     lastConfirmedFmt: "Última confirmación: {date}",
-    heirsLoadedFmt: "Herederos cargados — {pct}% asignado",
+    heirsLoadedFmt: "Herederos — {pct}% asignado",
     noHeirsLoaded:
-      "Este miembro no cargó herederos. Contactalo por su email registrado o reviendo la cuenta directamente.",
+      "Este miembro no cargó herederos. Contactalo por su email registrado.",
     noEmail: "Sin email",
     cron: {
-      eyebrow: "Operación manual",
-      runBtn: "Ejecutar verificaciones ahora",
-      runningBtn: "Ejecutando…",
+      runEyebrow: "Ejecutar verificaciones →",
+      runningEyebrow: "Ejecutando…",
       description:
         "Vence checks PENDING de más de 15 días y crea los nuevos que toquen.",
       statUsers: "Usuarios",
