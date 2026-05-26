@@ -50,6 +50,7 @@ export default async function FounderDashboardPage({ params }: Params) {
   // El workspace del founder es estrictamente del dueño del proyecto.
   if (project.ownerId !== user.id) notFound();
 
+  const t = dict.founderDashboard;
   const sp = project.startupProfile;
 
   // ─── Cap table (estructural + por holder individual) ──────────────
@@ -110,48 +111,48 @@ export default async function FounderDashboardPage({ params }: Params) {
   // ─── Checklist de completitud ─────────────────────────────────────
   const checklist = [
     {
-      label: "Información básica del proyecto",
+      label: t.checklist.itemBasicLabel,
       done: Boolean(sp?.oneLiner && sp?.problemStatement && sp?.solutionStatement),
       href: `/founder/${project.slug}/editar` as Route,
-      hint: "One-liner, problema, solución, modelo.",
+      hint: t.checklist.itemBasicHint,
     },
     {
-      label: "Equipo fundador cargado",
+      label: t.checklist.itemTeamLabel,
       done: (sp?.founders.length ?? 0) > 0,
       href: `/founder/${project.slug}/equipo` as Route,
-      hint: "Quiénes están detrás del proyecto.",
+      hint: t.checklist.itemTeamHint,
     },
     {
-      label: "Hitos del roadmap",
+      label: t.checklist.itemMilestonesLabel,
       done: (sp?.milestones.length ?? 0) > 0,
       href: `/founder/${project.slug}/hitos` as Route,
-      hint: "Lo prometido y lo cumplido.",
+      hint: t.checklist.itemMilestonesHint,
     },
     {
-      label: "Pitch deck o video",
+      label: t.checklist.itemPitchLabel,
       done: Boolean(sp?.pitchDeckStorageKey || sp?.videoUrl),
       href: `/founder/${project.slug}/editar` as Route,
-      hint: "URL al deck (Drive/Notion) o video (YouTube/Vimeo).",
+      hint: t.checklist.itemPitchHint,
     },
     {
-      label: "Valoración declarada",
+      label: t.checklist.itemValuationLabel,
       done: Boolean(sp?.preMoneyValuation && Number(sp.preMoneyValuation) > 0),
       href: `/founder/${project.slug}/editar` as Route,
-      hint: "Determina el precio por acción.",
+      hint: t.checklist.itemValuationHint,
     },
     {
-      label: "Primer documento compartido",
+      label: t.checklist.itemDocLabel,
       done: project.documents.length > 0,
       href: `/founder/${project.slug}?addDoc=1#documentos` as Route,
-      hint: "Reportes, estados financieros, lo que quieras compartir.",
+      hint: t.checklist.itemDocHint,
     },
     {
-      label: "Composición accionaria",
+      label: t.checklist.itemCapLabel,
       done:
         project._count.shareholderClasses > 0 ||
         project._count.externalHoldings > 0,
       href: `/founder/${project.slug}/composicion` as Route,
-      hint: "Clases de accionistas y tenencias pre-existentes.",
+      hint: t.checklist.itemCapHint,
     },
   ];
 
@@ -174,7 +175,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         <header className="pt-5 sm:pt-7 hairline-b pb-8">
           <div className="flex items-start justify-between gap-4">
             <p className="eyebrow !text-navy/40">
-              Project owner
+              {t.eyebrowRole}
               {sp?.sector && ` · ${sp.sector}`}
               {sp?.stage && ` · ${sp.stage}`}
             </p>
@@ -198,26 +199,26 @@ export default async function FounderDashboardPage({ params }: Params) {
               href={`/founder/${project.slug}/editar` as Route}
               className="btn-primary"
             >
-              Editar información
+              {t.editBtn}
             </Link>
             <Link
               href={`/proyectos/${project.slug}/chat` as Route}
               className="btn-outline"
             >
-              Abrir chat →
+              {t.chatBtn}
             </Link>
             <span className="eyebrow !text-navy/30">·</span>
             <Link
               href={`/proyectos/${project.slug}` as Route}
               className="eyebrow hover:!text-gold transition-colors"
             >
-              Ver ficha pública
+              {t.viewPublicLink}
             </Link>
             <Link
               href={"/founder/nuevo-proyecto" as Route}
               className="eyebrow hover:!text-gold transition-colors"
             >
-              + Otro proyecto
+              {t.newProjectLink}
             </Link>
           </div>
         </header>
@@ -225,9 +226,9 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 01 · Resumen ─────────────────────────────────────── */}
         <FounderSection
           n="01"
-          title="Resumen"
+          title={t.sectionResumen}
           editHref={`/founder/${project.slug}/editar` as Route}
-          editLabel="Editar"
+          editLabel={t.editLabelEditar}
         >
           {sp?.problemStatement ||
           sp?.solutionStatement ||
@@ -235,23 +236,23 @@ export default async function FounderDashboardPage({ params }: Params) {
           project.description ? (
             <dl className="space-y-5">
               {sp?.problemStatement && (
-                <SummaryField label="Problema" value={sp.problemStatement} />
+                <SummaryField label={t.summary.problem} value={sp.problemStatement} />
               )}
               {sp?.solutionStatement && (
-                <SummaryField label="Solución" value={sp.solutionStatement} />
+                <SummaryField label={t.summary.solution} value={sp.solutionStatement} />
               )}
               {sp?.businessModel && (
-                <SummaryField label="Modelo de negocio" value={sp.businessModel} />
+                <SummaryField label={t.summary.businessModel} value={sp.businessModel} />
               )}
               {project.description && (
-                <SummaryField label="Descripción" value={project.description} />
+                <SummaryField label={t.summary.description} value={project.description} />
               )}
             </dl>
           ) : (
             <EmptyState
-              text="Sin información cargada todavía."
+              text={t.summary.empty}
               href={`/founder/${project.slug}/editar` as Route}
-              cta="Cargar resumen →"
+              cta={t.summary.cta}
             />
           )}
         </FounderSection>
@@ -259,9 +260,9 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 02 · Equipo fundador ─────────────────────────────── */}
         <FounderSection
           n="02"
-          title="Equipo fundador"
+          title={t.sectionEquipo}
           editHref={`/founder/${project.slug}/equipo` as Route}
-          editLabel="+ Invitar / Modificar"
+          editLabel={t.editLabelEquipo}
         >
           {sp?.founders.length ? (
             <ul className="hairline-t">
@@ -274,7 +275,7 @@ export default async function FounderDashboardPage({ params }: Params) {
                     {f.fullName}
                     {!f.isActive && (
                       <span className="ml-2 eyebrow !text-navy/40">
-                        inactivo
+                        {t.team.inactive}
                       </span>
                     )}
                   </span>
@@ -289,9 +290,9 @@ export default async function FounderDashboardPage({ params }: Params) {
             </ul>
           ) : (
             <EmptyState
-              text="Cargá quiénes están detrás del proyecto."
+              text={t.team.empty}
               href={`/founder/${project.slug}/equipo` as Route}
-              cta="Cargar equipo →"
+              cta={t.team.cta}
             />
           )}
         </FounderSection>
@@ -299,15 +300,15 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 03 · Hitos del roadmap ───────────────────────────── */}
         <FounderSection
           n="03"
-          title="Hitos del roadmap"
+          title={t.sectionHitos}
           editHref={`/founder/${project.slug}/hitos` as Route}
-          editLabel="+ Hito / Editar"
+          editLabel={t.editLabelHitos}
         >
           {sp?.milestones.length ? (
             <ul className="hairline-t">
               {sp.milestones.map((m) => {
                 const isDone = m.status === "ACHIEVED";
-                const statusLabel = isDone ? "Logrado" : "Planeado";
+                const statusLabel = isDone ? t.milestones.statusAchieved : t.milestones.statusPlanned;
                 return (
                   <li
                     key={m.id}
@@ -327,7 +328,7 @@ export default async function FounderDashboardPage({ params }: Params) {
                     </span>
                     {/* Fecha al lado del status, no en el otro extremo */}
                     <span className="eyebrow !text-navy/40 font-mono shrink-0 min-w-[5.5rem]">
-                      {m.targetDate ? formatDate(m.targetDate) : "—"}
+                      {m.targetDate ? formatDate(m.targetDate, locale) : "—"}
                     </span>
                     {/* Título + descripción — ocupa el espacio restante */}
                     <span className="text-navy flex-1 min-w-0">
@@ -344,9 +345,9 @@ export default async function FounderDashboardPage({ params }: Params) {
             </ul>
           ) : (
             <EmptyState
-              text="Marcá tu roadmap — lo prometido y lo cumplido."
+              text={t.milestones.empty}
               href={`/founder/${project.slug}/hitos` as Route}
-              cta="Agregar primer hito →"
+              cta={t.milestones.cta}
             />
           )}
         </FounderSection>
@@ -354,29 +355,32 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 04 · Interés de compra (micro-panel) ─────────────── */}
         <FounderSection
           n="04"
-          title="Interés de compra"
+          title={t.sectionInteres}
           editHref={`/founder/${project.slug}/leads` as Route}
-          editLabel="Ver leads"
+          editLabel={t.editLabelLeads}
           urgent={pendingActions > 0}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
             <MicroKpi
-              label="Leads sin atender"
+              label={t.leads.openLabel}
               value={openLeadsCount}
               hint={
                 openLeadsCount === 0
-                  ? "Sin solicitudes activas"
-                  : `${openLeadsCount} esperando contacto`
+                  ? t.leads.openHintEmpty
+                  : t.leads.openHintFmt.replace("{n}", String(openLeadsCount))
               }
               urgent={openLeadsCount > 0}
             />
             <MicroKpi
-              label="Solicitudes de info pendientes"
+              label={t.leads.requestsLabel}
               value={pendingInfoRequestsCount}
               hint={
                 pendingInfoRequestsCount === 0
-                  ? "Bandeja al día"
-                  : `${pendingInfoRequestsCount} sin resolver`
+                  ? t.leads.requestsHintEmpty
+                  : t.leads.requestsHintFmt.replace(
+                      "{n}",
+                      String(pendingInfoRequestsCount)
+                    )
               }
               urgent={pendingInfoRequestsCount > 0}
             />
@@ -386,9 +390,9 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 05 · Métricas ────────────────────────────────────── */}
         <FounderSection
           n="05"
-          title="Métricas"
+          title={t.sectionMetricas}
           editHref={`/founder/${project.slug}/metricas` as Route}
-          editLabel="Actualizar"
+          editLabel={t.editLabelMetricas}
         >
           {sp?.metrics.length ? (
             <ul className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-line">
@@ -405,16 +409,16 @@ export default async function FounderDashboardPage({ params }: Params) {
                         : formatNumber(Number(m.value))}
                   </p>
                   <p className="mt-1 eyebrow !text-navy/40">
-                    {formatDate(m.asOf)}
+                    {formatDate(m.asOf, locale)}
                   </p>
                 </li>
               ))}
             </ul>
           ) : (
             <EmptyState
-              text="Subí tu primera medición (MRR, DAU, runway, etc.)."
+              text={t.metrics.empty}
               href={`/founder/${project.slug}/metricas` as Route}
-              cta="Cargar métrica →"
+              cta={t.metrics.cta}
             />
           )}
         </FounderSection>
@@ -422,7 +426,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 06 · Documentos ──────────────────────────────────── */}
         <FounderSection
           n="06"
-          title="Documentos"
+          title={t.sectionDocumentos}
           id="documentos"
           editHref={`/founder/${project.slug}?addDoc=1#documentos` as Route}
           editLabel={dict.documentsPanel.newDocEyebrow}
@@ -444,14 +448,17 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 07 · Avisos a miembros ───────────────────────────── */}
         <FounderSection
           n="07"
-          title="Avisos a miembros"
+          title={t.sectionAvisos}
           editHref={`/founder/${project.slug}/avisos` as Route}
-          editLabel={membersCount > 0 ? "Nuevo aviso" : undefined}
+          editLabel={membersCount > 0 ? t.editLabelAvisos : undefined}
         >
           <p className="text-navy/75 leading-relaxed">
             {membersCount > 0
-              ? `Tenés ${membersCount} miembro${membersCount === 1 ? "" : "s"} activo${membersCount === 1 ? "" : "s"} en este proyecto. Podés mandarles un email desde acá.`
-              : "Cuando un miembro reciba acciones del proyecto, vas a poder enviarle avisos por email desde acá."}
+              ? (membersCount === 1
+                  ? t.notices.activeMembersSingleFmt
+                  : t.notices.activeMembersPluralFmt
+                ).replace("{n}", String(membersCount))
+              : t.notices.empty}
           </p>
         </FounderSection>
       </div>
@@ -465,9 +472,9 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 00 · Fondeo (medidor + KPIs cortos) ──────────────── */}
         <div className="hairline bg-paper">
           <div className="px-5 pt-5 pb-5 hairline-b">
-            <WidgetHeader n="00" title="Fondeo" />
+            <WidgetHeader n="00" title={t.sectionFondeo} />
             <div className="mt-4">
-              <p className="eyebrow !text-navy/50">Acciones colocadas hasta hoy</p>
+              <p className="eyebrow !text-navy/50">{t.funding.placedLabel}</p>
               <p className="mt-1.5 font-mono text-2xl text-navy leading-none">
                 {formatNumber(assigned)}
                 <span className="text-navy/30"> / {formatNumber(totalShares)}</span>
@@ -486,30 +493,34 @@ export default async function FounderDashboardPage({ params }: Params) {
           </div>
           <dl className="grid grid-cols-2 gap-px bg-line">
             <SidebarStat
-              label="Disponibles"
-              value={formatNumber(available)}
+              label={t.funding.availableLabel}
+              value={formatNumber(available, undefined, locale)}
             />
             <SidebarStat
-              label="Valor sugerido"
+              label={t.funding.suggestedValueLabel}
               value={
                 pricePerShare
                   ? formatCurrency(
                       pricePerShare,
                       sp?.valuationCurrency ?? "USD",
+                      2,
+                      locale,
                     )
-                  : "—"
+                  : t.funding.empty
               }
               mono
             />
             <SidebarStat
-              label="Valoración"
+              label={t.funding.valuationLabel}
               value={
                 sp?.preMoneyValuation
                   ? formatCurrency(
                       Number(sp.preMoneyValuation),
                       sp.valuationCurrency,
+                      2,
+                      locale,
                     )
-                  : "—"
+                  : t.funding.empty
               }
               fullWidth
               mono
@@ -520,12 +531,12 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 08 · Cap table detallado por holder ──────────────── */}
         <div className="hairline bg-paper">
           <div className="px-5 pt-5 pb-5 hairline-b flex items-baseline justify-between gap-3">
-            <WidgetHeader n="08" title="Cap table" />
+            <WidgetHeader n="08" title={t.sectionCapTable} />
             <Link
               href={`/proyectos/${project.slug}` as Route}
               className="eyebrow !text-navy/50 hover:!text-gold transition-colors shrink-0"
             >
-              Detalle →
+              {t.capTable.detailLink}
             </Link>
           </div>
           {/* Filas con hairline-b explícito (0.5px) — match con el header
@@ -533,18 +544,20 @@ export default async function FounderDashboardPage({ params }: Params) {
           <ul>
             {available > 0 && (
               <CapHolderRow
-                name="Disponible (pool)"
+                name={t.capTable.poolName}
                 shares={available}
                 totalShares={totalShares}
                 muted
+                locale={locale}
               />
             )}
             {platform > 0 && (
               <CapHolderRow
-                name="AJDUT plataforma"
+                name={t.capTable.platformName}
                 shares={platform}
                 totalShares={totalShares}
                 gold
+                locale={locale}
               />
             )}
             {individualRows.map((row) => (
@@ -553,6 +566,7 @@ export default async function FounderDashboardPage({ params }: Params) {
                 name={row.name}
                 shares={row.shares}
                 totalShares={totalShares}
+                locale={locale}
               />
             ))}
           </ul>
@@ -561,7 +575,7 @@ export default async function FounderDashboardPage({ params }: Params) {
               href={`/founder/${project.slug}/composicion` as Route}
               className="eyebrow !text-gold hover:!text-navy transition-colors"
             >
-              Gestionar clases de accionistas →
+              {t.capTable.manageLink}
             </Link>
           </div>
         </div>
@@ -569,9 +583,9 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 09 · Checklist owner ─────────────────────────────── */}
         <div className="hairline bg-paper">
           <div className="px-5 pt-5 pb-5 hairline-b">
-            <WidgetHeader n="09" title="Estado del proyecto" />
+            <WidgetHeader n="09" title={t.sectionEstado} />
           </div>
-          <ChecklistInline items={checklist} />
+          <ChecklistInline items={checklist} completeBtn={t.checklist.completeBtn} />
         </div>
       </aside>
     </div>
@@ -641,8 +655,10 @@ function FounderSection({
  */
 function ChecklistInline({
   items,
+  completeBtn,
 }: {
   items: Array<{ label: string; done: boolean; href: Route; hint?: string }>;
+  completeBtn: string;
 }) {
   return (
     <ul>
@@ -671,7 +687,7 @@ function ChecklistInline({
                 href={it.href}
                 className="eyebrow !text-gold hover:!text-navy transition-colors shrink-0 self-center"
               >
-                Completar →
+                {completeBtn}
               </Link>
             )}
           </div>
@@ -771,17 +787,16 @@ function CapHolderRow({
   totalShares,
   muted,
   gold,
+  locale,
 }: {
   name: string;
   shares: number;
   totalShares: number;
   muted?: boolean;
   gold?: boolean;
+  locale: string;
 }) {
   const pct = totalShares > 0 ? (shares / totalShares) * 100 : 0;
-  // Mismo px-5 que el header del widget (Fondeo/Cap table), por lo que los
-  // bordes hairline-b de cada fila se alinean visualmente con el divisor
-  // del header sin "tocar abruptamente" el borde del contenedor.
   return (
     <li className="hairline-b last:border-b-0">
       <div className="flex items-baseline justify-between gap-3 px-5 py-3 text-sm">
@@ -795,7 +810,7 @@ function CapHolderRow({
         </span>
         <span className="flex items-baseline gap-2 shrink-0 font-mono">
           <span className="text-navy/40 text-xs">{pct.toFixed(1)}%</span>
-          <span className="text-navy">{formatNumber(shares)}</span>
+          <span className="text-navy">{formatNumber(shares, undefined, locale)}</span>
         </span>
       </div>
     </li>

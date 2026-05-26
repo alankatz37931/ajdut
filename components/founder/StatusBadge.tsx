@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils/cn";
+import { getDict } from "@/lib/i18n";
 
 type Status =
   | "DRAFT"
@@ -7,15 +8,6 @@ type Status =
   | "SUSPENDED"
   | "CLOSED"
   | "ARCHIVED";
-
-const LABEL: Record<Status, string> = {
-  DRAFT: "Borrador",
-  PENDING_APPROVAL: "En revisión",
-  ACTIVE: "Activo",
-  SUSPENDED: "Suspendido",
-  CLOSED: "Cerrado",
-  ARCHIVED: "Archivado",
-};
 
 const SYMBOL: Record<Status, string> = {
   DRAFT: "○",
@@ -27,14 +19,10 @@ const SYMBOL: Record<Status, string> = {
 };
 
 /**
- * Píldora de estado de proyecto.
- * - ACTIVE → acento oro (positivo).
- * - PENDING_APPROVAL → navy/70 (neutro-en-espera).
- * - DRAFT → navy/50 (borrador).
- * - SUSPENDED/CLOSED/ARCHIVED → navy/40 (apagado).
- * Sin background fuerte: respeta la regla "el oro nunca como fondo plano".
+ * Píldora de estado de proyecto. Server component — usa getDict para
+ * traducir el label según el idioma activo.
  */
-export function StatusBadge({
+export async function StatusBadge({
   status,
   className,
 }: {
@@ -42,6 +30,8 @@ export function StatusBadge({
   className?: string;
 }) {
   const s = (status as Status) ?? "DRAFT";
+  const dict = await getDict();
+  const label = dict.projectStatus[s] ?? s;
   const tone =
     s === "ACTIVE"
       ? "!text-gold"
@@ -62,7 +52,7 @@ export function StatusBadge({
       <span aria-hidden className="text-[0.85em] leading-none">
         {SYMBOL[s] ?? "·"}
       </span>
-      {LABEL[s] ?? s}
+      {label}
     </span>
   );
 }

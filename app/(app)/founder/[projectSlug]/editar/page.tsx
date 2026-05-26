@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { getDict } from "@/lib/i18n";
+import { getDict, getLocale } from "@/lib/i18n";
 import { getProjectAccess } from "@/lib/services/project-access";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { EditProjectForm } from "./EditProjectForm";
@@ -18,6 +18,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function EditProjectPage({ params }: Params) {
   const user = await requireSession();
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.founderEditar;
   const { projectSlug } = await params;
 
   const project = await prisma.project.findUnique({
@@ -61,20 +64,22 @@ export default async function EditProjectPage({ params }: Params) {
         projectName={project.name}
         projectSlug={project.slug}
         projectStatus={project.status}
-        section="Editar información"
-        description="La información que actualices acá se muestra en la ficha pública del proyecto a quien tenga acceso."
+        section={t.section}
+        description={t.description}
         action={
           <Link
             href={`/proyectos/${project.slug}` as Route}
             className="btn-outline"
           >
-            Ver ficha pública →
+            {t.viewPublicBtn}
           </Link>
         }
       />
 
       <EditProjectForm
         projectSlug={project.slug}
+        dict={t}
+        locale={locale}
         initial={{
           name: project.name,
           shortPitch: project.shortPitch,

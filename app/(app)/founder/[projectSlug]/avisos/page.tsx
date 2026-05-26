@@ -23,6 +23,8 @@ const ASSIGNED_STATUSES = [
 
 export default async function FounderAvisosPage({ params }: Params) {
   const user = await requireSession();
+  const dict = await getDict();
+  const t = dict.founderAvisos;
   const { projectSlug } = await params;
 
   const project = await prisma.project.findUnique({
@@ -81,20 +83,18 @@ export default async function FounderAvisosPage({ params }: Params) {
         projectName={project.name}
         projectSlug={project.slug}
         projectStatus={project.status}
-        section="Avisos a miembros"
-        description="Enviá un email a todos los miembros de tu proyecto, o a uno en particular, para avisar reportes, votaciones o información relevante."
+        section={t.section}
+        description={t.description}
       />
 
       {memberCount === 0 ? (
-        <p className="mt-10 text-navy/60">
-          Tu proyecto todavía no tiene miembros con acciones asignadas. Cuando se
-          distribuyan acciones, vas a poder enviarles avisos desde acá.
-        </p>
+        <p className="mt-10 text-navy/60">{t.emptyNoMembers}</p>
       ) : (
         <AvisoForm
           projectSlug={project.slug}
           memberCount={memberCount}
           members={members}
+          dict={t}
         />
       )}
     </div>

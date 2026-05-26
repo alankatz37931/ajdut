@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { sendBroadcastAction } from "./actions";
 import {
   FloatingInput,
@@ -9,16 +10,18 @@ import {
 } from "@/components/ui/Floating";
 
 type Member = { userId: string; label: string; email: string };
+type AvisosDict = Dict["founderAvisos"];
 
 type Props = {
   projectSlug: string;
   memberCount: number;
   members: Member[];
+  dict: AvisosDict;
 };
 
 type Mode = "ALL" | "ONE";
 
-export function AvisoForm({ projectSlug, memberCount, members }: Props) {
+export function AvisoForm({ projectSlug, memberCount, members, dict }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [mode, setMode] = useState<Mode>("ALL");
@@ -35,13 +38,13 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
     setError(null);
     setSuccess(false);
     if (!subject.trim() || !body.trim()) {
-      setError("Completá el asunto y el mensaje del aviso.");
+      setError(dict.errEmpty);
       return;
     }
     const formData = new FormData(e.currentTarget);
     if (mode === "ONE") {
       if (!recipientUserId) {
-        setError("Elegí un miembro destinatario.");
+        setError(dict.errSelectMember);
         return;
       }
       formData.set("recipientUserId", recipientUserId);
@@ -67,20 +70,25 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
   const buttonLabel =
     mode === "ONE"
       ? selected
-        ? `Enviar a ${selected.label} →`
-        : "Enviar →"
-      : `Enviar a ${memberCount} miembro${memberCount === 1 ? "" : "s"} →`;
+        ? dict.sendBtnOneFmt.replace("{name}", selected.label)
+        : dict.sendBtnFallback
+      : (memberCount === 1 ? dict.sendBtnAllFmtSingle : dict.sendBtnAllFmtPlural).replace(
+          "{n}",
+          String(memberCount)
+        );
 
   const successLabel =
     mode === "ONE" && selected
-      ? `Aviso enviado a ${selected.label}.`
-      : `Aviso enviado a ${memberCount} miembro${memberCount === 1 ? "" : "s"}.`;
+      ? dict.successOneFmt.replace("{name}", selected.label)
+      : (memberCount === 1 ? dict.successAllFmtSingle : dict.successAllFmtPlural).replace(
+          "{n}",
+          String(memberCount)
+        );
 
   return (
     <form ref={formRef} onSubmit={onSubmit} className="mt-10 space-y-6">
-      {/* ─── Destinatarios ───────────────────────────────────────── */}
       <div className="space-y-3 hairline p-5 bg-paper">
-        <p className="eyebrow !text-navy">Destinatarios</p>
+        <p className="eyebrow !text-navy">{dict.recipientsLabel}</p>
         <div className="flex flex-wrap gap-4">
           <label className="inline-flex items-center gap-2 cursor-pointer">
             <input
@@ -93,7 +101,7 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
               className="accent-navy"
             />
             <span className="font-sans text-sm text-navy">
-              Todos los miembros ({memberCount})
+              {dict.allMembersFmt.replace("{n}", String(memberCount))}
             </span>
           </label>
           <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -106,14 +114,14 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
               disabled={isPending}
               className="accent-navy"
             />
-            <span className="font-sans text-sm text-navy">Un miembro específico</span>
+            <span className="font-sans text-sm text-navy">{dict.oneMember}</span>
           </label>
         </div>
 
         {mode === "ONE" && (
           <FloatingSelect
             id="recipientUserId"
-            label="Miembro"
+            label={dict.memberLabel}
             value={recipientUserId}
             onChange={setRecipientUserId}
             disabled={isPending}
@@ -124,7 +132,7 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
 
       <FloatingInput
         id="subject"
-        label="Asunto"
+        label={dict.subjectLabel}
         value={subject}
         onChange={setSubject}
         maxLength={160}
@@ -132,7 +140,7 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
 
       <FloatingTextarea
         id="body"
-        label="Mensaje"
+        label={dict.bodyLabel}
         value={body}
         onChange={setBody}
         rows={8}
@@ -152,12 +160,10 @@ export function AvisoForm({ projectSlug, memberCount, members }: Props) {
 
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" disabled={isPending} className="btn-primary disabled:opacity-50">
-          {isPending ? "Enviando…" : buttonLabel}
+          {isPending ? dict.sendingBtn : buttonLabel}
         </button>
         <span className="eyebrow !text-navy/40">
-          {mode === "ONE"
-            ? "Se envía solo al miembro seleccionado."
-            : "Se envía por email a todos los miembros del proyecto."}
+          {mode === "ONE" ? dict.hintOne : dict.hintAll}
         </span>
       </div>
     </form>

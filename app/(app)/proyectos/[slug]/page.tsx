@@ -777,7 +777,7 @@ export default async function ProjectPage({ params }: Params) {
       {access.role === "ADMIN" && project.status === "PENDING_APPROVAL" && (
         <div className="mt-8">
           {/* TODO i18n: panel admin queda en español por scope. */}
-          <AdminApprovalActions projectSlug={project.slug} />
+          <AdminApprovalActions projectSlug={project.slug} dict={dict.adminApproval} />
         </div>
       )}
 

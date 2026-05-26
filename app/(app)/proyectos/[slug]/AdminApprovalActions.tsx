@@ -2,9 +2,18 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { Dict } from "@/lib/i18n";
 import { approveProjectAction, rejectProjectAction } from "./admin-actions";
 
-export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
+type AdminDict = Dict["adminApproval"];
+
+export function AdminApprovalActions({
+  projectSlug,
+  dict,
+}: {
+  projectSlug: string;
+  dict: AdminDict;
+}) {
   const router = useRouter();
   const [mode, setMode] = useState<"idle" | "confirming-approve" | "rejecting">("idle");
   const [reason, setReason] = useState("");
@@ -26,7 +35,7 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
   function reject() {
     setError(null);
     if (reason.trim().length < 10) {
-      setError("La razón debe tener al menos 10 caracteres.");
+      setError(dict.errReasonTooShort);
       return;
     }
     startTransition(async () => {
@@ -42,12 +51,8 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
   if (mode === "confirming-approve") {
     return (
       <div className="hairline p-6 bg-paper-light space-y-4">
-        <p className="eyebrow !text-gold">Confirmar aprobación</p>
-        <p className="text-navy/85 leading-relaxed">
-          Al aprobar, AJDUT emite automáticamente el <strong>10%</strong> institucional y el resto
-          queda como pool de acciones disponibles para los miembros. Esta acción no se puede revertir
-          desde la UI.
-        </p>
+        <p className="eyebrow !text-gold">{dict.confirmApproveTitle}</p>
+        <p className="text-navy/85 leading-relaxed">{dict.confirmApproveBody}</p>
         {error && (
           <p className="eyebrow !text-navy" role="alert">
             {error}
@@ -55,14 +60,14 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
         )}
         <div className="flex flex-wrap gap-3">
           <button onClick={approve} disabled={isPending} className="btn-primary disabled:opacity-50">
-            {isPending ? "Aprobando…" : "Sí, aprobar proyecto"}
+            {isPending ? dict.approvingBtn : dict.confirmApproveBtn}
           </button>
           <button
             onClick={() => setMode("idle")}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cancelar
+            {dict.cancelBtn}
           </button>
         </div>
       </div>
@@ -72,15 +77,13 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
   if (mode === "rejecting") {
     return (
       <div className="hairline p-6 bg-paper-light space-y-4">
-        <p className="eyebrow">Rechazar proyecto</p>
-        <p className="text-navy/75 leading-relaxed">
-          El project owner recibirá esta nota explicando por qué no avanzamos.
-        </p>
+        <p className="eyebrow">{dict.rejectTitle}</p>
+        <p className="text-navy/75 leading-relaxed">{dict.rejectBody}</p>
         <textarea
           rows={4}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Mínimo 10 caracteres"
+          placeholder={dict.rejectPlaceholder}
           className="w-full hairline bg-paper px-3 py-2 font-sans text-navy focus:outline-none focus:border-navy"
         />
         {error && (
@@ -90,14 +93,14 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
         )}
         <div className="flex flex-wrap gap-3">
           <button onClick={reject} disabled={isPending} className="btn-primary disabled:opacity-50">
-            {isPending ? "Rechazando…" : "Confirmar rechazo"}
+            {isPending ? dict.rejectingBtn : dict.confirmRejectBtn}
           </button>
           <button
             onClick={() => setMode("idle")}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
-            Cancelar
+            {dict.cancelBtn}
           </button>
         </div>
       </div>
@@ -106,26 +109,22 @@ export function AdminApprovalActions({ projectSlug }: { projectSlug: string }) {
 
   return (
     <div className="hairline p-6 bg-paper-light space-y-4">
-      <p className="eyebrow">Moderación · proyecto pendiente</p>
-      <p className="text-navy/75 leading-relaxed">
-        Este proyecto fue creado por el project owner y espera tu aprobación. Al aprobar, AJDUT emite
-        automáticamente el 10% institucional y crea el pool de acciones disponibles para los
-        miembros.
-      </p>
+      <p className="eyebrow">{dict.moderationEyebrow}</p>
+      <p className="text-navy/75 leading-relaxed">{dict.moderationBody}</p>
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => setMode("confirming-approve")}
           disabled={isPending}
           className="btn-primary disabled:opacity-50"
         >
-          Aprobar proyecto
+          {dict.approveBtn}
         </button>
         <button
           onClick={() => setMode("rejecting")}
           disabled={isPending}
           className="btn-outline disabled:opacity-50"
         >
-          Rechazar
+          {dict.rejectBtn}
         </button>
       </div>
       {error && (

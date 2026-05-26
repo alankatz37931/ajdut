@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { createProjectAction } from "./actions";
 import { derivePriceAndShares } from "@/lib/utils/shares";
 import {
@@ -8,34 +9,39 @@ import {
   FloatingSelect,
   FloatingTextarea,
 } from "@/components/ui/Floating";
-import { FileUpload } from "@/components/ui/FileUpload";
 
-const STAGES = [
-  { id: "IDEA", label: "Idea" },
-  { id: "PRE_SEED", label: "Pre-seed" },
-  { id: "SEED", label: "Seed" },
-  { id: "EARLY_REVENUE", label: "Early revenue" },
-  { id: "GROWTH", label: "Growth" },
-  { id: "SCALE", label: "Scale" },
-] as const;
+type NewDict = Dict["founderNuevoProyecto"];
+type Kind = "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER";
+type Stage = "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
 
-const KINDS = [
-  { id: "REAL_ESTATE", label: "Inmobiliario" },
-  { id: "MERCHANDISE", label: "Mercancía" },
-  { id: "STARTUP", label: "Otro" },
-] as const;
+export function NewProjectForm({
+  dict,
+  locale,
+}: {
+  dict: NewDict;
+  locale: string;
+}) {
+  const STAGES: Array<{ id: Stage; label: string }> = [
+    { id: "IDEA", label: dict.stageIdea },
+    { id: "PRE_SEED", label: dict.stagePreSeed },
+    { id: "SEED", label: dict.stageSeed },
+    { id: "EARLY_REVENUE", label: dict.stageEarlyRevenue },
+    { id: "GROWTH", label: dict.stageGrowth },
+    { id: "SCALE", label: dict.stageScale },
+  ];
+  const KINDS: Array<{ id: Kind; label: string }> = [
+    { id: "REAL_ESTATE", label: dict.kindRealEstate },
+    { id: "MERCHANDISE", label: dict.kindMerchandise },
+    { id: "STARTUP", label: dict.kindOther },
+  ];
 
-const DOC_ACCEPT = ".pdf,.xlsx,.xls,.docx,.doc,.png,.jpg,.jpeg";
-const DOC_HELP = "PDF, Word, Excel o imagen (máx. 25 MB).";
-
-export function NewProjectForm() {
   const [form, setForm] = useState({
     name: "",
     legalName: "",
     jurisdiction: "",
-    kind: "STARTUP" as (typeof KINDS)[number]["id"],
+    kind: "STARTUP" as Kind,
     sector: "",
-    stage: "IDEA" as (typeof STAGES)[number]["id"],
+    stage: "IDEA" as Stage,
     location: "",
     targetRaiseAmount: "",
     oneLiner: "",
@@ -78,22 +84,22 @@ export function NewProjectForm() {
   }
 
   const fmtMoney = (n: number) =>
-    new Intl.NumberFormat("es-MX", {
+    new Intl.NumberFormat(locale, {
       style: "currency",
       currency: form.valuationCurrency,
       maximumFractionDigits: 2,
     }).format(n);
-  const fmtInt = (n: number) => n.toLocaleString("es-MX");
+  const fmtInt = (n: number) => n.toLocaleString(locale);
 
   return (
     <form action={onSubmit} className="mt-10 space-y-10">
       {/* Identidad */}
       <section className="space-y-5">
-        <p className="eyebrow">Identidad</p>
+        <p className="eyebrow">{dict.sectionIdentity}</p>
 
         <FloatingInput
           id="name"
-          label="Nombre del proyecto"
+          label={dict.nameLabel}
           value={form.name}
           onChange={(v) => update("name", v)}
           required
@@ -102,20 +108,20 @@ export function NewProjectForm() {
         <div>
           <FloatingInput
             id="oneLiner"
-            label="One-liner"
+            label={dict.oneLinerLabel}
             value={form.oneLiner}
             onChange={(v) => update("oneLiner", v)}
             maxLength={160}
             required
           />
           <p className="eyebrow !text-navy/40 mt-1.5">
-            {form.oneLiner.length} / 160 — en una frase, qué hace tu empresa.
+            {dict.oneLinerHelperFmt.replace("{n}", String(form.oneLiner.length))}
           </p>
         </div>
 
         <FloatingTextarea
           id="description"
-          label="Descripción larga"
+          label={dict.descriptionLabel}
           value={form.description}
           onChange={(v) => update("description", v)}
           rows={5}
@@ -125,22 +131,20 @@ export function NewProjectForm() {
 
       {/* Legal */}
       <section className="space-y-5 hairline-t pt-8">
-        <p className="eyebrow">Datos legales</p>
+        <p className="eyebrow">{dict.sectionLegal}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
           <div>
             <FloatingInput
               id="legalName"
-              label="Razón social"
+              label={dict.legalNameLabel}
               value={form.legalName}
               onChange={(v) => update("legalName", v)}
             />
-            <p className="eyebrow !text-navy/40 mt-1.5">
-              Si está en blanco, usamos el nombre del proyecto.
-            </p>
+            <p className="eyebrow !text-navy/40 mt-1.5">{dict.legalNameHelper}</p>
           </div>
           <FloatingInput
             id="jurisdiction"
-            label="Jurisdicción"
+            label={dict.jurisdictionLabel}
             value={form.jurisdiction}
             onChange={(v) => update("jurisdiction", v)}
             required
@@ -150,21 +154,21 @@ export function NewProjectForm() {
 
       {/* Categorización */}
       <section className="space-y-5 hairline-t pt-8">
-        <p className="eyebrow">Categorización</p>
+        <p className="eyebrow">{dict.sectionCategorization}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
           <div>
             <FloatingSelect
               id="kind"
-              label="Tipo"
+              label={dict.kindLabel}
               value={form.kind}
-              onChange={(v) => update("kind", v as typeof form.kind)}
+              onChange={(v) => update("kind", v as Kind)}
               options={KINDS.map((k) => ({ value: k.id, label: k.label }))}
             />
             <input type="hidden" name="kind" value={form.kind} />
           </div>
           <FloatingInput
             id="location"
-            label="Ubicación"
+            label={dict.locationLabel}
             value={form.location}
             onChange={(v) => update("location", v)}
           />
@@ -172,7 +176,7 @@ export function NewProjectForm() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
           <FloatingInput
             id="sector"
-            label="Sector"
+            label={dict.sectorLabel}
             value={form.sector}
             onChange={(v) => update("sector", v)}
             required
@@ -180,9 +184,9 @@ export function NewProjectForm() {
           <div>
             <FloatingSelect
               id="stage"
-              label="Stage"
+              label={dict.stageLabel}
               value={form.stage}
-              onChange={(v) => update("stage", v as typeof form.stage)}
+              onChange={(v) => update("stage", v as Stage)}
               options={STAGES.map((s) => ({ value: s.id, label: s.label }))}
             />
             <input type="hidden" name="stage" value={form.stage} />
@@ -192,7 +196,7 @@ export function NewProjectForm() {
           id="websiteUrl"
           type="url"
           inputMode="url"
-          label="Sitio web (opcional)"
+          label={dict.websiteLabel}
           value={form.websiteUrl}
           onChange={(v) => update("websiteUrl", v)}
         />
@@ -200,10 +204,10 @@ export function NewProjectForm() {
 
       {/* ¿Qué hace? */}
       <section className="space-y-5 hairline-t pt-8">
-        <p className="eyebrow">¿Qué hace tu empresa?</p>
+        <p className="eyebrow">{dict.sectionWhat}</p>
         <FloatingTextarea
           id="problemStatement"
-          label="Problema que resuelve"
+          label={dict.problemLabel}
           value={form.problemStatement}
           onChange={(v) => update("problemStatement", v)}
           rows={3}
@@ -211,7 +215,7 @@ export function NewProjectForm() {
         />
         <FloatingTextarea
           id="solutionStatement"
-          label="Solución"
+          label={dict.solutionLabel}
           value={form.solutionStatement}
           onChange={(v) => update("solutionStatement", v)}
           rows={3}
@@ -219,7 +223,7 @@ export function NewProjectForm() {
         />
         <FloatingTextarea
           id="businessModel"
-          label="Modelo de negocio"
+          label={dict.businessModelLabel}
           value={form.businessModel}
           onChange={(v) => update("businessModel", v)}
           rows={2}
@@ -229,10 +233,10 @@ export function NewProjectForm() {
 
       {/* Estructura y respaldo */}
       <section className="space-y-5 hairline-t pt-8">
-        <p className="eyebrow">Estructura y respaldo</p>
+        <p className="eyebrow">{dict.sectionStructure}</p>
         <FloatingTextarea
           id="assetBackingNote"
-          label="Activo respaldado (opcional)"
+          label={dict.assetBackingLabel}
           value={form.assetBackingNote}
           onChange={(v) => update("assetBackingNote", v)}
           rows={3}
@@ -240,7 +244,7 @@ export function NewProjectForm() {
         />
         <FloatingTextarea
           id="equityStructureNote"
-          label="Estructura accionaria (opcional)"
+          label={dict.equityStructureLabel}
           value={form.equityStructureNote}
           onChange={(v) => update("equityStructureNote", v)}
           rows={3}
@@ -250,14 +254,11 @@ export function NewProjectForm() {
 
       {/* Políticas */}
       <section className="space-y-5 hairline-t pt-8">
-        <p className="eyebrow">Políticas</p>
-        <p className="text-navy/75 leading-relaxed">
-          Texto informativo que verán los miembros con acceso a la información del proyecto.
-          Todos los campos son opcionales.
-        </p>
+        <p className="eyebrow">{dict.sectionPolicies}</p>
+        <p className="text-navy/75 leading-relaxed">{dict.policiesIntro}</p>
         <FloatingTextarea
           id="policyShares"
-          label="Política de acciones (opcional)"
+          label={dict.policySharesLabel}
           value={form.policyShares}
           onChange={(v) => update("policyShares", v)}
           rows={3}
@@ -265,7 +266,7 @@ export function NewProjectForm() {
         />
         <FloatingTextarea
           id="policyDividends"
-          label="Política de dividendos (opcional)"
+          label={dict.policyDividendsLabel}
           value={form.policyDividends}
           onChange={(v) => update("policyDividends", v)}
           rows={3}
@@ -273,7 +274,7 @@ export function NewProjectForm() {
         />
         <FloatingInput
           id="dividendsFrequency"
-          label="Frecuencia de dividendos (opcional)"
+          label={dict.dividendsFreqLabel}
           value={form.dividendsFrequency}
           onChange={(v) => update("dividendsFrequency", v)}
           maxLength={120}
@@ -282,40 +283,31 @@ export function NewProjectForm() {
 
       {/* Video */}
       <section className="space-y-5 hairline-t pt-8">
-        <p className="eyebrow">Video</p>
-        <p className="text-navy/75 leading-relaxed">
-          Si tenés un video de presentación del proyecto, pegá el link acá. Los
-          documentos se suben después desde la sección Documentos.
-        </p>
+        <p className="eyebrow">{dict.sectionVideo}</p>
+        <p className="text-navy/75 leading-relaxed">{dict.videoIntro}</p>
         <div>
           <FloatingInput
             id="videoUrl"
             type="url"
             inputMode="url"
-            label="URL del video (YouTube / Vimeo)"
+            label={dict.videoUrlLabel}
             value={form.videoUrl}
             onChange={(v) => update("videoUrl", v)}
           />
-          <p className="eyebrow !text-navy/40 mt-1.5">
-            Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.
-          </p>
+          <p className="eyebrow !text-navy/40 mt-1.5">{dict.videoHelper}</p>
         </div>
       </section>
 
       {/* Valoración */}
       <section className="space-y-5 hairline-t pt-8">
-        <p className="eyebrow">Valoración</p>
-        <p className="text-navy/75 leading-relaxed">
-          A partir de la valoración calculamos el precio por acción (múltiplo de 10) y el total de
-          acciones de tu empresa. AJDUT mantiene el 10% institucional; el resto queda como pool
-          disponible para los miembros.
-        </p>
+        <p className="eyebrow">{dict.sectionValuation}</p>
+        <p className="text-navy/75 leading-relaxed">{dict.valuationIntro}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
           <FloatingInput
             id="preMoneyValuation"
             type="number"
             step="any"
-            label="Monto"
+            label={dict.valuationLabel}
             value={form.preMoneyValuation}
             onChange={(v) => update("preMoneyValuation", v)}
             required
@@ -323,12 +315,12 @@ export function NewProjectForm() {
           <div>
             <FloatingSelect
               id="valuationCurrency"
-              label="Moneda"
+              label={dict.currencyLabel}
               value={form.valuationCurrency}
               onChange={(v) => update("valuationCurrency", v as "USD" | "MXN")}
               options={[
-                { value: "USD", label: "USD · Dólares" },
-                { value: "MXN", label: "MXN · Pesos" },
+                { value: "USD", label: dict.currencyUsd },
+                { value: "MXN", label: dict.currencyMxn },
               ]}
             />
             <input
@@ -342,7 +334,7 @@ export function NewProjectForm() {
           id="targetRaiseAmount"
           type="number"
           step="any"
-          label="Monto a levantar (opcional)"
+          label={dict.targetRaiseLabel}
           value={form.targetRaiseAmount}
           onChange={(v) => update("targetRaiseAmount", v)}
         />
@@ -350,11 +342,11 @@ export function NewProjectForm() {
         {derived && (
           <div className="hairline p-4 bg-paper grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-sm">
             <div>
-              <p className="eyebrow !text-navy/40">Precio por acción</p>
+              <p className="eyebrow !text-navy/40">{dict.pricePerShareLabel}</p>
               <p className="mt-1 text-navy">{fmtMoney(derived.pricePerShare)}</p>
             </div>
             <div>
-              <p className="eyebrow !text-navy/40">Acciones totales</p>
+              <p className="eyebrow !text-navy/40">{dict.totalSharesLabel}</p>
               <p className="mt-1 text-navy">{fmtInt(derived.totalShares)}</p>
             </div>
           </div>
@@ -368,16 +360,13 @@ export function NewProjectForm() {
       )}
 
       <div className="hairline-t pt-6 space-y-3">
-        <p className="text-navy/75 leading-relaxed text-sm">
-          Al crear el proyecto queda en estado <strong>pendiente de aprobación</strong>. El equipo de
-          AJDUT revisa los datos antes de activarlo y notificarte por email.
-        </p>
+        <p className="text-navy/75 leading-relaxed text-sm">{dict.finalNote}</p>
         <button
           type="submit"
           disabled={isPending}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Creando proyecto…" : "Crear proyecto y enviar para revisión"}
+          {isPending ? dict.submittingBtn : dict.submitBtn}
         </button>
       </div>
     </form>

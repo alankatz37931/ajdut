@@ -15,6 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function FounderMetricsPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
+  const dict = await getDict();
+  const t = dict.founderMetricas;
   const { projectSlug } = await params;
 
   const project = await prisma.project.findUnique({
@@ -45,11 +47,11 @@ export default async function FounderMetricsPage({ params }: Params) {
         projectName={project.name}
         projectSlug={project.slug}
         projectStatus={project.status}
-        section="Métricas"
-        description="Snapshot numérico del proyecto. Cada métrica queda vinculada a una fecha; las marcadas como visibles para miembros se muestran en la ficha pública."
+        section={t.section}
+        description={t.description}
       />
 
-      <MetricsEditor projectSlug={projectSlug} initial={metrics} />
+      <MetricsEditor projectSlug={projectSlug} initial={metrics} dict={t} />
     </div>
   );
 }

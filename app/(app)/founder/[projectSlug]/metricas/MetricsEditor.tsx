@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { addMetricAction, removeMetricAction } from "./actions";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
 import {
@@ -24,6 +25,8 @@ type Kind =
   | "HEADCOUNT"
   | "CUSTOM";
 
+type MetricsDict = Dict["founderMetricas"];
+
 type Metric = {
   id: string;
   kind: Kind;
@@ -32,22 +35,6 @@ type Metric = {
   unit: string;
   asOf: string;
   visibility: "PRIVATE" | "PUBLIC_TO_HOLDERS";
-};
-
-const KIND_LABEL: Record<Kind, string> = {
-  MRR: "MRR",
-  ARR: "ARR",
-  GMV: "GMV",
-  ACTIVE_USERS: "Usuarios activos",
-  PAYING_CUSTOMERS: "Clientes pagos",
-  CHURN_RATE: "Churn rate",
-  BURN_RATE: "Burn rate",
-  RUNWAY_MONTHS: "Runway (meses)",
-  CAC: "CAC",
-  LTV: "LTV",
-  GROSS_MARGIN: "Gross margin",
-  HEADCOUNT: "Headcount",
-  CUSTOM: "Personalizada",
 };
 
 const KIND_DEFAULT_UNIT: Record<Kind, string> = {
@@ -71,15 +58,16 @@ const today = () => new Date().toISOString().slice(0, 10);
 export function MetricsEditor({
   projectSlug,
   initial,
+  dict,
 }: {
   projectSlug: string;
   initial: Metric[];
+  dict: MetricsDict;
 }) {
   const [showNew, setShowNew] = useState(initial.length === 0);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Form state para defaults dinámicos (unit depende de kind)
   const [kind, setKind] = useState<Kind>("MRR");
   const [unit, setUnit] = useState<string>(KIND_DEFAULT_UNIT.MRR);
   const [customLabel, setCustomLabel] = useState("");
@@ -124,15 +112,20 @@ export function MetricsEditor({
 
   function labelFor(m: Metric) {
     if (m.kind === "CUSTOM" && m.customLabel) return m.customLabel;
-    return KIND_LABEL[m.kind];
+    return dict.kindLabels[m.kind] ?? m.kind;
   }
 
   function formatValue(m: Metric) {
-    const fmt = new Intl.NumberFormat("es-MX", {
+    const fmt = new Intl.NumberFormat(undefined, {
       maximumFractionDigits: 2,
     }).format(m.value);
     return `${fmt} ${m.unit}`;
   }
+
+  const countLabel = (initial.length === 1
+    ? dict.countSingle
+    : dict.countPlural
+  ).replace("{n}", String(initial.length));
 
   return (
     <div className="mt-8 space-y-6">
@@ -143,16 +136,14 @@ export function MetricsEditor({
       )}
 
       <div className="hairline p-4 bg-paper flex items-center justify-between">
-        <p className="eyebrow">
-          {initial.length} medición{initial.length === 1 ? "" : "es"} registrada{initial.length === 1 ? "" : "s"}
-        </p>
+        <p className="eyebrow">{countLabel}</p>
         {!showNew && (
           <button
             type="button"
             onClick={() => setShowNew(true)}
             className="eyebrow hover:!text-gold"
           >
-            + Agregar medición
+            {dict.addBtn}
           </button>
         )}
       </div>
@@ -163,19 +154,19 @@ export function MetricsEditor({
             <div>
               <FloatingSelect
                 id="kind"
-                label="Tipo"
+                label={dict.form.kindLabel}
                 value={kind}
                 onChange={(v) => onKindChange(v as Kind)}
-                options={(Object.keys(KIND_LABEL) as Kind[]).map((k) => ({
+                options={(Object.keys(dict.kindLabels) as Kind[]).map((k) => ({
                   value: k,
-                  label: KIND_LABEL[k],
+                  label: dict.kindLabels[k] ?? k,
                 }))}
               />
               <input type="hidden" name="kind" value={kind} />
             </div>
             <FloatingInput
               id="unit"
-              label="Unidad"
+              label={dict.form.unitLabel}
               value={unit}
               onChange={setUnit}
               required
@@ -185,7 +176,7 @@ export function MetricsEditor({
           {kind === "CUSTOM" && (
             <FloatingInput
               id="customLabel"
-              label="Etiqueta personalizada"
+              label={dict.form.customLabel}
               value={customLabel}
               onChange={setCustomLabel}
               required
@@ -197,14 +188,14 @@ export function MetricsEditor({
               id="value"
               type="number"
               step="any"
-              label="Valor"
+              label={dict.form.valueLabel}
               value={metricValue}
               onChange={setMetricValue}
               required
             />
             <FloatingDate
               id="asOf"
-              label="Fecha"
+              label={dict.form.asOfLabel}
               value={asOf}
               onChange={setAsOf}
               required
@@ -212,12 +203,12 @@ export function MetricsEditor({
             <div>
               <FloatingSelect
                 id="visibility"
-                label="Visibilidad"
+                label={dict.form.visibilityLabel}
                 value={visibility}
                 onChange={setVisibility}
                 options={[
-                  { value: "PUBLIC_TO_HOLDERS", label: "Visible para miembros" },
-                  { value: "PRIVATE", label: "Privada (solo vos y admin)" },
+                  { value: "PUBLIC_TO_HOLDERS", label: dict.form.visibilityPublicOpt },
+                  { value: "PRIVATE", label: dict.form.visibilityPrivateOpt },
                 ]}
               />
               <input type="hidden" name="visibility" value={visibility} />
@@ -234,10 +225,10 @@ export function MetricsEditor({
               disabled={isPending}
               className="eyebrow hover:!text-gold"
             >
-              Cancelar
+              {dict.form.cancelBtn}
             </button>
             <button type="submit" disabled={isPending} className="btn-primary disabled:opacity-50">
-              {isPending ? "Guardando…" : "Agregar"}
+              {isPending ? dict.form.savingBtn : dict.form.saveBtn}
             </button>
           </div>
         </form>
@@ -249,15 +240,17 @@ export function MetricsEditor({
             <div className="col-span-12 sm:col-span-4">
               <p className="font-sans text-navy">{labelFor(m)}</p>
               <p className="mt-1 eyebrow">
-                {m.visibility === "PUBLIC_TO_HOLDERS" ? "● Pública a miembros" : "○ Privada"}
+                {m.visibility === "PUBLIC_TO_HOLDERS"
+                  ? dict.visibilityPublic
+                  : dict.visibilityPrivate}
               </p>
             </div>
             <div className="col-span-6 sm:col-span-4 font-mono text-navy">{formatValue(m)}</div>
             <div className="col-span-6 sm:col-span-2 eyebrow">{m.asOf}</div>
             <div className="col-span-12 sm:col-span-2 text-right">
               <InlineConfirm
-                label="Eliminar"
-                question="¿Eliminar esta medición?"
+                label={dict.removeBtn}
+                question={dict.removeConfirm}
                 onConfirm={() => onRemove(m.id)}
                 disabled={isPending}
               />
@@ -267,7 +260,7 @@ export function MetricsEditor({
       </ul>
 
       {initial.length === 0 && !showNew && (
-        <p className="text-navy/60">Sin métricas cargadas todavía.</p>
+        <p className="text-navy/60">{dict.empty}</p>
       )}
     </div>
   );

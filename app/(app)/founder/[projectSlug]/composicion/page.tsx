@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { getDict } from "@/lib/i18n";
+import { getDict, getLocale } from "@/lib/i18n";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { CompositionEditor } from "./CompositionEditor";
 
@@ -15,6 +15,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function FounderCompositionPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.founderComposicion;
   const { projectSlug } = await params;
 
   const project = await prisma.project.findUnique({
@@ -80,8 +83,8 @@ export default async function FounderCompositionPage({ params }: Params) {
         projectName={project.name}
         projectSlug={project.slug}
         projectStatus={project.status}
-        section="Composición accionaria"
-        description="Agrupá a los accionistas en clases (Directivo, Operativo, Inversionistas, etc.). Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres."
+        section={t.section}
+        description={t.description}
       />
 
       <CompositionEditor
@@ -90,6 +93,8 @@ export default async function FounderCompositionPage({ params }: Params) {
         initialClasses={classes}
         initialHolders={holders}
         initialExternal={externalHoldings}
+        dict={t}
+        locale={locale}
       />
     </div>
   );

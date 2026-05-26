@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
 import {
   createClassAction,
@@ -29,7 +30,8 @@ type ExternalInput = {
   shareCount: number;
 };
 
-/** Estilo compartido para los <select> inline de clase. */
+type CompDict = Dict["founderComposicion"];
+
 const SELECT_CLS =
   "hairline bg-paper px-2.5 py-1.5 font-sans text-sm text-navy outline-none focus:border-navy disabled:opacity-50";
 const LINE_INPUT =
@@ -41,12 +43,16 @@ export function CompositionEditor({
   initialClasses,
   initialHolders,
   initialExternal,
+  dict,
+  locale,
 }: {
   projectSlug: string;
   totalShares: number;
   initialClasses: ClassRow[];
   initialHolders: HolderRow[];
   initialExternal: ExternalRow[];
+  dict: CompDict;
+  locale: string;
 }) {
   const [classes, setClasses] = useState<ClassRow[]>(initialClasses);
   const [holders, setHolders] = useState<HolderRow[]>(initialHolders);
@@ -66,7 +72,7 @@ export function CompositionEditor({
     startTransition(async () => {
       const r = await fn();
       if (r.ok) onOk(r as Extract<R, { ok: true }>);
-      else setError(r.error ?? "Ocurrió un error.");
+      else setError(r.error ?? dict.genericError);
     });
   }
 
@@ -147,10 +153,9 @@ export function CompositionEditor({
       {/* ─── Clases ──────────────────────────────────────────────── */}
       <section className="space-y-4">
         <div>
-          <p className="eyebrow">— Clases de accionistas</p>
+          <p className="eyebrow">{dict.classes.eyebrow}</p>
           <p className="mt-2 text-sm text-navy/70 leading-relaxed max-w-xl">
-            Las categorías en las que agrupás a tus accionistas. Los miembros
-            las ven en la ficha con la cantidad de personas y el % de cada una.
+            {dict.classes.helper}
           </p>
         </div>
 
@@ -163,6 +168,9 @@ export function CompositionEditor({
                 isPending={isPending}
                 onRename={(name) => renameClass(c.id, name)}
                 onDelete={() => deleteClass(c.id)}
+                saveLabel={dict.classes.saveBtn}
+                removeLabel={dict.classes.removeBtn}
+                removeConfirm={dict.classes.removeConfirm}
               />
             ))}
           </ul>
@@ -173,7 +181,7 @@ export function CompositionEditor({
             value={newClass}
             onChange={(e) => setNewClass(e.target.value)}
             maxLength={60}
-            placeholder="Nueva clase — ej. Directivo"
+            placeholder={dict.classes.placeholder}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -188,7 +196,7 @@ export function CompositionEditor({
             disabled={isPending || newClass.trim().length < 2}
             className="btn-outline disabled:opacity-50 shrink-0"
           >
-            Agregar clase
+            {dict.classes.addBtn}
           </button>
         </div>
       </section>
@@ -196,17 +204,14 @@ export function CompositionEditor({
       {/* ─── Accionistas de AJDUT ────────────────────────────────── */}
       <section className="space-y-4">
         <div>
-          <p className="eyebrow">— Accionistas de AJDUT</p>
+          <p className="eyebrow">{dict.holders.eyebrow}</p>
           <p className="mt-2 text-sm text-navy/70 leading-relaxed max-w-xl">
-            Personas que recibieron acciones a través de la plataforma. Asigná
-            una clase a cada una.
+            {dict.holders.helper}
           </p>
         </div>
 
         {holders.length === 0 ? (
-          <p className="text-sm text-navy/55">
-            Todavía no hay accionistas asignados a través de AJDUT.
-          </p>
+          <p className="text-sm text-navy/55">{dict.holders.empty}</p>
         ) : (
           <ul className="hairline-t">
             {holders.map((h) => (
@@ -217,6 +222,9 @@ export function CompositionEditor({
                 totalShares={totalShares}
                 isPending={isPending}
                 onAssign={(classId) => assignHolder(h.userId, classId)}
+                sharesAndPctFmt={dict.holders.sharesAndPctFmt}
+                noClassLabel={dict.holders.noClass}
+                locale={locale}
               />
             ))}
           </ul>
@@ -227,10 +235,9 @@ export function CompositionEditor({
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">— Accionistas pre-existentes</p>
+            <p className="eyebrow">{dict.external.eyebrow}</p>
             <p className="mt-2 text-sm text-navy/70 leading-relaxed max-w-xl">
-              Gente que ya tenía acciones antes de AJDUT (fundadores, inversores
-              previos). Declarás cuántas personas, cuántas acciones y su clase.
+              {dict.external.helper}
             </p>
           </div>
           {!showNewExternal && editingExternalId === null && (
@@ -240,7 +247,7 @@ export function CompositionEditor({
               disabled={isPending}
               className="eyebrow hover:!text-gold shrink-0"
             >
-              + Agregar
+              {dict.external.addBtn}
             </button>
           )}
         </div>
@@ -254,6 +261,7 @@ export function CompositionEditor({
               upsertExternal(input, () => setShowNewExternal(false))
             }
             onCancel={() => setShowNewExternal(false)}
+            dict={dict.external.form}
           />
         )}
 
@@ -270,6 +278,7 @@ export function CompositionEditor({
                       upsertExternal(input, () => setEditingExternalId(null))
                     }
                     onCancel={() => setEditingExternalId(null)}
+                    dict={dict.external.form}
                   />
                 </li>
               ) : (
@@ -281,6 +290,8 @@ export function CompositionEditor({
                   isPending={isPending}
                   onEdit={() => setEditingExternalId(x.id)}
                   onDelete={() => removeExternal(x.id)}
+                  dict={dict.external}
+                  locale={locale}
                 />
               )
             )}
@@ -296,11 +307,17 @@ function ClassLine({
   isPending,
   onRename,
   onDelete,
+  saveLabel,
+  removeLabel,
+  removeConfirm,
 }: {
   cls: ClassRow;
   isPending: boolean;
   onRename: (name: string) => void;
   onDelete: () => void;
+  saveLabel: string;
+  removeLabel: string;
+  removeConfirm: string;
 }) {
   const [draft, setDraft] = useState(cls.name);
   const dirty = draft.trim() !== cls.name && draft.trim().length >= 2;
@@ -319,12 +336,12 @@ function ClassLine({
           disabled={isPending}
           className="eyebrow hover:!text-gold shrink-0"
         >
-          Guardar
+          {saveLabel}
         </button>
       )}
       <InlineConfirm
-        label="Eliminar"
-        question="¿Eliminar esta clase?"
+        label={removeLabel}
+        question={removeConfirm}
         onConfirm={onDelete}
         disabled={isPending}
       />
@@ -338,21 +355,28 @@ function HolderLine({
   totalShares,
   isPending,
   onAssign,
+  sharesAndPctFmt,
+  noClassLabel,
+  locale,
 }: {
   holder: HolderRow;
   classes: ClassRow[];
   totalShares: number;
   isPending: boolean;
   onAssign: (classId: string) => void;
+  sharesAndPctFmt: string;
+  noClassLabel: string;
+  locale: string;
 }) {
   const pct = totalShares > 0 ? (holder.shares / totalShares) * 100 : 0;
+  const sharesText = sharesAndPctFmt
+    .replace("{n}", holder.shares.toLocaleString(locale))
+    .replace("{pct}", pct.toFixed(1));
   return (
     <li className="hairline-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 py-3">
       <div className="min-w-0">
         <p className="text-navy">{holder.name}</p>
-        <p className="eyebrow !text-navy/40 mt-0.5">
-          {holder.shares.toLocaleString("es-MX")} acciones · {pct.toFixed(1)}%
-        </p>
+        <p className="eyebrow !text-navy/40 mt-0.5">{sharesText}</p>
       </div>
       <select
         value={holder.classId}
@@ -360,7 +384,7 @@ function HolderLine({
         disabled={isPending}
         className={SELECT_CLS}
       >
-        <option value="">— Sin clase —</option>
+        <option value="">{noClassLabel}</option>
         {classes.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}
@@ -378,6 +402,8 @@ function ExternalLine({
   isPending,
   onEdit,
   onDelete,
+  dict,
+  locale,
 }: {
   row: ExternalRow;
   classes: ClassRow[];
@@ -385,21 +411,31 @@ function ExternalLine({
   isPending: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  dict: CompDict["external"];
+  locale: string;
 }) {
   const cls = classes.find((c) => c.id === row.classId);
   const pct = totalShares > 0 ? (row.shareCount / totalShares) * 100 : 0;
+  const peopleText = cls
+    ? (row.peopleCount === 1
+        ? dict.peopleSingleFmt
+        : dict.peoplePluralFmt
+      )
+        .replace("{n}", String(row.peopleCount))
+        .replace("{cls}", cls.name)
+    : (row.peopleCount === 1
+        ? dict.noClassPeopleSingleFmt
+        : dict.noClassPeoplePluralFmt
+      ).replace("{n}", String(row.peopleCount));
   return (
     <li className="hairline-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 py-3">
       <div className="min-w-0">
-        <p className="text-navy">{row.label || cls?.name || "Tenencia"}</p>
-        <p className="eyebrow !text-navy/40 mt-0.5">
-          {row.peopleCount} persona{row.peopleCount === 1 ? "" : "s"} ·{" "}
-          {cls?.name ?? "sin clase"}
-        </p>
+        <p className="text-navy">{row.label || cls?.name || dict.defaultLabel}</p>
+        <p className="eyebrow !text-navy/40 mt-0.5">{peopleText}</p>
       </div>
       <div className="flex items-center gap-4 shrink-0">
         <span className="font-mono text-sm text-navy">
-          {row.shareCount.toLocaleString("es-MX")}
+          {row.shareCount.toLocaleString(locale)}
           <span className="text-navy/40"> · {pct.toFixed(1)}%</span>
         </span>
         <button
@@ -408,11 +444,11 @@ function ExternalLine({
           disabled={isPending}
           className="eyebrow hover:!text-gold"
         >
-          Editar
+          {dict.editBtn}
         </button>
         <InlineConfirm
-          label="Eliminar"
-          question="¿Eliminar esta tenencia?"
+          label={dict.removeBtn}
+          question={dict.removeConfirm}
           onConfirm={onDelete}
           disabled={isPending}
         />
@@ -427,12 +463,14 @@ function ExternalForm({
   isPending,
   onSubmit,
   onCancel,
+  dict,
 }: {
   initial: ExternalRow | null;
   classes: ClassRow[];
   isPending: boolean;
   onSubmit: (input: ExternalInput) => void;
   onCancel: () => void;
+  dict: CompDict["external"]["form"];
 }) {
   const [label, setLabel] = useState(initial?.label ?? "");
   const [classId, setClassId] = useState(initial?.classId ?? "");
@@ -447,23 +485,23 @@ function ExternalForm({
     <div className="hairline bg-paper p-4 space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
         <label className="block">
-          <span className="eyebrow !text-navy/50">Etiqueta (opcional)</span>
+          <span className="eyebrow !text-navy/50">{dict.labelLabel}</span>
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             maxLength={80}
-            placeholder="ej. Fundadores"
+            placeholder={dict.labelPlaceholder}
             className={`mt-1 w-full ${LINE_INPUT}`}
           />
         </label>
         <label className="block">
-          <span className="eyebrow !text-navy/50">Clase</span>
+          <span className="eyebrow !text-navy/50">{dict.classLabel}</span>
           <select
             value={classId}
             onChange={(e) => setClassId(e.target.value)}
             className={`mt-1 w-full ${SELECT_CLS}`}
           >
-            <option value="">— Sin clase —</option>
+            <option value="">{dict.noClass}</option>
             {classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -472,7 +510,7 @@ function ExternalForm({
           </select>
         </label>
         <label className="block">
-          <span className="eyebrow !text-navy/50">Cantidad de personas</span>
+          <span className="eyebrow !text-navy/50">{dict.peopleLabel}</span>
           <input
             value={people}
             onChange={(e) => setPeople(e.target.value)}
@@ -481,7 +519,7 @@ function ExternalForm({
           />
         </label>
         <label className="block">
-          <span className="eyebrow !text-navy/50">Cantidad de acciones</span>
+          <span className="eyebrow !text-navy/50">{dict.sharesLabel}</span>
           <input
             value={shares}
             onChange={(e) => setShares(e.target.value)}
@@ -497,7 +535,7 @@ function ExternalForm({
           disabled={isPending}
           className="eyebrow hover:!text-gold"
         >
-          Cancelar
+          {dict.cancelBtn}
         </button>
         <button
           type="button"
@@ -513,7 +551,7 @@ function ExternalForm({
           disabled={isPending || !valid}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Guardando…" : initial ? "Guardar" : "Agregar"}
+          {isPending ? dict.savingBtn : initial ? dict.saveBtn : dict.addBtn}
         </button>
       </div>
     </div>
