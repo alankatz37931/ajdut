@@ -8,7 +8,13 @@ import { FloatingInput } from "@/components/ui/Floating";
  * Búsqueda instantánea por actor — mismo patrón que /proyectos:
  * debounce ~250ms + router.replace, sin botón.
  */
-export function AuditSearch() {
+export function AuditSearch({
+  label,
+  clearLabel,
+}: {
+  label: string;
+  clearLabel: string;
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const [query, setQuery] = useState(params.get("actor") ?? "");
@@ -33,7 +39,7 @@ export function AuditSearch() {
     <div className="w-full">
       <FloatingInput
         id="actor"
-        label="Buscar por actor"
+        label={label}
         value={query}
         onChange={setQuery}
         autoComplete="off"
@@ -45,7 +51,7 @@ export function AuditSearch() {
           onClick={() => setQuery("")}
           className="mt-2 eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
         >
-          Limpiar
+          {clearLabel}
         </button>
       )}
     </div>

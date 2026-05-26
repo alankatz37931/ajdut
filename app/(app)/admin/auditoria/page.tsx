@@ -4,7 +4,7 @@ import type { Route } from "next";
 import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { getDict } from "@/lib/i18n";
+import { getDict, getLocale, type Dict } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { AuditSearch } from "./AuditSearch";
 
@@ -15,70 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const PAGE_SIZE = 50;
 
-const ACTION_LABEL: Record<string, string> = {
-  "APPLICATION.SUBMITTED": "Aplicación enviada",
-  "APPLICATION.REVIEW_STARTED": "Aplicación en revisión",
-  "APPLICATION.APPROVED": "Aplicación aprobada",
-  "APPLICATION.REJECTED": "Aplicación rechazada",
-  "USER.CREATED": "Usuario creado",
-  "USER.SUSPENDED": "Usuario suspendido",
-  "USER.REACTIVATED": "Usuario reactivado",
-  "PROJECT.CREATED": "Proyecto creado / editado",
-  "PROJECT.SUBMITTED_FOR_APPROVAL": "Proyecto enviado a aprobación",
-  "PROJECT.APPROVED": "Proyecto aprobado",
-  "PROJECT.SUSPENDED": "Proyecto suspendido",
-  "PROJECT.CLOSED": "Proyecto cerrado",
-  "PARTICIPATION.CREATED": "Participación creada",
-  "PARTICIPATION.LEAD_CREATED": "Interés de compra recibido",
-  "PARTICIPATION.LEAD_DISMISSED": "Interés descartado",
-  "PARTICIPATION.ASSIGNED": "Acciones asignadas",
-  "PARTICIPATION.RESALE_LISTED": "Reventa publicada",
-  "PARTICIPATION.RESALE_CANCELLED": "Reventa cancelada",
-  "PARTICIPATION.RESALE_DEAL_CLOSED": "Reventa cerrada",
-  "PARTICIPATION.TRANSFER_VALIDATED": "Transferencia validada",
-  "PARTICIPATION.TRANSFER_REJECTED": "Transferencia rechazada",
-  "CERTIFICATE.ISSUED": "Certificado emitido",
-  "CERTIFICATE.REVOKED": "Certificado revocado",
-  "REPORT.PUBLISHED": "Reporte publicado",
-  "METRIC.RECORDED": "Métrica registrada",
-  "MILESTONE.STATUS_CHANGED": "Estado de hito cambiado",
-  "DISTRIBUTION.DRAFTED": "Dividendo en borrador",
-  "DISTRIBUTION.ANNOUNCED": "Dividendo anunciado",
-  "DISTRIBUTION.PAYMENT_SENT": "Pago de dividendo enviado",
-  "DISTRIBUTION.PAYMENT_RECEIVED": "Pago de dividendo cobrado",
-  "DISTRIBUTION.PAYMENT_DISPUTED": "Pago en disputa",
-  "DISTRIBUTION.PAYMENT_RESOLVED": "Pago resuelto",
-  "DISTRIBUTION.COMPLETED": "Dividendo completado",
-  "DISTRIBUTION.CANCELLED": "Dividendo cancelado",
-  "EMAIL.FAILED": "Email fallido",
-  "RATE_LIMIT.HIT": "Rate limit alcanzado",
-  "FOUNDER.UPSERTED": "Miembro de equipo editado",
-  "FOUNDER.REMOVED": "Miembro de equipo eliminado",
-  "MILESTONE.UPSERTED": "Hito editado",
-  "MILESTONE.REMOVED": "Hito eliminado",
-  "METRIC.REMOVED": "Métrica eliminada",
-  "INFO_REQUEST.CREATED": "Solicitud de información",
-  "INFO_REQUEST.APPROVED": "Solicitud de información aprobada",
-  "INFO_REQUEST.REJECTED": "Solicitud de información rechazada",
-  "ADMIN_BROADCAST.SENT": "Aviso de admin enviado",
-  "PARTICIPATION.INVITED": "Miembro invitado a proyecto",
-  "PARTICIPATION.ASSIGN_PROPOSED": "Asignación propuesta (esperando admin)",
-  "PARTICIPATION.ASSIGN_APPROVED": "Asignación aprobada por admin",
-  "PARTICIPATION.ASSIGN_REJECTED": "Asignación rechazada por admin",
-  "CHAT.MESSAGE_POSTED": "Mensaje publicado en chat",
-  "CHAT.MESSAGE_DELETED": "Mensaje ocultado por moderación",
-  "CHAT.POLL_CREATED": "Encuesta creada",
-  "CHAT.POLL_VOTED": "Voto en encuesta",
-  "CHAT.POLL_CLOSED": "Encuesta cerrada",
-  "HEIR.ADDED": "Heredero agregado",
-  "HEIR.UPDATED": "Heredero editado",
-  "HEIR.REMOVED": "Heredero eliminado",
-  "VALIDATION.FREQUENCY_UPDATED": "Frecuencia de validación actualizada",
-  "VALIDATION.SCHEDULED": "Verificación de vida programada",
-  "VALIDATION.CONFIRMED": "Verificación de vida confirmada",
-  "VALIDATION.MISSED": "Verificación de vida sin respuesta",
-  "VALIDATION.ESCALATED": "Alerta: contactar a herederos",
-};
+type PayloadDict = Dict["adminAuditoria"]["payload"];
 
 /**
  * Traduce el payload crudo a una frase legible. El admin no necesita ver JSON
@@ -86,40 +23,56 @@ const ACTION_LABEL: Record<string, string> = {
  */
 function describePayload(
   action: string,
-  payload: Record<string, unknown> | null
+  payload: Record<string, unknown> | null,
+  p: PayloadDict,
+  locale: string
 ): string | null {
   if (!payload) return null;
   const n = (k: string) =>
-    typeof payload[k] === "number" ? (payload[k] as number).toLocaleString("es-MX") : null;
+    typeof payload[k] === "number" ? (payload[k] as number).toLocaleString(locale) : null;
   const s = (k: string) => (typeof payload[k] === "string" ? (payload[k] as string) : null);
+  const sourceLabel = (src: string | null): string | null => {
+    if (src === "INVITE") return p.sourceInvite;
+    if (src === "LEAD") return p.sourceLead;
+    return null;
+  };
 
   switch (action) {
     case "PARTICIPATION.LEAD_CREATED": {
       const shares = n("shareCountRequested");
-      return shares ? `${shares} acciones de interés` : null;
+      return shares ? p.sharesOfInterestFmt.replace("{n}", shares) : null;
     }
     case "PARTICIPATION.ASSIGNED": {
       const shares = n("shareCount");
-      return shares ? `${shares} acciones asignadas` : null;
+      return shares ? p.sharesAssignedFmt.replace("{n}", shares) : null;
     }
     case "CERTIFICATE.ISSUED":
-      return s("serial") ? `Certificado ${s("serial")}` : null;
+      return s("serial") ? p.certificateFmt.replace("{serial}", s("serial")!) : null;
     case "APPLICATION.APPROVED":
-      return s("role") ? `Rol asignado: ${s("role")}` : null;
+      return s("role") ? p.roleAssignedFmt.replace("{role}", s("role")!) : null;
     case "APPLICATION.REJECTED":
-      return s("rejectionNote") ? `Nota: ${s("rejectionNote")}` : null;
+      return s("rejectionNote")
+        ? p.noteFmt.replace("{note}", s("rejectionNote")!)
+        : null;
     case "PROJECT.CREATED": {
-      if (s("event") === "PROJECT_INFO_UPDATED") return "Información actualizada";
+      if (s("event") === "PROJECT_INFO_UPDATED") return p.infoUpdated;
       const shares = n("totalShares");
-      return shares ? `${shares} acciones emitidas` : null;
+      return shares ? p.sharesIssuedFmt.replace("{n}", shares) : null;
     }
     case "USER.CREATED":
-      if (s("event") === "PASSWORD_SET") return "Contraseña establecida";
-      return s("role") ? `Rol: ${s("role")}` : null;
+      if (s("event") === "PASSWORD_SET") return p.passwordSet;
+      return s("role") ? p.roleFmt.replace("{role}", s("role")!) : null;
     case "METRIC.RECORDED": {
       const kind = s("kind");
       const val = n("value");
-      return kind && val ? `${kind}: ${val} ${s("unit") ?? ""}`.trim() : kind;
+      if (kind && val) {
+        return p.metricFullFmt
+          .replace("{kind}", kind)
+          .replace("{value}", val)
+          .replace("{unit}", s("unit") ?? "")
+          .trim();
+      }
+      return kind;
     }
     case "FOUNDER.UPSERTED":
     case "FOUNDER.REMOVED":
@@ -127,61 +80,82 @@ function describePayload(
     case "MILESTONE.UPSERTED":
       return s("title");
     case "RATE_LIMIT.HIT":
-      return s("reason") ? `Límite por ${s("reason")}` : null;
+      return s("reason") ? p.limitReasonFmt.replace("{reason}", s("reason")!) : null;
     case "EMAIL.FAILED":
-      return s("subject") ? `Falló: ${s("subject")}` : null;
+      return s("subject") ? p.emailFailedFmt.replace("{subject}", s("subject")!) : null;
     case "ADMIN_BROADCAST.SENT": {
       const count = n("recipientCount");
       const subj = s("subject");
-      if (count && subj) return `${count} destinatarios — “${subj}”`;
-      if (count) return `${count} destinatarios`;
-      return subj ? `“${subj}”` : null;
+      if (count && subj) {
+        return p.broadcastCountAndSubjectFmt
+          .replace("{n}", count)
+          .replace("{subject}", subj);
+      }
+      if (count) return p.broadcastCountFmt.replace("{n}", count);
+      return subj ? p.broadcastSubjectFmt.replace("{subject}", subj) : null;
     }
     case "PARTICIPATION.INVITED": {
       const shares = n("shareCount");
       const email = s("inviteeEmail");
-      if (shares && email) return `${shares} acciones a ${email}`;
-      if (shares) return `${shares} acciones`;
+      if (shares && email) {
+        return p.inviteSharesAndEmailFmt
+          .replace("{n}", shares)
+          .replace("{email}", email);
+      }
+      if (shares) return p.inviteSharesFmt.replace("{n}", shares);
       return email;
     }
     case "PARTICIPATION.ASSIGN_PROPOSED": {
       const shares = n("shareCount");
-      const source = s("source");
+      const src = sourceLabel(s("source"));
       const email = s("inviteEmail");
-      const srcLabel =
-        source === "INVITE" ? "invitación" : source === "LEAD" ? "lead" : null;
-      if (shares && srcLabel && email) {
-        return `${shares} acciones (${srcLabel}) — ${email}`;
+      if (shares && src && email) {
+        return p.assignSharesAndSourceAndEmailFmt
+          .replace("{n}", shares)
+          .replace("{source}", src)
+          .replace("{email}", email);
       }
-      if (shares && srcLabel) return `${shares} acciones (${srcLabel})`;
-      if (shares) return `${shares} acciones`;
+      if (shares && src) {
+        return p.assignSharesAndSourceFmt
+          .replace("{n}", shares)
+          .replace("{source}", src);
+      }
+      if (shares) return p.inviteSharesFmt.replace("{n}", shares);
       return null;
     }
     case "PARTICIPATION.ASSIGN_APPROVED": {
       const shares = n("shareCount");
-      const source = s("source");
-      const srcLabel =
-        source === "INVITE" ? "invitación" : source === "LEAD" ? "lead" : null;
-      if (shares && srcLabel) return `${shares} acciones (${srcLabel})`;
-      if (shares) return `${shares} acciones`;
+      const src = sourceLabel(s("source"));
+      if (shares && src) {
+        return p.assignSharesAndSourceFmt
+          .replace("{n}", shares)
+          .replace("{source}", src);
+      }
+      if (shares) return p.inviteSharesFmt.replace("{n}", shares);
       return null;
     }
     case "PARTICIPATION.ASSIGN_REJECTED": {
       const shares = n("shareCount");
       const note = s("note");
-      if (shares && note) return `${shares} acciones — “${note}”`;
-      if (shares) return `${shares} acciones`;
-      return note ? `“${note}”` : null;
+      if (shares && note) {
+        return p.assignSharesAndNoteFmt
+          .replace("{n}", shares)
+          .replace("{note}", note);
+      }
+      if (shares) return p.inviteSharesFmt.replace("{n}", shares);
+      return note ? p.noteFmt.replace("{note}", note) : null;
     }
     case "CHAT.POLL_CREATED": {
       const q = s("question");
       const cnt = n("optionsCount");
-      if (q && cnt) return `“${q}” · ${cnt} opciones`;
-      return q ? `“${q}”` : null;
+      if (q && cnt) {
+        return p.pollWithCountFmt.replace("{question}", q).replace("{n}", cnt);
+      }
+      return q ? p.pollQuestionFmt.replace("{question}", q) : null;
     }
     case "CHAT.MESSAGE_POSTED": {
       const has = payload.hasAttachment === true;
-      return has ? "Con archivo adjunto" : null;
+      return has ? p.chatWithAttachment : null;
     }
     default:
       return null;
@@ -199,6 +173,9 @@ export default async function AdminAuditPage({
   searchParams: Promise<SearchParams>;
 }) {
   await requireRole(["ADMIN"]);
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.adminAuditoria;
   const sp = await searchParams;
 
   const actor = (sp.actor ?? "").trim();
@@ -231,26 +208,36 @@ export default async function AdminAuditPage({
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const countLabel = (total === 1 ? t.countSingle : t.countPlural).replace(
+    "{n}",
+    total.toLocaleString(locale)
+  );
+  const pageLabel = t.pageFmt
+    .replace("{page}", String(page))
+    .replace("{total}", String(totalPages));
 
   return (
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
-        <p className="eyebrow">— Admin</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Bitácora del sistema</h1>
+        <p className="eyebrow">{t.eyebrow}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
         <p className="mt-3 font-mono text-sm text-navy/50">
-          {total.toLocaleString("es-MX")} evento{total === 1 ? "" : "s"}
-          {totalPages > 1 ? ` · página ${page}/${totalPages}` : ""}
+          {countLabel}
+          {totalPages > 1 ? ` · ${pageLabel}` : ""}
         </p>
       </header>
 
       {/* Búsqueda por actor — instantánea, sin botón */}
       <div className="mt-2">
-        <AuditSearch />
+        <AuditSearch
+          label={t.searchLabel}
+          clearLabel={t.clearBtn}
+        />
       </div>
 
       {logs.length === 0 ? (
         <p className="mt-6 text-navy/60">
-          {actor ? "Sin eventos para ese actor." : "Todavía no hay eventos."}
+          {actor ? t.emptyNoActor : t.emptyAll}
         </p>
       ) : (
         <ul className="mt-6 hairline-t">
@@ -259,18 +246,18 @@ export default async function AdminAuditPage({
               l.payload && typeof l.payload === "object"
                 ? (l.payload as Record<string, unknown>)
                 : null;
-            const detail = describePayload(l.action, payload);
+            const detail = describePayload(l.action, payload, t.payload, locale);
             const who = l.actor
               ? `${l.actor.fullName ?? l.actor.email} · ${l.actor.role}`
-              : "Sistema";
+              : t.systemActor;
             return (
               <li key={l.id} className="hairline-b py-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-sans text-navy">
-                    {ACTION_LABEL[l.action] ?? l.action}
+                    {t.actions[l.action] ?? l.action}
                   </p>
                   <p className="eyebrow font-mono shrink-0 !text-navy/40">
-                    {formatDate(l.createdAt)} ·{" "}
+                    {formatDate(l.createdAt, locale)} ·{" "}
                     {l.createdAt.toISOString().slice(11, 16)}
                   </p>
                 </div>
@@ -299,7 +286,7 @@ export default async function AdminAuditPage({
 
       {totalPages > 1 && (
         <div className="mt-8 flex items-center justify-between hairline-t pt-6">
-          <PageLink page={page - 1} disabled={page <= 1} actor={actor} label="← Anterior" />
+          <PageLink page={page - 1} disabled={page <= 1} actor={actor} label={t.pagPrev} />
           <p className="eyebrow font-mono">
             {page} / {totalPages}
           </p>
@@ -307,7 +294,7 @@ export default async function AdminAuditPage({
             page={page + 1}
             disabled={page >= totalPages}
             actor={actor}
-            label="Siguiente →"
+            label={t.pagNext}
           />
         </div>
       )}
