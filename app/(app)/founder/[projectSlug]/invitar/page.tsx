@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { getDict } from "@/lib/i18n";
+import { getDict, getLocale } from "@/lib/i18n";
 import { getProjectAccess } from "@/lib/services/project-access";
 import { getAvailableSharesForProposal } from "@/lib/services/pending-assignment";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
@@ -17,6 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function InvitarMiembroPage({ params }: Params) {
   const user = await requireSession();
+  const dict = await getDict();
+  const locale = await getLocale();
+  const t = dict.founderInvitar;
   const { projectSlug } = await params;
 
   const project = await prisma.project.findUnique({
@@ -36,7 +39,6 @@ export default async function InvitarMiembroPage({ params }: Params) {
     notFound();
   }
 
-  // Disponibles para proponer = pool AVAILABLE − propuestas PENDING ya hechas.
   const availableShares = await getAvailableSharesForProposal(project.id);
 
   return (
@@ -45,19 +47,23 @@ export default async function InvitarMiembroPage({ params }: Params) {
         projectName={project.name}
         projectSlug={project.slug}
         projectStatus={project.status}
-        section="Invitar miembro"
-        description="Proponé agregar un socio a tu proyecto. La propuesta queda pendiente de validación por el equipo de AJDUT. Cuando un admin la apruebe se crea la cuenta (si hace falta), se asignan las acciones desde el pool y se le envía el email al invitado."
+        section={t.section}
+        description={t.description}
       />
 
-      {/* KPI compacto del pool disponible — el dato más importante acá. */}
       <div className="mt-8 hairline bg-paper p-5 flex flex-wrap items-baseline justify-between gap-4">
-        <p className="eyebrow">— Pool disponible para proponer</p>
+        <p className="eyebrow">{t.poolLabel}</p>
         <p className="font-mono text-h2 text-navy leading-none">
-          {availableShares.toLocaleString("es-MX")}
+          {availableShares.toLocaleString(locale)}
         </p>
       </div>
 
-      <InvitarForm projectSlug={project.slug} availableShares={availableShares} />
+      <InvitarForm
+        projectSlug={project.slug}
+        availableShares={availableShares}
+        dict={t}
+        locale={locale}
+      />
     </div>
   );
 }

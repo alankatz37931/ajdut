@@ -1,12 +1,17 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { inviteMemberAction } from "./actions";
 import { FloatingInput, FloatingTextarea } from "@/components/ui/Floating";
+
+type InvitarDict = Dict["founderInvitar"];
 
 type Props = {
   projectSlug: string;
   availableShares: number;
+  dict: InvitarDict;
+  locale: string;
 };
 
 type SuccessState = {
@@ -16,7 +21,12 @@ type SuccessState = {
   fullName: string;
 };
 
-export function InvitarForm({ projectSlug, availableShares }: Props) {
+export function InvitarForm({
+  projectSlug,
+  availableShares,
+  dict,
+  locale,
+}: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<SuccessState | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -52,7 +62,7 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
         id="email"
         type="email"
         inputMode="email"
-        label="Email del invitado"
+        label={dict.emailLabel}
         value={email}
         onChange={setEmail}
         required
@@ -61,37 +71,42 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
       <div>
         <FloatingInput
           id="fullName"
-          label="Nombre completo"
+          label={dict.fullNameLabel}
           value={fullName}
           onChange={setFullName}
           maxLength={120}
           required
         />
-        <p className="eyebrow !text-navy/50 mt-1.5">
-          Se usa para crear la cuenta si el email no está registrado todavía.
-        </p>
+        <p className="eyebrow !text-navy/50 mt-1.5">{dict.fullNameHelper}</p>
       </div>
 
       <div>
         <FloatingInput
           id="shareCount"
           type="number"
-          label="Acciones a asignar"
+          label={dict.sharesLabel}
           value={shareCount}
           onChange={setShareCount}
           required
         />
         <p className="eyebrow !text-navy/50 mt-1.5">
-          Disponibles ahora:{" "}
-          <span className="font-mono text-navy">
-            {availableShares.toLocaleString("es-MX")}
-          </span>
+          {dict.sharesAvailableFmt
+            .split(/(\{n\})/)
+            .map((part, i) =>
+              part === "{n}" ? (
+                <span key={i} className="font-mono text-navy">
+                  {availableShares.toLocaleString(locale)}
+                </span>
+              ) : (
+                <span key={i}>{part}</span>
+              )
+            )}
         </p>
       </div>
 
       <FloatingTextarea
         id="message"
-        label="Mensaje (opcional)"
+        label={dict.messageLabel}
         value={message}
         onChange={setMessage}
         rows={5}
@@ -105,27 +120,33 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
       )}
       {success && (
         <div className="hairline p-3 bg-paper-light" role="status">
-          <p className="eyebrow !text-gold">
-            Invitación propuesta — esperando validación del admin
-          </p>
+          <p className="eyebrow !text-gold">{dict.successEyebrow}</p>
           <p className="mt-2 text-sm text-navy/75">
-            Propusiste asignar{" "}
-            <span className="font-mono text-navy">
-              {success.shareCount.toLocaleString("es-MX")}
-            </span>{" "}
-            acciones a <span className="text-navy">{success.fullName}</span> ({success.email}).
-            El equipo de AJDUT recibió el aviso. Cuando lo aprueben, se va a crear
-            la cuenta (si hace falta), se va a emitir el certificado y vamos a
-            avisarle al invitado por email.
+            {dict.successBodyFmt
+              .split(/(\{n\}|\{name\}|\{email\})/)
+              .map((part, i) => {
+                if (part === "{n}")
+                  return (
+                    <span key={i} className="font-mono text-navy">
+                      {success.shareCount.toLocaleString(locale)}
+                    </span>
+                  );
+                if (part === "{name}")
+                  return (
+                    <span key={i} className="text-navy">
+                      {success.fullName}
+                    </span>
+                  );
+                if (part === "{email}")
+                  return <span key={i}>{success.email}</span>;
+                return <span key={i}>{part}</span>;
+              })}
           </p>
         </div>
       )}
 
       {availableShares === 0 && (
-        <p className="eyebrow !text-navy/60">
-          No hay acciones disponibles en el pool. Para invitar nuevos miembros, primero
-          recuperá acciones desde el pool del proyecto.
-        </p>
+        <p className="eyebrow !text-navy/60">{dict.emptyPool}</p>
       )}
 
       <div className="flex flex-wrap items-center gap-4">
@@ -134,12 +155,9 @@ export function InvitarForm({ projectSlug, availableShares }: Props) {
           disabled={isPending || availableShares === 0}
           className="btn-primary disabled:opacity-50"
         >
-          {isPending ? "Enviando…" : "Proponer al admin →"}
+          {isPending ? dict.sendingBtn : dict.sendBtn}
         </button>
-        <span className="eyebrow !text-navy/40">
-          La propuesta queda pendiente. Recién cuando el admin la valida se crea
-          la cuenta, se asignan las acciones y se le avisa al invitado.
-        </span>
+        <span className="eyebrow !text-navy/40">{dict.disclaimer}</span>
       </div>
     </form>
   );

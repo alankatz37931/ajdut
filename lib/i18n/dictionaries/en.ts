@@ -1317,6 +1317,29 @@ export const dict: Dict = {
     },
   },
 
+  founderInvitar: {
+    section: "Invite member",
+    description:
+      "Propose adding a member to your project. The proposal stays pending validation from the AJDUT team. When an admin approves it, the account is created (if needed), shares are assigned from the pool and an email is sent to the invitee.",
+    poolLabel: "— Pool available to propose",
+    emailLabel: "Invitee email",
+    fullNameLabel: "Full name",
+    fullNameHelper:
+      "Used to create the account if the email isn't registered yet.",
+    sharesLabel: "Shares to assign",
+    sharesAvailableFmt: "Available now: {n}",
+    messageLabel: "Message (optional)",
+    successEyebrow: "Invitation proposed — awaiting admin validation",
+    successBodyFmt:
+      "You proposed assigning {n} shares to {name} ({email}). The AJDUT team received the notice. Once approved, the account will be created (if needed), the certificate will be issued and we'll email the invitee.",
+    emptyPool:
+      "No shares available in the pool. To invite new members, first recover shares from the project pool.",
+    sendBtn: "Propose to admin →",
+    sendingBtn: "Sending…",
+    disclaimer:
+      "The proposal stays pending. Only when the admin validates it the account is created, shares are assigned, and the invitee is notified.",
+  },
+
   founderLeads: {
     section: "Purchase interest",
     description:

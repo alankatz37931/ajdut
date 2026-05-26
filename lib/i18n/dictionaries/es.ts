@@ -1325,6 +1325,29 @@ export const dict = {
     },
   },
 
+  founderInvitar: {
+    section: "Invitar miembro",
+    description:
+      "Proponé agregar un socio a tu proyecto. La propuesta queda pendiente de validación por el equipo de AJDUT. Cuando un admin la apruebe se crea la cuenta (si hace falta), se asignan las acciones desde el pool y se le envía el email al invitado.",
+    poolLabel: "— Pool disponible para proponer",
+    emailLabel: "Email del invitado",
+    fullNameLabel: "Nombre completo",
+    fullNameHelper:
+      "Se usa para crear la cuenta si el email no está registrado todavía.",
+    sharesLabel: "Acciones a asignar",
+    sharesAvailableFmt: "Disponibles ahora: {n}",
+    messageLabel: "Mensaje (opcional)",
+    successEyebrow: "Invitación propuesta — esperando validación del admin",
+    successBodyFmt:
+      "Propusiste asignar {n} acciones a {name} ({email}). El equipo de AJDUT recibió el aviso. Cuando lo aprueben, se va a crear la cuenta (si hace falta), se va a emitir el certificado y vamos a avisarle al invitado por email.",
+    emptyPool:
+      "No hay acciones disponibles en el pool. Para invitar nuevos miembros, primero recuperá acciones desde el pool del proyecto.",
+    sendBtn: "Proponer al admin →",
+    sendingBtn: "Enviando…",
+    disclaimer:
+      "La propuesta queda pendiente. Recién cuando el admin la valida se crea la cuenta, se asignan las acciones y se le avisa al invitado.",
+  },
+
   founderLeads: {
     section: "Interés de compra",
     description:
