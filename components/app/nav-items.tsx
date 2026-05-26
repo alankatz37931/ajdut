@@ -208,7 +208,7 @@ export async function navItemsFor(
     const ownsShares = await fetchOwnsShares();
     return [
       { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
-      { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
+      { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
       // Documentos / Historial solo si el founder tiene shares de algún otro
       // proyecto (rol mixto). Como dueño del proyecto los ve dentro de la
       // propia ficha founder, no globalmente.
@@ -221,7 +221,7 @@ export async function navItemsFor(
   }
   if (role === "PARTNER") {
     return [
-      { label: n.explore, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
+      { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
       { label: n.myParticipations, href: "/partner" as Route, group: SEC_PORTFOLIO, icon: <ParticipationsIcon /> },
       documentosItem,
       historialItem,
