@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import type { Dict } from "@/lib/i18n";
-import { countRecipientsAction, sendAdminBroadcastAction } from "./actions";
+import { sendAdminBroadcastAction } from "./actions";
 import {
   FloatingInput,
   FloatingSelect,
@@ -18,9 +18,8 @@ type Props = {
   locale: string;
 };
 
-type CountState = { count: number; stale: boolean } | null;
-
 export function AdminAvisoForm({ projects, dict, locale }: Props) {
+  void locale;
   const ROLES = [
     { value: "ADMIN", label: dict.roleAdmin },
     { value: "PROJECT_OWNER", label: dict.roleProjectOwner },
@@ -30,35 +29,15 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<number | null>(null);
-  const [countState, setCountState] = useState<CountState>(null);
-  const [isCounting, startCount] = useTransition();
   const [isSending, startSend] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [projectId, setProjectId] = useState("");
 
-  function markStale() {
+  function clearStatus() {
     setSuccess(null);
     setError(null);
-    setCountState((c) => (c ? { ...c, stale: true } : c));
-  }
-
-  function onCount() {
-    setError(null);
-    setSuccess(null);
-    const form = formRef.current;
-    if (!form) return;
-    const fd = new FormData(form);
-    startCount(async () => {
-      const r = await countRecipientsAction(fd);
-      if (!r.ok) {
-        setError(r.error);
-        setCountState(null);
-        return;
-      }
-      setCountState({ count: r.count, stale: false });
-    });
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -69,10 +48,6 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
       setError(dict.errEmpty);
       return;
     }
-    if (!countState || countState.stale) {
-      setError(dict.errNotCounted);
-      return;
-    }
     const fd = new FormData(e.currentTarget);
     startSend(async () => {
       const r = await sendAdminBroadcastAction(fd);
@@ -81,7 +56,6 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
         return;
       }
       setSuccess(r.count);
-      setCountState(null);
       setSubject("");
       setBody("");
       setProjectId("");
@@ -90,25 +64,7 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
   }
 
   const canSend =
-    !!countState &&
-    !countState.stale &&
-    countState.count > 0 &&
-    !isSending;
-
-  const countLabel = countState
-    ? (countState.count === 1
-        ? dict.countResultSingle
-        : dict.countResultPlural
-      ).replace("{n}", countState.count.toLocaleString(locale))
-    : "";
-
-  const sendBtnLabel =
-    countState && !countState.stale
-      ? (countState.count === 1
-          ? dict.sendBtnFmtSingle
-          : dict.sendBtnFmt
-        ).replace("{n}", String(countState.count))
-      : dict.sendBtnIdle;
+    !isSending && subject.trim().length > 0 && body.trim().length > 0;
 
   return (
     <form ref={formRef} onSubmit={onSubmit}>
@@ -129,7 +85,7 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
                     type="checkbox"
                     name="roles"
                     value={r.value}
-                    onChange={markStale}
+                    onChange={clearStatus}
                     disabled={isSending}
                     className="accent-navy"
                   />
@@ -147,7 +103,7 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
                 name="onlyActive"
                 value="true"
                 defaultChecked
-                onChange={markStale}
+                onChange={clearStatus}
                 disabled={isSending}
                 className="accent-navy"
               />
@@ -164,7 +120,7 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
               value={projectId}
               onChange={(v) => {
                 setProjectId(v);
-                markStale();
+                clearStatus();
               }}
               disabled={isSending}
               options={[
@@ -208,23 +164,6 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
         <SectionHeader n="03" title={dict.sectionSend} />
 
         <div className="mt-6 space-y-5">
-          <div className="flex flex-wrap items-center gap-4">
-            <button
-              type="button"
-              onClick={onCount}
-              disabled={isCounting || isSending}
-              className="btn-outline disabled:opacity-50"
-            >
-              {isCounting ? dict.countingBtn : dict.countBtn}
-            </button>
-            {countState && !countState.stale && (
-              <span className="eyebrow !text-navy">{countLabel}</span>
-            )}
-            {countState?.stale && (
-              <span className="eyebrow !text-navy/50">{dict.countStale}</span>
-            )}
-          </div>
-
           {error && (
             <p className="eyebrow !text-navy" role="alert">
               {error}
@@ -239,13 +178,13 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
             </p>
           )}
 
-          <div className="flex flex-wrap items-center gap-4 pt-1">
+          <div className="flex flex-wrap items-center gap-4">
             <button
               type="submit"
               disabled={!canSend}
               className="btn-primary disabled:opacity-50"
             >
-              {isSending ? dict.sendingBtn : sendBtnLabel}
+              {isSending ? dict.sendingBtn : dict.sendBtnIdle}
             </button>
             <span className="eyebrow !text-navy/40">{dict.sendDisclaimer}</span>
           </div>
