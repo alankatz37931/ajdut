@@ -3,13 +3,30 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { DomainError } from "@/lib/services/errors";
 import {
   upsertFounder,
   removeFounder,
 } from "@/lib/services/project-content";
 import { normalizeOptionalUrl } from "@/lib/utils/url";
 
-type Result = { ok: true } | { ok: false; error: string; field?: string };
+type Result =
+  | { ok: true }
+  | { ok: false; error: string; code?: string; field?: string };
+
+/**
+ * DomainError → message + code + field (si vino en details).
+ * Cualquier otro Error → log servidor + mensaje genérico, para no filtrar
+ * códigos Prisma ni nombres de tabla al cliente.
+ */
+function toFailure(e: unknown, tag: string): Extract<Result, { ok: false }> {
+  if (e instanceof DomainError) {
+    const field = (e.details as { field?: string } | undefined)?.field;
+    return { ok: false, error: e.message, code: e.code, field };
+  }
+  console.error(`[equipo:${tag}]`, e);
+  return { ok: false, error: "Error inesperado." };
+}
 
 async function resolveProjectId(slug: string, ownerId: string) {
   const project = await prisma.project.findUnique({
@@ -66,8 +83,7 @@ export async function upsertFounderAction(
     revalidatePath(`/proyectos/${projectSlug}`);
     return { ok: true };
   } catch (e) {
-    const err = e as { message?: string; field?: string };
-    return { ok: false, error: err.message ?? "Error inesperado.", field: err.field };
+    return toFailure(e, "upsertFounderAction");
   }
 }
 
@@ -86,7 +102,6 @@ export async function removeFounderAction(
     revalidatePath(`/proyectos/${projectSlug}`);
     return { ok: true };
   } catch (e) {
-    const err = e as { message?: string };
-    return { ok: false, error: err.message ?? "Error inesperado." };
+    return toFailure(e, "removeFounderAction");
   }
 }

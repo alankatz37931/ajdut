@@ -17,7 +17,16 @@ export default function MarketingError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[marketing-error]", error);
+    // Sentry defensivo: si la próxima ola de observability inyectó el SDK,
+    // reportamos el crash; si no, fallback a console.error. Evita tener que
+    // reescribir las boundaries cuando Sentry se active.
+    const sentry = (globalThis as { Sentry?: { captureException?: (err: unknown) => void } })
+      .Sentry;
+    if (sentry?.captureException) {
+      sentry.captureException(error);
+    } else {
+      console.error("[marketing-error]", error);
+    }
   }, [error]);
 
   const dict = getErrorBoundaryDict();

@@ -253,6 +253,15 @@ export const dict = {
     founderHitos: "Hitos · AJDUT",
     founderInvitar: "Invitar miembro · AJDUT",
     founderMetricas: "Métricas · AJDUT",
+    home: "AJDUT",
+    founderHome: "Founder · AJDUT",
+    partner: "Socio · AJDUT",
+    proyectos: "Proyectos · AJDUT",
+    proyectoDetailFallback: "Proyecto · AJDUT",
+    founderDashboardFallback: "Founder · AJDUT",
+    founderLeadsFallback: "Leads · Founder · AJDUT",
+    adminApplicationDetail: "Aplicación · Admin · AJDUT",
+    adminProjects: "Proyectos · Admin · AJDUT",
   },
 
   recoveryPassword: {

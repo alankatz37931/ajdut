@@ -22,7 +22,13 @@ const STATUS_LABEL: Record<string, string> = {
 
 function csvEscape(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
-  const s = String(value);
+  let s = String(value);
+  // CSV injection: si la celda arranca con =, +, -, @, \t o \r, Excel/Sheets
+  // la interpreta como fórmula y la ejecuta al abrir. Prependemos comilla
+  // simple para neutralizar — el receptor ve el contenido literal.
+  if (/^[=+\-@\t\r]/.test(s)) {
+    s = "'" + s;
+  }
   // Comillas dobles, comas y saltos de línea fuerzan el quoting.
   if (/[",\n\r]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;

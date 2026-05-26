@@ -10,6 +10,7 @@ import {
   FloatingTextarea,
   FloatingDate,
 } from "@/components/ui/Floating";
+import { SYMBOL } from "@/lib/utils/status-symbols";
 
 type Status = "PLANNED" | "IN_PROGRESS" | "ACHIEVED" | "DELAYED" | "CANCELLED";
 type HitosDict = Dict["founderHitos"];
@@ -23,12 +24,13 @@ type Milestone = {
   achievedAt: string;
 };
 
+// Paleta canónica en `@/lib/utils/status-symbols`.
 const STATUS_SYMBOL: Record<Status, string> = {
-  PLANNED: "○",
-  IN_PROGRESS: "◐",
-  ACHIEVED: "●",
-  DELAYED: "◇",
-  CANCELLED: "✕",
+  PLANNED: SYMBOL.open,
+  IN_PROGRESS: SYMBOL.prog,
+  ACHIEVED: SYMBOL.done,
+  DELAYED: SYMBOL.delay,
+  CANCELLED: SYMBOL.reject,
 };
 
 const empty: Milestone = {

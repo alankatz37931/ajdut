@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { updateProjectInfoAction } from "./actions";
 import { derivePriceAndShares } from "@/lib/utils/shares";
@@ -45,6 +45,24 @@ type Initial = {
   availableShares: number;
 };
 
+// Hoisted fuera del render: solo ids + dict-keys. Los labels se resuelven
+// con `useMemo` dentro del componente. Antes se reconstruían arrays nuevos
+// en cada keystroke (form con 25+ inputs).
+const STAGE_DEFS: Array<{ id: Initial["stage"]; key: keyof EditDict }> = [
+  { id: "IDEA", key: "stageIdea" },
+  { id: "PRE_SEED", key: "stagePreSeed" },
+  { id: "SEED", key: "stageSeed" },
+  { id: "EARLY_REVENUE", key: "stageEarlyRevenue" },
+  { id: "GROWTH", key: "stageGrowth" },
+  { id: "SCALE", key: "stageScale" },
+];
+
+const KIND_DEFS: Array<{ id: Initial["kind"]; key: keyof EditDict }> = [
+  { id: "REAL_ESTATE", key: "kindRealEstate" },
+  { id: "MERCHANDISE", key: "kindMerchandise" },
+  { id: "STARTUP", key: "kindOther" },
+];
+
 export function EditProjectForm({
   projectSlug,
   initial,
@@ -71,20 +89,22 @@ export function EditProjectForm({
   );
   const { run, isPending, error } = useSafeAction(boundAction);
 
-  const STAGES: Array<{ id: Initial["stage"]; label: string }> = [
-    { id: "IDEA", label: dict.stageIdea },
-    { id: "PRE_SEED", label: dict.stagePreSeed },
-    { id: "SEED", label: dict.stageSeed },
-    { id: "EARLY_REVENUE", label: dict.stageEarlyRevenue },
-    { id: "GROWTH", label: dict.stageGrowth },
-    { id: "SCALE", label: dict.stageScale },
-  ];
-
-  const KINDS: Array<{ id: Initial["kind"]; label: string }> = [
-    { id: "REAL_ESTATE", label: dict.kindRealEstate },
-    { id: "MERCHANDISE", label: dict.kindMerchandise },
-    { id: "STARTUP", label: dict.kindOther },
-  ];
+  // Labels resueltos del dict — recomputa solo si el dict cambia.
+  const STAGES = useMemo(
+    () => STAGE_DEFS.map((s) => ({ value: s.id, label: dict[s.key] })),
+    [dict]
+  );
+  const KINDS = useMemo(
+    () => KIND_DEFS.map((k) => ({ value: k.id, label: dict[k.key] })),
+    [dict]
+  );
+  const CURRENCY_OPTS = useMemo(
+    () => [
+      { value: "USD", label: dict.currencyUsd },
+      { value: "MXN", label: dict.currencyMxn },
+    ],
+    [dict.currencyUsd, dict.currencyMxn]
+  );
 
   function update<K extends keyof Initial>(key: K, value: Initial[K]) {
     setForm((p) => ({ ...p, [key]: value }));
@@ -146,7 +166,7 @@ export function EditProjectForm({
                   label={dict.kindLabel}
                   value={form.kind}
                   onChange={(v) => update("kind", v as Initial["kind"])}
-                  options={KINDS.map((k) => ({ value: k.id, label: k.label }))}
+                  options={KINDS}
                 />
                 <input type="hidden" name="kind" value={form.kind} />
               </div>
@@ -170,7 +190,7 @@ export function EditProjectForm({
                   label={dict.stageLabel}
                   value={form.stage}
                   onChange={(v) => update("stage", v as Initial["stage"])}
-                  options={STAGES.map((s) => ({ value: s.id, label: s.label }))}
+                  options={STAGES}
                 />
                 <input type="hidden" name="stage" value={form.stage} />
               </div>
@@ -343,10 +363,7 @@ export function EditProjectForm({
                   label={dict.currencyLabel}
                   value={form.valuationCurrency}
                   onChange={(v) => update("valuationCurrency", v)}
-                  options={[
-                    { value: "USD", label: dict.currencyUsd },
-                    { value: "MXN", label: dict.currencyMxn },
-                  ]}
+                  options={CURRENCY_OPTS}
                 />
                 <input
                   type="hidden"

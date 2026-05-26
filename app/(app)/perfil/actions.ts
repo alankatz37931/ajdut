@@ -108,7 +108,7 @@ export async function changePasswordAction(formData: FormData): Promise<ProfileR
     return { ok: false, error: e.pwCurrentWrong, field: "currentPassword" };
   }
 
-  const hash = await bcrypt.hash(next, 10);
+  const hash = await bcrypt.hash(next, 12);
   await prisma.user.update({
     where: { id: user.id },
     data: { passwordHash: hash },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { createProjectAction } from "./actions";
 import { derivePriceAndShares } from "@/lib/utils/shares";
@@ -15,6 +15,53 @@ type NewDict = Dict["founderNuevoProyecto"];
 type Kind = "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER";
 type Stage = "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
 
+// Hoisted fuera del render: solo ids + dict-keys, sin labels resueltos
+// (los labels vienen del dict y se resuelven con `useMemo`). Antes esto se
+// reconstruía en cada keystroke del form (20+ inputs).
+const STAGE_DEFS: Array<{ id: Stage; key: keyof NewDict }> = [
+  { id: "IDEA", key: "stageIdea" },
+  { id: "PRE_SEED", key: "stagePreSeed" },
+  { id: "SEED", key: "stageSeed" },
+  { id: "EARLY_REVENUE", key: "stageEarlyRevenue" },
+  { id: "GROWTH", key: "stageGrowth" },
+  { id: "SCALE", key: "stageScale" },
+];
+const KIND_DEFS: Array<{ id: Kind; key: keyof NewDict }> = [
+  { id: "REAL_ESTATE", key: "kindRealEstate" },
+  { id: "MERCHANDISE", key: "kindMerchandise" },
+  { id: "STARTUP", key: "kindOther" },
+];
+
+type FormState = {
+  name: string;
+  legalName: string;
+  jurisdiction: string;
+  kind: Kind;
+  sector: string;
+  stage: Stage;
+  location: string;
+  targetRaiseAmount: string;
+  oneLiner: string;
+  description: string;
+  problemStatement: string;
+  solutionStatement: string;
+  businessModel: string;
+  preMoneyValuation: string;
+  valuationCurrency: "USD" | "MXN";
+  websiteUrl: string;
+  videoUrl: string;
+  assetBackingNote: string;
+  equityStructureNote: string;
+  projectionsUrl: string;
+  planNegociosUrl: string;
+  estrategiasPeriodicasUrl: string;
+  estadosFinancierosUrl: string;
+  estrategiaEmisionUrl: string;
+  policyShares: string;
+  policyDividends: string;
+  dividendsFrequency: string;
+};
+
 export function NewProjectForm({
   dict,
   locale,
@@ -22,27 +69,13 @@ export function NewProjectForm({
   dict: NewDict;
   locale: string;
 }) {
-  const STAGES: Array<{ id: Stage; label: string }> = [
-    { id: "IDEA", label: dict.stageIdea },
-    { id: "PRE_SEED", label: dict.stagePreSeed },
-    { id: "SEED", label: dict.stageSeed },
-    { id: "EARLY_REVENUE", label: dict.stageEarlyRevenue },
-    { id: "GROWTH", label: dict.stageGrowth },
-    { id: "SCALE", label: dict.stageScale },
-  ];
-  const KINDS: Array<{ id: Kind; label: string }> = [
-    { id: "REAL_ESTATE", label: dict.kindRealEstate },
-    { id: "MERCHANDISE", label: dict.kindMerchandise },
-    { id: "STARTUP", label: dict.kindOther },
-  ];
-
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     name: "",
     legalName: "",
     jurisdiction: "",
-    kind: "STARTUP" as Kind,
+    kind: "STARTUP",
     sector: "",
-    stage: "IDEA" as Stage,
+    stage: "IDEA",
     location: "",
     targetRaiseAmount: "",
     oneLiner: "",
@@ -51,7 +84,7 @@ export function NewProjectForm({
     solutionStatement: "",
     businessModel: "",
     preMoneyValuation: "",
-    valuationCurrency: "USD" as "USD" | "MXN",
+    valuationCurrency: "USD",
     websiteUrl: "",
     videoUrl: "",
     assetBackingNote: "",
@@ -71,9 +104,49 @@ export function NewProjectForm({
   const valuationValid = Number.isFinite(valuation) && valuation > 0;
   const derived = valuationValid ? derivePriceAndShares(valuation) : null;
 
-  function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
-    setForm((p) => ({ ...p, [k]: v }));
-  }
+  // `update` con identidad estable — sin esto, cada keystroke creaba un
+  // nuevo `update` y cada arrow `(v) => update(...)` también, rompiendo el
+  // memo de las primitivas Floating.
+  const update = useCallback(
+    <K extends keyof FormState>(k: K, v: FormState[K]) => {
+      setForm((p) => ({ ...p, [k]: v }));
+    },
+    []
+  );
+
+  // Factory de handlers `onChange` por campo, memoizada. Cada `field`
+  // produce un handler estable mientras el componente esté montado.
+  // Esto, combinado con `React.memo` en las primitivas, evita que cada
+  // keystroke re-renderice los ~25 campos del form.
+  const handlerCache = useMemo(() => new Map<keyof FormState, (v: unknown) => void>(), []);
+  const handler = useCallback(
+    <K extends keyof FormState>(field: K): ((v: FormState[K]) => void) => {
+      const cached = handlerCache.get(field);
+      if (cached) return cached as (v: FormState[K]) => void;
+      const fn = (v: FormState[K]) => update(field, v);
+      handlerCache.set(field, fn as (v: unknown) => void);
+      return fn;
+    },
+    [handlerCache, update]
+  );
+
+  // Labels resueltos del dict — recomputa solo si el dict cambia
+  // (prácticamente nunca durante el ciclo del form).
+  const STAGES = useMemo(
+    () => STAGE_DEFS.map((s) => ({ value: s.id, label: dict[s.key] })),
+    [dict]
+  );
+  const KINDS = useMemo(
+    () => KIND_DEFS.map((k) => ({ value: k.id, label: dict[k.key] })),
+    [dict]
+  );
+  const CURRENCY_OPTS = useMemo(
+    () => [
+      { value: "USD", label: dict.currencyUsd },
+      { value: "MXN", label: dict.currencyMxn },
+    ],
+    [dict.currencyUsd, dict.currencyMxn]
+  );
 
   const fmtMoney = (n: number) =>
     new Intl.NumberFormat(locale, {
@@ -93,7 +166,7 @@ export function NewProjectForm({
           id="name"
           label={dict.nameLabel}
           value={form.name}
-          onChange={(v) => update("name", v)}
+          onChange={handler("name")}
           required
         />
 
@@ -102,7 +175,7 @@ export function NewProjectForm({
             id="oneLiner"
             label={dict.oneLinerLabel}
             value={form.oneLiner}
-            onChange={(v) => update("oneLiner", v)}
+            onChange={handler("oneLiner")}
             maxLength={160}
             required
           />
@@ -115,7 +188,7 @@ export function NewProjectForm({
           id="description"
           label={dict.descriptionLabel}
           value={form.description}
-          onChange={(v) => update("description", v)}
+          onChange={handler("description")}
           rows={5}
           required
         />
@@ -130,7 +203,7 @@ export function NewProjectForm({
               id="legalName"
               label={dict.legalNameLabel}
               value={form.legalName}
-              onChange={(v) => update("legalName", v)}
+              onChange={handler("legalName")}
             />
             <p className="eyebrow !text-navy/40 mt-1.5">{dict.legalNameHelper}</p>
           </div>
@@ -138,7 +211,7 @@ export function NewProjectForm({
             id="jurisdiction"
             label={dict.jurisdictionLabel}
             value={form.jurisdiction}
-            onChange={(v) => update("jurisdiction", v)}
+            onChange={handler("jurisdiction")}
             required
           />
         </div>
@@ -153,8 +226,8 @@ export function NewProjectForm({
               id="kind"
               label={dict.kindLabel}
               value={form.kind}
-              onChange={(v) => update("kind", v as Kind)}
-              options={KINDS.map((k) => ({ value: k.id, label: k.label }))}
+              onChange={handler("kind") as (v: string) => void}
+              options={KINDS}
             />
             <input type="hidden" name="kind" value={form.kind} />
           </div>
@@ -162,7 +235,7 @@ export function NewProjectForm({
             id="location"
             label={dict.locationLabel}
             value={form.location}
-            onChange={(v) => update("location", v)}
+            onChange={handler("location")}
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
@@ -170,7 +243,7 @@ export function NewProjectForm({
             id="sector"
             label={dict.sectorLabel}
             value={form.sector}
-            onChange={(v) => update("sector", v)}
+            onChange={handler("sector")}
             required
           />
           <div>
@@ -178,8 +251,8 @@ export function NewProjectForm({
               id="stage"
               label={dict.stageLabel}
               value={form.stage}
-              onChange={(v) => update("stage", v as Stage)}
-              options={STAGES.map((s) => ({ value: s.id, label: s.label }))}
+              onChange={handler("stage") as (v: string) => void}
+              options={STAGES}
             />
             <input type="hidden" name="stage" value={form.stage} />
           </div>
@@ -190,7 +263,7 @@ export function NewProjectForm({
           inputMode="url"
           label={dict.websiteLabel}
           value={form.websiteUrl}
-          onChange={(v) => update("websiteUrl", v)}
+          onChange={handler("websiteUrl")}
         />
       </section>
 
@@ -201,7 +274,7 @@ export function NewProjectForm({
           id="problemStatement"
           label={dict.problemLabel}
           value={form.problemStatement}
-          onChange={(v) => update("problemStatement", v)}
+          onChange={handler("problemStatement")}
           rows={3}
           required
         />
@@ -209,7 +282,7 @@ export function NewProjectForm({
           id="solutionStatement"
           label={dict.solutionLabel}
           value={form.solutionStatement}
-          onChange={(v) => update("solutionStatement", v)}
+          onChange={handler("solutionStatement")}
           rows={3}
           required
         />
@@ -217,7 +290,7 @@ export function NewProjectForm({
           id="businessModel"
           label={dict.businessModelLabel}
           value={form.businessModel}
-          onChange={(v) => update("businessModel", v)}
+          onChange={handler("businessModel")}
           rows={2}
           required
         />
@@ -230,7 +303,7 @@ export function NewProjectForm({
           id="assetBackingNote"
           label={dict.assetBackingLabel}
           value={form.assetBackingNote}
-          onChange={(v) => update("assetBackingNote", v)}
+          onChange={handler("assetBackingNote")}
           rows={3}
           maxLength={2000}
         />
@@ -238,7 +311,7 @@ export function NewProjectForm({
           id="equityStructureNote"
           label={dict.equityStructureLabel}
           value={form.equityStructureNote}
-          onChange={(v) => update("equityStructureNote", v)}
+          onChange={handler("equityStructureNote")}
           rows={3}
           maxLength={2000}
         />
@@ -252,7 +325,7 @@ export function NewProjectForm({
           id="policyShares"
           label={dict.policySharesLabel}
           value={form.policyShares}
-          onChange={(v) => update("policyShares", v)}
+          onChange={handler("policyShares")}
           rows={3}
           maxLength={2000}
         />
@@ -260,7 +333,7 @@ export function NewProjectForm({
           id="policyDividends"
           label={dict.policyDividendsLabel}
           value={form.policyDividends}
-          onChange={(v) => update("policyDividends", v)}
+          onChange={handler("policyDividends")}
           rows={3}
           maxLength={2000}
         />
@@ -268,7 +341,7 @@ export function NewProjectForm({
           id="dividendsFrequency"
           label={dict.dividendsFreqLabel}
           value={form.dividendsFrequency}
-          onChange={(v) => update("dividendsFrequency", v)}
+          onChange={handler("dividendsFrequency")}
           maxLength={120}
         />
       </section>
@@ -284,7 +357,7 @@ export function NewProjectForm({
             inputMode="url"
             label={dict.videoUrlLabel}
             value={form.videoUrl}
-            onChange={(v) => update("videoUrl", v)}
+            onChange={handler("videoUrl")}
           />
           <p className="eyebrow !text-navy/40 mt-1.5">{dict.videoHelper}</p>
         </div>
@@ -301,7 +374,7 @@ export function NewProjectForm({
             step="any"
             label={dict.valuationLabel}
             value={form.preMoneyValuation}
-            onChange={(v) => update("preMoneyValuation", v)}
+            onChange={handler("preMoneyValuation")}
             required
           />
           <div>
@@ -309,11 +382,8 @@ export function NewProjectForm({
               id="valuationCurrency"
               label={dict.currencyLabel}
               value={form.valuationCurrency}
-              onChange={(v) => update("valuationCurrency", v as "USD" | "MXN")}
-              options={[
-                { value: "USD", label: dict.currencyUsd },
-                { value: "MXN", label: dict.currencyMxn },
-              ]}
+              onChange={handler("valuationCurrency") as (v: string) => void}
+              options={CURRENCY_OPTS}
             />
             <input
               type="hidden"
@@ -328,7 +398,7 @@ export function NewProjectForm({
           step="any"
           label={dict.targetRaiseLabel}
           value={form.targetRaiseAmount}
-          onChange={(v) => update("targetRaiseAmount", v)}
+          onChange={handler("targetRaiseAmount")}
         />
 
         {derived && (

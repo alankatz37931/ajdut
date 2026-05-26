@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import type { Dict } from "@/lib/i18n";
@@ -10,8 +10,12 @@ import {
   type ApproveResult,
 } from "./actions";
 import { FloatingTextarea } from "@/components/ui/Floating";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 
 type ReviewDict = Dict["adminApplications"]["review"];
+type Role = "PARTNER" | "PROJECT_OWNER" | "CO_ADMIN";
+
+type Mode = "idle" | "approving" | "rejecting" | "approved" | "rejected";
 
 export function ApplicationReviewActions({
   applicationId,
@@ -26,46 +30,64 @@ export function ApplicationReviewActions({
    *   - PERSON  → PARTNER (miembro de la comunidad)
    * El admin puede cambiarlo manualmente antes de confirmar.
    */
-  defaultRole?: "PARTNER" | "PROJECT_OWNER" | "CO_ADMIN";
+  defaultRole?: Role;
   dict: ReviewDict;
 }) {
-  const [mode, setMode] = useState<
-    "idle" | "approving" | "rejecting" | "approved" | "rejected"
-  >("idle");
-  const [approvedRole, setApprovedRole] =
-    useState<"PARTNER" | "PROJECT_OWNER" | "CO_ADMIN">(defaultRole);
+  const [mode, setMode] = useState<Mode>("idle");
+  const [approvedRole, setApprovedRole] = useState<Role>(defaultRole);
   const [rejectionNote, setRejectionNote] = useState("");
   const [result, setResult] = useState<ApproveResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  // Validación local del rejectionNote (min 10 chars).
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // El action retorna `{ ok: true; data: ApproveResult }` — el hook expone el
+  // objeto completo al `onSuccess`, así que destructuramos `data`.
+  const approveFn = useCallback(
+    (role: Role) => approveApplicationAction(applicationId, role),
+    [applicationId]
+  );
+  const {
+    run: runApprove,
+    isPending: isApprovePending,
+    error: approveError,
+    reset: resetApprove,
+  } = useSafeAction<Role, { ok: true; data: ApproveResult }>(approveFn, {
+    onSuccess: ({ data }) => {
+      setResult(data);
+      setMode("approved");
+    },
+  });
+
+  const rejectFn = useCallback(
+    (note: string) => rejectApplicationAction(applicationId, note),
+    [applicationId]
+  );
+  const {
+    run: runReject,
+    isPending: isRejectPending,
+    error: rejectError,
+    reset: resetReject,
+  } = useSafeAction<string>(rejectFn, {
+    onSuccess: () => setMode("rejected"),
+  });
+
+  const isPending = isApprovePending || isRejectPending;
+  const error = validationError ?? approveError ?? rejectError;
 
   function approve() {
-    setError(null);
-    startTransition(async () => {
-      const res = await approveApplicationAction(applicationId, approvedRole);
-      if (!res.ok) {
-        setError(res.error);
-        return;
-      }
-      setResult(res.data);
-      setMode("approved");
-    });
+    resetApprove();
+    setValidationError(null);
+    runApprove(approvedRole);
   }
 
   function reject() {
-    setError(null);
+    resetReject();
+    setValidationError(null);
     if (rejectionNote.trim().length < 10) {
-      setError(dict.noteTooShort);
+      setValidationError(dict.noteTooShort);
       return;
     }
-    startTransition(async () => {
-      const res = await rejectApplicationAction(applicationId, rejectionNote);
-      if (!res.ok) {
-        setError(res.error);
-        return;
-      }
-      setMode("rejected");
-    });
+    runReject(rejectionNote);
   }
 
   if (mode === "approved" && result) {

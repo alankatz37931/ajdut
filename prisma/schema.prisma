@@ -972,6 +972,32 @@ model PlatformPayoutAccount {
 
 // ─── AUDITORÍA Y NOTIFICACIONES ─────────────────────────────────────
 
+// ─── AuditLog retention strategy (notas — NO implementado todavía) ──
+// Esta tabla crece sin límite. Hoy no hay partitioning ni retention job;
+// es un trade-off consciente porque AJDUT es chico y la auditoría es la
+// fuente de verdad de toda la operación. Cuando el volumen empiece a
+// pesar (índices grandes, queries lentas en /admin/auditoria), aplicar:
+//
+//  1) Retention job mensual (Vercel cron):
+//     · borrar entries con createdAt > 12 meses para acciones NO críticas
+//       (CHAT.*, EMAIL.FAILED, RATE_LIMIT.HIT, INFO_REQUEST.*, etc.).
+//     · La cron corre en /api/cron/audit-retention con CRON_SECRET y hace
+//       deleteMany por chunks (cuidado con el lock del row del WAL en PG).
+//
+//  2) NUNCA borrar (audit-of-record para operaciones financieras y de
+//     propiedad — necesario para reconstrucciones legales/forenses):
+//     · PARTICIPATION.*      → creación, asignación, transferencia, reventa
+//     · CERTIFICATE.*        → emisión / revocación de certificados
+//     · DISTRIBUTION.*       → dividendos: draft, anuncio, pagos, disputas
+//     · OWNERSHIP-related actions vía OwnershipHistory (otro modelo)
+//
+//  3) Eventualmente, month-partitioning vía raw SQL (PG 14+ native
+//     partitioning por createdAt). Requiere migration manual fuera de
+//     Prisma — schema sólo declara la tabla parent; los hijos los crea
+//     un job pg con pg_partman o equivalente.
+//
+//  4) Mientras tanto: el índice partial sobre action <> 'EMAIL.FAILED'
+//     (ver TODO abajo) es el primer mitigation barato a aplicar.
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String?

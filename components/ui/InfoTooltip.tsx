@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * InfoTooltip — ícono "info" minimal con tooltip CSS-only (hover/focus).
  *
@@ -7,7 +5,8 @@
  * depender de la fuente). Vector nítido a cualquier tamaño.
  *
  * Sin dependencias: usamos `group` + `group-hover:block / group-focus-within:block`
- * para mostrar el cuadrito.
+ * para mostrar el cuadrito. Server component — sin hooks, sin event handlers,
+ * todo es CSS hover/focus.
  */
 export function InfoTooltip({
   text,

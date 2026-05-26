@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
@@ -28,6 +28,20 @@ import {
 
 type Params = { params: Promise<{ slug: string }> };
 
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { slug } = await params;
+  const dict = await getDict();
+  // Fetch barato: solo el name para meter en el title del browser.
+  const project = await prisma.project
+    .findUnique({ where: { slug }, select: { name: true } })
+    .catch(() => null);
+  return {
+    title: project
+      ? `${project.name} · AJDUT`
+      : dict.metaTitles.proyectoDetailFallback,
+  };
+}
+
 export default async function ProjectPage({ params }: Params) {
   const user = await requireSession();
   const { slug } = await params;
@@ -54,7 +68,9 @@ export default async function ProjectPage({ params }: Params) {
       externalHoldings: true,
     },
   });
-  if (!project) notFound();
+  // Soft-delete: si el proyecto fue eliminado, tratamos como notFound — no
+  // se exponen ni la ficha pública ni los datos del cap table.
+  if (!project || project.deletedAt) notFound();
 
   const access = await getProjectAccess({
     userId: user.id,
@@ -101,6 +117,17 @@ export default async function ProjectPage({ params }: Params) {
     .reduce((s, p) => s + p.shareCount, 0);
 
   // Cap table agrupado por dueño (solo para roles permitidos).
+  //
+  // TODO perf: si esta agregación se vuelve cara (proyectos con >>100
+  // participaciones), considerar mover la query de participations a una
+  // función separada envuelta en `unstable_cache` con
+  // `tags: [\`project:${projectId}:capTable\`]`, y disparar `revalidateTag`
+  // en cada mutation que afecte ownership (transferAction, resaleAction,
+  // approveLeadAction, etc.). No lo hicimos ahora porque las
+  // participations ya viajan en el `findUnique` de arriba (un solo round
+  // trip) y la CPU de los Maps/Sets es trivial para tamaños actuales —
+  // wrappear sin extraer la query no produce ganancia, sólo añade
+  // complejidad de invalidación.
   type CapRow = { holder: string; isPlatform: boolean; shares: number };
   const capTable: CapRow[] = [];
   if (access.canSeeCapTable) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import {
   markLeadContactedAction,
@@ -10,6 +10,7 @@ import {
   requestMoreInfoAction,
 } from "./actions";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 
 type ActionsDict = Dict["founderLeads"]["actions"];
 
@@ -32,57 +33,116 @@ export function LeadActions({
   dict,
   locale,
 }: Props) {
-  const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("idle");
   const [question, setQuestion] = useState("");
-  const [isPending, startTransition] = useTransition();
+
+  // ─── Hooks por acción ──────────────────────────────────────────────
+  // Cada server action tiene su propio useSafeAction. El hook ya cubre el
+  // double-click guard y la normalización de errores; compartimos el flag
+  // `isPending` via OR para deshabilitar todos los botones cuando alguna
+  // está en curso.
+
+  const contactedFn = useCallback(
+    () => markLeadContactedAction(leadId),
+    [leadId]
+  );
+  const {
+    run: runContacted,
+    isPending: isContactedPending,
+    error: contactedError,
+    reset: resetContacted,
+  } = useSafeAction<void>(contactedFn);
+
+  const interviewingFn = useCallback(
+    () => markLeadInterviewingAction(leadId),
+    [leadId]
+  );
+  const {
+    run: runInterviewing,
+    isPending: isInterviewingPending,
+    error: interviewingError,
+    reset: resetInterviewing,
+  } = useSafeAction<void>(interviewingFn);
+
+  const dismissFn = useCallback(() => dismissLeadAction(leadId), [leadId]);
+  const {
+    run: runDismiss,
+    isPending: isDismissPending,
+    error: dismissError,
+    reset: resetDismiss,
+  } = useSafeAction<void>(dismissFn);
+
+  const acceptFn = useCallback(
+    () => acceptLeadAndAssignAction(leadId),
+    [leadId]
+  );
+  const {
+    run: runAccept,
+    isPending: isAcceptPending,
+    error: acceptError,
+    reset: resetAccept,
+  } = useSafeAction<void>(acceptFn);
+
+  const askMoreFn = useCallback(
+    (q: string) => requestMoreInfoAction(leadId, q),
+    [leadId]
+  );
+  const {
+    run: runAskMore,
+    isPending: isAskMorePending,
+    error: askMoreError,
+    reset: resetAskMore,
+  } = useSafeAction<string>(askMoreFn, {
+    onSuccess: () => {
+      setQuestion("");
+      setMode("idle");
+    },
+  });
+
+  const isPending =
+    isContactedPending ||
+    isInterviewingPending ||
+    isDismissPending ||
+    isAcceptPending ||
+    isAskMorePending;
+  const error =
+    contactedError ??
+    interviewingError ??
+    dismissError ??
+    acceptError ??
+    askMoreError;
+
+  function resetAllErrors() {
+    resetContacted();
+    resetInterviewing();
+    resetDismiss();
+    resetAccept();
+    resetAskMore();
+  }
 
   function markContacted() {
-    setError(null);
-    startTransition(async () => {
-      const r = await markLeadContactedAction(leadId);
-      if (!r.ok) setError(r.error);
-    });
+    resetAllErrors();
+    runContacted();
   }
 
   function markInterviewing() {
-    setError(null);
-    startTransition(async () => {
-      const r = await markLeadInterviewingAction(leadId);
-      if (!r.ok) setError(r.error);
-    });
+    resetAllErrors();
+    runInterviewing();
   }
 
   function dismiss() {
-    setError(null);
-    startTransition(async () => {
-      const r = await dismissLeadAction(leadId);
-      if (!r.ok) setError(r.error);
-    });
+    resetAllErrors();
+    runDismiss();
   }
 
   function acceptAndAssign() {
-    setError(null);
-    startTransition(async () => {
-      const r = await acceptLeadAndAssignAction(leadId);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-    });
+    resetAllErrors();
+    runAccept();
   }
 
   function sendMoreInfoRequest() {
-    setError(null);
-    startTransition(async () => {
-      const r = await requestMoreInfoAction(leadId, question);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      setQuestion("");
-      setMode("idle");
-    });
+    resetAllErrors();
+    runAskMore(question);
   }
 
   if (mode === "confirming-accept") {
@@ -122,7 +182,10 @@ export function LeadActions({
             {isPending ? dict.proposeSubmittingBtn : dict.proposeSubmitBtn}
           </button>
           <button
-            onClick={() => setMode("idle")}
+            onClick={() => {
+              setMode("idle");
+              resetAllErrors();
+            }}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
@@ -164,7 +227,7 @@ export function LeadActions({
           <button
             onClick={() => {
               setMode("idle");
-              setError(null);
+              resetAllErrors();
             }}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"

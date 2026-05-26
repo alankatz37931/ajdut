@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import {
   FloatingInput,
@@ -12,6 +12,7 @@ import {
   proposeBuyerAction,
   cancelResaleAction,
 } from "./actions";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 
 type Member = { id: string; name: string };
 
@@ -57,6 +58,8 @@ function fmtInt(n: number): string {
   return n.toLocaleString("es-MX");
 }
 
+type ListInput = { intentNote: string; contactChannel: string };
+
 function SellerRow({
   projectSlug,
   row,
@@ -73,67 +76,107 @@ function SellerRow({
   const [intentNote, setIntentNote] = useState("");
   const [contact, setContact] = useState("");
   const [buyerId, setBuyerId] = useState(members[0]?.id ?? "");
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  // Validación client-side (sin viaje al server) — el hook solo cubre errores
+  // que llegan del action.
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const canList = row.status === "ASSIGNED";
   const inResale = row.status === "IN_RESALE";
   const transferPending = row.status === "TRANSFER_PENDING";
 
+  // Cada acción tiene su propio hook (tipo de input distinto + onSuccess
+  // distinto). Compartimos los flags via OR para que cualquier botón quede
+  // disabled mientras alguna está pendiente.
+  const listFn = useCallback(
+    ({ intentNote: n, contactChannel: c }: ListInput) =>
+      listForResaleAction(projectSlug, row.participationId, n, c),
+    [projectSlug, row.participationId]
+  );
+  const {
+    run: runList,
+    isPending: isListPending,
+    error: listError,
+    reset: resetList,
+  } = useSafeAction<ListInput>(listFn, {
+    onSuccess: () => reset(),
+  });
+
+  const designateFn = useCallback(
+    (buyer: string) => {
+      if (!row.listing) {
+        // Defensa adicional: el botón solo aparece cuando hay listing, pero
+        // si la prop cambió entre render y click resolvemos a un error
+        // estándar del hook en vez de romper.
+        return Promise.resolve({ ok: false as const, error: s.errBuyerRequired });
+      }
+      return proposeBuyerAction(projectSlug, row.listing.id, buyer);
+    },
+    [projectSlug, row.listing, s.errBuyerRequired]
+  );
+  const {
+    run: runDesignate,
+    isPending: isDesignatePending,
+    error: designateError,
+    reset: resetDesignate,
+  } = useSafeAction<string>(designateFn, {
+    onSuccess: () => reset(),
+  });
+
+  const cancelFn = useCallback(() => {
+    if (!row.listing) {
+      return Promise.resolve({ ok: false as const, error: s.errBuyerRequired });
+    }
+    return cancelResaleAction(projectSlug, row.listing.id);
+  }, [projectSlug, row.listing, s.errBuyerRequired]);
+  const {
+    run: runCancel,
+    isPending: isCancelPending,
+    error: cancelError,
+    reset: resetCancel,
+  } = useSafeAction<void>(cancelFn);
+
+  const isPending = isListPending || isDesignatePending || isCancelPending;
+  const error =
+    validationError ?? listError ?? designateError ?? cancelError;
+
   function reset() {
     setMode("idle");
-    setError(null);
+    setValidationError(null);
+    resetList();
+    resetDesignate();
+    resetCancel();
   }
 
   function doList() {
-    setError(null);
+    resetList();
+    setValidationError(null);
     if (intentNote.trim().length < 10) {
-      setError(s.errNoteTooShort);
+      setValidationError(s.errNoteTooShort);
       return;
     }
     if (contact.trim().length < 3) {
-      setError(s.errContactRequired);
+      setValidationError(s.errContactRequired);
       return;
     }
-    startTransition(async () => {
-      const r = await listForResaleAction(
-        projectSlug,
-        row.participationId,
-        intentNote,
-        contact
-      );
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      reset();
-    });
+    runList({ intentNote, contactChannel: contact });
   }
 
   function doDesignate() {
-    setError(null);
+    resetDesignate();
+    setValidationError(null);
     if (!row.listing) return;
     if (!buyerId) {
-      setError(s.errBuyerRequired);
+      setValidationError(s.errBuyerRequired);
       return;
     }
-    startTransition(async () => {
-      const r = await proposeBuyerAction(projectSlug, row.listing!.id, buyerId);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      reset();
-    });
+    runDesignate(buyerId);
   }
 
   function doCancel() {
-    setError(null);
+    resetCancel();
+    setValidationError(null);
     if (!row.listing) return;
-    startTransition(async () => {
-      const r = await cancelResaleAction(projectSlug, row.listing!.id);
-      if (!r.ok) setError(r.error);
-    });
+    runCancel();
   }
 
   return (
@@ -174,7 +217,7 @@ function SellerRow({
             disabled={isPending}
             className="eyebrow !text-navy/40 hover:!text-navy p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
           >
-            {isPending ? s.removingBtn : s.removeBtn}
+            {isCancelPending ? s.removingBtn : s.removeBtn}
           </button>
           {error && (
             <span className="eyebrow !text-navy" role="alert">
@@ -213,7 +256,7 @@ function SellerRow({
               disabled={isPending}
               className="btn-primary disabled:opacity-50"
             >
-              {isPending ? s.listingConfirmingBtn : s.listingConfirmBtn}
+              {isListPending ? s.listingConfirmingBtn : s.listingConfirmBtn}
             </button>
             <button
               onClick={reset}
@@ -259,7 +302,7 @@ function SellerRow({
                 disabled={isPending}
                 className="btn-primary disabled:opacity-50"
               >
-                {isPending
+                {isDesignatePending
                   ? s.designatingSubmittingBtn
                   : s.designatingSubmitBtn}
               </button>

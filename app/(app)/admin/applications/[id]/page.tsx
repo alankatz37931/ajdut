@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
@@ -8,6 +9,11 @@ import { formatDateTime } from "@/lib/utils/format";
 import { ApplicationReviewActions } from "./ReviewActions";
 
 type Params = { params: Promise<{ id: string }> };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.adminApplicationDetail };
+}
 
 export default async function ApplicationDetailPage({ params }: Params) {
   await requireRole(["ADMIN"]);

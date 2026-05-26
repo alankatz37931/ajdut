@@ -6,18 +6,20 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict } from "@/lib/i18n";
+import { SYMBOL } from "@/lib/utils/status-symbols";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
   return { title: dict.adminApplications.metaTitle };
 }
 
-// Símbolos geométricos para cada estado
+// Símbolos geométricos para cada estado de Application (paleta canónica en
+// `@/lib/utils/status-symbols`).
 const STATUS_SYMBOL: Record<string, string> = {
-  PENDING: "○",
-  UNDER_REVIEW: "○",
-  APPROVED: "●",
-  REJECTED: "✕",
+  PENDING: SYMBOL.open,
+  UNDER_REVIEW: SYMBOL.open,
+  APPROVED: SYMBOL.done,
+  REJECTED: SYMBOL.reject,
 };
 
 const MOTIVATION_PREVIEW_CHARS = 140;

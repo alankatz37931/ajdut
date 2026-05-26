@@ -20,8 +20,16 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Hook para reporting futuro (Sentry, etc.). Por ahora solo console.
-    console.error("[global-error]", error);
+    // Sentry defensivo: si la próxima ola de observability inyectó el SDK,
+    // reportamos el crash; si no, fallback a console.error. Permite enchufar
+    // Sentry sin tocar este boundary.
+    const sentry = (globalThis as { Sentry?: { captureException?: (err: unknown) => void } })
+      .Sentry;
+    if (sentry?.captureException) {
+      sentry.captureException(error);
+    } else {
+      console.error("[global-error]", error);
+    }
   }, [error]);
 
   const dict = getErrorBoundaryDict();

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
+import { DomainError } from "@/lib/services/errors";
 import {
   runValidationCronPass,
   type CronRunStats,
@@ -9,7 +10,7 @@ import {
 
 export type CronActionResult =
   | { ok: true; stats: CronRunStats }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: string };
 
 /**
  * Disparador manual del scheduler de verificación de vida. Solo ADMIN.
@@ -23,7 +24,10 @@ export async function runValidationCronAction(): Promise<CronActionResult> {
     revalidatePath("/admin/herederos");
     return { ok: true, stats };
   } catch (e) {
-    const err = e as { message?: string };
-    return { ok: false, error: err.message ?? "Error inesperado." };
+    if (e instanceof DomainError) {
+      return { ok: false, error: e.message, code: e.code };
+    }
+    console.error("[admin:runValidationCronAction]", e);
+    return { ok: false, error: "Error inesperado." };
   }
 }

@@ -92,7 +92,7 @@ export async function setPasswordFromToken(args: {
     if (record.expiresAt.getTime() < Date.now())
       return { ok: false as const, error: "Este link expiró. Pedí uno nuevo al equipo.", code: "TOKEN_EXPIRED" };
 
-    const passwordHash = await bcrypt.hash(args.newPassword, 10);
+    const passwordHash = await bcrypt.hash(args.newPassword, 12);
 
     await tx.user.update({
       where: { id: record.user.id },

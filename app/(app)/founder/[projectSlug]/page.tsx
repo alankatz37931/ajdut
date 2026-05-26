@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
@@ -15,6 +15,19 @@ import {
 } from "@/lib/utils/format";
 
 type Params = { params: Promise<{ projectSlug: string }> };
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { projectSlug } = await params;
+  const dict = await getDict();
+  const project = await prisma.project
+    .findUnique({ where: { slug: projectSlug }, select: { name: true } })
+    .catch(() => null);
+  return {
+    title: project
+      ? `${project.name} · Founder · AJDUT`
+      : dict.metaTitles.founderDashboardFallback,
+  };
+}
 
 export default async function FounderDashboardPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
@@ -46,7 +59,9 @@ export default async function FounderDashboardPage({ params }: Params) {
     },
   });
 
-  if (!project) notFound();
+  // Soft-delete: si el proyecto fue eliminado, el founder no debe entrar
+  // al dashboard — la fuente de verdad para "ya no existe" es deletedAt.
+  if (!project || project.deletedAt) notFound();
 
   // El workspace del founder es estrictamente del dueño del proyecto.
   if (project.ownerId !== user.id) notFound();

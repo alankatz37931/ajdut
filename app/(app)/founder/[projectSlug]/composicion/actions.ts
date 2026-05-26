@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { DomainError } from "@/lib/services/errors";
 
 type ClassDTO = { id: string; name: string };
 type ExternalDTO = {
@@ -13,13 +14,35 @@ type ExternalDTO = {
   shareCount: number;
 };
 
-export type CompositionResult = { ok: true } | { ok: false; error: string };
+export type CompositionResult =
+  | { ok: true }
+  | { ok: false; error: string; code?: string; field?: string };
 export type CreateClassResult =
   | { ok: true; class: ClassDTO }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: string; field?: string };
 export type UpsertExternalResult =
   | { ok: true; holding: ExternalDTO }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code?: string; field?: string };
+
+/**
+ * Wrap consistente para los catch de este módulo:
+ *   - DomainError → exponemos message + code + field (si vino en details).
+ *   - cualquier otro Error → log servidor + mensaje genérico al cliente,
+ *     para no filtrar códigos Prisma (P2002, etc.) ni nombres de tabla.
+ */
+function toFailure(e: unknown, tag: string): {
+  ok: false;
+  error: string;
+  code?: string;
+  field?: string;
+} {
+  if (e instanceof DomainError) {
+    const field = (e.details as { field?: string } | undefined)?.field;
+    return { ok: false, error: e.message, code: e.code, field };
+  }
+  console.error(`[composicion:${tag}]`, e);
+  return { ok: false, error: "Error inesperado." };
+}
 
 /** Carga el proyecto y verifica que el viewer sea su owner. Throws si no. */
 async function ownedProject(projectSlug: string) {
@@ -52,7 +75,7 @@ export async function createClassAction(
     revalidatePath(`/founder/${projectSlug}/composicion`);
     return { ok: true, class: { id: created.id, name: created.name } };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error." };
+    return toFailure(e, "createClassAction");
   }
 }
 
@@ -77,7 +100,7 @@ export async function renameClassAction(
     revalidatePath(`/founder/${projectSlug}/composicion`);
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error." };
+    return toFailure(e, "renameClassAction");
   }
 }
 
@@ -106,7 +129,7 @@ export async function deleteClassAction(
     revalidatePath(`/founder/${projectSlug}/composicion`);
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error." };
+    return toFailure(e, "deleteClassAction");
   }
 }
 
@@ -132,7 +155,7 @@ export async function assignHolderClassAction(
     revalidatePath(`/founder/${projectSlug}/composicion`);
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error." };
+    return toFailure(e, "assignHolderClassAction");
   }
 }
 
@@ -197,7 +220,7 @@ export async function upsertExternalHoldingAction(
       },
     };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error." };
+    return toFailure(e, "upsertExternalHoldingAction");
   }
 }
 
@@ -217,6 +240,6 @@ export async function removeExternalHoldingAction(
     revalidatePath(`/founder/${projectSlug}/composicion`);
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error." };
+    return toFailure(e, "removeExternalHoldingAction");
   }
 }

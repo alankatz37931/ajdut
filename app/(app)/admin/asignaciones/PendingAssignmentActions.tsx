@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import {
   approvePendingAssignmentAction,
   rejectPendingAssignmentAction,
 } from "./actions";
 import { FloatingTextarea } from "@/components/ui/Floating";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 
 type ActionsDict = Dict["adminAsignaciones"]["actions"];
 
@@ -18,6 +19,13 @@ type Props = {
   locale: string;
 };
 
+type Mode =
+  | "idle"
+  | "confirming-approve"
+  | "rejecting"
+  | "done-approved"
+  | "done-rejected";
+
 export function PendingAssignmentActions({
   pendingId,
   recipientLabel,
@@ -25,39 +33,57 @@ export function PendingAssignmentActions({
   dict,
   locale,
 }: Props) {
-  const [mode, setMode] = useState<
-    "idle" | "confirming-approve" | "rejecting" | "done-approved" | "done-rejected"
-  >("idle");
+  const [mode, setMode] = useState<Mode>("idle");
   const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  // Errores de validación local (sin viaje al server) — el hook solo gestiona
+  // errores de las server actions; el chequeo del note <10 chars vive acá.
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const approveFn = useCallback(
+    () => approvePendingAssignmentAction(pendingId),
+    [pendingId]
+  );
+  const {
+    run: runApprove,
+    isPending: isApprovePending,
+    error: approveError,
+    reset: resetApprove,
+  } = useSafeAction<void>(approveFn, {
+    onSuccess: () => setMode("done-approved"),
+  });
+
+  const rejectFn = useCallback(
+    (n: string) => rejectPendingAssignmentAction(pendingId, n),
+    [pendingId]
+  );
+  const {
+    run: runReject,
+    isPending: isRejectPending,
+    error: rejectError,
+    reset: resetReject,
+  } = useSafeAction<string>(rejectFn, {
+    onSuccess: () => setMode("done-rejected"),
+  });
+
+  const isPending = isApprovePending || isRejectPending;
+  // Mostramos el error que corresponda al modo activo: validación local
+  // (sólo en rejecting) o el del último intento contra el server.
+  const error = validationError ?? approveError ?? rejectError;
 
   function approve() {
-    setError(null);
-    startTransition(async () => {
-      const r = await approvePendingAssignmentAction(pendingId);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      setMode("done-approved");
-    });
+    resetApprove();
+    setValidationError(null);
+    runApprove();
   }
 
   function reject() {
-    setError(null);
+    resetReject();
+    setValidationError(null);
     if (note.trim().length < 10) {
-      setError(dict.noteTooShort);
+      setValidationError(dict.noteTooShort);
       return;
     }
-    startTransition(async () => {
-      const r = await rejectPendingAssignmentAction(pendingId, note);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      setMode("done-rejected");
-    });
+    runReject(note);
   }
 
   if (mode === "done-approved") {
@@ -98,7 +124,11 @@ export function PendingAssignmentActions({
             {isPending ? dict.approvingBtn : dict.confirmApproveBtn}
           </button>
           <button
-            onClick={() => setMode("idle")}
+            onClick={() => {
+              setMode("idle");
+              resetApprove();
+              setValidationError(null);
+            }}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
@@ -137,7 +167,8 @@ export function PendingAssignmentActions({
           <button
             onClick={() => {
               setMode("idle");
-              setError(null);
+              resetReject();
+              setValidationError(null);
             }}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"

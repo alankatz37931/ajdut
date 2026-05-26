@@ -20,6 +20,46 @@ const nextConfig = {
       dynamic: 30,
     },
   },
+  // Headers de seguridad básicos para todo /(.*).
+  // TODO CSP en proxima ola — requiere nonces para inline scripts y allowlisting de YouTube/Vimeo
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            // 2 años + subdominios + preload list. Solo aplica sobre HTTPS,
+            // navegadores lo ignoran en localhost / IP.
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            // Frena MIME sniffing — el browser respeta el Content-Type que
+            // mandamos y no infiere "esto parece HTML, lo ejecuto".
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            // Clickjacking: AJDUT nunca debe poder embebese en iframe externo.
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            // Mandamos origin + path solo a same-origin; a cross-origin
+            // mandamos solo el origin. Evita filtrar paths privados al salir.
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            // Bloquea API browser-side que no usamos. Si en el futuro
+            // necesitamos cámara/mic/geo, hay que abrir explícito acá.
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

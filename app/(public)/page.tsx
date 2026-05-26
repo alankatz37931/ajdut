@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getDict } from "@/lib/i18n";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.home };
+}
 
 export default async function HomePage() {
   const dict = await getDict();

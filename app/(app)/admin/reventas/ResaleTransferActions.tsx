@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { FloatingTextarea } from "@/components/ui/Floating";
 import { approveTransferAction, rejectTransferAction } from "./actions";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 
 type ActionsDict = Dict["adminReventas"]["actions"];
 
@@ -15,6 +16,13 @@ type Props = {
   dict: ActionsDict;
 };
 
+type Mode =
+  | "idle"
+  | "confirming-approve"
+  | "rejecting"
+  | "done-approved"
+  | "done-rejected";
+
 export function ResaleTransferActions({
   resaleListingId,
   sellerName,
@@ -22,39 +30,55 @@ export function ResaleTransferActions({
   shareCount,
   dict,
 }: Props) {
-  const [mode, setMode] = useState<
-    "idle" | "confirming-approve" | "rejecting" | "done-approved" | "done-rejected"
-  >("idle");
+  const [mode, setMode] = useState<Mode>("idle");
   const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  // Validación local del note (mínimo 10 chars) — no la maneja el hook
+  // porque no involucra un viaje al server.
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const approveFn = useCallback(
+    () => approveTransferAction(resaleListingId),
+    [resaleListingId]
+  );
+  const {
+    run: runApprove,
+    isPending: isApprovePending,
+    error: approveError,
+    reset: resetApprove,
+  } = useSafeAction<void>(approveFn, {
+    onSuccess: () => setMode("done-approved"),
+  });
+
+  const rejectFn = useCallback(
+    (n: string) => rejectTransferAction(resaleListingId, n),
+    [resaleListingId]
+  );
+  const {
+    run: runReject,
+    isPending: isRejectPending,
+    error: rejectError,
+    reset: resetReject,
+  } = useSafeAction<string>(rejectFn, {
+    onSuccess: () => setMode("done-rejected"),
+  });
+
+  const isPending = isApprovePending || isRejectPending;
+  const error = validationError ?? approveError ?? rejectError;
 
   function approve() {
-    setError(null);
-    startTransition(async () => {
-      const r = await approveTransferAction(resaleListingId);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      setMode("done-approved");
-    });
+    resetApprove();
+    setValidationError(null);
+    runApprove();
   }
 
   function reject() {
-    setError(null);
+    resetReject();
+    setValidationError(null);
     if (note.trim().length < 10) {
-      setError(dict.errNoteTooShort);
+      setValidationError(dict.errNoteTooShort);
       return;
     }
-    startTransition(async () => {
-      const r = await rejectTransferAction(resaleListingId, note);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      setMode("done-rejected");
-    });
+    runReject(note);
   }
 
   if (mode === "done-approved") {
@@ -96,7 +120,11 @@ export function ResaleTransferActions({
             {isPending ? dict.approving : dict.confirmApprove}
           </button>
           <button
-            onClick={() => setMode("idle")}
+            onClick={() => {
+              setMode("idle");
+              resetApprove();
+              setValidationError(null);
+            }}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
           >
@@ -134,7 +162,8 @@ export function ResaleTransferActions({
           <button
             onClick={() => {
               setMode("idle");
-              setError(null);
+              resetReject();
+              setValidationError(null);
             }}
             disabled={isPending}
             className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"

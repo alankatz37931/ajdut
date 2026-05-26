@@ -3,7 +3,6 @@
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { prisma } from "@/lib/db/client";
-import { getDict } from "@/lib/i18n";
 import { createPasswordSetupToken } from "@/lib/services/password-setup";
 import { notifyPasswordReset } from "@/lib/email/notifications";
 import { consumeRateLimit } from "@/lib/utils/rate-limit";
@@ -44,9 +43,13 @@ export async function requestPasswordResetAction(
   formData: FormData
 ): Promise<RecoveryResult> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
+
+  // Formato inválido (vacío o sin "@"): devolvemos ok:true sin hacer nada.
+  // Antes respondíamos {ok:false, errEmailInvalid} y eso permitía enumerar:
+  // el atacante mandaba un email válido y otro malformado y distinguía la
+  // respuesta. Ahora la UX es idéntica venga lo que venga.
   if (!email || !email.includes("@")) {
-    const dict = await getDict();
-    return { ok: false, error: dict.recoveryPassword.errEmailInvalid };
+    return { ok: true };
   }
 
   // Rate limits: si se exceden, devolvemos ok:true sin enviar nada.

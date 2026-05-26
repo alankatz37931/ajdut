@@ -14,8 +14,7 @@
  * libre).
  */
 import { getUserPreferences } from "@/lib/preferences";
-import { dict as esDict, type Dict } from "./dictionaries/es";
-import { dict as enDict } from "./dictionaries/en";
+import type { Dict } from "./dictionaries/es";
 
 export type Language = "es" | "en";
 export type { Dict } from "./dictionaries/es";
@@ -30,10 +29,20 @@ export async function getLanguage(): Promise<Language> {
  * Devuelve el diccionario para el idioma activo. Tipado como `Dict` (español
  * es la source of truth), por lo que el autocomplete funciona igual para ES y
  * EN.
+ *
+ * Lazy-loaded: importamos solo el dict del idioma activo. Antes ambos viajaban
+ * en cada server bundle aunque uno fuera dead weight (~80KB c/u). Webpack /
+ * Turbopack en server resolverán cada `import()` y cachearán el módulo, así
+ * que el costo de la segunda llamada es cero.
  */
 export async function getDict(): Promise<Dict> {
   const lang = await getLanguage();
-  return lang === "en" ? enDict : esDict;
+  if (lang === "en") {
+    const { dict } = await import("./dictionaries/en");
+    return dict;
+  }
+  const { dict } = await import("./dictionaries/es");
+  return dict;
 }
 
 /**

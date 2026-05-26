@@ -275,7 +275,7 @@ async function main() {
       email: adminEmail.toLowerCase(),
       fullName: adminName,
       role: "ADMIN",
-      passwordHash: await bcrypt.hash(adminPassword, 10),
+      passwordHash: await bcrypt.hash(adminPassword, 12),
       isActive: true,
     },
   });
@@ -284,13 +284,13 @@ async function main() {
       email: "admin2@ajdut.io",
       fullName: "Admin AJDUT (Co-firma)",
       role: "ADMIN",
-      passwordHash: await bcrypt.hash(adminPassword, 10),
+      passwordHash: await bcrypt.hash(adminPassword, 12),
       isActive: true,
     },
   });
 
   // ─── Founders (cada uno dueño de un proyecto) ──────────────────
-  const founderPass = await bcrypt.hash("ajdut-demo-2026", 10);
+  const founderPass = await bcrypt.hash("ajdut-demo-2026", 12);
   const luciaFounder = await prisma.user.create({
     data: { email: "lucia@pushka.demo", fullName: "Lucía Méndez", role: "PROJECT_OWNER", passwordHash: founderPass, isActive: true },
   });
@@ -305,7 +305,7 @@ async function main() {
   });
 
   // ─── Socios ────────────────────────────────────────────────────
-  const partnerPass = await bcrypt.hash("ajdut-demo-2026", 10);
+  const partnerPass = await bcrypt.hash("ajdut-demo-2026", 12);
   const partners = await Promise.all([
     prisma.user.create({ data: { email: "ana@socios.demo", fullName: "Ana Pérez", role: "PARTNER", passwordHash: partnerPass, isActive: true } }),
     prisma.user.create({ data: { email: "diego@socios.demo", fullName: "Diego Soto", role: "PARTNER", passwordHash: partnerPass, isActive: true } }),

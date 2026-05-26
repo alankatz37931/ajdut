@@ -249,6 +249,15 @@ export const dict: Dict = {
     founderHitos: "Milestones · AJDUT",
     founderInvitar: "Invite member · AJDUT",
     founderMetricas: "Metrics · AJDUT",
+    home: "AJDUT",
+    founderHome: "Founder · AJDUT",
+    partner: "Partner · AJDUT",
+    proyectos: "Projects · AJDUT",
+    proyectoDetailFallback: "Project · AJDUT",
+    founderDashboardFallback: "Founder · AJDUT",
+    founderLeadsFallback: "Leads · Founder · AJDUT",
+    adminApplicationDetail: "Application · Admin · AJDUT",
+    adminProjects: "Projects · Admin · AJDUT",
   },
 
   recoveryPassword: {

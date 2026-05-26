@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
@@ -5,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
+import { SYMBOL } from "@/lib/utils/status-symbols";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { LeadActions } from "./LeadActions";
 import { InfoRequestActions } from "./InfoRequestActions";
@@ -31,13 +33,27 @@ type FounderInfoRequestRow = Prisma.InfoRequestGetPayload<{
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { projectSlug } = await params;
+  const dict = await getDict();
+  const project = await prisma.project
+    .findUnique({ where: { slug: projectSlug }, select: { name: true } })
+    .catch(() => null);
+  return {
+    title: project
+      ? `Leads · ${project.name} · AJDUT`
+      : dict.metaTitles.founderLeadsFallback,
+  };
+}
+
+// Paleta canónica en `@/lib/utils/status-symbols`.
 const STATUS_SYMBOL: Record<string, string> = {
-  OPEN: "○",
-  CONTACTED: "◐",
-  INTERVIEWING: "◑",
-  CONVERTED: "●",
-  DISMISSED: "✕",
-  EXPIRED: "▪",
+  OPEN: SYMBOL.open,
+  CONTACTED: SYMBOL.half,
+  INTERVIEWING: SYMBOL.thrq,
+  CONVERTED: SYMBOL.done,
+  DISMISSED: SYMBOL.reject,
+  EXPIRED: SYMBOL.expire,
 };
 
 export default async function FounderLeadsPage({ params }: Params) {

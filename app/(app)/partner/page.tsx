@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { Section } from "@/components/ui/Section";
@@ -13,6 +13,11 @@ import {
   formatNumber,
 } from "@/lib/utils/format";
 
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.partner };
+}
+
 export default async function PartnerDashboardPage() {
   const user = await requireSession();
   const prefs = await getUserPreferences();
@@ -21,8 +26,11 @@ export default async function PartnerDashboardPage() {
   const locale = await getLocale();
   const t = dict.partner;
 
+  // Soft-delete: si el proyecto del que el usuario es socio fue eliminado, no
+  // debe seguir apareciendo en su portafolio (rompería links a /proyectos/[slug]
+  // que ya devuelven notFound). Filtramos la relación project por deletedAt: null.
   const participations = await prisma.participation.findMany({
-    where: { currentOwnerId: user.id },
+    where: { currentOwnerId: user.id, project: { deletedAt: null } },
     include: {
       project: {
         select: {

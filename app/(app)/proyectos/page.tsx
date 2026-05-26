@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import type { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
@@ -7,6 +7,11 @@ import { sequentialPrisma } from "@/lib/prisma/safe";
 import { formatCurrency, formatNumber } from "@/lib/utils/format";
 import { getDict, getLocale } from "@/lib/i18n";
 import { ProjectFilters } from "./ProjectFilters";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.proyectos };
+}
 
 // Orden de visualización para la lista (admin ve todos los estados).
 const STATUS_RANK: Record<string, number> = {
@@ -60,9 +65,12 @@ export default async function ProjectsDiscoveryPage({
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
   const skip = (page - 1) * PAGE_SIZE;
 
-  const where: Prisma.ProjectWhereInput = {};
+  // Soft-delete: nunca mostramos proyectos eliminados, ni siquiera al admin
+  // desde el discovery. Para inspección forense / panel admin dedicado, se
+  // construirá una vista aparte que sí los liste.
+  const where: Prisma.ProjectWhereInput = { deletedAt: null };
 
-  // El no-admin solo ve proyectos ACTIVE. El admin ve todos.
+  // El no-admin solo ve proyectos ACTIVE. El admin ve todos (excepto deleted).
   if (!isAdmin) {
     where.status = "ACTIVE";
   }

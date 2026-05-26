@@ -1,15 +1,24 @@
 import Link from "next/link";
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { getDict } from "@/lib/i18n";
 import { StatusBadge } from "@/components/founder/StatusBadge";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDict();
+  return { title: dict.metaTitles.founderHome };
+}
 
 export default async function FounderRootPage() {
   const user = await requireRole(["PROJECT_OWNER"]);
 
   const projects = await prisma.project.findMany({
-    where: { ownerId: user.id },
+    // Soft-delete: el founder no debería seguir viendo un proyecto que ya fue
+    // eliminado; el redirect de "un solo proyecto" tampoco debe disparar sobre
+    // un proyecto deleted.
+    where: { ownerId: user.id, deletedAt: null },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

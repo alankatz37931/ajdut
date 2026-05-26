@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/client";
 import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
+import { SYMBOL } from "@/lib/utils/status-symbols";
 import { PendingAssignmentActions } from "./PendingAssignmentActions";
 
 const adminAsignacionesInclude = {
@@ -25,10 +26,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: dict.metaTitles.adminAsignaciones };
 }
 
+// Paleta canónica en `@/lib/utils/status-symbols`.
 const STATUS_SYMBOL: Record<string, string> = {
-  PENDING: "○",
-  APPROVED: "●",
-  REJECTED: "✕",
+  PENDING: SYMBOL.open,
+  APPROVED: SYMBOL.done,
+  REJECTED: SYMBOL.reject,
 };
 
 export default async function AdminPendingAssignmentsPage({

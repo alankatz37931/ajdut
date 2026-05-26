@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 /**
  * Floating-label form primitives — patrón unificado del sitio.
@@ -15,6 +15,12 @@ import { useEffect, useRef, useState } from "react";
  *    valor permanente queda raro).
  *
  * Nacido en /aplicar — replicado en el resto del site.
+ *
+ * Perf: todas las primitivas exportadas están envueltas en `React.memo`.
+ * Esto es preparación: el bail por shallow-equality se activa cuando el
+ * padre estabiliza el callback `onChange` (e.g. con `useCallback`). En
+ * forms que no estabilizan callbacks, el memo no produce ganancia (cada
+ * render el padre crea una arrow nueva), pero tampoco hace daño.
  */
 
 const FIELD_BASE =
@@ -44,7 +50,7 @@ export function GoldUnderline() {
   );
 }
 
-export function FloatingInput({
+function FloatingInputImpl({
   id,
   name,
   type = "text",
@@ -96,12 +102,104 @@ export function FloatingInput({
     </div>
   );
 }
+export const FloatingInput = memo(FloatingInputImpl);
+
+/**
+ * Hook compartido por FloatingSelect / FloatingMultiSelect.
+ *
+ * Maneja:
+ *  - estado `open` + outside-click + Escape para cerrar
+ *  - `activeIndex` para keyboard nav (Up/Down/Home/End)
+ *  - reset de activeIndex al abrir (sincronizado con el valor seleccionado)
+ *
+ * Devuelve también helpers para que el componente decida qué hacer en
+ * Enter/Space (single vs multi).
+ */
+function useListboxNav(opts: {
+  optionsLen: number;
+  /** Index inicial al abrir (típicamente el del valor seleccionado). */
+  initialActive: number;
+  /** Llamado cuando el usuario apretó Enter o Space sobre `activeIndex`. */
+  onActivate: (index: number) => void;
+}) {
+  const { optionsLen, initialActive, onActivate } = opts;
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(initialActive);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // Cuando abrimos, sincronizamos el activeIndex con la selección actual
+  // para que Up/Down arranque desde un lugar predecible.
+  useEffect(() => {
+    if (open) {
+      setActiveIndex(initialActive >= 0 ? initialActive : 0);
+    }
+  }, [open, initialActive]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+        return;
+      }
+      // Solo manejamos keys si el foco está dentro del wrapper — así no
+      // robamos keys cuando el usuario está en otro listbox o input.
+      if (!wrapperRef.current?.contains(document.activeElement)) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.min(optionsLen - 1, i + 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(0, i - 1));
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        setActiveIndex(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        setActiveIndex(optionsLen - 1);
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        // Usamos un getter del activeIndex actual vía functional state — no
+        // queremos cerrar sobre stale.
+        setActiveIndex((i) => {
+          if (i >= 0 && i < optionsLen) onActivate(i);
+          return i;
+        });
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, optionsLen, onActivate]);
+
+  return {
+    open,
+    setOpen,
+    activeIndex,
+    setActiveIndex,
+    wrapperRef,
+    buttonRef,
+    listRef,
+  };
+}
 
 /**
  * FloatingSelect — dropdown custom (NO <select> nativo) que respeta el
  * estilo del form: paper-light bg, hairlines, gold accent.
+ *
+ * Teclado: ArrowUp/Down/Home/End mueven el item activo; Enter/Space lo
+ * selecciona y cierra; Escape cierra; click fuera cierra.
  */
-export function FloatingSelect({
+function FloatingSelectImpl({
   id,
   label,
   value,
@@ -118,32 +216,24 @@ export function FloatingSelect({
   autoFocus?: boolean;
   disabled?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onPointerDown(e: PointerEvent) {
-      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setOpen(false);
-        buttonRef.current?.focus();
-      }
-    }
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
+  const selectedIndex = options.findIndex((o) => o.value === value);
+  const { open, setOpen, activeIndex, setActiveIndex, wrapperRef, buttonRef } =
+    useListboxNav({
+      optionsLen: options.length,
+      initialActive: selectedIndex,
+      onActivate: (i) => {
+        const opt = options[i];
+        if (opt) {
+          onChange(opt.value);
+          setOpen(false);
+          buttonRef.current?.focus();
+        }
+      },
+    });
 
   useEffect(() => {
     if (autoFocus) buttonRef.current?.focus();
-  }, [autoFocus]);
+  }, [autoFocus, buttonRef]);
 
   const selected = options.find((o) => o.value === value);
 
@@ -161,6 +251,11 @@ export function FloatingSelect({
           disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
+          aria-activedescendant={
+            open && activeIndex >= 0 && activeIndex < options.length
+              ? `${id}-opt-${activeIndex}`
+              : undefined
+          }
           className={`peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none focus:border-navy/60 flex items-center justify-between gap-3 transition-colors ${
             disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
           }`}
@@ -185,9 +280,15 @@ export function FloatingSelect({
           >
             {options.map((o, i) => {
               const isSelected = o.value === value;
+              const isActive = i === activeIndex;
               const isLast = i === options.length - 1;
               return (
-                <li key={o.value} role="option" aria-selected={isSelected}>
+                <li
+                  key={o.value}
+                  id={`${id}-opt-${i}`}
+                  role="option"
+                  aria-selected={isSelected}
+                >
                   <button
                     type="button"
                     onClick={() => {
@@ -195,9 +296,10 @@ export function FloatingSelect({
                       setOpen(false);
                       buttonRef.current?.focus();
                     }}
-                    className={`relative w-full text-left px-4 py-2.5 font-sans text-navy hover:bg-paper transition-colors cursor-pointer ${
-                      !isLast ? "border-b-[0.5px] border-line" : ""
-                    }`}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    className={`relative w-full text-left px-4 py-2.5 font-sans text-navy transition-colors cursor-pointer ${
+                      isActive ? "bg-paper" : "hover:bg-paper"
+                    } ${!isLast ? "border-b-[0.5px] border-line" : ""}`}
                   >
                     {isSelected && (
                       <span
@@ -218,13 +320,17 @@ export function FloatingSelect({
     </div>
   );
 }
+export const FloatingSelect = memo(FloatingSelectImpl);
 
 /**
  * FloatingMultiSelect — versión multi-select del FloatingSelect. Mismo
  * estilo visual; cada opción tiene un checkbox y click toggle. Cuando no
  * hay nada seleccionado se muestra `placeholder` (típicamente "All X").
+ *
+ * Teclado: igual que FloatingSelect, pero Enter/Space hace TOGGLE (no
+ * cierra), respetando el patrón ARIA listbox multi-selectable.
  */
-export function FloatingMultiSelect({
+function FloatingMultiSelectImpl({
   id,
   label,
   values,
@@ -243,32 +349,8 @@ export function FloatingMultiSelect({
   autoFocus?: boolean;
   disabled?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onPointerDown(e: PointerEvent) {
-      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setOpen(false);
-        buttonRef.current?.focus();
-      }
-    }
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (autoFocus) buttonRef.current?.focus();
-  }, [autoFocus]);
+  // Para multi, "initialActive" arranca en el primer seleccionado (o 0).
+  const firstSelectedIndex = options.findIndex((o) => values.includes(o.value));
 
   function toggle(val: string) {
     if (values.includes(val)) {
@@ -277,6 +359,20 @@ export function FloatingMultiSelect({
       onChange([...values, val]);
     }
   }
+
+  const { open, setOpen, activeIndex, setActiveIndex, wrapperRef, buttonRef } =
+    useListboxNav({
+      optionsLen: options.length,
+      initialActive: firstSelectedIndex,
+      onActivate: (i) => {
+        const opt = options[i];
+        if (opt) toggle(opt.value);
+      },
+    });
+
+  useEffect(() => {
+    if (autoFocus) buttonRef.current?.focus();
+  }, [autoFocus, buttonRef]);
 
   const display =
     values.length === 0
@@ -300,6 +396,11 @@ export function FloatingMultiSelect({
           disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
+          aria-activedescendant={
+            open && activeIndex >= 0 && activeIndex < options.length
+              ? `${id}-opt-${activeIndex}`
+              : undefined
+          }
           className={`peer w-full bg-transparent border-0 border-b-[0.5px] border-navy/30 px-0 py-1.5 font-sans text-navy text-left outline-none focus:border-navy/60 flex items-center justify-between gap-3 transition-colors ${
             disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
           }`}
@@ -327,15 +428,22 @@ export function FloatingMultiSelect({
           >
             {options.map((o, i) => {
               const isSelected = values.includes(o.value);
+              const isActive = i === activeIndex;
               const isLast = i === options.length - 1;
               return (
-                <li key={o.value} role="option" aria-selected={isSelected}>
+                <li
+                  key={o.value}
+                  id={`${id}-opt-${i}`}
+                  role="option"
+                  aria-selected={isSelected}
+                >
                   <button
                     type="button"
                     onClick={() => toggle(o.value)}
-                    className={`relative w-full text-left px-4 py-2.5 font-sans text-navy hover:bg-paper transition-colors cursor-pointer flex items-center gap-3 ${
-                      !isLast ? "border-b-[0.5px] border-line" : ""
-                    }`}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    className={`relative w-full text-left px-4 py-2.5 font-sans text-navy transition-colors cursor-pointer flex items-center gap-3 ${
+                      isActive ? "bg-paper" : "hover:bg-paper"
+                    } ${!isLast ? "border-b-[0.5px] border-line" : ""}`}
                   >
                     <span
                       aria-hidden
@@ -362,6 +470,7 @@ export function FloatingMultiSelect({
     </div>
   );
 }
+export const FloatingMultiSelect = memo(FloatingMultiSelectImpl);
 
 /**
  * FloatingTextarea — para multi-línea NO usamos floating label (queda
@@ -370,7 +479,7 @@ export function FloatingMultiSelect({
  * span absolute (no en el border del textarea) para que el gold
  * underline se superponga perfecto sin offset por inline-block.
  */
-export function FloatingTextarea({
+function FloatingTextareaImpl({
   id,
   label,
   value,
@@ -429,13 +538,14 @@ export function FloatingTextarea({
     </div>
   );
 }
+export const FloatingTextarea = memo(FloatingTextareaImpl);
 
 /**
  * FloatingDate — para <input type="date">. Los date inputs no soportan
  * `placeholder`, así que el floating label no aplica: usamos label estático
  * arriba como eyebrow, igual que FloatingSelect / FloatingTextarea.
  */
-export function FloatingDate({
+function FloatingDateImpl({
   id,
   label,
   value,
@@ -468,3 +578,5 @@ export function FloatingDate({
     </div>
   );
 }
+export const FloatingDate = memo(FloatingDateImpl);
+

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { DomainError } from "@/lib/services/errors";
 import {
   addMetric,
   removeMetric,
@@ -10,7 +11,23 @@ import {
   type MetricKind,
 } from "@/lib/services/project-content";
 
-type Result = { ok: true } | { ok: false; error: string; field?: string };
+type Result =
+  | { ok: true }
+  | { ok: false; error: string; code?: string; field?: string };
+
+/**
+ * DomainError → message + code + field (si vino en details).
+ * Cualquier otro Error → log servidor + mensaje genérico, para no filtrar
+ * códigos Prisma ni nombres de tabla al cliente.
+ */
+function toFailure(e: unknown, tag: string): Extract<Result, { ok: false }> {
+  if (e instanceof DomainError) {
+    const field = (e.details as { field?: string } | undefined)?.field;
+    return { ok: false, error: e.message, code: e.code, field };
+  }
+  console.error(`[metricas:${tag}]`, e);
+  return { ok: false, error: "Error inesperado." };
+}
 
 async function resolveProjectId(slug: string, ownerId: string) {
   const project = await prisma.project.findUnique({
@@ -67,8 +84,7 @@ export async function addMetricAction(
     revalidatePath(`/proyectos/${projectSlug}`);
     return { ok: true };
   } catch (e) {
-    const err = e as { message?: string; field?: string };
-    return { ok: false, error: err.message ?? "Error inesperado.", field: err.field };
+    return toFailure(e, "addMetricAction");
   }
 }
 
@@ -87,7 +103,6 @@ export async function removeMetricAction(
     revalidatePath(`/proyectos/${projectSlug}`);
     return { ok: true };
   } catch (e) {
-    const err = e as { message?: string };
-    return { ok: false, error: err.message ?? "Error inesperado." };
+    return toFailure(e, "removeMetricAction");
   }
 }

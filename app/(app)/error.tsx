@@ -17,7 +17,16 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[app-error]", error);
+    // Sentry defensivo: si la próxima ola de observability inyectó el SDK,
+    // reportamos el crash; si no, fallback a console.error. Permite enchufar
+    // Sentry sin tocar este boundary.
+    const sentry = (globalThis as { Sentry?: { captureException?: (err: unknown) => void } })
+      .Sentry;
+    if (sentry?.captureException) {
+      sentry.captureException(error);
+    } else {
+      console.error("[app-error]", error);
+    }
   }, [error]);
 
   const dict = getErrorBoundaryDict();

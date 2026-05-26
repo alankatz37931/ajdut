@@ -113,8 +113,15 @@ export async function isChannelMember(
   userId: string
 ): Promise<boolean> {
   if (await isPrivilegedInProject(projectId, userId)) return true;
+  // Soft-delete: si el user fue eliminado, no debe contar como miembro del
+  // canal aunque siga teniendo participations vinculadas (la baja no resetea
+  // currentOwnerId — eso es operación humana).
   const myShares = await prisma.participation.count({
-    where: { projectId, currentOwnerId: userId },
+    where: {
+      projectId,
+      currentOwnerId: userId,
+      currentOwner: { deletedAt: null },
+    },
   });
   return myShares > 0;
 }
@@ -671,23 +678,30 @@ export async function getChannelMemberEmails(
   const [owner, coAdmins, participationRows] = await sequentialPrisma([
     {
       run: () =>
+        // Filtramos el proyecto por deletedAt: null — un proyecto eliminado
+        // no debe disparar broadcasts. Si está deleted, devolvemos null y
+        // el cálculo de miembros queda vacío para esa fuente.
         prisma.project
           .findUnique({
             where: { id: projectId },
             select: {
+              deletedAt: true,
               owner: {
                 select: { id: true, email: true, isActive: true, deletedAt: true },
               },
             },
           })
-          .then((p) => p?.owner ?? null),
+          .then((p) => (p && !p.deletedAt ? p.owner : null)),
       fallback: null as MemberUser | null,
       tag: "chat:getMembers:owner",
     },
     {
       run: () =>
+        // Co-admin user soft-delete: filtramos en la relación user para no
+        // notificar a co-admins que ya fueron dados de baja. El registro
+        // ProjectCoAdmin sigue existiendo (audit) — sólo no notifica.
         prisma.projectCoAdmin.findMany({
-          where: { projectId },
+          where: { projectId, user: { deletedAt: null } },
           select: {
             user: {
               select: { id: true, email: true, isActive: true, deletedAt: true },
@@ -701,9 +715,15 @@ export async function getChannelMemberEmails(
       // DISTINCT por currentOwnerId: si un mismo user tiene 50 participations
       // en el proyecto, Prisma devuelve 1 sola fila. Antes el include profundo
       // hidrataba el User completo en cada participation (N copias).
+      // Soft-delete: filtramos por currentOwner.deletedAt: null para no
+      // notificar holders dados de baja.
       run: () =>
         prisma.participation.findMany({
-          where: { projectId, currentOwnerId: { not: null } },
+          where: {
+            projectId,
+            currentOwnerId: { not: null },
+            currentOwner: { deletedAt: null },
+          },
           distinct: ["currentOwnerId"],
           select: {
             currentOwner: {
