@@ -4,6 +4,7 @@ import type { Route } from "next";
 import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale, type Dict } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { AuditSearch } from "./AuditSearch";
@@ -193,19 +194,37 @@ export default async function AdminAuditPage({
     ];
   }
 
-  const [total, logs] = await Promise.all([
-    prisma.auditLog.count({ where }),
-    prisma.auditLog.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: {
-        actor: { select: { email: true, fullName: true, role: true } },
-        project: { select: { slug: true, name: true } },
-      },
-    }),
-  ]);
+  // Secuencial: count + findMany paralelos con connection_limit=1 pelean por
+  // la conexión. Total cae a 0 si falla (paginación queda en 1 página) y los
+  // logs caen a [] (empty state). Mejor que crashear /admin/auditoria entera.
+  type AuditLogRow = Prisma.AuditLogGetPayload<{
+    include: {
+      actor: { select: { email: true; fullName: true; role: true } };
+      project: { select: { slug: true; name: true } };
+    };
+  }>;
+  const [total, logs] = await sequentialPrisma([
+    {
+      run: () => prisma.auditLog.count({ where }),
+      fallback: 0,
+      tag: "adminAuditoria:total",
+    },
+    {
+      run: () =>
+        prisma.auditLog.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * PAGE_SIZE,
+          take: PAGE_SIZE,
+          include: {
+            actor: { select: { email: true, fullName: true, role: true } },
+            project: { select: { slug: true, name: true } },
+          },
+        }),
+      fallback: [] as AuditLogRow[],
+      tag: "adminAuditoria:logs",
+    },
+  ] as const);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const countLabel = (total === 1 ? t.countSingle : t.countPlural).replace(

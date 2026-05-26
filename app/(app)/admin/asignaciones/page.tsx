@@ -1,11 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { Route } from "next";
+import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { PendingAssignmentActions } from "./PendingAssignmentActions";
+
+const adminAsignacionesInclude = {
+  project: { select: { name: true, slug: true } },
+  proposedBy: { select: { fullName: true, alias: true, email: true } },
+  targetUser: { select: { fullName: true, alias: true, email: true } },
+  reviewedBy: { select: { fullName: true, alias: true } },
+} satisfies Prisma.PendingAssignmentInclude;
+
+type AdminPendingAssignmentRow = Prisma.PendingAssignmentGetPayload<{
+  include: typeof adminAsignacionesInclude;
+}>;
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
@@ -55,31 +68,46 @@ export default async function AdminPendingAssignmentsPage({
       ? { status: "REJECTED" as const }
       : { status: "PENDING" as const };
 
+  // Secuencial: 5 queries concurrentes con connection_limit=1 dispara pool
+  // timeout. Cada count va con fallback 0 → si la DB hipa el filtro renderea
+  // (0) pero la página entra. El listado principal cae a [] (empty state).
   const [items, pendingCount, approvedCount, rejectedCount, allCount] =
-    await Promise.all([
-      prisma.pendingAssignment.findMany({
-        where,
-        orderBy:
-          filter === "pending"
-            ? { createdAt: "asc" }
-            : { createdAt: "desc" },
-        take: 100,
-        include: {
-          project: { select: { name: true, slug: true } },
-          proposedBy: {
-            select: { fullName: true, alias: true, email: true },
-          },
-          targetUser: {
-            select: { fullName: true, alias: true, email: true },
-          },
-          reviewedBy: { select: { fullName: true, alias: true } },
-        },
-      }),
-      prisma.pendingAssignment.count({ where: { status: "PENDING" } }),
-      prisma.pendingAssignment.count({ where: { status: "APPROVED" } }),
-      prisma.pendingAssignment.count({ where: { status: "REJECTED" } }),
-      prisma.pendingAssignment.count(),
-    ]);
+    await sequentialPrisma([
+      {
+        run: () =>
+          prisma.pendingAssignment.findMany({
+            where,
+            orderBy:
+              filter === "pending"
+                ? { createdAt: "asc" }
+                : { createdAt: "desc" },
+            take: 100,
+            include: adminAsignacionesInclude,
+          }),
+        fallback: [] as AdminPendingAssignmentRow[],
+        tag: "adminAsignaciones:items",
+      },
+      {
+        run: () => prisma.pendingAssignment.count({ where: { status: "PENDING" } }),
+        fallback: 0,
+        tag: "adminAsignaciones:pendingCount",
+      },
+      {
+        run: () => prisma.pendingAssignment.count({ where: { status: "APPROVED" } }),
+        fallback: 0,
+        tag: "adminAsignaciones:approvedCount",
+      },
+      {
+        run: () => prisma.pendingAssignment.count({ where: { status: "REJECTED" } }),
+        fallback: 0,
+        tag: "adminAsignaciones:rejectedCount",
+      },
+      {
+        run: () => prisma.pendingAssignment.count(),
+        fallback: 0,
+        tag: "adminAsignaciones:allCount",
+      },
+    ] as const);
 
   const countsByFilter: Record<string, number> = {
     pending: pendingCount,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { sendAdminBroadcastAction } from "./actions";
 import {
@@ -8,6 +8,7 @@ import {
   FloatingMultiSelect,
   FloatingTextarea,
 } from "@/components/ui/Floating";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 
 type ProjectOpt = { id: string; name: string; slug: string };
 type AvisoDict = Dict["adminAvisos"];
@@ -31,20 +32,38 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
 
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<number | null>(null);
-  const [isSending, startSend] = useTransition();
+  const [localError, setLocalError] = useState<string | null>(null);
+  const {
+    run,
+    isPending: isSending,
+    error: actionError,
+    reset,
+  } = useSafeAction<FormData, { ok: true; count: number }>(
+    sendAdminBroadcastAction,
+    {
+      onSuccess: ({ count }) => {
+        setSuccess(count);
+        setSubject("");
+        setBody("");
+        setRoles([]);
+        setProjectIds([]);
+      },
+    }
+  );
+  const error = localError ?? actionError;
 
   function clearStatus() {
     setSuccess(null);
-    setError(null);
+    setLocalError(null);
+    reset();
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     clearStatus();
     if (!subject.trim() || !body.trim()) {
-      setError(dict.errEmpty);
+      setLocalError(dict.errEmpty);
       return;
     }
     const fd = new FormData();
@@ -53,19 +72,7 @@ export function AdminAvisoForm({ projects, dict, locale }: Props) {
     fd.set("onlyActive", "true");
     fd.set("subject", subject);
     fd.set("body", body);
-
-    startSend(async () => {
-      const r = await sendAdminBroadcastAction(fd);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      setSuccess(r.count);
-      setSubject("");
-      setBody("");
-      setRoles([]);
-      setProjectIds([]);
-    });
+    run(fd);
   }
 
   const canSend =

@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { StatusBadge } from "@/components/founder/StatusBadge";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { getDict, getLocale } from "@/lib/i18n";
@@ -85,26 +86,51 @@ export default async function FounderDashboardPage({ params }: Params) {
   );
 
   // ─── KPIs operativos (lo que requiere atención hoy) ───────────────
+  // Secuencial: con connection_limit=1 los 3 paralelos pelean por la única
+  // conexión (la query del project ya consumió cupo en este request). Cada
+  // KPI tiene fallback 0 — si falla, el widget muestra 0 y el dashboard sigue.
   const [openLeadsCount, pendingInfoRequestsCount, membersCount] =
-    await Promise.all([
-      prisma.lead.count({
-        where: { projectId: project.id, status: { in: ["OPEN", "CONTACTED"] } },
-      }),
-      prisma.infoRequest.count({
-        where: { projectId: project.id, status: "PENDING" },
-      }),
-      prisma.participation
-        .findMany({
-          where: {
-            projectId: project.id,
-            isPlatformStake: false,
-            currentOwnerId: { not: null },
-            status: { in: ["ASSIGNED", "IN_RESALE", "TRANSFER_PENDING", "IN_NEGOTIATION"] },
-          },
-          select: { currentOwnerId: true },
-        })
-        .then((rows) => new Set(rows.map((r) => r.currentOwnerId)).size),
-    ]);
+    await sequentialPrisma([
+      {
+        run: () =>
+          prisma.lead.count({
+            where: { projectId: project.id, status: { in: ["OPEN", "CONTACTED"] } },
+          }),
+        fallback: 0,
+        tag: "founderDashboard:openLeads",
+      },
+      {
+        run: () =>
+          prisma.infoRequest.count({
+            where: { projectId: project.id, status: "PENDING" },
+          }),
+        fallback: 0,
+        tag: "founderDashboard:pendingInfoRequests",
+      },
+      {
+        run: () =>
+          prisma.participation
+            .findMany({
+              where: {
+                projectId: project.id,
+                isPlatformStake: false,
+                currentOwnerId: { not: null },
+                status: {
+                  in: [
+                    "ASSIGNED",
+                    "IN_RESALE",
+                    "TRANSFER_PENDING",
+                    "IN_NEGOTIATION",
+                  ],
+                },
+              },
+              select: { currentOwnerId: true },
+            })
+            .then((rows) => new Set(rows.map((r) => r.currentOwnerId)).size),
+        fallback: 0,
+        tag: "founderDashboard:membersCount",
+      },
+    ] as const);
 
   const pendingActions = openLeadsCount + pendingInfoRequestsCount;
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { updateProjectInfoAction } from "./actions";
 import { derivePriceAndShares } from "@/lib/utils/shares";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 import {
   FloatingInput,
   FloatingSelect,
@@ -64,8 +65,11 @@ export function EditProjectForm({
   locale: string;
 }) {
   const [form, setForm] = useState<Initial>(initial);
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const boundAction = useCallback(
+    (formData: FormData) => updateProjectInfoAction(projectSlug, formData),
+    [projectSlug]
+  );
+  const { run, isPending, error } = useSafeAction(boundAction);
 
   const STAGES: Array<{ id: Initial["stage"]; label: string }> = [
     { id: "IDEA", label: dict.stageIdea },
@@ -86,16 +90,8 @@ export function EditProjectForm({
     setForm((p) => ({ ...p, [key]: value }));
   }
 
-  function onSubmit(formData: FormData) {
-    setError(null);
-    startTransition(async () => {
-      const r = await updateProjectInfoAction(projectSlug, formData);
-      if (r && r.ok === false) setError(r.error);
-    });
-  }
-
   return (
-    <form action={onSubmit} className="mt-10 space-y-10">
+    <form action={run} className="mt-10 space-y-10">
       {/* Identidad */}
       <section className="space-y-5">
         <p className="eyebrow">{dict.sectionIdentity}</p>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { inviteMemberAction } from "./actions";
 import { FloatingInput, FloatingTextarea } from "@/components/ui/Floating";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 
 type InvitarDict = Dict["founderInvitar"];
 
@@ -27,33 +28,36 @@ export function InvitarForm({
   dict,
   locale,
 }: Props) {
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<SuccessState | null>(null);
-  const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [shareCount, setShareCount] = useState("");
   const [message, setMessage] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    const fd = new FormData(e.currentTarget);
-    startTransition(async () => {
-      const r = await inviteMemberAction(projectSlug, fd);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      setSuccess(r.data);
+  const boundAction = useCallback(
+    (fd: FormData) => inviteMemberAction(projectSlug, fd),
+    [projectSlug]
+  );
+  const { run, isPending, error, reset } = useSafeAction<
+    FormData,
+    { ok: true; data: SuccessState }
+  >(boundAction, {
+    onSuccess: ({ data }) => {
+      setSuccess(data);
       setEmail("");
       setFullName("");
       setShareCount("");
       setMessage("");
       formRef.current?.reset();
-    });
+    },
+  });
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    reset();
+    setSuccess(null);
+    run(new FormData(e.currentTarget));
   }
 
   return (

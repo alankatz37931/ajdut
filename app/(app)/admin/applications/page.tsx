@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { Route } from "next";
+import type { Application } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,20 +40,42 @@ export default async function ApplicationsListPage({
       ? { status: { in: ["APPROVED" as const, "REJECTED" as const] } }
       : { status: { in: ["PENDING" as const, "UNDER_REVIEW" as const] } };
 
-  const [applications, allCount, pendingCount, resolvedCount] = await Promise.all([
-    prisma.application.findMany({
-      where,
-      orderBy: { createdAt: "asc" },
-      take: 100,
-    }),
-    prisma.application.count(),
-    prisma.application.count({
-      where: { status: { in: ["PENDING" as const, "UNDER_REVIEW" as const] } },
-    }),
-    prisma.application.count({
-      where: { status: { in: ["APPROVED" as const, "REJECTED" as const] } },
-    }),
-  ]);
+  // Secuencial: 4 queries concurrentes con connection_limit=1 dispara pool
+  // timeout. Counts caen a 0 si la DB falla; listado cae a [] (empty state).
+  const [applications, allCount, pendingCount, resolvedCount] =
+    await sequentialPrisma([
+      {
+        run: () =>
+          prisma.application.findMany({
+            where,
+            orderBy: { createdAt: "asc" },
+            take: 100,
+          }),
+        fallback: [] as Application[],
+        tag: "adminApplications:list",
+      },
+      {
+        run: () => prisma.application.count(),
+        fallback: 0,
+        tag: "adminApplications:allCount",
+      },
+      {
+        run: () =>
+          prisma.application.count({
+            where: { status: { in: ["PENDING" as const, "UNDER_REVIEW" as const] } },
+          }),
+        fallback: 0,
+        tag: "adminApplications:pendingCount",
+      },
+      {
+        run: () =>
+          prisma.application.count({
+            where: { status: { in: ["APPROVED" as const, "REJECTED" as const] } },
+          }),
+        fallback: 0,
+        tag: "adminApplications:resolvedCount",
+      },
+    ] as const);
 
   const countsByFilter: Record<string, number> = {
     all: allCount,

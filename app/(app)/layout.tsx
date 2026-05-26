@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/auth/session";
 import { AppShell } from "@/components/app/AppShell";
 import { navItemsFor } from "@/components/app/nav-items";
+import { LanguageSyncBoundary } from "@/components/app/LanguageSyncBoundary";
 import { prisma } from "@/lib/db/client";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -31,6 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       }}
       navItems={navItems}
     >
+      <LanguageSyncBoundary />
       {children}
     </AppShell>
   );

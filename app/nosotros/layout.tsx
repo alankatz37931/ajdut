@@ -4,6 +4,7 @@ import { navItemsFor } from "@/components/app/nav-items";
 import { PublicNav } from "@/components/landing/PublicNav";
 import { PublicFooter } from "@/components/landing/PublicFooter";
 import { prisma } from "@/lib/db/client";
+import { safePrisma } from "@/lib/prisma/safe";
 
 /**
  * /nosotros es accesible con o sin sesión:
@@ -18,13 +19,19 @@ export default async function NosotrosLayout({
   const user = await getOptionalSession();
 
   if (user) {
-    const [navItems, dbUser] = await Promise.all([
-      navItemsFor(user.role, user.id),
-      prisma.user.findUnique({
-        where: { id: user.id },
-        select: { avatarUrl: true },
-      }),
-    ]);
+    // Secuencial: con connection_limit=1 paralelizar el sidebar (varios counts
+    // dentro de navItemsFor) y el avatar agota el pool y dispara timeout. El
+    // avatar va envuelto en safePrisma — si falla, SideNav cae a iniciales.
+    const navItems = await navItemsFor(user.role, user.id);
+    const dbUser = await safePrisma(
+      () =>
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { avatarUrl: true },
+        }),
+      null,
+      "nosotrosLayout:avatar"
+    );
     return (
       <AppShell
         user={{

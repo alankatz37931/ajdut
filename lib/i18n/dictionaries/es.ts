@@ -2044,6 +2044,19 @@ export const dict = {
       },
     },
   },
+
+  errorBoundary: {
+    title: "Algo se interrumpió.",
+    description:
+      "Tuvimos un problema al cargar esta sección. Podés reintentar o volver al inicio — el equipo ya recibió el aviso.",
+    tryAgainBtn: "Reintentar",
+    goHomeBtn: "Volver al inicio",
+    digestLabel: "Referencia",
+  },
+
+  loading: {
+    loading: "Cargando…",
+  },
 };
 
 export type Dict = typeof dict;

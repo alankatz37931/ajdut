@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Language } from "@/lib/preferences";
 import { setLanguagePublicAction } from "./language-actions";
+import { useLanguageSync } from "@/components/hooks/useLanguageSync";
 
 /**
  * Toggle EN | ES para el PublicNav. El idioma activo se ve en navy lleno
@@ -13,12 +14,14 @@ import { setLanguagePublicAction } from "./language-actions";
 export function LanguageToggle({ current }: { current: Language }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { broadcast } = useLanguageSync();
 
   function pick(lang: Language) {
     if (lang === current || isPending) return;
     startTransition(async () => {
       await setLanguagePublicAction(lang);
       router.refresh();
+      broadcast();
     });
   }
 

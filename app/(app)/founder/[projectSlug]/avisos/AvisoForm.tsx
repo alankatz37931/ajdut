@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { sendBroadcastAction } from "./actions";
 import {
@@ -8,6 +8,7 @@ import {
   FloatingSelect,
   FloatingTextarea,
 } from "@/components/ui/Floating";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 
 type Member = { userId: string; label: string; email: string };
 type AvisosDict = Dict["founderAvisos"];
@@ -22,7 +23,7 @@ type Props = {
 type Mode = "ALL" | "ONE";
 
 export function AvisoForm({ projectSlug, memberCount, members, dict }: Props) {
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [mode, setMode] = useState<Mode>("ALL");
   const [recipientUserId, setRecipientUserId] = useState<string>(
@@ -30,38 +31,42 @@ export function AvisoForm({ projectSlug, memberCount, members, dict }: Props) {
   );
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+
+  const boundAction = useCallback(
+    (fd: FormData) => sendBroadcastAction(projectSlug, fd),
+    [projectSlug]
+  );
+  const { run, isPending, error: actionError, reset } = useSafeAction(boundAction, {
+    onSuccess: () => {
+      setSuccess(true);
+      setSubject("");
+      setBody("");
+      formRef.current?.reset();
+    },
+  });
+  const error = localError ?? actionError;
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setError(null);
+    setLocalError(null);
+    reset();
     setSuccess(false);
     if (!subject.trim() || !body.trim()) {
-      setError(dict.errEmpty);
+      setLocalError(dict.errEmpty);
       return;
     }
     const formData = new FormData(e.currentTarget);
     if (mode === "ONE") {
       if (!recipientUserId) {
-        setError(dict.errSelectMember);
+        setLocalError(dict.errSelectMember);
         return;
       }
       formData.set("recipientUserId", recipientUserId);
     } else {
       formData.delete("recipientUserId");
     }
-    startTransition(async () => {
-      const r = await sendBroadcastAction(projectSlug, formData);
-      if (!r.ok) {
-        setError(r.error);
-        return;
-      }
-      setSuccess(true);
-      setSubject("");
-      setBody("");
-      formRef.current?.reset();
-    });
+    run(formData);
   }
 
   const selected =

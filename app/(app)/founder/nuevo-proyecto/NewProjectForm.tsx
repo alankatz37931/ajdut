@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { createProjectAction } from "./actions";
 import { derivePriceAndShares } from "@/lib/utils/shares";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
 import {
   FloatingInput,
   FloatingSelect,
@@ -64,8 +65,7 @@ export function NewProjectForm({
     policyDividends: "",
     dividendsFrequency: "",
   });
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const { run, isPending, error } = useSafeAction(createProjectAction);
 
   const valuation = Number.parseFloat(form.preMoneyValuation);
   const valuationValid = Number.isFinite(valuation) && valuation > 0;
@@ -73,14 +73,6 @@ export function NewProjectForm({
 
   function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((p) => ({ ...p, [k]: v }));
-  }
-
-  function onSubmit(formData: FormData) {
-    setError(null);
-    startTransition(async () => {
-      const r = await createProjectAction(formData);
-      if (r && r.ok === false) setError(r.error);
-    });
   }
 
   const fmtMoney = (n: number) =>
@@ -92,7 +84,7 @@ export function NewProjectForm({
   const fmtInt = (n: number) => n.toLocaleString(locale);
 
   return (
-    <form action={onSubmit} className="mt-10 space-y-10">
+    <form action={run} className="mt-10 space-y-10">
       {/* Identidad */}
       <section className="space-y-5">
         <p className="eyebrow">{dict.sectionIdentity}</p>

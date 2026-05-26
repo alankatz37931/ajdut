@@ -1,9 +1,27 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma, safePrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
+
+const documentosProjectSelect = {
+  name: true,
+  slug: true,
+} satisfies Prisma.ProjectSelect;
+
+const documentosDocSelect = {
+  id: true,
+  title: true,
+  storageKey: true,
+  createdAt: true,
+  project: { select: { name: true, slug: true } },
+} satisfies Prisma.DocumentSelect;
+
+type DocumentosProjectRow = Prisma.ProjectGetPayload<{ select: typeof documentosProjectSelect }>;
+type DocumentosDocRow = Prisma.DocumentGetPayload<{ select: typeof documentosDocSelect }>;
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
@@ -21,36 +39,49 @@ export default async function DocumentosPage({
   const t = dict.documentos;
   const { proyecto } = await searchParams;
 
-  const myParts = await prisma.participation.findMany({
-    where: { currentOwnerId: user.id },
-    select: { projectId: true },
-  });
+  // safePrisma: si la lookup de participaciones falla, asumimos sin projectIds
+  // y caemos al empty-state de "no tenés proyectos" en vez de crashear /documentos.
+  const myParts = await safePrisma(
+    () =>
+      prisma.participation.findMany({
+        where: { currentOwnerId: user.id },
+        select: { projectId: true },
+      }),
+    [] as { projectId: string }[],
+    "documentos:myParts"
+  );
   const projectIds = Array.from(new Set(myParts.map((p) => p.projectId)));
 
+  // Secuencial: 2 lecturas con connection_limit=1 ya pueden timeout cuando
+  // coinciden con el render del layout (sidebar). Cada bucket cae a [].
   const [projects, documents] =
     projectIds.length > 0
-      ? await Promise.all([
-          prisma.project.findMany({
-            where: { id: { in: projectIds } },
-            select: { name: true, slug: true },
-            orderBy: { name: "asc" },
-          }),
-          prisma.document.findMany({
-            where: {
-              projectId: { in: projectIds },
-              ...(proyecto ? { project: { slug: proyecto } } : {}),
-            },
-            orderBy: { createdAt: "desc" },
-            select: {
-              id: true,
-              title: true,
-              storageKey: true,
-              createdAt: true,
-              project: { select: { name: true, slug: true } },
-            },
-          }),
-        ])
-      : [[], []];
+      ? await sequentialPrisma([
+          {
+            run: () =>
+              prisma.project.findMany({
+                where: { id: { in: projectIds } },
+                select: documentosProjectSelect,
+                orderBy: { name: "asc" },
+              }),
+            fallback: [] as DocumentosProjectRow[],
+            tag: "documentos:projects",
+          },
+          {
+            run: () =>
+              prisma.document.findMany({
+                where: {
+                  projectId: { in: projectIds },
+                  ...(proyecto ? { project: { slug: proyecto } } : {}),
+                },
+                orderBy: { createdAt: "desc" },
+                select: documentosDocSelect,
+              }),
+            fallback: [] as DocumentosDocRow[],
+            tag: "documentos:documents",
+          },
+        ] as const)
+      : [[] as DocumentosProjectRow[], [] as DocumentosDocRow[]];
 
   const chipClass = (active: boolean) =>
     `eyebrow whitespace-nowrap transition-colors ${

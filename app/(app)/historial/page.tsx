@@ -1,9 +1,45 @@
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
 import { HistoryFilters } from "./HistoryFilters";
+
+const dividendsSelect = {
+  id: true,
+  amount: true,
+  currency: true,
+  shareCount: true,
+  receivedAt: true,
+  sentAt: true,
+  createdAt: true,
+  distribution: { select: { project: { select: { name: true } } } },
+} satisfies Prisma.DividendPaymentSelect;
+
+const participationsSelect = {
+  id: true,
+  shareCount: true,
+  acquiredAt: true,
+  createdAt: true,
+  project: { select: { name: true } },
+} satisfies Prisma.ParticipationSelect;
+
+const salesSelect = {
+  id: true,
+  effectiveAt: true,
+  participation: {
+    select: {
+      shareCount: true,
+      project: { select: { name: true } },
+    },
+  },
+} satisfies Prisma.OwnershipHistorySelect;
+
+type DividendRow = Prisma.DividendPaymentGetPayload<{ select: typeof dividendsSelect }>;
+type ParticipationRow = Prisma.ParticipationGetPayload<{ select: typeof participationsSelect }>;
+type SaleRow = Prisma.OwnershipHistoryGetPayload<{ select: typeof salesSelect }>;
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
@@ -57,44 +93,38 @@ export default async function HistorialPage({
     { value: "365", label: t.periods["365"] },
   ];
 
-  const [dividends, participations, sales] = await Promise.all([
-    prisma.dividendPayment.findMany({
-      where: { recipientId: user.id },
-      select: {
-        id: true,
-        amount: true,
-        currency: true,
-        shareCount: true,
-        receivedAt: true,
-        sentAt: true,
-        createdAt: true,
-        distribution: { select: { project: { select: { name: true } } } },
-      },
-    }),
-    prisma.participation.findMany({
-      where: { currentOwnerId: user.id },
-      select: {
-        id: true,
-        shareCount: true,
-        acquiredAt: true,
-        createdAt: true,
-        project: { select: { name: true } },
-      },
-    }),
-    prisma.ownershipHistory.findMany({
-      where: { fromUserId: user.id },
-      select: {
-        id: true,
-        effectiveAt: true,
-        participation: {
-          select: {
-            shareCount: true,
-            project: { select: { name: true } },
-          },
-        },
-      },
-    }),
-  ]);
+  // Secuencial: 3 findMany concurrentes con connection_limit=1 dispara timeout.
+  // Cada bucket cae a [] si la query falla — el historial mostrará menos
+  // movimientos pero la página entra (mejor que crashear /historial completo).
+  const [dividends, participations, sales] = await sequentialPrisma([
+    {
+      run: () =>
+        prisma.dividendPayment.findMany({
+          where: { recipientId: user.id },
+          select: dividendsSelect,
+        }),
+      fallback: [] as DividendRow[],
+      tag: "historial:dividends",
+    },
+    {
+      run: () =>
+        prisma.participation.findMany({
+          where: { currentOwnerId: user.id },
+          select: participationsSelect,
+        }),
+      fallback: [] as ParticipationRow[],
+      tag: "historial:participations",
+    },
+    {
+      run: () =>
+        prisma.ownershipHistory.findMany({
+          where: { fromUserId: user.id },
+          select: salesSelect,
+        }),
+      fallback: [] as SaleRow[],
+      tag: "historial:sales",
+    },
+  ] as const);
 
   const movements: Movement[] = [];
   for (const d of dividends) {

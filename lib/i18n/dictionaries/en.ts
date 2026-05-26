@@ -2035,4 +2035,17 @@ export const dict: Dict = {
       },
     },
   },
+
+  errorBoundary: {
+    title: "Something broke.",
+    description:
+      "We had trouble loading this section. You can try again or head back home — the team has already been notified.",
+    tryAgainBtn: "Try again",
+    goHomeBtn: "Back to home",
+    digestLabel: "Reference",
+  },
+
+  loading: {
+    loading: "Loading…",
+  },
 };

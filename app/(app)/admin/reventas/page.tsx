@@ -1,11 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { Route } from "next";
+import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
+import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
 import { ResaleTransferActions } from "./ResaleTransferActions";
+
+const adminResalesListingSelect = {
+  id: true,
+  status: true,
+  intentNote: true,
+  contactChannel: true,
+  createdAt: true,
+  proposedBuyerId: true,
+  seller: { select: { fullName: true, alias: true, email: true } },
+  project: { select: { name: true, slug: true } },
+  participation: { select: { serialCode: true, shareCount: true } },
+} satisfies Prisma.ResaleListingSelect;
+
+type AdminResaleListingRow = Prisma.ResaleListingGetPayload<{
+  select: typeof adminResalesListingSelect;
+}>;
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
@@ -35,28 +53,39 @@ export default async function AdminResalesPage({
       ? {}
       : { status: "AWAITING_VALIDATION" as const };
 
-  const [listings, pendingCount, completedCount, allCount] = await Promise.all([
-    prisma.resaleListing.findMany({
-      where,
-      orderBy:
-        filter === "pending" ? { createdAt: "asc" } : { createdAt: "desc" },
-      take: 100,
-      select: {
-        id: true,
-        status: true,
-        intentNote: true,
-        contactChannel: true,
-        createdAt: true,
-        proposedBuyerId: true,
-        seller: { select: { fullName: true, alias: true, email: true } },
-        project: { select: { name: true, slug: true } },
-        participation: { select: { serialCode: true, shareCount: true } },
-      },
-    }),
-    prisma.resaleListing.count({ where: { status: "AWAITING_VALIDATION" } }),
-    prisma.resaleListing.count({ where: { status: "COMPLETED" } }),
-    prisma.resaleListing.count(),
-  ]);
+  // Secuencial: 4 queries concurrentes con connection_limit=1 dispara pool
+  // timeout. Cada count tiene fallback 0 → el badge muestra (0) si falla pero
+  // la página renderea. El listado principal sin fallback razonable usa [].
+  const [listings, pendingCount, completedCount, allCount] = await sequentialPrisma([
+    {
+      run: () =>
+        prisma.resaleListing.findMany({
+          where,
+          orderBy:
+            filter === "pending" ? { createdAt: "asc" } : { createdAt: "desc" },
+          take: 100,
+          select: adminResalesListingSelect,
+        }),
+      fallback: [] as AdminResaleListingRow[],
+      tag: "adminReventas:listings",
+    },
+    {
+      run: () =>
+        prisma.resaleListing.count({ where: { status: "AWAITING_VALIDATION" } }),
+      fallback: 0,
+      tag: "adminReventas:pendingCount",
+    },
+    {
+      run: () => prisma.resaleListing.count({ where: { status: "COMPLETED" } }),
+      fallback: 0,
+      tag: "adminReventas:completedCount",
+    },
+    {
+      run: () => prisma.resaleListing.count(),
+      fallback: 0,
+      tag: "adminReventas:allCount",
+    },
+  ] as const);
 
   const buyerIds = Array.from(
     new Set(
