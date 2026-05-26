@@ -25,10 +25,10 @@ export default async function AdminAvisosPage() {
 
   return (
     <div>
-      <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
+      <header className="pt-5 pb-8 sm:pt-7 sm:pb-10">
         <p className="eyebrow">{t.eyebrow}</p>
         <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
-        <p className="mt-3 text-navy/75 leading-relaxed max-w-3xl">{t.intro}</p>
+        <p className="mt-3 text-navy/75 leading-relaxed max-w-2xl">{t.intro}</p>
       </header>
 
       <AdminAvisoForm projects={projects} dict={t} locale={locale} />
