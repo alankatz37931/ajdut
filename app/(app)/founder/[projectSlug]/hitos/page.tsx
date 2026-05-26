@@ -15,6 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function FounderMilestonesPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
+  const dict = await getDict();
+  const t = dict.founderHitos;
   const { projectSlug } = await params;
 
   const project = await prisma.project.findUnique({
@@ -48,11 +50,15 @@ export default async function FounderMilestonesPage({ params }: Params) {
         projectName={project.name}
         projectSlug={project.slug}
         projectStatus={project.status}
-        section="Hitos del roadmap"
-        description="Lo que prometiste cumplir y lo que ya cumpliste. Los hitos se muestran en la ficha pública a quienes tengan acceso."
+        section={t.section}
+        description={t.description}
       />
 
-      <MilestonesEditor projectSlug={projectSlug} initial={milestones} />
+      <MilestonesEditor
+        projectSlug={projectSlug}
+        initial={milestones}
+        dict={t}
+      />
     </div>
   );
 }

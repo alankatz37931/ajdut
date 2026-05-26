@@ -1317,6 +1317,38 @@ export const dict: Dict = {
     },
   },
 
+  founderHitos: {
+    section: "Roadmap milestones",
+    description:
+      "What you committed to deliver and what you've already delivered. Milestones are shown on the public project page to those with access.",
+    countSingle: "{n} milestone recorded",
+    countPlural: "{n} milestones recorded",
+    addBtn: "+ Add milestone",
+    empty: "No milestones recorded yet.",
+    status: {
+      PLANNED: "Planned",
+      IN_PROGRESS: "In progress",
+      ACHIEVED: "Achieved",
+      DELAYED: "Delayed",
+      CANCELLED: "Cancelled",
+    } as Record<string, string>,
+    fieldTarget: "Target",
+    fieldAchieved: "Achieved",
+    editBtn: "Edit",
+    removeBtn: "Remove",
+    removeConfirm: "Remove this milestone?",
+    form: {
+      titleLabel: "Title",
+      descriptionLabel: "Description",
+      statusLabel: "Status",
+      targetDateLabel: "Target date",
+      achievedAtLabel: "Achieved on",
+      cancelBtn: "Cancel",
+      saveBtn: "Save",
+      savingBtn: "Saving…",
+    },
+  },
+
   founderInvitar: {
     section: "Invite member",
     description:

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { Dict } from "@/lib/i18n";
 import { upsertMilestoneAction, removeMilestoneAction } from "./actions";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/Floating";
 
 type Status = "PLANNED" | "IN_PROGRESS" | "ACHIEVED" | "DELAYED" | "CANCELLED";
+type HitosDict = Dict["founderHitos"];
 
 type Milestone = {
   id: string;
@@ -19,14 +21,6 @@ type Milestone = {
   status: Status;
   targetDate: string;
   achievedAt: string;
-};
-
-const STATUS_LABEL: Record<Status, string> = {
-  PLANNED: "Planeado",
-  IN_PROGRESS: "En curso",
-  ACHIEVED: "Cumplido",
-  DELAYED: "Atrasado",
-  CANCELLED: "Cancelado",
 };
 
 const STATUS_SYMBOL: Record<Status, string> = {
@@ -49,9 +43,11 @@ const empty: Milestone = {
 export function MilestonesEditor({
   projectSlug,
   initial,
+  dict,
 }: {
   projectSlug: string;
   initial: Milestone[];
+  dict: HitosDict;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(initial.length === 0);
@@ -79,6 +75,11 @@ export function MilestonesEditor({
     });
   }
 
+  const countLabel = (initial.length === 1
+    ? dict.countSingle
+    : dict.countPlural
+  ).replace("{n}", String(initial.length));
+
   return (
     <div className="mt-8 space-y-6">
       {error && (
@@ -88,14 +89,14 @@ export function MilestonesEditor({
       )}
 
       <div className="hairline p-4 bg-paper flex items-center justify-between">
-        <p className="eyebrow">{initial.length} hito{initial.length === 1 ? "" : "s"} registrado{initial.length === 1 ? "" : "s"}</p>
+        <p className="eyebrow">{countLabel}</p>
         {!showNew && !editingId && (
           <button
             type="button"
             onClick={() => setShowNew(true)}
             className="eyebrow hover:!text-gold"
           >
-            + Agregar hito
+            {dict.addBtn}
           </button>
         )}
       </div>
@@ -106,6 +107,7 @@ export function MilestonesEditor({
           onSubmit={onSubmit}
           onCancel={() => setShowNew(false)}
           isPending={isPending}
+          dict={dict}
         />
       )}
 
@@ -118,6 +120,7 @@ export function MilestonesEditor({
                 onSubmit={onSubmit}
                 onCancel={() => setEditingId(null)}
                 isPending={isPending}
+                dict={dict}
               />
             ) : (
               <div>
@@ -130,16 +133,16 @@ export function MilestonesEditor({
                     <span aria-hidden className="text-base leading-none">
                       {STATUS_SYMBOL[m.status]}
                     </span>
-                    {STATUS_LABEL[m.status]}
+                    {dict.status[m.status] ?? m.status}
                   </span>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-3 hairline-t pt-3 text-sm">
                   <div>
-                    <p className="eyebrow">Objetivo</p>
+                    <p className="eyebrow">{dict.fieldTarget}</p>
                     <p className="mt-1 font-mono text-navy">{m.targetDate || "—"}</p>
                   </div>
                   <div>
-                    <p className="eyebrow">Cumplido</p>
+                    <p className="eyebrow">{dict.fieldAchieved}</p>
                     <p className="mt-1 font-mono text-navy">{m.achievedAt || "—"}</p>
                   </div>
                 </div>
@@ -149,11 +152,11 @@ export function MilestonesEditor({
                     onClick={() => setEditingId(m.id)}
                     className="eyebrow hover:!text-gold"
                   >
-                    Editar
+                    {dict.editBtn}
                   </button>
                   <InlineConfirm
-                    label="Eliminar"
-                    question="¿Eliminar este hito?"
+                    label={dict.removeBtn}
+                    question={dict.removeConfirm}
                     onConfirm={() => onRemove(m.id)}
                     disabled={isPending}
                   />
@@ -165,7 +168,7 @@ export function MilestonesEditor({
       </ul>
 
       {initial.length === 0 && !showNew && (
-        <p className="text-navy/60">Sin hitos registrados todavía.</p>
+        <p className="text-navy/60">{dict.empty}</p>
       )}
     </div>
   );
@@ -176,11 +179,13 @@ function MilestoneForm({
   onSubmit,
   onCancel,
   isPending,
+  dict,
 }: {
   milestone: Milestone;
   onSubmit: (fd: FormData) => void;
   onCancel: () => void;
   isPending: boolean;
+  dict: HitosDict;
 }) {
   const [title, setTitle] = useState(milestone.title);
   const [description, setDescription] = useState(milestone.description);
@@ -193,14 +198,14 @@ function MilestoneForm({
       <input type="hidden" name="milestoneId" value={milestone.id} />
       <FloatingInput
         id="title"
-        label="Título"
+        label={dict.form.titleLabel}
         value={title}
         onChange={setTitle}
         required
       />
       <FloatingTextarea
         id="description"
-        label="Descripción"
+        label={dict.form.descriptionLabel}
         value={description}
         onChange={setDescription}
         rows={3}
@@ -210,25 +215,27 @@ function MilestoneForm({
         <div>
           <FloatingSelect
             id="status"
-            label="Estado"
+            label={dict.form.statusLabel}
             value={status}
             onChange={(v) => setStatus(v as Status)}
-            options={(Object.keys(STATUS_LABEL) as Status[]).map((s) => ({
-              value: s,
-              label: STATUS_LABEL[s],
-            }))}
+            options={(["PLANNED", "IN_PROGRESS", "ACHIEVED", "DELAYED", "CANCELLED"] as Status[]).map(
+              (s) => ({
+                value: s,
+                label: dict.status[s] ?? s,
+              })
+            )}
           />
           <input type="hidden" name="status" value={status} />
         </div>
         <FloatingDate
           id="targetDate"
-          label="Fecha objetivo"
+          label={dict.form.targetDateLabel}
           value={targetDate}
           onChange={setTargetDate}
         />
         <FloatingDate
           id="achievedAt"
-          label="Cumplido el"
+          label={dict.form.achievedAtLabel}
           value={achievedAt}
           onChange={setAchievedAt}
         />
@@ -240,10 +247,10 @@ function MilestoneForm({
           disabled={isPending}
           className="eyebrow hover:!text-gold"
         >
-          Cancelar
+          {dict.form.cancelBtn}
         </button>
         <button type="submit" disabled={isPending} className="btn-primary disabled:opacity-50">
-          {isPending ? "Guardando…" : "Guardar"}
+          {isPending ? dict.form.savingBtn : dict.form.saveBtn}
         </button>
       </div>
     </form>

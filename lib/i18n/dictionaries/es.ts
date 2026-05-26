@@ -1325,6 +1325,38 @@ export const dict = {
     },
   },
 
+  founderHitos: {
+    section: "Hitos del roadmap",
+    description:
+      "Lo que prometiste cumplir y lo que ya cumpliste. Los hitos se muestran en la ficha pública a quienes tengan acceso.",
+    countSingle: "{n} hito registrado",
+    countPlural: "{n} hitos registrados",
+    addBtn: "+ Agregar hito",
+    empty: "Sin hitos registrados todavía.",
+    status: {
+      PLANNED: "Planeado",
+      IN_PROGRESS: "En curso",
+      ACHIEVED: "Cumplido",
+      DELAYED: "Atrasado",
+      CANCELLED: "Cancelado",
+    } as Record<string, string>,
+    fieldTarget: "Objetivo",
+    fieldAchieved: "Cumplido",
+    editBtn: "Editar",
+    removeBtn: "Eliminar",
+    removeConfirm: "¿Eliminar este hito?",
+    form: {
+      titleLabel: "Título",
+      descriptionLabel: "Descripción",
+      statusLabel: "Estado",
+      targetDateLabel: "Fecha objetivo",
+      achievedAtLabel: "Cumplido el",
+      cancelBtn: "Cancelar",
+      saveBtn: "Guardar",
+      savingBtn: "Guardando…",
+    },
+  },
+
   founderInvitar: {
     section: "Invitar miembro",
     description:
