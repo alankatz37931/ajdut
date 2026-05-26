@@ -95,6 +95,12 @@ export async function createProjectAction(
   if (!Number.isFinite(valuation) || valuation <= 0) {
     return { ok: false, error: "Ingresá una valoración válida." };
   }
+  // Cap defensivo: > USD 1 cuatrillón es siempre input erróneo (o
+  // intento de overflow numérico). El cap real lo aplica el dominio,
+  // este es solo el sanity check para no propagar floats absurdos.
+  if (valuation > 1e15) {
+    return { ok: false, error: "La valoración excede el límite permitido." };
+  }
 
   let created;
   try {

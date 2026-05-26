@@ -172,13 +172,26 @@ export async function upsertExternalHoldingAction(
   try {
     const project = await ownedProject(projectSlug);
     const label = input.label.trim();
+    // Validamos NaN/Infinity ANTES de truncar — `Math.trunc(NaN) === NaN`
+    // se cuela del !isFinite anterior y deja caer la falla recién en Prisma.
+    if (!Number.isFinite(input.peopleCount) || !Number.isFinite(input.shareCount)) {
+      return { ok: false, error: "Cantidad inválida." };
+    }
     const peopleCount = Math.trunc(input.peopleCount);
     const shareCount = Math.trunc(input.shareCount);
-    if (!Number.isFinite(peopleCount) || peopleCount < 1) {
+    if (!Number.isInteger(peopleCount) || peopleCount < 1) {
       return { ok: false, error: "La cantidad de personas debe ser al menos 1." };
     }
-    if (!Number.isFinite(shareCount) || shareCount < 1) {
+    if (!Number.isInteger(shareCount) || shareCount < 1) {
       return { ok: false, error: "La cantidad de acciones debe ser al menos 1." };
+    }
+    // Cap defensivo: 1e9 personas/acciones es claramente input erróneo y
+    // protege contra inputs absurdos que pueden romper queries downstream.
+    if (peopleCount > 1e9) {
+      return { ok: false, error: "La cantidad de personas excede el límite permitido." };
+    }
+    if (shareCount > 1e9) {
+      return { ok: false, error: "La cantidad de acciones excede el límite permitido." };
     }
     let resolved: string | null = null;
     if (input.classId) {

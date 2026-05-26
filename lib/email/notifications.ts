@@ -629,8 +629,10 @@ export async function notifyChannelNewMessage(
   }
   if (process.env.NODE_ENV !== "production") {
     // En dev/test la notificación es ruido — la dejamos visible en logs por si
-    // alguien quiere verificar el flujo, sin tocar Resend.
-    console.log(
+    // alguien quiere verificar el flujo, sin tocar Resend. Usamos console.warn
+    // porque ESLint no permite console.log y porque "se descartó el email" es
+    // un evento que merece visibilidad en la consola del dev.
+    console.warn(
       `[chat] (skip email en NODE_ENV=${process.env.NODE_ENV}) ${input.authorName} → ${input.to.length} miembro(s) en ${input.projectName}`
     );
     return { ok: true as const, id: null, via: "console" as const };

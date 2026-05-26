@@ -165,6 +165,13 @@ export async function createPollAction(
       const dict = await getDict();
       return { ok: false, error: dict.chat.errors.invalidCloseDate, code: "VALIDATION" };
     }
+    // Cap defensivo: una poll no debería cerrar más de 10 años en el futuro
+    // (evita inputs accidentales tipo year-9999 o datepickers rotos).
+    const TEN_YEARS_MS = 10 * 365 * 24 * 60 * 60 * 1000;
+    if (parsed.getTime() > Date.now() + TEN_YEARS_MS) {
+      const dict = await getDict();
+      return { ok: false, error: dict.chat.errors.invalidCloseDate, code: "VALIDATION" };
+    }
     closesAt = parsed;
   }
 

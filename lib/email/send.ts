@@ -62,21 +62,32 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const recipients = Array.isArray(input.to) ? input.to : [input.to];
 
   if (!client) {
-    console.log(
-      [
-        "",
-        "═════════════════════════════════════════════════════════════════",
-        "  📧 EMAIL (fallback consola — RESEND_API_KEY no configurada)",
-        "═════════════════════════════════════════════════════════════════",
-        `  From:    ${FROM_EMAIL}`,
-        `  To:      ${recipients.join(", ")}`,
-        `  Subject: ${input.subject}`,
-        "─────────────────────────────────────────────────────────────────",
-        `  HTML:    ${input.html.length} chars (no se imprime; activa Resend para ver renderizado)`,
-        "═════════════════════════════════════════════════════════════════",
-        "",
-      ].join("\n")
-    );
+    // En producción NO imprimimos detalles del email (destinatarios, asunto
+    // → potencial PII en logs). Solo un warn una vez por evento para que el
+    // operador note la misconfiguración. En dev/test sí mostramos el pretty
+    // log porque ayuda a inspeccionar el contenido sin Resend.
+    if (process.env.NODE_ENV !== "production") {
+      console.log(
+        [
+          "",
+          "═════════════════════════════════════════════════════════════════",
+          "  📧 EMAIL (fallback consola — RESEND_API_KEY no configurada)",
+          "═════════════════════════════════════════════════════════════════",
+          `  From:    ${FROM_EMAIL}`,
+          `  To:      ${recipients.join(", ")}`,
+          `  Subject: ${input.subject}`,
+          "─────────────────────────────────────────────────────────────────",
+          `  HTML:    ${input.html.length} chars (no se imprime; activa Resend para ver renderizado)`,
+          "═════════════════════════════════════════════════════════════════",
+          "",
+        ].join("\n")
+      );
+    } else {
+      console.warn("[email] RESEND_API_KEY no configurada; email descartado.", {
+        kind: input.kind ?? null,
+        recipientCount: recipients.length,
+      });
+    }
     return { ok: true, id: null, via: "console" };
   }
 

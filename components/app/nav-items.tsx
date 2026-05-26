@@ -21,11 +21,10 @@ import {
 
 // Role labels (visible en /perfil, /configuracion, etc.). Las claves del
 // enum quedan en inglés (ADMIN/PROJECT_OWNER/...); las etiquetas humanas
-// son del dict según el idioma activo.
-//
-// TODO i18n: Si llamadores admin nuevos necesitan etiquetas localizadas,
-// usen `getRoleLabel` (async). El export estático `ROLE_LABEL` queda en
-// español por compat con audit / admin que están fuera del scope de Ola 7c.
+// vienen del dict (vía `getRoleLabel`) cuando hay request context. El export
+// estático `ROLE_LABEL` se conserva como fallback síncrono de `getRoleLabel`
+// — los call sites externos hoy son async; si en el futuro alguien necesita
+// labels sin request context, este fallback queda en español por diseño.
 export const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Admin",
   PROJECT_OWNER: "Project owner",

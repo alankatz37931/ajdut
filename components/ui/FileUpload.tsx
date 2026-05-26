@@ -173,6 +173,15 @@ export function FileUpload({
         /* ─── Cargado: fila compacta ────────────────────────────── */
         <div className="hairline bg-paper-light flex items-center gap-3 p-3">
           {showThumb ? (
+            /*
+             * Usamos <img> nativo (no next/image) intencionalmente:
+             *   1. Thumb de 48×48 — el overhead del optimizer (cold start + fetch)
+             *      no compensa el ahorro de bytes a este tamaño.
+             *   2. `value` puede venir recién subido a Blob — el optimizer puede
+             *      llegar antes que la propagación CDN y devolver 404 transitorio.
+             *   3. `onError` → setPreviewBroken nos da fallback predecible al
+             *      <FileGlyph />; con next/image el error path es más opaco.
+             */
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={value}

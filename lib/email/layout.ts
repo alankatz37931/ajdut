@@ -3,8 +3,9 @@
  * Mantiene la identidad visual (paper, navy, gold, hairline, DM Mono en cifras).
  * Sin imágenes, sin CSS externo — todo inline.
  *
- * TODO i18n: Los templates de email se mantienen en español en Ola 7c.
- * Ver lib/email/README.md para el plan de localización (Ola 7d+).
+ * i18n: por diseño los templates de email siguen en español. Ver
+ * lib/email/README.md para el plan de localización pendiente (requiere
+ * persistir `User.preferredLanguage` y bifurcar por audiencia).
  */
 
 export type EmailLayoutInput = {
