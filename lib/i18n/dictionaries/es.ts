@@ -1298,8 +1298,7 @@ export const dict = {
   adminAvisos: {
     eyebrow: "— Admin",
     title: "Avisos a usuarios",
-    intro:
-      "Enviá un email a usuarios filtrados por rol, actividad o pertenencia a un proyecto. Calculá primero cuántos lo reciben y después confirmá el envío.",
+    intro: "Enviá emails a los miembros filtrados por rol o proyecto.",
     sectionFilters: "Filtros",
     sectionMessage: "Mensaje",
     sectionSend: "Envío",

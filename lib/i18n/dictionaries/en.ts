@@ -1290,8 +1290,7 @@ export const dict: Dict = {
   adminAvisos: {
     eyebrow: "— Admin",
     title: "Notices to users",
-    intro:
-      "Send an email to users filtered by role, activity or project membership. Compute recipients first, then confirm the send.",
+    intro: "Email members filtered by role or project.",
     sectionFilters: "Filters",
     sectionMessage: "Message",
     sectionSend: "Send",
