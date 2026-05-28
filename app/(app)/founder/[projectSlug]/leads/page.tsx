@@ -160,7 +160,7 @@ export default async function FounderLeadsPage({ params }: Params) {
       {/* ─── Solicitudes de información (etapa 1) ──────────────────── */}
       {infoRequests.length > 0 && (
         <section className="mt-12">
-          <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
+          <div className="hairline-b pb-3 mb-6 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
             <p className="eyebrow !text-navy">
               {t.infoSectionFmt.replace("{n}", String(infoRequests.length))}
             </p>
@@ -177,7 +177,7 @@ export default async function FounderLeadsPage({ params }: Params) {
                   <span aria-hidden className="shrink-0 w-[3px] self-stretch bg-gold/70" />
                   <div className="flex-1 min-w-0 py-3 pr-2">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="font-sans text-navy text-lg leading-tight">
+                      <span className="font-sans text-navy text-lg leading-tight min-w-0 break-words">
                         {r.requester.fullName}
                       </span>
                       <span className="eyebrow shrink-0">{daysAgo}d</span>
@@ -206,7 +206,7 @@ export default async function FounderLeadsPage({ params }: Params) {
 
       {/* ─── Leads (etapa 2 — interés concreto) ────────────────────── */}
       <section className="mt-12">
-        <div className="hairline-b pb-3 mb-6 flex items-baseline justify-between gap-3">
+        <div className="hairline-b pb-3 mb-6 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <p className="eyebrow !text-navy">
             {leads.length > 0
               ? (infoRequests.length > 0
@@ -244,7 +244,7 @@ export default async function FounderLeadsPage({ params }: Params) {
                   />
                   <div className="flex-1 min-w-0 py-3 pr-2">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="font-sans text-navy text-lg leading-tight">
+                      <span className="font-sans text-navy text-lg leading-tight min-w-0 break-words">
                         {l.user.fullName}
                       </span>
                       <span className="eyebrow shrink-0">{daysAgo}d</span>

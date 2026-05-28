@@ -11,13 +11,13 @@ export default async function HomePage() {
   const dict = await getDict();
   const t = dict.home;
   return (
-    <div className="mx-auto max-w-6xl px-6 sm:px-8 py-5 sm:py-8">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-8 py-5 sm:py-8">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-[72px] lg:items-start">
         {/* Hero (col izquierda en desktop) — usa todo el ancho de su col */}
         <section>
           <p className="eyebrow leading-tight">{t.eyebrow}</p>
 
-          <h1 className="font-sans mt-3 sm:mt-4 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] text-navy !leading-[1.1] font-bold">
+          <h1 className="font-sans mt-3 sm:mt-4 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] text-navy !leading-[1.1] font-bold break-words">
             {t.titleLine1}
             {/* Break solo en desktop — en mobile/tablet el texto fluye natural */}
             <span className="hidden lg:inline">
@@ -58,7 +58,7 @@ export default async function HomePage() {
           <div className="mt-5 sm:mt-6 max-w-md">
             <Link
               href="/aplicar"
-              className="btn-primary w-full text-center transition-all duration-300 hover:shadow-lg hover:shadow-navy/15 hover:-translate-y-0.5"
+              className="btn-primary w-full sm:w-auto text-center transition-all duration-300 hover:shadow-lg hover:shadow-navy/15 hover:-translate-y-0.5"
             >
               <span>{t.ctaApply}</span>
               <span aria-hidden className="ml-1">→</span>

@@ -271,8 +271,8 @@ export default async function AdminAuditPage({
               : t.systemActor;
             return (
               <li key={l.id} className="hairline-b py-4">
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="font-sans text-navy">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <p className="font-sans text-navy break-words min-w-0">
                     {t.actions[l.action] ?? l.action}
                   </p>
                   <p className="eyebrow font-mono shrink-0 !text-navy/40">
@@ -280,7 +280,7 @@ export default async function AdminAuditPage({
                     {l.createdAt.toISOString().slice(11, 16)}
                   </p>
                 </div>
-                <p className="mt-1 eyebrow">
+                <p className="mt-1 eyebrow break-words [overflow-wrap:anywhere]">
                   {who}
                   {l.project ? (
                     <>
@@ -295,7 +295,9 @@ export default async function AdminAuditPage({
                   ) : null}
                 </p>
                 {detail && (
-                  <p className="mt-1.5 text-sm text-navy/70">{detail}</p>
+                  <p className="mt-1.5 text-sm text-navy/70 break-words [overflow-wrap:anywhere]">
+                    {detail}
+                  </p>
                 )}
               </li>
             );
@@ -304,9 +306,9 @@ export default async function AdminAuditPage({
       )}
 
       {totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-between hairline-t pt-6">
+        <div className="mt-8 flex items-center justify-between gap-3 hairline-t pt-6">
           <PageLink page={page - 1} disabled={page <= 1} actor={actor} label={t.pagPrev} />
-          <p className="eyebrow font-mono">
+          <p className="eyebrow font-mono whitespace-nowrap">
             {page} / {totalPages}
           </p>
           <PageLink
@@ -333,7 +335,11 @@ function PageLink({
   label: string;
 }) {
   if (disabled) {
-    return <span className="eyebrow !text-navy/30">{label}</span>;
+    return (
+      <span className="eyebrow !text-navy/30 inline-flex items-center min-h-[44px] px-2">
+        {label}
+      </span>
+    );
   }
   const params = new URLSearchParams();
   if (actor) params.set("actor", actor);
@@ -341,7 +347,7 @@ function PageLink({
   return (
     <Link
       href={`/admin/auditoria?${params.toString()}` as Route}
-      className="eyebrow hover:!text-gold"
+      className="eyebrow hover:!text-gold inline-flex items-center min-h-[44px] px-2"
     >
       {label}
     </Link>

@@ -135,13 +135,13 @@ export function MetricsEditor({
         </p>
       )}
 
-      <div className="hairline p-4 bg-paper flex items-center justify-between">
+      <div className="hairline p-4 bg-paper flex flex-wrap items-center justify-between gap-3">
         <p className="eyebrow">{countLabel}</p>
         {!showNew && (
           <button
             type="button"
             onClick={() => setShowNew(true)}
-            className="eyebrow hover:!text-gold"
+            className="eyebrow hover:!text-gold shrink-0"
           >
             {dict.addBtn}
           </button>
@@ -236,17 +236,17 @@ export function MetricsEditor({
 
       <ul className="hairline-t">
         {initial.map((m) => (
-          <li key={m.id} className="hairline-b py-4 grid grid-cols-12 items-center gap-3">
-            <div className="col-span-12 sm:col-span-4">
-              <p className="font-sans text-navy">{labelFor(m)}</p>
+          <li key={m.id} className="hairline-b py-4 grid grid-cols-12 items-center gap-x-3 gap-y-2">
+            <div className="col-span-12 sm:col-span-4 min-w-0">
+              <p className="font-sans text-navy break-words">{labelFor(m)}</p>
               <p className="mt-1 eyebrow">
                 {m.visibility === "PUBLIC_TO_HOLDERS"
                   ? dict.visibilityPublic
                   : dict.visibilityPrivate}
               </p>
             </div>
-            <div className="col-span-6 sm:col-span-4 font-mono text-navy">{formatValue(m)}</div>
-            <div className="col-span-6 sm:col-span-2 eyebrow">{m.asOf}</div>
+            <div className="col-span-7 sm:col-span-4 font-mono text-navy break-words min-w-0">{formatValue(m)}</div>
+            <div className="col-span-5 sm:col-span-2 eyebrow text-right sm:text-left">{m.asOf}</div>
             <div className="col-span-12 sm:col-span-2 text-right">
               <InlineConfirm
                 label={dict.removeBtn}

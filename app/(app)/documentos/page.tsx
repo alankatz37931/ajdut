@@ -92,7 +92,9 @@ export default async function DocumentosPage({
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <p className="eyebrow">{t.eyebrow}</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
+          {t.title}
+        </h1>
         <p className="mt-3 text-navy/75 leading-relaxed">{t.intro}</p>
       </header>
 

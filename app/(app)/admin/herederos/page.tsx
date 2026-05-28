@@ -41,7 +41,7 @@ export default async function AdminHerederosPage() {
               return (
                 <li key={u.id} className="hairline-b py-6">
                   <div className="flex items-baseline justify-between gap-3">
-                    <p className="font-sans text-navy text-lg leading-tight">
+                    <p className="font-sans text-navy text-base sm:text-lg leading-tight break-words [overflow-wrap:anywhere] min-w-0">
                       {displayName}
                     </p>
                     <p className="eyebrow shrink-0 !text-gold">
@@ -52,7 +52,7 @@ export default async function AdminHerederosPage() {
                     </p>
                   </div>
 
-                  <p className="mt-2 eyebrow normal-case tracking-normal !text-navy/60">
+                  <p className="mt-2 eyebrow normal-case tracking-normal !text-navy/60 break-all">
                     <a
                       href={`mailto:${u.email}`}
                       className="hover:!text-gold transition-colors"
@@ -99,10 +99,10 @@ export default async function AdminHerederosPage() {
                         {u.heirs.map((h) => (
                           <li
                             key={h.id}
-                            className="hairline-t py-3 grid grid-cols-12 gap-3 items-baseline"
+                            className="hairline-t py-3 grid grid-cols-12 gap-x-3 gap-y-1 items-baseline"
                           >
-                            <div className="col-span-12 sm:col-span-5 min-w-0">
-                              <p className="font-sans text-navy">
+                            <div className="col-span-8 sm:col-span-5 min-w-0">
+                              <p className="font-sans text-navy break-words">
                                 {h.fullName}
                               </p>
                               {h.relationship && (
@@ -110,6 +110,13 @@ export default async function AdminHerederosPage() {
                                   {h.relationship}
                                 </p>
                               )}
+                            </div>
+                            <div className="col-span-4 sm:col-span-2 sm:order-last font-mono text-navy text-right">
+                              {h.sharePercent.toLocaleString(locale, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                              %
                             </div>
                             <div className="col-span-12 sm:col-span-5 min-w-0">
                               {h.email ? (
@@ -124,13 +131,6 @@ export default async function AdminHerederosPage() {
                                   {t.noEmail}
                                 </span>
                               )}
-                            </div>
-                            <div className="col-span-12 sm:col-span-2 font-mono text-navy sm:text-right">
-                              {h.sharePercent.toLocaleString(locale, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                              %
                             </div>
                           </li>
                         ))}

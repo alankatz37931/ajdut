@@ -624,17 +624,17 @@ export default async function ProjectPage({ params }: Params) {
                       {t.participationStatus[p.status] ?? p.status}
                     </p>
                   </div>
-                  <div className="col-span-6 sm:col-span-3">
+                  <div className="col-span-12 sm:col-span-3">
                     <p className="eyebrow sm:hidden">{t.yours.colShares}</p>
                     <p className="mt-1 sm:mt-0 font-mono text-navy">
                       {formatNumber(p.shareCount, undefined, locale)}
                     </p>
                   </div>
-                  <div className="col-span-6 sm:col-span-2">
-                    <p className="eyebrow sm:hidden">
-                      {dict.projectList.of} {formatNumber(totalShares, undefined, locale)}
-                    </p>
-                    <p className="mt-1 sm:mt-0 font-mono text-navy">
+                  {/* "de N total" — solo visible en sm+: el header de la
+                      tabla ya pinta el contexto, repetir en mobile mete
+                      ruido y duplica el label encima del valor. */}
+                  <div className="hidden sm:block sm:col-span-2">
+                    <p className="font-mono text-navy">
                       {dict.projectList.of} {formatNumber(totalShares, undefined, locale)}
                     </p>
                   </div>

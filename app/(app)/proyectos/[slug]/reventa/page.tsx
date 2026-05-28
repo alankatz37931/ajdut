@@ -112,12 +112,14 @@ export default async function ProjectResalePage({ params }: Params) {
 
   return (
     <div>
-      <div className="pt-5 sm:pt-7 pb-8 hairline-b">
+      <div className="pt-5 pb-5 sm:pt-7 sm:pb-7 hairline-b">
         <BackLink fallback={`/proyectos/${project.slug}`}>
           {project.name}
         </BackLink>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
-        <p className="mt-3 text-navy/70 leading-relaxed max-w-2xl">{t.intro}</p>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
+          {t.title}
+        </h1>
+        <p className="mt-3 text-navy/75 leading-relaxed max-w-2xl">{t.intro}</p>
       </div>
 
       <section className="mt-10">

@@ -182,7 +182,7 @@ export default async function AdminResalesPage({
                     <div className="flex items-baseline justify-between gap-3">
                       <Link
                         href={`/proyectos/${l.project.slug}` as Route}
-                        className="font-sans text-navy text-lg leading-tight hover:!text-gold"
+                        className="font-sans text-navy text-base sm:text-lg leading-tight hover:!text-gold break-words [overflow-wrap:anywhere] min-w-0"
                       >
                         {l.project.name}
                       </Link>
@@ -198,35 +198,35 @@ export default async function AdminResalesPage({
                     </p>
 
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-sm">
-                      <div>
+                      <div className="min-w-0">
                         <p className="eyebrow !text-navy/40">{t.row.seller}</p>
-                        <p className="mt-1 text-navy">{sellerName}</p>
-                        <p className="text-navy/60 text-xs">{l.seller.email}</p>
+                        <p className="mt-1 text-navy break-words">{sellerName}</p>
+                        <p className="text-navy/60 text-xs break-all">{l.seller.email}</p>
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="eyebrow !text-navy/40">{t.row.buyer}</p>
-                        <p className="mt-1 text-navy">{buyerName}</p>
+                        <p className="mt-1 text-navy break-words">{buyerName}</p>
                         {buyer && (
-                          <p className="text-navy/60 text-xs">{buyer.email}</p>
+                          <p className="text-navy/60 text-xs break-all">{buyer.email}</p>
                         )}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <p className="eyebrow !text-navy/40">{t.row.shares}</p>
                         <p className="mt-1 text-navy">
                           {fmtInt(l.participation.shareCount)}
                         </p>
-                        <p className="text-navy/60 text-xs">
+                        <p className="text-navy/60 text-xs break-all">
                           {l.participation.serialCode}
                         </p>
                       </div>
                     </div>
 
                     {l.intentNote.trim().length > 0 && (
-                      <p className="mt-3 text-navy/75 text-sm leading-relaxed whitespace-pre-line">
+                      <p className="mt-3 text-navy/75 text-sm leading-relaxed whitespace-pre-line break-words">
                         “{l.intentNote}”
                       </p>
                     )}
-                    <p className="mt-2 eyebrow !text-navy/40">
+                    <p className="mt-2 eyebrow !text-navy/40 break-words">
                       {t.row.contact}{" "}
                       <span className="!text-navy/70">{l.contactChannel}</span>
                     </p>

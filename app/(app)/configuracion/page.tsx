@@ -51,7 +51,7 @@ export default async function SettingsPage() {
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <p className="eyebrow">{dict.settings.eyebrow}</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
           {dict.settings.title}
         </h1>
       </header>

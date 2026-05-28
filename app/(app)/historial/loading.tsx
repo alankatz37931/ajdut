@@ -9,19 +9,13 @@ export default function HistorialLoading() {
         <SkeletonLine width="w-2/3" height="h-3" />
       </header>
 
-      {/* Filtros: categoría + período */}
+      {/* Filtros: dos FloatingSelects side-by-side (cat + período). */}
       <div
         aria-hidden
-        className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-3"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6"
       >
-        <SkeletonLine width="w-20" height="h-3" />
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonLine key={`c-${i}`} width="w-16" height="h-3" />
-        ))}
-        <SkeletonLine width="w-20" height="h-3" />
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonLine key={`p-${i}`} width="w-12" height="h-3" />
-        ))}
+        <SkeletonLine width="w-full" height="h-10" />
+        <SkeletonLine width="w-full" height="h-10" />
       </div>
 
       <ul aria-hidden className="mt-8 hairline-t">

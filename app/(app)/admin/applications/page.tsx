@@ -171,7 +171,7 @@ export default async function ApplicationsListPage({
                 <li key={a.id}>
                   <Link
                     href={`/admin/applications/${a.id}` as Route}
-                    className="group flex gap-4 hover:bg-paper-light transition-colors"
+                    className="group flex gap-3 sm:gap-4 hover:bg-paper-light transition-colors min-h-[44px]"
                   >
                     <span
                       aria-hidden
@@ -180,7 +180,7 @@ export default async function ApplicationsListPage({
 
                     <div className="flex-1 min-w-0 py-3 pr-2">
                       <div className="flex items-baseline justify-between gap-3">
-                        <span className="font-sans text-navy text-lg leading-tight">
+                        <span className="font-sans text-navy text-base sm:text-lg leading-tight break-words [overflow-wrap:anywhere] min-w-0">
                           {a.fullName}
                         </span>
                         <span

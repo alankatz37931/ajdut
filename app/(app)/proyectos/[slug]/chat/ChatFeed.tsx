@@ -35,7 +35,10 @@ export function ChatFeed({
   locale,
 }: Props) {
   if (items.length === 0) {
-    return <p className="text-navy/60 italic">{feedDict.empty}</p>;
+    // Consistencia con el resto de empty-states de la app (perfil, documentos,
+    // historial): navy/60 plano, sin italic. El texto del dict ya invita a
+    // ser el primero en escribir.
+    return <p className="text-navy/60">{feedDict.empty}</p>;
   }
 
   return (

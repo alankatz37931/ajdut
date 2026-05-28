@@ -90,13 +90,13 @@ export function MilestonesEditor({
         </p>
       )}
 
-      <div className="hairline p-4 bg-paper flex items-center justify-between">
+      <div className="hairline p-4 bg-paper flex flex-wrap items-center justify-between gap-3">
         <p className="eyebrow">{countLabel}</p>
         {!showNew && !editingId && (
           <button
             type="button"
             onClick={() => setShowNew(true)}
-            className="eyebrow hover:!text-gold"
+            className="eyebrow hover:!text-gold shrink-0"
           >
             {dict.addBtn}
           </button>
@@ -128,10 +128,10 @@ export function MilestonesEditor({
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-sans text-navy">{m.title}</p>
-                    <p className="mt-2 text-navy/75 leading-relaxed">{m.description}</p>
+                    <p className="font-sans text-navy break-words">{m.title}</p>
+                    <p className="mt-2 text-navy/75 leading-relaxed break-words">{m.description}</p>
                   </div>
-                  <span className="eyebrow inline-flex items-center gap-1.5 shrink-0">
+                  <span className="eyebrow inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap">
                     <span aria-hidden className="text-base leading-none">
                       {STATUS_SYMBOL[m.status]}
                     </span>

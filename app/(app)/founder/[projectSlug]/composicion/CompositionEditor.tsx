@@ -380,15 +380,15 @@ function HolderLine({
     );
   return (
     <li className="hairline-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 py-3">
-      <div className="min-w-0">
-        <p className="text-navy">{holder.name}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-navy break-words">{holder.name}</p>
         <p className="eyebrow !text-navy/40 mt-0.5">{sharesText}</p>
       </div>
       <select
         value={holder.classId}
         onChange={(e) => onAssign(e.target.value)}
         disabled={isPending}
-        className={SELECT_CLS}
+        className={`${SELECT_CLS} shrink-0`}
       >
         <option value="">{noClassLabel}</option>
         {classes.map((c) => (
@@ -435,11 +435,11 @@ function ExternalLine({
       ).replace("{n}", String(row.peopleCount));
   return (
     <li className="hairline-b last:border-b-0 flex flex-wrap items-center justify-between gap-3 py-3">
-      <div className="min-w-0">
-        <p className="text-navy">{row.label || cls?.name || dict.defaultLabel}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-navy break-words">{row.label || cls?.name || dict.defaultLabel}</p>
         <p className="eyebrow !text-navy/40 mt-0.5">{peopleText}</p>
       </div>
-      <div className="flex items-center gap-4 shrink-0">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 shrink-0">
         <span className="font-mono text-sm text-navy">
           {row.shareCount.toLocaleString(locale)}
           <span className="text-navy/40">

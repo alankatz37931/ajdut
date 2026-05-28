@@ -146,7 +146,9 @@ export default async function ProjectsDiscoveryPage({
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <p className="eyebrow">{t.eyebrowMember}</p>
-        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">{t.title}</h1>
+        <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
+          {t.title}
+        </h1>
         {isAdmin ? (
           pendingCount > 0 && (
             <p className="mt-3 font-mono text-sm text-navy/75">
@@ -213,7 +215,7 @@ export default async function ProjectsDiscoveryPage({
                       )}
                     </p>
                     <h2
-                      className={`font-sans mt-1 text-h2 ${
+                      className={`font-sans mt-1 text-h2 break-words ${
                         isInactive ? "text-navy/60" : "text-navy"
                       }`}
                     >

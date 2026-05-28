@@ -61,7 +61,7 @@ export function RunCronButton({
       )}
 
       {stats && (
-        <dl className="mt-5 grid grid-cols-2 sm:grid-cols-5 gap-6 hairline-t pt-4">
+        <dl className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 hairline-t pt-4">
           <Stat label={dict.statUsers} value={stats.usersConsidered} locale={locale} />
           <Stat label={dict.statNew} value={stats.checksCreated} locale={locale} />
           <Stat label={dict.statPending} value={stats.alreadyPending} locale={locale} />

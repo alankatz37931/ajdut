@@ -101,14 +101,14 @@ function DocRow({
   }
 
   return (
-    <li className="hairline-b py-3 flex items-baseline justify-between gap-4">
-      <div className="min-w-0">
+    <li className="hairline-b py-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+      <div className="min-w-0 flex-1">
         <p className="text-navy break-words">{doc.title}</p>
         <p className="mt-0.5 eyebrow !text-navy/40">
           {formatDate(new Date(doc.createdAt), locale)}
         </p>
       </div>
-      <span className="flex items-center gap-4 shrink-0">
+      <span className="flex flex-wrap items-center gap-x-4 gap-y-1 shrink-0">
         <a
           href={doc.storageKey}
           target="_blank"
@@ -125,7 +125,7 @@ function DocRow({
           {isPending ? dict.deletingBtn : dict.deleteBtn}
         </button>
         {error && (
-          <span className="eyebrow !text-navy" role="alert">
+          <span className="eyebrow !text-navy basis-full sm:basis-auto" role="alert">
             {error}
           </span>
         )}

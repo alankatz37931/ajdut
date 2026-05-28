@@ -176,17 +176,21 @@ export function SideNav({ user, navItems, labels }: Props) {
     <>
       {/* ─── Mobile top bar con hamburguesa ───────────────────────── */}
       <div className="md:hidden hairline-b sticky top-0 z-30 surface-paper">
-        <div className="flex items-baseline justify-between gap-3 px-4 py-4">
+        <div className="flex items-center justify-between gap-2 px-4 py-3">
           <button
             type="button"
             onClick={() => setOpen(true)}
             aria-label={labels.openMenu}
-            className="text-navy text-xl leading-none p-2 -m-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center border-0 bg-transparent cursor-pointer"
+            className="text-navy text-xl leading-none p-2 -m-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center border-0 bg-transparent cursor-pointer shrink-0"
           >
             ☰
           </button>
-          <BrandMark tagline={labels.brandTagline} ariaLabel={labels.brandAriaLabel} />
-          <span className="eyebrow truncate max-w-[100px] leading-none">{compactName}</span>
+          <div className="shrink-0">
+            <BrandMark tagline={labels.brandTagline} ariaLabel={labels.brandAriaLabel} />
+          </div>
+          <span className="eyebrow truncate leading-none min-w-0 text-right">
+            {compactName}
+          </span>
         </div>
       </div>
 

@@ -214,8 +214,8 @@ export default async function FounderDashboardPage({ params }: Params) {
       <div className="min-w-0">
         {/* ─── HERO ──────────────────────────────────────────────── */}
         <header className="pt-5 sm:pt-7 hairline-b pb-8">
-          <div className="flex items-start justify-between gap-4">
-            <p className="eyebrow !text-navy/40">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="eyebrow !text-navy/40 min-w-0 break-words">
               {t.eyebrowRole}
               {sp?.sector && ` · ${sp.sector}`}
               {sp?.stage && ` · ${sp.stage}`}
@@ -571,7 +571,7 @@ export default async function FounderDashboardPage({ params }: Params) {
 
         {/* ─── 08 · Cap table detallado por holder ──────────────── */}
         <div className="hairline bg-paper">
-          <div className="px-5 pt-5 pb-5 hairline-b flex items-baseline justify-between gap-3">
+          <div className="px-5 pt-5 pb-5 hairline-b flex flex-wrap items-baseline justify-between gap-x-3 gap-y-2">
             <WidgetHeader n="08" title={t.sectionCapTable} />
             <Link
               href={`/proyectos/${project.slug}` as Route}
@@ -674,7 +674,7 @@ function FounderSection({
 }) {
   return (
     <section id={id} className="py-8 sm:py-10 hairline-b last:border-b-0">
-      <div className="flex items-baseline justify-between gap-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <WidgetHeader n={n} title={title} />
         {editHref && editLabel && (
           <Link

@@ -39,10 +39,12 @@ export default async function FounderRootPage() {
 
   return (
     <div>
-      <header className="pb-8 sm:pb-10 hairline-b flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+      <header className="pt-5 sm:pt-7 pb-8 sm:pb-10 hairline-b flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <p className="eyebrow">— Project owner</p>
-          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">Tus proyectos</h1>
+          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
+            Tus proyectos
+          </h1>
           {projects.length > 0 && (
             <p className="mt-3 text-navy/75 leading-relaxed">
               {projects.length} proyecto{projects.length === 1 ? "" : "s"} bajo tu
@@ -92,8 +94,8 @@ export default async function FounderRootPage() {
                   </p>
                   <StatusBadge status={p.status} />
                 </div>
-                <div className="flex-1">
-                  <p className="font-sans text-h2 text-navy leading-tight">
+                <div className="flex-1 min-w-0">
+                  <p className="font-sans text-h2 text-navy leading-tight break-words">
                     {p.name}
                   </p>
                   {(p.startupProfile?.oneLiner || p.shortPitch) && (

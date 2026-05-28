@@ -38,16 +38,18 @@ export default async function ApplicationDetailPage({ params }: Params) {
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
         <BackLink fallback="/admin/applications">{t.title}</BackLink>
-        <div className="mt-3 sm:mt-4 flex items-center gap-3 flex-wrap">
+        <div className="mt-3 sm:mt-4 flex items-baseline gap-3 flex-wrap">
           {/* Badge del tipo de aplicante: Empresa (proyect owner) vs Persona. */}
           <span
-            className={`eyebrow hairline px-2.5 py-1 ${
+            className={`eyebrow hairline px-2.5 py-1 shrink-0 ${
               isCompany ? "!text-gold" : "!text-navy/60"
             }`}
           >
             {isCompany ? t.kindCompany : t.kindPerson}
           </span>
-          <h1 className="font-sans text-h1 text-navy">{app.fullName}</h1>
+          <h1 className="font-sans text-h1 text-navy break-words [overflow-wrap:anywhere] min-w-0">
+            {app.fullName}
+          </h1>
         </div>
         <p className="mt-2 eyebrow">
           {statusLabel} · {d.sentAgoFmt.replace("{n}", String(daysOld))}

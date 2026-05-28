@@ -199,7 +199,7 @@ export default async function AdminPendingAssignmentsPage({
                     <div className="flex items-baseline justify-between gap-3">
                       <Link
                         href={`/proyectos/${p.project.slug}` as Route}
-                        className="font-sans text-navy text-lg leading-tight hover:!text-gold"
+                        className="font-sans text-navy text-base sm:text-lg leading-tight hover:!text-gold break-words [overflow-wrap:anywhere] min-w-0"
                       >
                         {p.project.name}
                       </Link>
@@ -208,11 +208,11 @@ export default async function AdminPendingAssignmentsPage({
                       </p>
                     </div>
 
-                    <p className="mt-1 eyebrow truncate">
+                    <p className="mt-1 eyebrow flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="!text-navy/50">
                         {SOURCE_LABEL[p.source] ?? p.source}
                       </span>
-                      <span className="!text-navy/30"> · </span>
+                      <span className="!text-navy/30" aria-hidden>·</span>
                       <span
                         className={`inline-flex items-center gap-1.5 ${
                           isOpen ? "!text-gold" : "!text-navy/50"
@@ -226,22 +226,22 @@ export default async function AdminPendingAssignmentsPage({
                     </p>
 
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-sm">
-                      <div className="sm:col-span-1">
+                      <div className="sm:col-span-1 min-w-0">
                         <p className="eyebrow !text-navy/40">{t.colOwner}</p>
-                        <p className="mt-1 text-navy">{proposerName}</p>
-                        <p className="text-navy/60 text-xs">
+                        <p className="mt-1 text-navy break-words">{proposerName}</p>
+                        <p className="text-navy/60 text-xs break-all">
                           {p.proposedBy.email}
                         </p>
                       </div>
-                      <div className="sm:col-span-1">
+                      <div className="sm:col-span-1 min-w-0">
                         <p className="eyebrow !text-navy/40">{t.colRecipient}</p>
-                        <p className="mt-1 text-navy">{targetName}</p>
-                        <p className="text-navy/60 text-xs">{targetEmail}</p>
+                        <p className="mt-1 text-navy break-words">{targetName}</p>
+                        <p className="text-navy/60 text-xs break-all">{targetEmail}</p>
                         {!p.targetUser && p.source === "INVITE" && (
                           <p className="eyebrow !text-gold mt-1">{t.newUserBadge}</p>
                         )}
                       </div>
-                      <div className="sm:col-span-1">
+                      <div className="sm:col-span-1 min-w-0">
                         <p className="eyebrow !text-navy/40">{t.colShares}</p>
                         <p className="mt-1 text-navy">{fmtInt(p.shareCount)}</p>
                       </div>

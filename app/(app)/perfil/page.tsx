@@ -34,9 +34,9 @@ export default async function ProfilePage() {
     <div>
       <header className="pt-5 pb-5 sm:pt-7 sm:pb-7 flex items-center gap-5 sm:gap-6">
         <HeaderAvatar initialUrl={user.avatarUrl ?? ""} dict={t} />
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="eyebrow">{t.eyebrow}</p>
-          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy">
+          <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
             {user.fullName}
           </h1>
           <p className="mt-3 text-navy/75 leading-relaxed">

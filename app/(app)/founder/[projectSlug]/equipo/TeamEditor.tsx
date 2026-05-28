@@ -89,7 +89,7 @@ export function TeamEditor({
         </p>
       )}
 
-      <div className="hairline p-4 bg-paper flex items-center justify-between">
+      <div className="hairline p-4 bg-paper flex flex-wrap items-center justify-between gap-3">
         <p className="eyebrow">
           {dict.equityTotalFmt.split(/(\{pct\})/).map((part, i) =>
             part === "{pct}" ? (
@@ -105,7 +105,7 @@ export function TeamEditor({
           <button
             type="button"
             onClick={() => setShowNew(true)}
-            className="eyebrow hover:!text-gold"
+            className="eyebrow hover:!text-gold shrink-0"
           >
             {dict.addBtn}
           </button>
@@ -134,28 +134,28 @@ export function TeamEditor({
                 dict={dict}
               />
             ) : (
-              <div className="grid grid-cols-12 items-center gap-3">
+              <div className="grid grid-cols-12 items-center gap-x-3 gap-y-3">
                 <div className="col-span-12 sm:col-span-5 min-w-0">
-                  <p className="font-sans text-navy">{f.fullName}</p>
+                  <p className="font-sans text-navy break-words">{f.fullName}</p>
                   <p className="mt-1 eyebrow">{f.role}</p>
                   {f.linkedinUrl && (
                     <a
                       href={f.linkedinUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 eyebrow !text-gold inline-block"
+                      className="mt-1 eyebrow !text-gold inline-block break-all"
                     >
                       {dict.linkedin}
                     </a>
                   )}
                 </div>
-                <div className="col-span-4 sm:col-span-2 font-mono text-navy">
+                <div className="col-span-6 sm:col-span-2 font-mono text-navy">
                   {fmtPct2(f.equityPercent)}%
                 </div>
-                <div className="col-span-4 sm:col-span-2 eyebrow">
+                <div className="col-span-6 sm:col-span-2 eyebrow">
                   {f.isActive ? dict.active : dict.inactive}
                 </div>
-                <div className="col-span-4 sm:col-span-3 flex justify-end gap-3">
+                <div className="col-span-12 sm:col-span-3 flex justify-end gap-3 sm:justify-end">
                   <button
                     type="button"
                     onClick={() => setEditingId(f.id)}

@@ -32,7 +32,7 @@ export default async function SetPasswordPage({ params }: Params) {
         )}
       </h1>
       <p className="mt-4 text-navy/75 leading-relaxed">{t.intro}</p>
-      <p className="mt-2 eyebrow">
+      <p className="mt-2 eyebrow break-words [overflow-wrap:anywhere]">
         {t.accountLabel}{" "}
         <span className="font-mono normal-case tracking-normal !text-navy">
           {inspection.user.email}

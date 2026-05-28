@@ -17,7 +17,7 @@ export default async function NosotrosPage() {
   const user = await getOptionalSession();
   const t = dict.nosotros;
   return (
-    <div className="mx-auto max-w-6xl px-6 sm:px-8 pb-4 sm:pb-6">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-8 pb-4 sm:pb-6">
       {/* Hero — sin sesión, el eyebrow es el back-link; con sesión, el viewer
           ya tiene el sidebar como nav, así que un "volver" no aporta. */}
       <section className="pt-5 pb-5 sm:pt-7 sm:pb-7">
@@ -27,7 +27,7 @@ export default async function NosotrosPage() {
           <BackLink fallback="/">{t.eyebrow.replace(/^—\s*/, "")}</BackLink>
         )}
 
-        <h1 className="font-sans mt-2 sm:mt-3 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] text-navy !leading-[1.1] font-bold">
+        <h1 className="font-sans mt-2 sm:mt-3 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] text-navy !leading-[1.1] font-bold break-words">
           {t.title}
         </h1>
 

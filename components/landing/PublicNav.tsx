@@ -7,7 +7,7 @@ export async function PublicNav() {
   const t = dict.publicNav;
   return (
     <nav className="hairline-b">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 sm:px-8 sm:py-5">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 md:px-8 sm:py-5">
         <BrandMark tagline={dict.brand.tagline} ariaLabel={dict.brand.ariaLabel} />
         <div className="flex items-center gap-6">
           {/* "Sobre nosotros" oculta en mobile para liberar espacio */}
