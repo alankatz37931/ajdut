@@ -14,6 +14,7 @@ import {
   notifyAdminsPendingAssignment,
   notifyRequesterInfoRequestResolved,
   notifyLeadMoreInfoRequest,
+  notifyTargetPendingAssignmentConfirm,
 } from "@/lib/email/notifications";
 
 export type LeadActionResult =
@@ -174,6 +175,8 @@ export async function acceptLeadAndAssignAction(leadId: string): Promise<LeadAct
   });
 
   let pendingId: string;
+  let targetConfirmationToken: string;
+  let targetConfirmationExpiresAt: Date;
   try {
     const result = await createPendingFromLead({
       projectId: lead.projectId,
@@ -183,6 +186,8 @@ export async function acceptLeadAndAssignAction(leadId: string): Promise<LeadAct
       shareCount: lead.shareCountRequested,
     });
     pendingId = result.pendingId;
+    targetConfirmationToken = result.targetConfirmationToken;
+    targetConfirmationExpiresAt = result.targetConfirmationExpiresAt;
   } catch (e) {
     if (e instanceof DomainError) return { ok: false, error: e.message };
     console.error(e);
@@ -200,16 +205,33 @@ export async function acceptLeadAndAssignAction(leadId: string): Promise<LeadAct
     });
     if (!founder || !target) return;
 
-    await notifyAdminsPendingAssignment({
-      pendingId,
-      projectName: project.name,
-      proposedByName: founder.alias ?? founder.fullName,
-      proposedByEmail: founder.email,
-      source: "LEAD",
-      recipientLabel: `${target.fullName} · ${target.email}`,
-      shareCount: lead.shareCountRequested,
-      message: lead.message?.trim().length ? lead.message : null,
-    });
+    const proposerName = founder.alias ?? founder.fullName;
+    const targetFirstName = target.fullName.split(/\s+/)[0] ?? target.fullName;
+
+    await Promise.all([
+      notifyAdminsPendingAssignment({
+        pendingId,
+        projectName: project.name,
+        proposedByName: proposerName,
+        proposedByEmail: founder.email,
+        source: "LEAD",
+        recipientLabel: `${target.fullName} · ${target.email}`,
+        shareCount: lead.shareCountRequested,
+        message: lead.message?.trim().length ? lead.message : null,
+      }),
+      // Validación bilateral: el target (que ya es usuario AJDUT) recibe link
+      // de confirmación. También lo verá in-app via banner de notificación.
+      notifyTargetPendingAssignmentConfirm({
+        to: target.email,
+        targetFirstName,
+        proposerName,
+        projectName: project.name,
+        shareCount: lead.shareCountRequested,
+        message: lead.message?.trim().length ? lead.message : null,
+        confirmToken: targetConfirmationToken,
+        expiresAt: targetConfirmationExpiresAt,
+      }),
+    ]);
   });
 
   return { ok: true };

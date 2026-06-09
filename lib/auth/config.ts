@@ -19,8 +19,8 @@ export type UserRoleLiteral = "ADMIN" | "PROJECT_OWNER" | "CO_ADMIN" | "PARTNER"
  * Notas:
  *   - `/api/auth/*` y assets estaticos ya estan excluidos en el matcher
  *     de `middleware.ts`, no van aca.
- *   - `/establecer-contrasena/[token]` y `/confirmar-vida/[token]` usan
- *     un token capability-based — no requieren session.
+ *   - `/establecer-contrasena/[token]` usa un token capability-based —
+ *     no requiere session.
  */
 const PUBLIC_PAGES = [
   "/nosotros",
@@ -29,7 +29,12 @@ const PUBLIC_PAGES = [
   "/aplicar",
   "/recuperar-contrasena",
   "/establecer-contrasena",
-  "/confirmar-vida",
+  // El comprador propuesto confirma una reventa via un token capability-based
+  // (link de email de un solo uso). No requiere session.
+  "/confirmar-reventa",
+  // El receptor de una asignacion pendiente confirma via token capability-based
+  // (link de email de un solo uso). No requiere session.
+  "/confirmar-asignacion",
 ] as const;
 
 export const authConfig: NextAuthConfig = {

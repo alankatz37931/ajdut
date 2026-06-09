@@ -65,8 +65,8 @@ export function newProjectPendingAdminEmail(input: NewProjectPendingAdminInput) 
         </tr>
       </table>
       <p style="margin:24px 0 0 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">
-        Al aprobar, AJDUT emite automáticamente el 10% institucional y deja el resto como pool
-        disponible para los miembros.
+        Al aprobar, se crea el pool con la totalidad de las participaciones disponibles para los
+        miembros.
       </p>
     `,
     ctaLabel: "Revisar proyecto →",

@@ -16,6 +16,9 @@ const adminResalesListingSelect = {
   contactChannel: true,
   createdAt: true,
   proposedBuyerId: true,
+  buyerAcceptedAt: true,
+  ownerAcceptedAt: true,
+  shareCount: true,
   seller: { select: { fullName: true, alias: true, email: true } },
   project: { select: { name: true, slug: true } },
   participation: { select: { serialCode: true, shareCount: true } },
@@ -197,6 +200,29 @@ export default async function AdminResalesPage({
                       </span>
                     </p>
 
+                    {isPending && (
+                      <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+                        <span
+                          className={
+                            l.buyerAcceptedAt ? "eyebrow !text-gold" : "eyebrow !text-navy/40"
+                          }
+                        >
+                          {l.buyerAcceptedAt
+                            ? t.tripartite.buyerConfirmed
+                            : t.tripartite.buyerPending}
+                        </span>
+                        <span
+                          className={
+                            l.ownerAcceptedAt ? "eyebrow !text-gold" : "eyebrow !text-navy/40"
+                          }
+                        >
+                          {l.ownerAcceptedAt
+                            ? t.tripartite.ownerConfirmed
+                            : t.tripartite.ownerPending}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-sm">
                       <div className="min-w-0">
                         <p className="eyebrow !text-navy/40">{t.row.seller}</p>
@@ -237,8 +263,11 @@ export default async function AdminResalesPage({
                           resaleListingId={l.id}
                           sellerName={sellerName}
                           buyerName={buyerName}
-                          shareCount={l.participation.shareCount}
+                          shareCount={l.shareCount ?? l.participation.shareCount}
+                          buyerConfirmed={l.buyerAcceptedAt !== null}
+                          ownerConfirmed={l.ownerAcceptedAt !== null}
                           dict={t.actions}
+                          tripartiteDict={t.tripartite}
                         />
                       </div>
                     )}

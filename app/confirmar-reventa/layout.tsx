@@ -2,13 +2,11 @@ import { PublicNav } from "@/components/landing/PublicNav";
 import { PublicFooter } from "@/components/landing/PublicFooter";
 
 /**
- * Layout público para /confirmar-vida/[token]. La ruta es accesible sin
- * sesión y la valida un token random hasheado (single-use, expira a los
- * LIFE_CONFIRM_TOKEN_TTL_DAYS días) — mismo patrón que
- * /establecer-contrasena. Usa el chrome público para que el email no
- * descargue al usuario a una pantalla rara.
+ * Layout público de la confirmación del comprador en una reventa. El comprador
+ * NO necesita estar logueado para confirmar — sólo tener el link de un solo uso
+ * que llegó por mail. Misma estructura que `confirmar-asignacion`.
  */
-export default function ConfirmarVidaLayout({
+export default function ConfirmReventaLayout({
   children,
 }: {
   children: React.ReactNode;

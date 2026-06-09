@@ -84,6 +84,35 @@ export async function updateAvatarAction(rawUrl: string): Promise<ProfileResult>
   return { ok: true };
 }
 
+/**
+ * Persiste el URL de la foto/scan del documento de identidad. Mismo patrón
+ * que updateAvatarAction: el FileUpload sube directo a Blob y nos pasa la
+ * URL pública; acá la validamos y la guardamos en User.idPhotoUrl. Acepta
+ * "" para quitarla (vuelve a null en DB).
+ *
+ * El campo es sensible (KYC) pero el bucket de Blob es público — la
+ * protección real es que la URL solo se expone en /perfil del propio dueño
+ * y, eventualmente, en el panel admin. No la mostramos en feeds ni en
+ * vistas de terceros.
+ */
+export async function updateIdPhotoAction(rawUrl: string): Promise<ProfileResult> {
+  const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.profile.errors;
+
+  const normalized = normalizeOptionalUrl(rawUrl);
+  if (normalized === "INVALID") {
+    return { ok: false, error: e.avatarInvalid, field: "idPhotoUrl" };
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { idPhotoUrl: normalized },
+  });
+  revalidatePath("/perfil");
+  return { ok: true };
+}
+
 export async function changePasswordAction(formData: FormData): Promise<ProfileResult> {
   const user = await requireSession();
   const dict = await getDict();

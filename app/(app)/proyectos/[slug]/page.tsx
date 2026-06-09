@@ -105,6 +105,29 @@ export default async function ProjectPage({ params }: Params) {
   });
 
   // Snapshot de participaciones.
+  //
+  // ─── Notas sobre el "desfase del cap table" ────────────────────────
+  // Hay DOS inventarios paralelos de acciones en este proyecto:
+  //   (a) Participations administradas por AJDUT (Platform stake + Pool
+  //       AVAILABLE + asignaciones a miembros). Estas SIEMPRE suman
+  //       `project.totalShares`.
+  //   (b) ExternalHoldings: accionistas pre-existentes declarados por el
+  //       founder en /composicion (founders, inversores previos). Se
+  //       contabilizan con `shareCount` por bucket, pero NO ajustan el pool
+  //       AVAILABLE de AJDUT — viven afuera del sistema de Participations.
+  //
+  // Si el founder declara, p. ej., un 50% de fundadores en ExternalHoldings,
+  // el cap table mostraba "Disponible 90%" + "Fundadores 50%" → suma 140%
+  // y eso es el desfase que reportó el cliente.
+  //
+  // Fix de display (sin tocar el modelo):
+  //   · Sumamos external holdings al cap table nominal (owner/admin lo veían
+  //     ausente) y mantenemos el ya existente en la vista anónima.
+  //   · Reducimos el `availableForDisplay` por external shares: si el founder
+  //     comprometió X% pre-existente, el pool visible debe encogerse esa X%
+  //     (clamp a 0 si X% > pool actual).
+  //   · Mostramos una fila "Verificación" en ambas tablas + aviso si la suma
+  //     supera 100% (el founder comprometió de más).
   const totalShares = project.totalShares;
   const platformShares = project.participations
     .filter((p) => p.isPlatformStake)
@@ -115,6 +138,14 @@ export default async function ProjectPage({ params }: Params) {
   const availableShares = project.participations
     .filter((p) => p.status === "AVAILABLE")
     .reduce((s, p) => s + p.shareCount, 0);
+  const externalShares = project.externalHoldings.reduce(
+    (s, h) => s + h.shareCount,
+    0
+  );
+  // El "disponible" que vamos a mostrar al usuario YA descuenta lo que el
+  // founder comprometió como pre-existente. Clamp a 0: si la suma se pasó,
+  // que se note en la fila de verificación, no en un número negativo.
+  const availableForDisplay = Math.max(0, availableShares - externalShares);
 
   // Cap table agrupado por dueño (solo para roles permitidos).
   //
@@ -155,11 +186,31 @@ export default async function ProjectPage({ params }: Params) {
         shares: v.shares,
       }))
     );
-    if (availableShares > 0) {
+    // External holdings — los accionistas declarados por el founder en
+    // /composicion deben verse acá; antes solo aparecían en la vista
+    // anónima (CapTableByClass) y el owner/admin no los veía en su nominal.
+    const classNameById = new Map<string, string>();
+    for (const c of project.shareholderClasses) {
+      classNameById.set(c.id, c.name);
+    }
+    for (const h of project.externalHoldings) {
+      const className = h.shareholderClassId
+        ? classNameById.get(h.shareholderClassId) ?? null
+        : null;
+      // Etiqueta editorial: label libre del founder > nombre de clase >
+      // fallback genérico. Mantiene el cap table legible aunque el founder
+      // no haya puesto un label.
+      const holder =
+        (h.label && h.label.trim() !== "" ? h.label : null) ??
+        className ??
+        t.capTable.preExistingFallback;
+      capTable.push({ holder, isPlatform: false, shares: h.shareCount });
+    }
+    if (availableForDisplay > 0) {
       capTable.push({
         holder: t.capTable.unassigned,
         isPlatform: false,
-        shares: availableShares,
+        shares: availableForDisplay,
       });
     }
     capTable.sort((a, b) => b.shares - a.shares);
@@ -223,11 +274,15 @@ export default async function ProjectPage({ params }: Params) {
     // La participación de AJDUT Platform NO se muestra en la vista anónima
     // del miembro — el founder y el admin sí la ven en el cap table nominal
     // (CapTableViz), abajo en este mismo sidebar.
-    if (availableShares > 0) {
+    //
+    // `availableForDisplay` ya descontó los externalHoldings (que sí están
+    // en las clases de arriba como shares). Usar `availableShares` crudo
+    // sumaría dos veces — esa era una de las patas del desfase.
+    if (availableForDisplay > 0) {
       byClassRows.push({
         label: t.capTable.unassigned,
         people: null,
-        shares: availableShares,
+        shares: availableForDisplay,
         tone: "muted",
       });
     }
@@ -259,6 +314,28 @@ export default async function ProjectPage({ params }: Params) {
 
   const myShares = myParticipations.reduce((s, p) => s + p.shareCount, 0);
 
+  // Gate de fecha de reventa: si el project owner definió una fecha de inicio
+  // que todavía no llegó, deshabilitamos el botón "Revender" y comunicamos la
+  // fecha. Fecha pasada (o null) → reventa habilitada normal.
+  const resaleLocked =
+    project.resaleAllowedFrom !== null &&
+    new Date() < project.resaleAllowedFrom;
+
+  // ───────────── Métricas de composición (siempre visibles) ─────────
+  // "Socios totales" — distinct currentOwnerId sobre todas las
+  // participations no AVAILABLE de este proyecto. Cuenta también la stake
+  // de plataforma como un "socio" institucional para mantener el alineamiento
+  // con la spec del SQL (where currentOwnerId is not null).
+  const distinctOwnerIds = new Set<string>();
+  for (const p of project.participations) {
+    if (p.currentOwnerId) distinctOwnerIds.add(p.currentOwnerId);
+  }
+  const sociosTotales = distinctOwnerIds.size;
+  // "Socios directivos y operativos" — founders/team del StartupProfile.
+  const sociosDirectivos = project.startupProfile?.founders.length ?? 0;
+  // TODO: define socio embajador semantics — sin modelo de datos por ahora.
+  const sociosEmbajadores = 0;
+
   // Valor de la posición del viewer si hay valoración declarada.
   const valuationNum = project.startupProfile?.preMoneyValuation
     ? Number(project.startupProfile.preMoneyValuation)
@@ -269,9 +346,15 @@ export default async function ProjectPage({ params }: Params) {
   const projectCurrency = project.startupProfile?.valuationCurrency ?? "USD";
 
   // Fondeo: el bar visible refleja lo que el viewer puede ver.
-  const visibleAssigned = access.canSeeCapTable
-    ? assignedShares
-    : assignedShares - platformShares;
+  //
+  // Para que el bar concuerde con el cap table corregido, "colocadas" incluye
+  // a los accionistas pre-existentes declarados por el founder (externalShares):
+  // si comprometió 40% afuera de AJDUT, eso es capital "ya colocado" desde la
+  // óptica del lector. El miembro común sigue sin ver el stake de Platform
+  // (`canSeeCapTable === false` → resta platformShares), pero sí ve external.
+  const visibleAssigned =
+    (access.canSeeCapTable ? assignedShares : assignedShares - platformShares) +
+    externalShares;
   const fundedPct =
     totalShares > 0
       ? Math.min(100, Math.max(0, (visibleAssigned / totalShares) * 100))
@@ -352,10 +435,13 @@ export default async function ProjectPage({ params }: Params) {
   const satellite: SatAct[] = [];
 
   // ───────────── Stats de la banda unificada ────────────────────────
+  // "Disponibles" muestra el pool YA descontado por externalHoldings — así
+  // el founder no ve "Disponibles 90%" cuando en realidad ya comprometió un
+  // 40% de pre-existentes. El stat queda coherente con el cap table de abajo.
   const fundingStats: { label: string; value: string; hint?: string }[] = [
     {
       label: t.participations.available,
-      value: formatNumber(availableShares, undefined, locale),
+      value: formatNumber(availableForDisplay, undefined, locale),
       hint: `${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`,
     },
   ];
@@ -598,6 +684,38 @@ export default async function ProjectPage({ params }: Params) {
             />
           </div>
 
+          {/* CTA Revender — promovido como botón outline para que la
+              acción se descubra desde "Tu participación". El destino es la
+              página dedicada de reventa del proyecto.
+              Si el project owner definió una fecha de inicio de reventa que
+              todavía no llegó, el botón queda deshabilitado y mostramos la
+              fecha. Fecha pasada (o null) → botón habilitado normal. */}
+          <div className="mt-6">
+            {resaleLocked ? (
+              <>
+                <span
+                  className="btn-outline inline-flex opacity-50 cursor-not-allowed pointer-events-none"
+                  aria-disabled="true"
+                >
+                  {t.revenderBtn}
+                </span>
+                <p className="mt-2 eyebrow !text-gold">
+                  {t.resaleLockedFmt.replace(
+                    "{date}",
+                    formatDate(project.resaleAllowedFrom!, locale)
+                  )}
+                </p>
+              </>
+            ) : (
+              <Link
+                href={`/proyectos/${project.slug}/reventa` as Route}
+                className="btn-outline inline-flex"
+              >
+                {t.revenderBtn}
+              </Link>
+            )}
+          </div>
+
           {myParticipations.length > 0 && (
             <ul className="mt-6 space-y-5">
               <li className="hidden sm:grid grid-cols-12 gap-3 pb-1">
@@ -655,12 +773,39 @@ export default async function ProjectPage({ params }: Params) {
 
   // — Métricas (ref).
   // Mismo StatCard que "Tu participación" — un solo lenguaje de tarjeta.
-  if (latestByKind.size > 0) {
+  // Primero las métricas de composición (siempre presentes) y luego las
+  // operativas (MRR/ARR/etc.) que el founder haya reportado.
+  {
+    const valuationLabel =
+      valuationNum !== null
+        ? formatCurrency(valuationNum, projectCurrency, 0, locale)
+        : "—";
     sections.push({
       title: t.sections.metrics,
       tone: "ref",
       node: (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <StatCard
+            label={t.metricSociosDirectivos}
+            value={formatNumber(sociosDirectivos, undefined, locale)}
+          />
+          <StatCard
+            label={t.metricSociosEmbajadores}
+            value={formatNumber(sociosEmbajadores, undefined, locale)}
+          />
+          <StatCard
+            label={t.metricSociosTotales}
+            value={formatNumber(sociosTotales, undefined, locale)}
+          />
+          <StatCard
+            label={t.metricValuacionActual}
+            value={valuationLabel}
+            hint={
+              valuationNum !== null && showMxnDual
+                ? (formatDualCurrency(valuationNum, true, 0).secondary ?? undefined)
+                : undefined
+            }
+          />
           {Array.from(latestByKind.values()).map((m) => (
             <StatCard
               key={m.kind}
@@ -717,6 +862,8 @@ export default async function ProjectPage({ params }: Params) {
         formatShares={(n) => formatNumber(n, undefined, locale)}
         formatPct={(p) => formatPercent(p, 2, locale)}
         othersLabel={t.capTable.others}
+        verificationLabel={t.capTable.verificationLabel}
+        overcommitWarn={t.capTable.overcommitWarn}
       />
     ) : null;
 
@@ -734,6 +881,8 @@ export default async function ProjectPage({ params }: Params) {
             n === 1 ? t.capTable.person : t.capTable.people
           }`
         }
+        verificationLabel={t.capTable.verificationLabel}
+        overcommitWarn={t.capTable.overcommitWarn}
       />
     ) : null;
 
@@ -908,6 +1057,19 @@ export default async function ProjectPage({ params }: Params) {
                   ))}
                 </dl>
               )}
+              {/* Comunicación a compradores potenciales: si la reventa de este
+                  proyecto todavía no está habilitada, avisamos desde cuándo
+                  podrán adquirirse participaciones en el tablón de reventa.
+                  Solo para quien no es holder (el holder ve el aviso propio en
+                  "Tu participación"). */}
+              {resaleLocked && myShares === 0 && (
+                <p className="mt-5 eyebrow !text-navy/50 leading-relaxed normal-case tracking-normal">
+                  {t.resaleStartsFmt.replace(
+                    "{date}",
+                    formatDate(project.resaleAllowedFrom!, locale)
+                  )}
+                </p>
+              )}
             </div>
 
             {/* Cap table: nominal para owner/admin, por clase (anónimo)
@@ -944,6 +1106,17 @@ export default async function ProjectPage({ params }: Params) {
                   ))}
               </div>
             )}
+
+            {/* Link sutil a las políticas generales de la plataforma —
+                vive en /legal y aplica a todos los proyectos. */}
+            <div className="pt-1">
+              <Link
+                href={"/legal" as Route}
+                className="block text-center eyebrow !text-navy/40 hover:!text-gold transition-colors"
+              >
+                {t.politicasLink}
+              </Link>
+            </div>
           </aside>
         </div>
       </ProjectBody>

@@ -24,6 +24,7 @@ export default async function ProfilePage() {
       role: true,
       createdAt: true,
       avatarUrl: true,
+      idPhotoUrl: true,
       country: true,
       phone: true,
     },
@@ -56,6 +57,7 @@ export default async function ProfilePage() {
         initialAlias={user.alias ?? ""}
         initialCountry={user.country ?? ""}
         initialPhone={user.phone ?? ""}
+        initialIdPhotoUrl={user.idPhotoUrl ?? ""}
         dict={t}
       />
     </div>

@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { createProjectAction } from "./actions";
-import { derivePriceAndShares } from "@/lib/utils/shares";
 import { useSafeAction } from "@/components/hooks/useSafeAction";
 import {
   FloatingInput,
@@ -46,7 +45,8 @@ type FormState = {
   problemStatement: string;
   solutionStatement: string;
   businessModel: string;
-  preMoneyValuation: string;
+  totalParticipations: string;
+  pricePerParticipation: string;
   valuationCurrency: "USD" | "MXN";
   websiteUrl: string;
   videoUrl: string;
@@ -83,7 +83,8 @@ export function NewProjectForm({
     problemStatement: "",
     solutionStatement: "",
     businessModel: "",
-    preMoneyValuation: "",
+    totalParticipations: "",
+    pricePerParticipation: "",
     valuationCurrency: "USD",
     websiteUrl: "",
     videoUrl: "",
@@ -100,9 +101,14 @@ export function NewProjectForm({
   });
   const { run, isPending, error } = useSafeAction(createProjectAction);
 
-  const valuation = Number.parseFloat(form.preMoneyValuation);
-  const valuationValid = Number.isFinite(valuation) && valuation > 0;
-  const derived = valuationValid ? derivePriceAndShares(valuation) : null;
+  // Emisión directa: el founder define total + precio. La valoración es el
+  // producto (read-only, solo display).
+  const totalParts = Number.parseInt(form.totalParticipations, 10);
+  const pricePart = Number.parseFloat(form.pricePerParticipation);
+  const totalValid = Number.isFinite(totalParts) && totalParts >= 1;
+  const priceValid = Number.isFinite(pricePart) && pricePart > 0;
+  const derivedValuation =
+    totalValid && priceValid ? totalParts * pricePart : null;
 
   // `update` con identidad estable — sin esto, cada keystroke creaba un
   // nuevo `update` y cada arrow `(v) => update(...)` también, rompiendo el
@@ -363,20 +369,31 @@ export function NewProjectForm({
         </div>
       </section>
 
-      {/* Valoración */}
+      {/* Emisión de participaciones */}
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">{dict.sectionValuation}</p>
         <p className="text-navy/75 leading-relaxed">{dict.valuationIntro}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
           <FloatingInput
-            id="preMoneyValuation"
+            id="totalParticipations"
             type="number"
-            step="any"
-            label={dict.valuationLabel}
-            value={form.preMoneyValuation}
-            onChange={handler("preMoneyValuation")}
+            step="1"
+            label={dict.totalParticipationsLabel}
+            value={form.totalParticipations}
+            onChange={handler("totalParticipations")}
             required
           />
+          <FloatingInput
+            id="pricePerParticipation"
+            type="number"
+            step="any"
+            label={dict.pricePerParticipationLabel}
+            value={form.pricePerParticipation}
+            onChange={handler("pricePerParticipation")}
+            required
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
           <div>
             <FloatingSelect
               id="valuationCurrency"
@@ -391,28 +408,32 @@ export function NewProjectForm({
               value={form.valuationCurrency}
             />
           </div>
+          <FloatingInput
+            id="targetRaiseAmount"
+            type="number"
+            step="any"
+            label={dict.targetRaiseLabel}
+            value={form.targetRaiseAmount}
+            onChange={handler("targetRaiseAmount")}
+          />
         </div>
-        <FloatingInput
-          id="targetRaiseAmount"
-          type="number"
-          step="any"
-          label={dict.targetRaiseLabel}
-          value={form.targetRaiseAmount}
-          onChange={handler("targetRaiseAmount")}
-        />
 
-        {derived && (
-          <div className="hairline p-4 bg-paper grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-sm">
-            <div>
-              <p className="eyebrow !text-navy/40">{dict.pricePerShareLabel}</p>
-              <p className="mt-1 text-navy">{fmtMoney(derived.pricePerShare)}</p>
-            </div>
-            <div>
-              <p className="eyebrow !text-navy/40">{dict.totalSharesLabel}</p>
-              <p className="mt-1 text-navy">{fmtInt(derived.totalShares)}</p>
-            </div>
+        {derivedValuation !== null && (
+          <div className="hairline p-4 bg-paper font-mono text-sm">
+            <p className="eyebrow !text-navy/40">{dict.totalSharesLabel}</p>
+            <p className="mt-1 text-navy">{fmtInt(totalParts)}</p>
+            <p className="mt-3 text-navy">
+              {dict.derivedValuationFmt.replace(
+                "{value}",
+                fmtMoney(derivedValuation)
+              )}
+            </p>
           </div>
         )}
+
+        <p className="eyebrow !text-navy/55 leading-relaxed">
+          {dict.emissionLegend}
+        </p>
       </section>
 
       {error && (

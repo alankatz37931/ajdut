@@ -3,7 +3,13 @@
 import { useRef, useState, useTransition } from "react";
 import type { Dict } from "@/lib/i18n";
 import { FloatingInput, GoldUnderline } from "@/components/ui/Floating";
-import { changePasswordAction, updateNameAction } from "./actions";
+import { FileUpload } from "@/components/ui/FileUpload";
+import { useSafeAction } from "@/components/hooks/useSafeAction";
+import {
+  changePasswordAction,
+  updateIdPhotoAction,
+  updateNameAction,
+} from "./actions";
 
 type ProfileDict = Dict["profile"];
 
@@ -12,6 +18,7 @@ type Props = {
   initialAlias: string;
   initialCountry: string;
   initialPhone: string;
+  initialIdPhotoUrl: string;
   dict: ProfileDict;
 };
 
@@ -29,6 +36,7 @@ export function ProfileSurface({
   initialAlias,
   initialCountry,
   initialPhone,
+  initialIdPhotoUrl,
   dict,
 }: Props) {
   const [name, setName] = useState(initialName);
@@ -112,6 +120,12 @@ export function ProfileSurface({
           dict={dict}
         />
         <PasswordFieldRow dict={dict} onSaved={flashSaved} onError={setError} />
+        <IdPhotoRow
+          initialUrl={initialIdPhotoUrl}
+          dict={dict}
+          onSaved={flashSaved}
+          onError={setError}
+        />
       </div>
 
       <div className="mt-6 h-4">
@@ -397,5 +411,69 @@ function PasswordPanel({
         </button>
       </div>
     </form>
+  );
+}
+
+/**
+ * Foto/scan del documento de identidad — fila apilada con FileUpload
+ * embebido. Sin archivo muestra dropzone subtle ("Subí una foto…"). Con
+ * archivo muestra la fila compacta del FileUpload (thumbnail + "ver
+ * archivo" + "quitar"), persistiendo cualquier cambio inmediatamente vía
+ * updateIdPhotoAction. KYC-grade: la URL solo se renderiza en /perfil del
+ * propio dueño (y, a futuro, en el panel admin).
+ */
+function IdPhotoRow({
+  initialUrl,
+  dict,
+  onSaved,
+  onError,
+}: {
+  initialUrl: string;
+  dict: ProfileDict;
+  onSaved: () => void;
+  onError: (msg: string | null) => void;
+}) {
+  const [url, setUrl] = useState(initialUrl);
+
+  const { run, error } = useSafeAction(updateIdPhotoAction, {
+    onSuccess: () => {
+      onError(null);
+      onSaved();
+    },
+    onError: (msg) => {
+      onError(msg);
+      // Revertir UI si el server rechazó la nueva URL.
+      setUrl(initialUrl);
+    },
+  });
+
+  function handleUploaded(newUrl: string) {
+    setUrl(newUrl);
+    run(newUrl);
+  }
+
+  const hasPhoto = url.trim() !== "";
+
+  return (
+    <div className="hairline-b py-5">
+      <label className="eyebrow !text-navy/50 block">{dict.idPhotoLabel}</label>
+      <div className="mt-3">
+        <FileUpload
+          scope="id-photo"
+          accept="image/png,image/jpeg,application/pdf"
+          maxSizeMb={5}
+          currentUrl={url}
+          onUploaded={handleUploaded}
+          helperText={hasPhoto ? undefined : dict.idPhotoHelper}
+          showImagePreview
+          subtle
+        />
+      </div>
+      {error && (
+        <p className="mt-2 eyebrow !text-navy" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

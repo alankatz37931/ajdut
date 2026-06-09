@@ -10,7 +10,10 @@ import {
   getAvailableSharesForProposal,
 } from "@/lib/services/pending-assignment";
 import { DomainError } from "@/lib/services/errors";
-import { notifyAdminsPendingAssignment } from "@/lib/email/notifications";
+import {
+  notifyAdminsPendingAssignment,
+  notifyTargetPendingAssignmentConfirm,
+} from "@/lib/email/notifications";
 
 export type InviteResult =
   | {
@@ -76,6 +79,8 @@ export async function inviteMemberAction(
   }
 
   let pendingId: string;
+  let targetConfirmationToken: string;
+  let targetConfirmationExpiresAt: Date;
   try {
     const result = await createPendingFromInvite({
       projectId: project.id,
@@ -88,6 +93,8 @@ export async function inviteMemberAction(
       reason: `Invitación directa del founder — ${shareCount} acciones${message ? " (con mensaje)" : ""}.`,
     });
     pendingId = result.pendingId;
+    targetConfirmationToken = result.targetConfirmationToken;
+    targetConfirmationExpiresAt = result.targetConfirmationExpiresAt;
   } catch (e) {
     if (e instanceof DomainError) {
       return { ok: false, error: e.message, code: e.code };
@@ -103,16 +110,32 @@ export async function inviteMemberAction(
     });
     if (!founder) return;
 
-    await notifyAdminsPendingAssignment({
-      pendingId,
-      projectName: project.name,
-      proposedByName: founder.alias ?? founder.fullName,
-      proposedByEmail: founder.email,
-      source: "INVITE",
-      recipientLabel: `${fullName} · ${email}`,
-      shareCount,
-      message: message.length > 0 ? message : null,
-    });
+    const proposerName = founder.alias ?? founder.fullName;
+    const targetFirstName = fullName.split(/\s+/)[0] ?? fullName;
+
+    await Promise.all([
+      notifyAdminsPendingAssignment({
+        pendingId,
+        projectName: project.name,
+        proposedByName: proposerName,
+        proposedByEmail: founder.email,
+        source: "INVITE",
+        recipientLabel: `${fullName} · ${email}`,
+        shareCount,
+        message: message.length > 0 ? message : null,
+      }),
+      // Validación bilateral: el target recibe link de confirmación.
+      notifyTargetPendingAssignmentConfirm({
+        to: email,
+        targetFirstName,
+        proposerName,
+        projectName: project.name,
+        shareCount,
+        message: message.length > 0 ? message : null,
+        confirmToken: targetConfirmationToken,
+        expiresAt: targetConfirmationExpiresAt,
+      }),
+    ]);
   });
 
   revalidatePath(`/founder/${project.slug}`);

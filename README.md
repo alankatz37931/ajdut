@@ -103,11 +103,11 @@ Cada cambio de propiedad genera un registro inmutable en `OwnershipHistory` con 
 ### Gatekeeping Estricto
 No existe registro abierto. El acceso requiere completar `/aplicar` y ser aprobado manualmente por un Admin.
 
-### Stake Institucional 10%
-AJDUT mantiene el 10% de cada startup que activa un proyecto en la plataforma, modelado como `User` con rol `PLATFORM` que posee `Participation` con `isPlatformStake = true`. Estas participaciones quedan locked para reventa y solo pueden transferirse con doble firma de Admins.
+### Sin stake institucional por defecto
+AJDUT NO retiene equity automáticamente en los proyectos. El flujo de aprobación crea el pool con la totalidad de las participaciones disponibles; el founder decide cuántas pone a la venta. Si históricamente un proyecto se seedeó con `Participation` `isPlatformStake = true` (rol `PLATFORM`), esos registros se mantienen como legacy — los nuevos proyectos no generan ninguno.
 
-### Doble Firma
-Toda transferencia de una participación institucional requiere `authorizedById` + `coAuthorizedById` (dos Admins distintos). Validado a nivel de servicio.
+### Doble Firma (legacy)
+Las participaciones institucionales que existan (legacy) siguen requiriendo `authorizedById` + `coAuthorizedById` (dos Admins distintos) para transferirse. Validado a nivel de servicio.
 
 ---
 
@@ -129,8 +129,7 @@ Toda transferencia de una participación institucional requiere `authorizedById`
 ### Funcionalidad
 
 - [ ] `ParticipationService.transition()` con guards de máquina de estados
-- [ ] `DividendService` con cálculo de prorrateo y residual al stake institucional
-- [ ] `ProjectApprovalService` con emisión automática del 10% al pasar a ACTIVE
+- [ ] `DividendService` con cálculo de prorrateo a holders activos
 - [ ] Formulario `/founder/[projectSlug]/distributions/new` con preview en vivo
 - [ ] Gestión de pagos individuales (founder marca SENT, partner marca RECEIVED)
 - [ ] Tablón de reventa (sin precio sugerido, A2)
@@ -162,7 +161,6 @@ Toda transferencia de una participación institucional requiere `authorizedById`
 - [ ] Platform Equity Agreement plantilla legal
 - [ ] Aviso legal con asesoría jurídica real
 - [ ] Política de retenciones fiscales por jurisdicción
-- [ ] Revisión securities-law de la estructura del 10%
 - [ ] KYC manual proceso operativo
 
 ### Diferido a v1.1
@@ -183,7 +181,7 @@ Toda transferencia de una participación institucional requiere `authorizedById`
 - **A2** Las reventas se publican sin precio sugerido; solo intención.
 - **A3** Cualquier usuario aprobado de AJDUT puede comprar en reventa (no necesita ser socio del proyecto).
 - **A4** Las métricas que ve un socio están limitadas a `visibility = PUBLIC_TO_HOLDERS`.
-- **B1** 2-3 admins operativos: la doble firma para stake institucional es invariante dura.
+- **B1** 2-3 admins operativos: la doble firma para transferencia de stake institucional legacy es invariante dura.
 - **B3** KYC manual en v1.
 - **Voz** "Manifestar interés" en lugar de "Comprar"; "Declarar distribución" en lugar de "Pagar dividendos"; "Confirmar recepción" en lugar de "Cobrar".
 

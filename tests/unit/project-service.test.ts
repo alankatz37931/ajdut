@@ -32,7 +32,9 @@ const baseCreateInput = {
   problemStatement: "El problema",
   solutionStatement: "La solución",
   businessModel: "El modelo",
-  preMoneyValuation: 12_500_000,
+  // Emisión directa: 1.25M participaciones a USD 10 c/u → valoración 12.5M.
+  totalParticipations: 1_250_000,
+  pricePerParticipation: 10,
   valuationCurrency: "USD" as const,
   legalName: "Pushka SAS",
   jurisdiction: "MX",
@@ -49,12 +51,24 @@ beforeEach(() => {
 });
 
 describe("createProject — validaciones", () => {
-  it("rechaza valoración 0 o negativa", async () => {
+  it("rechaza total de participaciones 0, negativo o no entero", async () => {
     await expect(
-      createProject({ ...baseCreateInput, preMoneyValuation: 0 })
+      createProject({ ...baseCreateInput, totalParticipations: 0 })
     ).rejects.toBeInstanceOf(ValidationError);
     await expect(
-      createProject({ ...baseCreateInput, preMoneyValuation: -100 })
+      createProject({ ...baseCreateInput, totalParticipations: -100 })
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      createProject({ ...baseCreateInput, totalParticipations: 1.5 })
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("rechaza valor por participación 0 o negativo", async () => {
+    await expect(
+      createProject({ ...baseCreateInput, pricePerParticipation: 0 })
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      createProject({ ...baseCreateInput, pricePerParticipation: -10 })
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
@@ -150,23 +164,26 @@ describe("createProject — efectos", () => {
     tx.startupProfile.create.mockResolvedValue({ id: "sp-new" });
   });
 
-  it("crea proyecto en PENDING_APPROVAL con totalShares derivadas", async () => {
+  it("crea proyecto en PENDING_APPROVAL con el total de participaciones definido", async () => {
     await createProject(baseCreateInput);
 
     const projectCall = tx.project.create.mock.calls[0]?.[0];
     expect(projectCall.data.status).toBe("PENDING_APPROVAL");
     expect(projectCall.data.kind).toBe("STARTUP");
+    // Emisión directa: totalShares = totalParticipations del input (sin derivar).
     expect(projectCall.data.totalShares).toBe(1_250_000);
   });
 
-  it("crea StartupProfile con los datos del founder", async () => {
+  it("crea StartupProfile con la valoración derivada (total × precio)", async () => {
     await createProject(baseCreateInput);
 
     const spCall = tx.startupProfile.create.mock.calls[0]?.[0];
     expect(spCall.data.legalName).toBe("Pushka SAS");
     expect(spCall.data.jurisdiction).toBe("MX");
     expect(spCall.data.totalEquityShares).toBe(1_250_000);
-    expect(Number(spCall.data.platformEquityPercent)).toBe(10);
+    // preMoneyValuation = totalParticipations × pricePerParticipation = 12.5M.
+    expect(Number(spCall.data.preMoneyValuation)).toBe(12_500_000);
+    expect(Number(spCall.data.platformEquityPercent)).toBe(0);
   });
 
   it("auditoría: PROJECT.CREATED + PROJECT.SUBMITTED_FOR_APPROVAL", async () => {

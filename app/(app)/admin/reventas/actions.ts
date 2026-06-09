@@ -38,6 +38,44 @@ export async function approveTransferAction(
 }
 
 /**
+ * Override de la validación tripartita: el admin ejecuta el traspaso aunque el
+ * comprador o el founder no hayan confirmado por la plataforma. Requiere una
+ * nota (>= 10 chars). Queda auditado como RESALE.ADMIN_OVERRIDE.
+ */
+export async function overrideTransferAction(
+  resaleListingId: string,
+  note: string
+): Promise<AdminResaleResult> {
+  const admin = await requireRole(["ADMIN"]);
+  const dict = await getDict();
+  const e = dict.adminReventas.errors;
+
+  const trimmedNote = note.trim();
+  if (trimmedNote.length < 10) {
+    return { ok: false, error: e.noteTooShort };
+  }
+
+  try {
+    await validateTransfer({
+      resaleListingId,
+      adminId: admin.id,
+      reason:
+        "Reventa aprobada con override de validación tripartita por el equipo de AJDUT.",
+      override: true,
+      overrideNote: trimmedNote,
+    });
+  } catch (err) {
+    if (err instanceof DomainError) return { ok: false, error: err.message };
+    console.error("overrideTransferAction", err);
+    return { ok: false, error: e.serverError };
+  }
+
+  revalidatePath("/admin/reventas");
+  revalidatePath("/partner");
+  return { ok: true };
+}
+
+/**
  * El admin rechaza el traspaso: la reventa vuelve al tablón para que el
  * vendedor pueda corregir o designar otro comprador.
  */

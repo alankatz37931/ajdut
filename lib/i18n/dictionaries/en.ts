@@ -43,13 +43,12 @@ export const dict: Dict = {
     profileAriaDefault: "Go to profile",
     applications: "Applications",
     assignments: "Assignments",
-    heirs: "Heirs",
     audit: "Audit",
     notices: "Announcements",
     sectionAdministration: "Administration",
     sectionPortfolio: "Portfolio",
     sectionAccount: "Account",
-    documents: "Documents",
+    documents: "Periodic reports",
     history: "History",
     resales: "Resales",
   },
@@ -240,10 +239,9 @@ export const dict: Dict = {
     adminAsignaciones: "Pending assignments · AJDUT",
     adminAuditoria: "Audit log · AJDUT",
     adminAvisos: "Notices · Admin · AJDUT",
-    adminHerederos: "Heirs · AJDUT",
     founderNuevoProyecto: "New project · AJDUT",
     founderAvisos: "Notices to members · AJDUT",
-    founderComposicion: "Shareholder composition · AJDUT",
+    founderComposicion: "Participation composition · AJDUT",
     founderEditar: "Edit project · AJDUT",
     founderEquipo: "Team · AJDUT",
     founderHitos: "Milestones · AJDUT",
@@ -309,30 +307,6 @@ export const dict: Dict = {
     },
   },
 
-  confirmarVida: {
-    metaTitle: "Liveness check · AJDUT",
-    back: "Liveness check",
-    greeting: "Hi, {name}. Everything still okay?",
-    fallbackName: "friend",
-    body:
-      "This is a periodic AJDUT check-in. We just need you to tap the button to confirm you're still active. If you don't respond in the coming days, we'll contact the heirs you set up in your account.",
-    confirmBtn: "Yes, I'm still active →",
-    confirmingBtn: "Confirming…",
-    doneEyebrow: "✓ Confirmed",
-    doneTitle: "Thank you.",
-    doneBody:
-      "We registered that you're still active. The next check-in will arrive according to the frequency you configured.",
-    invalidLinkTitle: "Invalid link",
-    invalidLinkBody: "The link you used doesn't match any check-in.",
-    alreadyTitle: "Check-in already answered",
-    alreadyConfirmedBody:
-      "This check-in was already confirmed. You don't need to do anything else.",
-    alreadyExpiredBody:
-      "This check-in expired. If you receive another one in the coming days, respond to that one.",
-    errAlreadyResponded: "This check-in was already answered.",
-    errInvalidLink: "Invalid link.",
-  },
-
   certificate: {
     metaTitle: "Participation certificate · AJDUT",
     back: "Certificate",
@@ -344,7 +318,7 @@ export const dict: Dict = {
     fields: {
       member: "Member",
       project: "Project",
-      shares: "Shares",
+      shares: "Participations",
       totalIssued: "Total issued",
       assigned: "Assigned",
       validity: "Validity",
@@ -353,7 +327,7 @@ export const dict: Dict = {
     },
     validationEyebrow: "Platform validation",
     validationBody:
-      "AJDUT validates and registers this share participation and its current holder. Any change of owner requires authorization from AJDUT's administration control.",
+      "AJDUT validates and registers this participation and its current holder. Any change of owner requires authorization from AJDUT's administration control.",
     disclaimer:
       "This certificate is a community membership document, not a contract. AJDUT does not process payments, hold funds, or provide legal or financial advice. The agreement and signature are between the member and the project lead, outside the platform.",
     printBtn: "Print / Save PDF",
@@ -469,6 +443,12 @@ export const dict: Dict = {
     uploadAriaChange: "Change profile photo",
     uploadTooBig: "File exceeds {n}MB.",
     uploadFailed: "Upload failed. Try again.",
+    idPhotoLabel: "Official ID",
+    idPhotoHelper:
+      "Upload a photo or scan of your ID, passport, INE or DNI. Only you and the AJDUT team can see it.",
+    idPhotoUploadBtn: "Upload ID",
+    idPhotoChangeBtn: "Replace ID",
+    idPhotoUploaded: "ID uploaded",
     errors: {
       nameTooShort: "Name must be at least 2 characters.",
       aliasTooShort:
@@ -486,6 +466,7 @@ export const dict: Dict = {
   projectList: {
     eyebrowMember: "— AJDUT",
     title: "Projects",
+    exploreBtn: "Learn more",
     pendingApproval: "pending approval",
     pendingApprovalSingular: "pending approval",
     intro:
@@ -530,6 +511,14 @@ export const dict: Dict = {
     requestNotApproved: "Request not approved",
     editInfo: "Edit information",
     seeProject: "View project →",
+    politicasLink: "Company policies",
+    revenderBtn: "Resell your participation",
+    resaleLockedFmt: "You'll be able to resell your participation starting {date}.",
+    resaleStartsFmt: "Resales for this project start on {date}.",
+    metricSociosDirectivos: "Directive and operational partners",
+    metricSociosEmbajadores: "Ambassador partners",
+    metricSociosTotales: "Total partners",
+    metricValuacionActual: "Current valuation",
     heroContextEyebrow: "— Project file",
     nextStep: "Next step",
     emptySection: "The project owner has not completed this section yet.",
@@ -538,10 +527,10 @@ export const dict: Dict = {
       question: "Would you like to take part in this project?",
       body:
         "AJDUT does not process payments or hold funds. If you move forward, the project owner will reach out via the email you registered with.",
-      notAvailableEyebrow: "— No shares available",
+      notAvailableEyebrow: "— No participations available",
       notAvailableTitle: "This project is fully placed.",
       notAvailableBody:
-        "There are no shares left to assign right now. Stay on the platform — if a participation is released, you'll see it here.",
+        "There are no participations left to assign right now. Stay on the platform — if a participation is released, you'll see it here.",
     },
     sections: {
       summary: "Summary",
@@ -574,25 +563,25 @@ export const dict: Dict = {
       targetRaiseHint: "round goal",
     },
     funding: {
-      placedOf: "shares placed",
-      placedHeadlineSuffix: "shares placed to date",
-      pricePerShare: "Suggested price per share",
-      pricePerShareHint: "valuation ÷ total shares",
-      annualReturnPerShare: "Annual return per share",
+      placedOf: "participations placed",
+      placedHeadlineSuffix: "participations placed to date",
+      pricePerShare: "Suggested price per participation",
+      pricePerShareHint: "valuation ÷ total participations",
+      annualReturnPerShare: "Annual return per participation",
       annualReturnPerShareHint: "not provided by the project owner",
     },
     yours: {
-      shares: "Shares",
+      shares: "Participations",
       value: "Value",
       participations: "Participations",
       oneRecord: "1 record",
       manyRecordsSuffix: "records",
       noValuation: "no declared valuation",
-      pricePerShareSuffix: "/ share",
+      pricePerShareSuffix: "/ participation",
       partnersOnlyOwnPositionNote:
         "You only see your own position. The full cap table is sensitive information and is reserved for the project owner and the AJDUT team.",
       colSerial: "Serial",
-      colShares: "Shares",
+      colShares: "Participations",
       colAcquired: "Acquired",
     },
     structure: {
@@ -618,7 +607,7 @@ export const dict: Dict = {
       CUSTOM: "Custom",
     } as Record<string, string>,
     policies: {
-      shares: "Share policy",
+      shares: "Participation policy",
       dividends: "Dividend policy",
       frequency: "Dividend frequency",
     },
@@ -648,6 +637,10 @@ export const dict: Dict = {
       unclassified: "Unclassified",
       person: "person",
       people: "people",
+      preExistingFallback: "Pre-existing shareholders",
+      verificationLabel: "Verification",
+      overcommitWarn:
+        "The cap table exceeds total issued participations. Review pre-existing shareholders in Composition.",
     },
     participationStatus: {
       ASSIGNED: "Assigned",
@@ -701,13 +694,13 @@ export const dict: Dict = {
     amountLabel: "What amount would you like to invest?",
     amountPlaceholder: "0.00",
     maxOf: "Maximum",
-    sharesShort: "shares",
-    sharesAvailableSuffix: "shares available",
+    sharesShort: "participations",
+    sharesAvailableSuffix: "participations available",
     equivalentTo: "Equivalent to",
-    pricePerShare: "Price per share",
+    pricePerShare: "Price per participation",
     effectiveSuffix: "effective",
-    sharesSingular: "share",
-    sharesPlural: "shares",
+    sharesSingular: "participation",
+    sharesPlural: "participations",
     messageLabel: "Message to the project owner",
     messageOptional: "(optional)",
     messagePlaceholderPrefix: "My name is",
@@ -719,7 +712,7 @@ export const dict: Dict = {
     errorNoValuation:
       "This project has not yet declared its valuation — you cannot specify an amount.",
     errorMinAmount: "Minimum:",
-    errorOneShare: "(1 share)",
+    errorOneShare: "(1 participation)",
     errorEnterValid: "Enter a valid amount.",
     errorOverMax: "The amount exceeds availability. Maximum:",
     errorMaxShares: "Maximum available:",
@@ -760,21 +753,24 @@ export const dict: Dict = {
     portfolioValue: "Total portfolio value",
     portfolioValueHintOneProject: "1 project",
     portfolioValueHintManyProjectsSuffix: "projects",
-    totalShares: "Total shares",
+    totalShares: "Total participations",
     totalSharesHint: "across all projects",
     activeProjects: "Active projects",
     activeProjectsHintAll: "with valuation declared",
     activeProjectsHintMissingSuffix: "without valuation declared",
     certificates: "Certificates",
     certificatesHintIssued: "issued in your name",
-    certificatesHintEmpty: "issued when shares are assigned",
+    certificatesHintEmpty: "issued when participations are assigned",
     activeParticipationsTitle: "Active participations",
     noParticipations:
       "You don't have any assigned participations yet. They will appear here once AJDUT assigns them to you.",
     chatShort: "Chat →",
     resaleShort: "Resale →",
     seeProject: "View project →",
-    colShares: "Shares",
+    chatBtn: "Chat",
+    resellBtn: "Resell",
+    seeProjectBtn: "View project",
+    colShares: "Participations",
     colValue: "Value",
     colStatus: "Status",
     colAcquired: "Acquired",
@@ -835,14 +831,14 @@ export const dict: Dict = {
   },
 
   documentos: {
-    metaTitle: "Documents · AJDUT",
+    metaTitle: "Periodic reports · AJDUT",
     eyebrow: "— Your projects",
-    title: "Documents",
+    title: "Periodic reports",
     intro:
-      "All documents shared by founders across the projects where you hold shares, in one place.",
+      "All reports shared by founders across the projects where you hold participations, in one place.",
     filterAll: "All",
-    emptyNoProjects: "You don't hold shares in any project yet.",
-    emptyNoDocs: "No documents shared yet.",
+    emptyNoProjects: "You don't hold participations in any project yet.",
+    emptyNoDocs: "No reports shared yet.",
     openLink: "Open ↗",
   },
 
@@ -851,7 +847,7 @@ export const dict: Dict = {
     eyebrow: "— Your activity",
     title: "History",
     intro:
-      "All your activity on AJDUT — dividends received, share purchases and sales.",
+      "All your activity on AJDUT — dividends received, participation purchases and sales.",
     catLabel: "Type",
     periodLabel: "Period",
     cats: {
@@ -868,8 +864,8 @@ export const dict: Dict = {
     },
     types: {
       dividendo: "Dividend received",
-      compra: "Share purchase",
-      venta: "Share sale",
+      compra: "Participation purchase",
+      venta: "Participation sale",
     },
     empty: "No activity recorded yet.",
     emptyFiltered: "No activity matches that filter.",
@@ -877,18 +873,21 @@ export const dict: Dict = {
   },
 
   reventa: {
-    metaTitle: "Share resale · AJDUT",
-    title: "Share resale",
+    metaTitle: "Participation resale · AJDUT",
+    title: "Participation resale",
     intro:
-      "List your shares so other community members can acquire them. When you reach an agreement with a buyer, designate them here, and the AJDUT team approves the transfer so it's recorded.",
-    sectionYours: "01 · Your shares",
+      "List your participations so other community members can acquire them. When you reach an agreement with a buyer, designate them here, and the AJDUT team approves the transfer so it's recorded.",
+    sectionYours: "01 · Your participations",
     sectionBoard: "02 · Resale board",
-    emptyNoShares: "You don't hold any shares in this project to resell.",
-    emptyNoBoard: "No shares for resale in this project right now.",
-    boardSharesSuffix: "shares",
+    emptyNoShares: "You don't hold any participations in this project to resell.",
+    emptyNoBoard: "No participations for resale in this project right now.",
+    boardSharesSuffix: "participations",
     boardContactLabel: "Contact:",
+    boardPriceLabel: "Price/participation",
+    boardTotalLabel: "Total",
+    boardPartialBadge: "Partial sale",
     seller: {
-      sharesSuffix: "shares",
+      sharesSuffix: "participations",
       transferPending: "Transfer submitted · waiting for the AJDUT team to approve",
       inBoard: "On the resale board",
       listBtn: "List for resale →",
@@ -904,12 +903,44 @@ export const dict: Dict = {
       designatingNoMembers:
         "There are no other members in this project to designate as buyer yet.",
       designatingNoteWithShares:
-        "On confirmation, the transfer of {shares} shares is sent to the AJDUT team for approval.",
+        "On confirmation, the transfer of {shares} participations is sent to the AJDUT team for approval.",
       designatingSubmitBtn: "Designate and send for approval",
       designatingSubmittingBtn: "Sending…",
       errNoteTooShort: "The note must be at least 10 characters.",
       errContactRequired: "Please provide a contact method.",
       errBuyerRequired: "Please pick a buyer.",
+      listingShareCountLabel: "How many participations to sell",
+      listingShareCountHelperFmt:
+        "You have {total} participations; you can resell up to {available}.",
+      listingPricePerShareLabelFmt: "Price per participation ({currency})",
+      listingPricePerShareHelperFmt: "Current estimated price: {price}.",
+      listingPricePerShareHelperNoEstimate:
+        "Set the price per participation freely.",
+      listingTotalAskLabelFmt: "Total ask: {total}",
+      errShareCountOutOfRange: "Quantity out of range.",
+      errPriceInvalid: "Invalid price.",
+      lockedEyebrow: "Resale not yet enabled",
+      lockedUntilFmt:
+        "Participations of {project} can be resold starting {date}.",
+    },
+    // Tripartite validation: the founder validates resales of their project.
+    ownerValidation: {
+      sectionTitle: "00 · Resales pending your validation",
+      intro:
+        "As project owner, your OK is required for a resale to proceed. This gives you control over who joins as a partner: you can offer to active partners first and avoid unwanted partners.",
+      sharesSuffix: "participations",
+      fromTo: "{seller} → {buyer}",
+      priceLabel: "Price/participation",
+      totalLabel: "Total",
+      unknownBuyer: "Buyer",
+      buyerConfirmed: "Buyer confirmed ✓",
+      buyerPending: "Buyer pending —",
+      ownerConfirmed: "You validated ✓",
+      ownerPending: "Pending your validation —",
+      validateBtn: "Validate transaction →",
+      validatingBtn: "Validating…",
+      doneValidated:
+        "You validated this resale. The AJDUT team will execute the transfer once the buyer also confirms.",
     },
     errors: {
       projectNotFound: "Project not found.",
@@ -921,103 +952,74 @@ export const dict: Dict = {
     },
   },
 
-  heirs: {
-    eyebrow: "— Succession",
-    title: "Heirs and life verification",
-    savedTick: "✓ Saved",
-    summaryNone: "Not set up",
-    summaryHeirsSingle: "1 heir · {pct}%",
-    summaryHeirsPlural: "{n} heirs · {pct}%",
-    toggleAria: "Show or hide {section}",
-    section1Title: "Heirs",
-    section1Desc:
-      "Define who will inherit your participation. Only the AJDUT team sees this data, and these people will be contacted if you stop responding to our verifications for more than 3 consecutive cycles.",
-    allocatedSuffix: "% allocated",
-    remainingSuffix: "% remaining",
-    addHeirBtn: "+ Add heir",
-    overAllocatedWarning:
-      "The sum exceeds 100%. Adjust the values before saving new changes.",
-    emptyHeirs: "You haven't added any heirs yet.",
-    editBtn: "Edit",
-    removeBtn: "Remove",
-    removeConfirm: "Remove this heir?",
-    form: {
-      fullName: "Full name",
-      email: "Email (optional)",
-      relationship: "Relationship (optional)",
-      sharePercent: "Allocated percent",
-      cancelBtn: "Cancel",
-      addBtn: "Add",
-      saveBtn: "Save",
-      savingBtn: "Saving…",
-    },
-    validation: {
-      title: "Life verification",
-      desc: "Every so often we'll send you an email to confirm you're still active. If you don't respond 3 times in a row, our team will contact your heirs.",
-      frequencyLabel: "Frequency",
-      freqOptions: {
-        "0": "Off",
-        "1": "Monthly",
-        "3": "Every 3 months",
-        "6": "Every 6 months",
-        "12": "Yearly",
-      },
-      lastConfirmedPrefix: "Last confirmation:",
-      emptyLastConfirmed: "You haven't confirmed any verification yet.",
-      pendingSincePrefix: "Pending response since",
-      missedSingle: "verification without response",
-      missedPlural: "verifications without response",
-      escalated: "Our team has been alerted and will contact your heirs.",
-      almostEscalated: "One more and your heirs will be contacted.",
-      keepResponding:
-        "If you keep not responding, your heirs will be contacted after the third consecutive miss.",
-      ago: {
-        hours: "a few hours ago",
-        daySingle: "1 day ago",
-        daysPlural: "{n} days ago",
-        monthSingle: "1 month ago",
-        monthsPlural: "{n} months ago",
-        yearSingle: "1 year ago",
-        yearsPlural: "{n} years ago",
-      },
-    },
+  // Public page where the proposed buyer confirms a resale (token).
+  confirmarReventa: {
+    title: "Confirm your purchase",
+    eyebrow: "— Resale pending your confirmation",
+    body:
+      "{seller} agreed to sell you {shares} participations of {project}. Before executing the transfer, the founder and the AJDUT team validate the operation. We need your OK.",
+    projectLabel: "Project",
+    sellerLabel: "Seller",
+    shareLabel: "Participations",
+    priceLabel: "Price/participation",
+    totalLabel: "Total",
+    noteLabel: "Seller detail",
+    confirmBtn: "Yes, I confirm the purchase →",
+    confirmingBtn: "Confirming…",
+    doneTitle: "Thanks!",
+    doneBody:
+      "Your confirmation is on record. Once the founder validates, the AJDUT team will execute the transfer and you'll receive your certificate by email.",
+    alreadyTitle: "You already confirmed this purchase",
+    alreadyBody:
+      "Your confirmation was recorded on {date}. No further action needed.",
+    invalidTitle: "Invalid link",
+    invalidBody:
+      "This link doesn't match any active resale. If you got it recently, check your most recent email.",
+    expiredTitle: "Link expired",
+    expiredBody:
+      "This confirmation link is expired. Ask the seller to restart the deal to get a new one.",
+    resolvedTitle: "Resale already resolved",
+    resolvedBody:
+      "This resale has already been executed or cancelled. Nothing more to confirm.",
+    back: "Back to home",
+    expiresFmt: "Link valid until {date}",
   },
 
   documentsPanel: {
-    addBtn: "+ Add document",
-    newDocEyebrow: "New document",
-    empty: "You haven't shared any documents with your members yet.",
+    addBtn: "+ Add report",
+    newDocEyebrow: "New report",
+    empty: "You haven't shared any reports with your members yet.",
     deleteConfirm: "Remove \"{title}\"? This cannot be undone.",
     deleteBtn: "Remove",
     deletingBtn: "Removing…",
     openLink: "Open ↗",
     modal: {
-      title: "Add document",
+      title: "Add report",
       closeBtn: "Close ×",
       description:
         "",
       fileLabel: "",
       fileHelper: "PDF, Excel or Word · 25 MB max.",
       errNoFile: "Upload a file first.",
-      publishBtn: "Publish document →",
+      publishBtn: "Publish report →",
       publishingBtn: "Publishing…",
       cancelBtn: "Cancel",
     },
     errors: {
       projectNotFound: "Project not found.",
       noPermission: "You don't have permission for this project.",
-      nameRequired: "The document needs a name.",
-      fileRequired: "Upload the document file.",
-      uploadError: "Error uploading the document.",
-      notFound: "Document not found.",
-      deleteError: "Error removing the document.",
+      nameRequired: "The report needs a name.",
+      fileRequired: "Upload the report file.",
+      uploadError: "Error uploading the report.",
+      notFound: "Report not found.",
+      deleteError: "Error removing the report.",
     },
   },
 
   adminReventas: {
     metaTitle: "Resales · AJDUT",
     eyebrow: "— Admin",
-    title: "Share resales",
+    title: "Participation resales",
     emptyInbox: "No transfers pending approval.",
     pendingCountSingle: "{n} transfer pending approval.",
     pendingCountPlural: "{n} transfers pending approval.",
@@ -1041,7 +1043,7 @@ export const dict: Dict = {
     row: {
       seller: "Seller",
       buyer: "Buyer",
-      shares: "Shares",
+      shares: "Participations",
       noBuyer: "Not designated",
       contact: "Seller contact:",
     },
@@ -1049,11 +1051,11 @@ export const dict: Dict = {
       approveBtn: "Approve transfer →",
       rejectBtn: "Reject",
       cancelBtn: "Cancel",
-      doneApproved: "Transfer approved. The shares now belong to the buyer.",
+      doneApproved: "Transfer approved. The participations now belong to the buyer.",
       doneRejected: "Transfer rejected. The resale returns to the project board.",
       confirmTitle: "Confirm approval",
       confirmDescription:
-        "You're about to transfer {shares} shares from {seller} to {buyer}. The ownership change is recorded in the ownership chain. It's irreversible.",
+        "You're about to transfer {shares} participations from {seller} to {buyer}. The ownership change is recorded in the ownership chain. It's irreversible.",
       confirmApprove: "Yes, approve the transfer",
       approving: "Approving…",
       rejectNoteLabel: "Rejection note (10+ characters)",
@@ -1064,6 +1066,23 @@ export const dict: Dict = {
     errors: {
       noteTooShort: "The note must be at least 10 characters.",
       serverError: "Internal server error.",
+    },
+    // Tripartite validation (buyer + founder + admin) — appended at end.
+    tripartite: {
+      buyerConfirmed: "Buyer confirmed ✓",
+      buyerPending: "Buyer pending —",
+      ownerConfirmed: "Founder validated ✓",
+      ownerPending: "Founder pending —",
+      approveGatedHint:
+        "Waiting for the buyer and the founder to confirm before approving.",
+      approveGatedTooltip:
+        "The buyer and/or the founder haven't validated the resale yet.",
+      overrideBtn: "Tripartite override",
+      overrideTitle: "Tripartite validation override",
+      overrideDescription:
+        "You're about to execute the transfer even though the buyer or the founder hasn't confirmed in-platform. Only use this if they confirmed off-channel. It will be recorded in the audit log.",
+      overrideNoteLabel: "Justification (min 10 characters)",
+      overrideConfirmBtn: "Yes, force and execute",
     },
   },
 
@@ -1168,7 +1187,7 @@ export const dict: Dict = {
     sourceInvite: "Direct invite",
     colOwner: "Project owner",
     colRecipient: "Recipient",
-    colShares: "Shares",
+    colShares: "Participations",
     newUserBadge: "New user",
     reviewerNote: "Reviewer note",
     approvedBy: "Approved by",
@@ -1184,7 +1203,7 @@ export const dict: Dict = {
       doneRejected: "Assignment rejected. The project owner received the note.",
       confirmTitle: "Confirm approval",
       confirmDescription:
-        "You're about to assign {shares} shares to {recipient}. The pool will be decremented, a Participation created and a Certificate issued. This is irreversible.",
+        "You're about to assign {shares} participations to {recipient}. The pool will be decremented, a Participation created and a Certificate issued. This is irreversible.",
       approveBtn: "Approve →",
       approvingBtn: "Approving…",
       confirmApproveBtn: "Yes, approve and execute",
@@ -1195,34 +1214,54 @@ export const dict: Dict = {
       noteTooShort: "The note must be at least 10 characters.",
       cancelBtn: "Cancel",
     },
-  },
-
-  adminHerederos: {
-    eyebrow: "— Admin",
-    title: "Heirs",
-    intro:
-      "Members whose liveness checks went unanswered for 3 consecutive cycles. Contact their configured heirs to validate the situation.",
-    summaryEmpty: "Inbox cleared.",
-    summaryPendingSingle: "{n} member pending contact.",
-    summaryPendingPlural: "{n} members pending contact.",
-    emptyAll: "Inbox cleared — no members with escalated checks.",
-    missedFmt: "{n} unanswered",
-    lastConfirmedFmt: "Last confirmed: {date}",
-    heirsLoadedFmt: "Heirs — {pct}% allocated",
-    noHeirsLoaded:
-      "This member hasn't configured heirs. Contact them via their registered email.",
-    noEmail: "No email",
-    cron: {
-      runEyebrow: "Run checks →",
-      runningEyebrow: "Running…",
-      description:
-        "Expires PENDING checks older than 15 days and creates new ones that are due.",
-      statUsers: "Users",
-      statNew: "New",
-      statPending: "Pending",
-      statMissed: "Missed",
-      statEscalated: "Escalated",
-    },
+    // Bilateral validation (Wave 2k) — appended at end of block.
+    proposerAccepted: "Project owner confirmed",
+    targetAccepted: "Recipient confirmed",
+    targetPending: "Recipient pending",
+    proposerAcceptedFmt: "Project owner confirmed · {date}",
+    targetAcceptedFmt: "Recipient confirmed · {date}",
+    targetReminderFmt: "Reminder sent · {date}",
+    targetReminderNever: "No reminders sent since creation",
+    resendBtn: "Re-send email to recipient",
+    resendingBtn: "Sending…",
+    resendDoneFmt: "Email re-sent to {email}.",
+    bothPartiesPendingTooltip:
+      "Waiting for the recipient to confirm before approving.",
+    targetPendingTooltip:
+      "The recipient hasn't confirmed by email yet. Re-send or use override.",
+    overrideBtn: "Bilateral override",
+    overrideTitle: "Bilateral validation override",
+    overrideDescription:
+      "You're about to execute the assignment even though the recipient hasn't confirmed in-platform. Only use this if they confirmed off-channel. It will be recorded in the audit log.",
+    overrideNoteLabel: "Justification (min 10 characters)",
+    overrideConfirmBtn: "Yes, force and execute",
+    confirmAsignacionTitle: "Confirm your assignment",
+    confirmAsignacionEyebrow: "— Assignment pending your confirmation",
+    confirmAsignacionBody:
+      "{proposer} proposed assigning you {shares} participations of {project}. Before the AJDUT team executes, we need your OK.",
+    confirmAsignacionShareLabel: "Participations",
+    confirmAsignacionProjectLabel: "Project",
+    confirmAsignacionProposerLabel: "Proposed by",
+    confirmAsignacionMessageLabel: "Message from the project owner",
+    confirmAsignacionConfirmBtn: "Yes, I accept the assignment →",
+    confirmAsignacionConfirmingBtn: "Confirming…",
+    confirmAsignacionDoneTitle: "Thanks!",
+    confirmAsignacionDoneBody:
+      "Your confirmation is on record. The AJDUT team will execute the assignment shortly. You'll receive the certificate by email.",
+    confirmAsignacionAlreadyTitle: "You already confirmed this assignment",
+    confirmAsignacionAlreadyBody:
+      "Your confirmation was recorded on {date}. No further action needed.",
+    confirmAsignacionInvalidTitle: "Invalid link",
+    confirmAsignacionInvalidBody:
+      "This link doesn't match any active proposal. If you got it recently, check your most recent email from the team.",
+    confirmAsignacionExpiredTitle: "Link expired",
+    confirmAsignacionExpiredBody:
+      "This confirmation link is expired. Ask the AJDUT team for a new one.",
+    confirmAsignacionResolvedTitle: "Assignment already resolved",
+    confirmAsignacionResolvedBody:
+      "The AJDUT team already closed this assignment proposal. Nothing more to confirm.",
+    confirmAsignacionBack: "Back to home",
+    confirmAsignacionExpiresFmt: "Link valid until {date}",
   },
 
   adminAuditoria: {
@@ -1254,7 +1293,7 @@ export const dict: Dict = {
       "PARTICIPATION.CREATED": "Participation created",
       "PARTICIPATION.LEAD_CREATED": "Purchase interest received",
       "PARTICIPATION.LEAD_DISMISSED": "Interest dismissed",
-      "PARTICIPATION.ASSIGNED": "Shares assigned",
+      "PARTICIPATION.ASSIGNED": "Participations assigned",
       "PARTICIPATION.RESALE_LISTED": "Resale listed",
       "PARTICIPATION.RESALE_CANCELLED": "Resale cancelled",
       "PARTICIPATION.RESALE_DEAL_CLOSED": "Resale closed",
@@ -1288,28 +1327,23 @@ export const dict: Dict = {
       "PARTICIPATION.ASSIGN_PROPOSED": "Assignment proposed (awaiting admin)",
       "PARTICIPATION.ASSIGN_APPROVED": "Assignment approved by admin",
       "PARTICIPATION.ASSIGN_REJECTED": "Assignment rejected by admin",
+      "PARTICIPATION.ASSIGN_TARGET_CONFIRMED": "Recipient confirmed the assignment",
+      "PARTICIPATION.ASSIGN_TARGET_REMINDER_SENT": "Reminder sent to the recipient",
+      "PARTICIPATION.ASSIGN_ADMIN_OVERRIDE": "Assignment executed by admin (bilateral override)",
       "CHAT.MESSAGE_POSTED": "Message posted in chat",
       "CHAT.MESSAGE_DELETED": "Message hidden by moderation",
       "CHAT.POLL_CREATED": "Poll created",
       "CHAT.POLL_VOTED": "Poll vote",
       "CHAT.POLL_CLOSED": "Poll closed",
-      "HEIR.ADDED": "Heir added",
-      "HEIR.UPDATED": "Heir edited",
-      "HEIR.REMOVED": "Heir removed",
-      "VALIDATION.FREQUENCY_UPDATED": "Validation frequency updated",
-      "VALIDATION.SCHEDULED": "Liveness check scheduled",
-      "VALIDATION.CONFIRMED": "Liveness check confirmed",
-      "VALIDATION.MISSED": "Liveness check missed",
-      "VALIDATION.ESCALATED": "Alert: contact heirs",
     } as Record<string, string>,
     payload: {
-      sharesOfInterestFmt: "{n} shares of interest",
-      sharesAssignedFmt: "{n} shares assigned",
+      sharesOfInterestFmt: "{n} participations of interest",
+      sharesAssignedFmt: "{n} participations assigned",
       certificateFmt: "Certificate {serial}",
       roleAssignedFmt: "Assigned role: {role}",
       noteFmt: "Note: {note}",
       infoUpdated: "Information updated",
-      sharesIssuedFmt: "{n} shares issued",
+      sharesIssuedFmt: "{n} participations issued",
       passwordSet: "Password set",
       roleFmt: "Role: {role}",
       metricFullFmt: "{kind}: {value} {unit}",
@@ -1318,11 +1352,11 @@ export const dict: Dict = {
       broadcastCountAndSubjectFmt: "{n} recipients — “{subject}”",
       broadcastCountFmt: "{n} recipients",
       broadcastSubjectFmt: "“{subject}”",
-      inviteSharesAndEmailFmt: "{n} shares to {email}",
-      inviteSharesFmt: "{n} shares",
-      assignSharesAndSourceAndEmailFmt: "{n} shares ({source}) — {email}",
-      assignSharesAndSourceFmt: "{n} shares ({source})",
-      assignSharesAndNoteFmt: "{n} shares — “{note}”",
+      inviteSharesAndEmailFmt: "{n} participations to {email}",
+      inviteSharesFmt: "{n} participations",
+      assignSharesAndSourceAndEmailFmt: "{n} participations ({source}) — {email}",
+      assignSharesAndSourceFmt: "{n} participations ({source})",
+      assignSharesAndNoteFmt: "{n} participations — “{note}”",
       sourceInvite: "invite",
       sourceLead: "lead",
       pollWithCountFmt: "“{question}” · {n} options",
@@ -1334,12 +1368,12 @@ export const dict: Dict = {
   adminApproval: {
     moderationEyebrow: "Moderation · pending project",
     moderationBody:
-      "This project was created by the project owner and is awaiting your approval. On approval, AJDUT automatically issues the 10% institutional stake and creates the pool of available shares for members.",
+      "This project was created by the project owner and is awaiting your approval. On approval, the pool with all available participations is created for members.",
     approveBtn: "Approve project",
     rejectBtn: "Reject",
     confirmApproveTitle: "Confirm approval",
     confirmApproveBody:
-      "On approval, AJDUT automatically issues the 10% institutional stake and the rest becomes the pool of available shares for members. This action can't be reverted from the UI.",
+      "On approval, the pool with all available participations is created for members. This action can't be reverted from the UI.",
     confirmApproveBtn: "Yes, approve project",
     approvingBtn: "Approving…",
     rejectTitle: "Reject project",
@@ -1393,23 +1427,28 @@ export const dict: Dict = {
     equityStructureLabel: "Equity structure (optional)",
     policiesIntro:
       "Informative text that members with project access will see. All fields are optional.",
-    policySharesLabel: "Share policy (optional)",
+    policySharesLabel: "Participation policy (optional)",
     policyDividendsLabel: "Dividend policy (optional)",
     dividendsFreqLabel: "Dividend frequency (optional)",
     videoIntro:
-      "If you have a pitch video, paste the link here. Documents are uploaded later from the Documents section.",
+      "If you have a pitch video, paste the link here. Reports are uploaded later from the Periodic reports section.",
     videoUrlLabel: "Video URL (YouTube / Vimeo)",
     videoHelper:
       "If you paste a YouTube or Vimeo link it shows as an embedded video on the project page.",
     valuationIntro:
-      "From the valuation we compute the price per share (multiple of 10) and total shares of your company. AJDUT keeps the 10% institutional stake; the rest becomes the pool available to members.",
+      "Define how many total participations your company issues and the value of each. The valuation is computed as total × value. The full total becomes the pool available to members.",
     valuationLabel: "Amount",
     currencyLabel: "Currency",
     currencyUsd: "USD · Dollars",
     currencyMxn: "MXN · Pesos",
     targetRaiseLabel: "Amount to raise (optional)",
-    pricePerShareLabel: "Price per share",
-    totalSharesLabel: "Total shares",
+    pricePerShareLabel: "Price per participation",
+    totalSharesLabel: "Total participations",
+    totalParticipationsLabel: "Total participations to issue",
+    pricePerParticipationLabel: "Value per participation",
+    derivedValuationFmt: "Valuation: {value}",
+    emissionLegend:
+      "To issue new participations later you'll need to consult with the AJDUT administration. The total defined here stays fixed unless agreed otherwise.",
     finalNote:
       "When you create the project it stays in pending approval status. The AJDUT team reviews the data before activating it and emailing you.",
     submitBtn: "Create project and submit for review",
@@ -1436,7 +1475,7 @@ export const dict: Dict = {
     sectionHitos: "Roadmap milestones",
     sectionInteres: "Purchase interest",
     sectionMetricas: "Metrics",
-    sectionDocumentos: "Documents",
+    sectionDocumentos: "Periodic reports",
     sectionAvisos: "Notices to members",
     sectionFondeo: "Funding",
     sectionCapTable: "Cap table",
@@ -1484,10 +1523,10 @@ export const dict: Dict = {
       activeMembersPluralFmt:
         "You have {n} active members in this project. You can email them from here.",
       empty:
-        "When a member receives project shares, you'll be able to send them notices from here.",
+        "When a member receives project participations, you'll be able to send them notices from here.",
     },
     funding: {
-      placedLabel: "Shares placed to date",
+      placedLabel: "Participations placed to date",
       availableLabel: "Available",
       suggestedValueLabel: "Suggested value",
       valuationLabel: "Valuation",
@@ -1510,7 +1549,7 @@ export const dict: Dict = {
       itemPitchLabel: "Pitch deck or video",
       itemPitchHint: "Link to deck (Drive/Notion) or video (YouTube/Vimeo).",
       itemValuationLabel: "Declared valuation",
-      itemValuationHint: "Determines the price per share.",
+      itemValuationHint: "Determines the price per participation.",
       itemDocLabel: "First document shared",
       itemDocHint: "Reports, financial statements, anything you want to share.",
       itemCapLabel: "Shareholder composition",
@@ -1527,7 +1566,7 @@ export const dict: Dict = {
     sectionCategorization: "Categorization",
     sectionVideo: "Video",
     videoIntro:
-      "If you have a pitch video, paste the link here. Project documents are uploaded from the Documents section.",
+      "If you have a pitch video, paste the link here. Project reports are uploaded from the Periodic reports section.",
     videoHelper:
       "If you paste a YouTube or Vimeo link it shows as an embedded video on the project page.",
     sectionWhat: "What does it do?",
@@ -1535,9 +1574,9 @@ export const dict: Dict = {
     sectionPolicies: "Policies",
     policiesIntro:
       "Informative text that members with access will see. All fields are optional.",
-    sectionSharesForSale: "Shares for sale",
+    sectionSharesForSale: "Participations for sale",
     sharesForSaleIntro:
-      "How many shares of your company you want to make available for members to participate. You can adjust at any time.",
+      "How many participations of your company you want to make available for members to participate. You can adjust at any time.",
     sectionValuation: "Valuation",
     nameLabel: "Name",
     oneLinerLabel: "One-liner",
@@ -1555,7 +1594,7 @@ export const dict: Dict = {
     businessModelLabel: "Business model",
     assetBackingLabel: "Asset backing (optional)",
     equityStructureLabel: "Equity structure (optional)",
-    policySharesLabel: "Share policy (optional)",
+    policySharesLabel: "Participation policy (optional)",
     policyDividendsLabel: "Dividend policy (optional)",
     dividendsFreqLabel: "Dividend frequency (optional)",
     availableLabelFmt: "Available (max {n})",
@@ -1572,16 +1611,18 @@ export const dict: Dict = {
     currencyMxn: "MXN · Pesos",
     targetRaiseLabel: "Amount to raise (optional)",
     valuationHint:
-      "Enter the valuation to see the derived price per share.",
-    pricePerShareLabel: "Price per share (effective)",
-    totalSharesLabel: "Total shares",
+      "Enter the valuation to see the derived price per participation.",
+    pricePerShareLabel: "Price per participation (effective)",
+    totalSharesLabel: "Total participations",
     valuationClean:
-      "The valuation divides cleanly: price per share is a multiple of 10.",
+      "The valuation divides cleanly: price per participation is a multiple of 10.",
     valuationWarnTitle: "⚠ Notice",
     valuationWarnBodyFmt:
-      "With this valuation, the \"clean\" split would be {price}/share × {shares} shares. But your project already has {current} issued shares, so changing the total now would break the cap table.",
+      "With this valuation, the \"clean\" split would be {price}/participation × {shares} participations. But your project already has {current} issued participations, so changing the total now would break the cap table.",
     valuationWarnBody2:
-      "You can update the valuation: the effective price per share recalculates over existing shares. If you want to reissue the cap table, contact the AJDUT team.",
+      "You can update the valuation: the effective price per participation recalculates over existing participations. If you want to reissue the cap table, contact the AJDUT team.",
+    emissionLegend:
+      "The total of issued participations stays fixed. To issue new participations you'll need to consult with the AJDUT administration. You can update the valuation: the value per participation recalculates over the existing total.",
     saveBtn: "Save changes",
     savingBtn: "Saving…",
     kindRealEstate: "Real estate",
@@ -1593,6 +1634,9 @@ export const dict: Dict = {
     stageEarlyRevenue: "Early revenue",
     stageGrowth: "Growth",
     stageScale: "Scale",
+    resaleAllowedFromLabel: "Resale allowed from",
+    resaleAllowedFromHelper:
+      "Leave empty to allow resale from the start. If you set a date, holders can't resell before it.",
   },
 
   founderComposicion: {
@@ -1613,15 +1657,15 @@ export const dict: Dict = {
     holders: {
       eyebrow: "— AJDUT shareholders",
       helper:
-        "People who received shares through the platform. Assign a class to each one.",
+        "People who received participations through the platform. Assign a class to each one.",
       empty: "No shareholders assigned through AJDUT yet.",
-      sharesAndPctFmt: "{n} shares · {pct}%",
+      sharesAndPctFmt: "{n} participations · {pct}%",
       noClass: "— No class —",
     },
     external: {
       eyebrow: "— Pre-existing shareholders",
       helper:
-        "People who held shares before AJDUT (founders, prior investors). You declare how many people, how many shares and their class.",
+        "People who held participations before AJDUT (founders, prior investors). You declare how many people, how many participations and their class.",
       addBtn: "+ Add",
       defaultLabel: "Holding",
       peopleSingleFmt: "{n} person · {cls}",
@@ -1637,7 +1681,7 @@ export const dict: Dict = {
         classLabel: "Class",
         noClass: "— No class —",
         peopleLabel: "Number of people",
-        sharesLabel: "Number of shares",
+        sharesLabel: "Number of participations",
         cancelBtn: "Cancel",
         addBtn: "Add",
         saveBtn: "Save",
@@ -1651,7 +1695,7 @@ export const dict: Dict = {
     description:
       "Send an email to all members of your project, or to a single one, to announce reports, votes or relevant information.",
     emptyNoMembers:
-      "Your project doesn't have members with assigned shares yet. Once shares are distributed, you'll be able to send notices from here.",
+      "Your project doesn't have members with assigned participations yet. Once participations are distributed, you'll be able to send notices from here.",
     recipientsLabel: "Recipients",
     allMembersFmt: "All members ({n})",
     oneMember: "A specific member",
@@ -1779,24 +1823,24 @@ export const dict: Dict = {
   founderInvitar: {
     section: "Invite member",
     description:
-      "Propose adding a member to your project. The proposal stays pending validation from the AJDUT team. When an admin approves it, the account is created (if needed), shares are assigned from the pool and an email is sent to the invitee.",
+      "Propose adding a member to your project. The proposal stays pending validation from the AJDUT team. When an admin approves it, the account is created (if needed), participations are assigned from the pool and an email is sent to the invitee.",
     poolLabel: "— Pool available to propose",
     emailLabel: "Invitee email",
     fullNameLabel: "Full name",
     fullNameHelper:
       "Used to create the account if the email isn't registered yet.",
-    sharesLabel: "Shares to assign",
+    sharesLabel: "Participations to assign",
     sharesAvailableFmt: "Available now: {n}",
     messageLabel: "Message (optional)",
     successEyebrow: "Invitation proposed — awaiting admin validation",
     successBodyFmt:
-      "You proposed assigning {n} shares to {name} ({email}). The AJDUT team received the notice. Once approved, the account will be created (if needed), the certificate will be issued and we'll email the invitee.",
+      "You proposed assigning {n} participations to {name} ({email}). The AJDUT team received the notice. Once approved, the account will be created (if needed), the certificate will be issued and we'll email the invitee.",
     emptyPool:
-      "No shares available in the pool. To invite new members, first recover shares from the project pool.",
+      "No participations available in the pool. To invite new members, first recover participations from the project pool.",
     sendBtn: "Propose to admin →",
     sendingBtn: "Sending…",
     disclaimer:
-      "The proposal stays pending. Only when the admin validates it the account is created, shares are assigned, and the invitee is notified.",
+      "The proposal stays pending. Only when the admin validates it the account is created, participations are assigned, and the invitee is notified.",
   },
 
   founderLeads: {
@@ -1834,16 +1878,16 @@ export const dict: Dict = {
     leadsStageNote: "Stage 2 — concrete interest",
     emptyLeads:
       "When someone says “I want to participate” in your project, they'll appear here with the amount they're requesting.",
-    colShares: "Shares",
+    colShares: "Participations",
     colEquivalent: "Equivalent",
     colReceived: "Received",
     proposalPendingEyebrow: "Assignment proposed — awaiting admin validation",
     proposalPendingBodyFmt:
-      "You proposed assigning {n} shares to the AJDUT team. When approved, the certificate will be issued and you'll receive an email.",
+      "You proposed assigning {n} participations to the AJDUT team. When approved, the certificate will be issued and you'll receive an email.",
     actions: {
       proposeTitle: "Propose assignment to admin",
       proposeDescFmt:
-        "You're about to propose assigning {n} shares to {name}. The proposal stays pending validation from the AJDUT team — only when an admin approves it the pool is decremented and the certificate is issued. Make sure to close the payment off-platform first.",
+        "You're about to propose assigning {n} participations to {name}. The proposal stays pending validation from the AJDUT team — only when an admin approves it the pool is decremented and the certificate is issued. Make sure to close the payment off-platform first.",
       proposeSubmitBtn: "Yes, send proposal to admin",
       proposeSubmittingBtn: "Proposing…",
       askMoreInfoTitle: "Request more information",
@@ -1933,9 +1977,9 @@ export const dict: Dict = {
           "Access to AJDUT is coordinated through an admission request and the individual validation of each profile. This personalized process ensures that every member shares the integrity standards and the value vision of our ecosystem.",
       },
       stake: {
-        title: "Institutional stake",
+        title: "Platform role",
         body:
-          "AJDUT supports the growth of the community by maintaining a 10% economic participation in every active project. This mutual commitment is formalized transparently in the Platform Equity Agreement entered into with the project owner at the start of the collaboration.",
+          "AJDUT does not hold an economic stake in active projects by default. The platform supports the growth of the community through member curation, operation records and governance tools, without taking equity in projects.",
       },
       distributions: {
         title: "Distributions and Governance",
@@ -1946,6 +1990,11 @@ export const dict: Dict = {
         title: "Transfer of participations",
         body:
           "The free transfer or resale of participations is managed through prior notification to the platform. For the safety of the entire community, the official change of ownership is consolidated in the registry once validated by the Administrator through the corresponding dual-signature system.",
+      },
+      liability: {
+        title: "Disclaimer of liability",
+        body:
+          "AJDUT acts exclusively as a registry and traceability platform. The platform is not responsible for the outcome, financial performance, administrative management, or veracity of the information of the projects published. Responsibility for compliance with obligations, management of resources, accuracy of metrics, investment decisions, and any resulting damages rests solely with the project owners and the parties involved. Partners acknowledge and accept that their participation is their own independent decision and at their own risk.",
       },
     },
   },

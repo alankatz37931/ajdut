@@ -272,10 +272,14 @@ export default async function ProjectsDiscoveryPage({
                     </p>
                   </div>
 
-                  <div className="col-span-12 sm:col-span-1 self-center text-right">
-                    <span className="eyebrow !text-gold">
-                      {isPending ? t.review : "→"}
-                    </span>
+                  <div className="col-span-12 sm:col-span-1 self-center sm:text-right">
+                    {isPending ? (
+                      <span className="eyebrow !text-gold">{t.review}</span>
+                    ) : (
+                      <span className="btn-outline shrink-0 !px-4 !py-2 text-xs tracking-wider uppercase">
+                        {t.exploreBtn}
+                      </span>
+                    )}
                   </div>
 
                   {/* Barra de fondeo: % de acciones ya colocadas */}

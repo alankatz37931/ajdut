@@ -276,15 +276,81 @@ export default async function AdminPendingAssignmentsPage({
                     )}
 
                     {p.status === "PENDING" && (
-                      <div className="mt-4">
-                        <PendingAssignmentActions
-                          pendingId={p.id}
-                          recipientLabel={recipientLabel}
-                          shareCount={p.shareCount}
-                          dict={t.actions}
-                          locale={locale}
-                        />
-                      </div>
+                      <>
+                        {/* Validación bilateral: badges del estado de cada
+                            confirmación. Admin sólo puede aprobar normalmente
+                            cuando ambos están seteados; si target no confirmó,
+                            puede re-enviar el mail o usar el override. */}
+                        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 eyebrow">
+                          <span
+                            className={
+                              p.proposerAcceptedAt
+                                ? "!text-navy/70"
+                                : "!text-navy/40"
+                            }
+                          >
+                            {p.proposerAcceptedAt
+                              ? `${SYMBOL.done} ${t.proposerAcceptedFmt.replace(
+                                  "{date}",
+                                  formatDate(p.proposerAcceptedAt, locale)
+                                )}`
+                              : `${SYMBOL.open} ${t.proposerAccepted} —`}
+                          </span>
+                          <span
+                            className={
+                              p.targetAcceptedAt
+                                ? "!text-navy/70"
+                                : "!text-gold"
+                            }
+                          >
+                            {p.targetAcceptedAt
+                              ? `${SYMBOL.done} ${t.targetAcceptedFmt.replace(
+                                  "{date}",
+                                  formatDate(p.targetAcceptedAt, locale)
+                                )}`
+                              : `${SYMBOL.open} ${t.targetPending}`}
+                          </span>
+                          {!p.targetAcceptedAt && (
+                            <span className="!text-navy/40">
+                              {p.targetReminderSentAt
+                                ? t.targetReminderFmt.replace(
+                                    "{date}",
+                                    formatDate(
+                                      p.targetReminderSentAt,
+                                      locale
+                                    )
+                                  )
+                                : t.targetReminderNever}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-4">
+                          <PendingAssignmentActions
+                            pendingId={p.id}
+                            recipientLabel={recipientLabel}
+                            shareCount={p.shareCount}
+                            dict={t.actions}
+                            bilateralDict={{
+                              resendBtn: t.resendBtn,
+                              resendingBtn: t.resendingBtn,
+                              resendDoneFmt: t.resendDoneFmt,
+                              bothPartiesPendingTooltip:
+                                t.bothPartiesPendingTooltip,
+                              targetPendingTooltip: t.targetPendingTooltip,
+                              overrideBtn: t.overrideBtn,
+                              overrideTitle: t.overrideTitle,
+                              overrideDescription: t.overrideDescription,
+                              overrideNoteLabel: t.overrideNoteLabel,
+                              overrideConfirmBtn: t.overrideConfirmBtn,
+                            }}
+                            locale={locale}
+                            targetEmail={targetEmail}
+                            proposerAccepted={!!p.proposerAcceptedAt}
+                            targetAccepted={!!p.targetAcceptedAt}
+                          />
+                        </div>
+                      </>
                     )}
                   </div>
                 </li>

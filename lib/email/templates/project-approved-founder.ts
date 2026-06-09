@@ -18,9 +18,9 @@ export function projectApprovedFounderEmail(input: ProjectApprovedFounderInput) 
         Ya está visible para los miembros, que pueden decir “me interesa participar”.
       </p>
       <p style="margin:0 0 16px 0;">
-        El cap table inicial quedó armado: AJDUT mantiene el 10% institucional y el resto está
-        disponible como pool. Podés ajustar cuántas acciones querés poner a la venta desde la
-        página de edición del proyecto.
+        El cap table inicial quedó armado con la totalidad de las acciones como pool disponible.
+        Podés ajustar cuántas acciones querés poner a la venta desde la página de edición del
+        proyecto.
       </p>
       <p style="margin:24px 0 0 0;font-family:'DM Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#4B4B5E;">
         Te avisaremos por email cada vez que un miembro diga que le interesa participar.

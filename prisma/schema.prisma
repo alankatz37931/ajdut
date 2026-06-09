@@ -125,19 +125,6 @@ model User {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  // ─── Ola 7b — Herederos y validación de vida ──────────────────────
-  // Cada cuántos meses AJDUT le pide al miembro que confirme que sigue activo.
-  // Valores permitidos: 0 (deshabilitado), 1, 3 (default), 6, 12.
-  validationFrequencyMonths Int       @default(3)
-  // Última vez que el miembro confirmó manualmente. Si null nunca confirmó.
-  lastValidationConfirmedAt DateTime?
-  // Contador de checks PENDING que vencieron sin respuesta. Se resetea al
-  // confirmar. Cuando llega a 3 disparamos heirsEscalated.
-  missedValidationCount     Int       @default(0)
-  // True cuando el admin ya recibió el alerta para contactar a los herederos.
-  // Evita re-disparar el alerta en cada cron-pass.
-  heirsEscalated            Boolean   @default(false)
-
   // Relaciones inversas
   ownedProjects         Project[]              @relation("ProjectOwner")
   coAdminAssignments    ProjectCoAdmin[]
@@ -163,59 +150,8 @@ model User {
   pendingProposed       PendingAssignment[]    @relation("PendingAssignmentProposer")
   pendingTargeted       PendingAssignment[]    @relation("PendingAssignmentTarget")
   pendingReviewed       PendingAssignment[]    @relation("PendingAssignmentReviewer")
-  heirs                 Heir[]                 @relation("HeirOwner")
-  validationChecks      ValidationCheck[]      @relation("ValidationUser")
 
   @@index([role, isActive])
-}
-
-// ─── HEREDEROS Y VALIDACIÓN DE VIDA (Ola 7b) ────────────────────────
-//
-// Cada miembro declara herederos con un % de reparto (suma <= 100). Si el
-// miembro deja de responder N verificaciones consecutivas, el admin recibe
-// alerta para contactarlos. AJDUT no ejecuta transferencias automáticas —
-// solo notifica al equipo para que actúe humanamente.
-
-model Heir {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation("HeirOwner", fields: [userId], references: [id])
-  fullName     String
-  email        String?
-  relationship String? // "hermana", "cónyuge", "hijo", texto libre
-  sharePercent Decimal  @db.Decimal(5, 2)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([userId, email])
-  @@index([userId])
-}
-
-enum ValidationCheckStatus {
-  PENDING
-  CONFIRMED
-  MISSED
-}
-
-model ValidationCheck {
-  id          String                @id @default(cuid())
-  userId      String
-  user        User                  @relation("ValidationUser", fields: [userId], references: [id])
-  sentAt      DateTime              @default(now())
-  respondedAt DateTime?
-  status      ValidationCheckStatus @default(PENDING)
-  escalatedAt DateTime?
-
-  // SHA-256 hash del token plano que viaja en el link del email. El plano
-  // nunca se almacena. Se setea a null al confirmar (invalidación) y al
-  // marcar como MISSED (defense in depth). Nullable porque los registros
-  // creados antes de Ola 7b-security no tienen token.
-  tokenHash      String?   @unique
-  // Fecha de expiración del token. Si null, no expira (legacy). Si pasada,
-  // la ruta /confirmar-vida lo rechaza aunque el status sea PENDING.
-  tokenExpiresAt DateTime?
-
-  @@index([userId, sentAt])
 }
 
 // ─── TOKENS DE SETEO DE CONTRASEÑA ──────────────────────────────────
@@ -284,6 +220,12 @@ model Project {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   deletedAt        DateTime?
+
+  // Fecha a partir de la cual los socios pueden revender sus participaciones.
+  // Null = sin restricción (reventa habilitada desde siempre). Si está seteada,
+  // listForResale rechaza listings antes de esta fecha. El project owner la define
+  // en /founder/[slug]/editar. Se comunica a holders y a compradores potenciales.
+  resaleAllowedFrom DateTime?
 
   startupProfile     StartupProfile?
   coAdmins           ProjectCoAdmin[]
@@ -361,8 +303,10 @@ model StartupProfile {
   valuationCurrency String       @default("USD")
   totalEquityShares Int
 
-  // Stake institucional AJDUT
-  platformEquityPercent      Decimal @default(10.00) @db.Decimal(5, 2)
+  // Stake institucional AJDUT (legacy). Por defecto 0 — AJDUT no retiene
+  // equity automáticamente. Proyectos seedeados antes de este cambio
+  // pueden tener 10 históricamente; nuevos proyectos son 0.
+  platformEquityPercent      Decimal @default(0.00) @db.Decimal(5, 2)
   platformEquityAgreementKey String?
 
   websiteUrl          String?
@@ -686,6 +630,18 @@ model ResaleListing {
   contactChannel  String
   status          ResaleStatus  @default(LISTED)
 
+  // ─── Cantidad y precio ────────────────────────────────────────────
+  // Cuántas participaciones se ofrecen en este listing. Puede ser menor
+  // a `participation.shareCount` (venta parcial). Si NULL, es un listing
+  // legacy creado antes del overhaul → se interpreta como la totalidad
+  // de la participación. Migrar a NOT NULL una vez que todos los rows
+  // tengan valor (backfill: `UPDATE "ResaleListing" rl SET "shareCount" = p."shareCount" FROM "Participation" p WHERE rl."participationId" = p.id AND rl."shareCount" IS NULL;`).
+  shareCount            Int?
+  // Precio propuesto por participación (no es el total — es el unitario).
+  // NULL = listing legacy sin precio (negociar offline). Decimal(18,2)
+  // para alinearse con preMoneyValuation y dividendos.
+  proposedPricePerShare Decimal? @db.Decimal(18, 2)
+
   // Comprador propuesto al cerrar trato offline (cualquier User aprobado de AJDUT)
   proposedBuyerId String?
   // Evidencia de firma electrónica de ambas partes (in-app)
@@ -696,6 +652,20 @@ model ResaleListing {
   rofrWaivedAt   DateTime?
   rofrWaivedById String?
   rofrWaiverNote String?
+
+  // ─── Validación TRIPARTITA previa a la transferencia ──────────────
+  // Cuando el seller designa un comprador propuesto, antes de que el admin
+  // ejecute validateTransfer deben aprobar DOS partes más: el comprador
+  // propuesto y el project owner (founder). Esto da al founder control sobre
+  // quién entra como socio (evita socios no deseados; permite ofrecer primero
+  // a socios activos). Mismo patrón de validación bilateral que
+  // PendingAssignment (proposerAcceptedAt/targetAcceptedAt + token SHA-256).
+  buyerAcceptedAt DateTime?
+  ownerAcceptedAt DateTime?
+  // Token capability-based para que el comprador confirme via email / in-app.
+  // La DB sólo guarda el SHA-256; single-use, se nullea al consumirse.
+  buyerConfirmationTokenHash      String?   @unique
+  buyerConfirmationTokenExpiresAt DateTime?
 
   createdAt DateTime  @default(now())
   closedAt  DateTime?
@@ -1084,6 +1054,22 @@ model PendingAssignment {
   reviewedById String?
   reviewedBy   User?                   @relation("PendingAssignmentReviewer", fields: [reviewedById], references: [id])
   reviewNote   String?
+
+  // Validación bilateral: ambas partes deben aprobar antes que admin ejecute.
+  // El proposer (founder) ya implícitamente aprobó al crear el pending. El
+  // target (receptor) debe explícitamente aceptar via link en email / acción
+  // in-app. Admin solo puede ejecutar cuando proposerAcceptedAt y targetAcceptedAt
+  // están ambos seteados (salvo override explícito que queda en AuditLog).
+  proposerAcceptedAt    DateTime?
+  targetAcceptedAt      DateTime?
+  // Hash SHA-256 de un token que se envía al target por email para confirmar.
+  // Single-use: se nullea al consumirse. Misma pattern que life-confirmation tokens.
+  targetConfirmationTokenHash      String?   @unique
+  targetConfirmationTokenExpiresAt DateTime?
+  // Timestamp del último re-envío del mail de confirmación al target. Permite
+  // a la UI del admin mostrar "recordatorio enviado X días atrás" y abrir la
+  // puerta a rate-limit más adelante.
+  targetReminderSentAt             DateTime?
 
   createdAt DateTime @default(now())
 

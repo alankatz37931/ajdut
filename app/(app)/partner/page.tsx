@@ -99,8 +99,6 @@ export default async function PartnerDashboardPage() {
     ([c]) => c !== primaryCurrency
   );
 
-  const certificatesCount = rows.reduce((s, r) => s + r.certificates.length, 0);
-
   return (
     <div>
       <div className="pt-5 pb-5 sm:pt-7 sm:pb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -117,7 +115,7 @@ export default async function PartnerDashboardPage() {
       </div>
 
       {participations.length > 0 && (
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-3">
           <KpiCard
             label={t.portfolioValue}
             value={formatCurrency(primaryTotal, primaryCurrency, 2, locale)}
@@ -155,15 +153,6 @@ export default async function PartnerDashboardPage() {
                 : t.activeProjectsHintAll
             }
           />
-          <KpiCard
-            label={t.certificates}
-            value={String(certificatesCount)}
-            hint={
-              certificatesCount > 0
-                ? t.certificatesHintIssued
-                : t.certificatesHintEmpty
-            }
-          />
         </div>
       )}
 
@@ -171,107 +160,105 @@ export default async function PartnerDashboardPage() {
         {rows.length === 0 ? (
           <p className="text-navy/60">{t.noParticipations}</p>
         ) : (
-          <ul>
+          <ul className="flex flex-col gap-4">
             {rows.map((p) => {
               const currency =
                 p.project.startupProfile?.valuationCurrency ?? "USD";
               const cert = p.certificates[0];
               return (
-                <li key={p.id} className="hairline-b">
-                  <div className="block py-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-baseline gap-3 flex-wrap">
-                          <Link
-                            href={`/proyectos/${p.project.slug}` as Route}
-                            className="font-sans text-navy hover:!text-gold break-words"
-                          >
-                            {p.project.name}
-                          </Link>
-                          <Link
-                            href={`/proyectos/${p.project.slug}/chat` as Route}
-                            className="eyebrow hover:!text-gold shrink-0"
-                          >
-                            {t.chatShort}
-                          </Link>
-                          <Link
-                            href={`/proyectos/${p.project.slug}/reventa` as Route}
-                            className="eyebrow hover:!text-gold shrink-0"
-                          >
-                            {t.resaleShort}
-                          </Link>
-                        </div>
-                        <p className="mt-1 eyebrow">{p.project.shortPitch}</p>
+                <li key={p.id} className="hairline bg-paper p-5 sm:p-6">
+                  <div>
+                    <Link
+                      href={`/proyectos/${p.project.slug}` as Route}
+                      className="font-sans text-navy hover:!text-gold break-words"
+                    >
+                      {p.project.name}
+                    </Link>
+                    <p className="mt-1 eyebrow">{p.project.shortPitch}</p>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+                    <div>
+                      <p className="eyebrow">{t.colShares}</p>
+                      <p className="mt-1 font-mono text-navy">
+                        {formatNumber(p.shareCount, undefined, locale)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="eyebrow">{t.colValue}</p>
+                      <p className="mt-1 font-mono text-navy">
+                        {p.valueInProjectCurrency !== null
+                          ? formatCurrency(
+                              p.valueInProjectCurrency,
+                              currency,
+                              2,
+                              locale
+                            )
+                          : "—"}
+                      </p>
+                      {prefersMxn &&
+                        currency === "USD" &&
+                        p.valueInProjectCurrency !== null && (
+                          <p className="mt-0.5 font-mono text-xs text-navy/40">
+                            {
+                              formatDualCurrency(
+                                p.valueInProjectCurrency,
+                                true
+                              ).secondary
+                            }
+                          </p>
+                        )}
+                    </div>
+                    <div>
+                      <p className="eyebrow">{t.colStatus}</p>
+                      <p className="mt-1 eyebrow !text-navy">
+                        {t.participationStatus[p.status] ?? p.status}
+                      </p>
+                    </div>
+                    <div className="sm:text-right">
+                      <p className="eyebrow">{t.colAcquired}</p>
+                      <p className="mt-1 eyebrow !text-navy">
+                        {p.acquiredAt ? formatDate(p.acquiredAt, locale) : "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Link
+                      href={`/proyectos/${p.project.slug}` as Route}
+                      className="btn-primary"
+                    >
+                      {t.seeProjectBtn}
+                    </Link>
+                    <Link
+                      href={`/proyectos/${p.project.slug}/chat` as Route}
+                      className="btn-outline"
+                    >
+                      {t.chatBtn}
+                    </Link>
+                    <Link
+                      href={`/proyectos/${p.project.slug}/reventa` as Route}
+                      className="btn-outline"
+                    >
+                      {t.resellBtn}
+                    </Link>
+                  </div>
+
+                  {cert && (
+                    <div className="mt-5 hairline-t pt-4 flex items-center justify-between gap-3 flex-wrap">
+                      <div className="font-mono text-xs text-navy/70">
+                        {t.certificateLabel}{" "}
+                        <span className="text-navy">{cert.serialCode}</span> ·{" "}
+                        {t.issuedAt} {formatDate(cert.issuedAt, locale)}
                       </div>
                       <Link
-                        href={`/proyectos/${p.project.slug}` as Route}
-                        className="eyebrow text-gold shrink-0"
+                        href={`/certificado/${cert.id}` as Route}
+                        className="eyebrow hover:!text-gold"
                       >
-                        {t.seeProject}
+                        {t.seeCertificate}
                       </Link>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                      <div>
-                        <p className="eyebrow">{t.colShares}</p>
-                        <p className="mt-1 font-mono text-navy">
-                          {formatNumber(p.shareCount, undefined, locale)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="eyebrow">{t.colValue}</p>
-                        <p className="mt-1 font-mono text-navy">
-                          {p.valueInProjectCurrency !== null
-                            ? formatCurrency(
-                                p.valueInProjectCurrency,
-                                currency,
-                                2,
-                                locale
-                              )
-                            : "—"}
-                        </p>
-                        {prefersMxn &&
-                          currency === "USD" &&
-                          p.valueInProjectCurrency !== null && (
-                            <p className="mt-0.5 font-mono text-xs text-navy/40">
-                              {
-                                formatDualCurrency(
-                                  p.valueInProjectCurrency,
-                                  true
-                                ).secondary
-                              }
-                            </p>
-                          )}
-                      </div>
-                      <div>
-                        <p className="eyebrow">{t.colStatus}</p>
-                        <p className="mt-1 eyebrow !text-navy">
-                          {t.participationStatus[p.status] ?? p.status}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="eyebrow">{t.colAcquired}</p>
-                        <p className="mt-1 eyebrow !text-navy">
-                          {p.acquiredAt ? formatDate(p.acquiredAt, locale) : "—"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {cert && (
-                      <div className="mt-3 hairline-t pt-3 flex items-center justify-between gap-3 flex-wrap">
-                        <div className="font-mono text-xs text-navy/70">
-                          {t.certificateLabel}{" "}
-                          <span className="text-navy">{cert.serialCode}</span> ·{" "}
-                          {t.issuedAt} {formatDate(cert.issuedAt, locale)}
-                        </div>
-                        <Link
-                          href={`/certificado/${cert.id}` as Route}
-                          className="eyebrow hover:!text-gold"
-                        >
-                          {t.seeCertificate}
-                        </Link>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </li>
               );
             })}

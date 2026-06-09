@@ -19,6 +19,35 @@ import {
 type Tx = Prisma.TransactionClient;
 type AnyClient = Prisma.TransactionClient | typeof prisma;
 
+// ─── Validación bilateral: helpers de token ─────────────────────────
+//
+// El target recibe un link `/confirmar-asignacion/<plainToken>` por mail.
+// La DB sólo guarda el SHA-256 del token. TTL por defecto: 30 días — suficiente
+// para que el receptor confirme sin presión, sin dejar tokens vivos para siempre.
+// Mismo patrón que `password-setup`.
+
+const TARGET_CONFIRMATION_TOKEN_BYTES = 32;
+const TARGET_CONFIRMATION_TTL_DAYS = 30;
+
+function hashTargetConfirmationToken(plain: string): string {
+  return createHash("sha256").update(plain).digest("hex");
+}
+
+function newTargetConfirmationToken(): {
+  plain: string;
+  hash: string;
+  expiresAt: Date;
+} {
+  const plain = randomBytes(TARGET_CONFIRMATION_TOKEN_BYTES).toString(
+    "base64url"
+  );
+  const hash = hashTargetConfirmationToken(plain);
+  const expiresAt = new Date(
+    Date.now() + TARGET_CONFIRMATION_TTL_DAYS * 24 * 60 * 60 * 1000
+  );
+  return { plain, hash, expiresAt };
+}
+
 /**
  * Ola 5 — Toda asignación de acciones queda primero como PendingAssignment.
  * El ADMIN aprueba o rechaza desde /admin/asignaciones. Solo cuando aprueba se
@@ -98,6 +127,38 @@ async function assertAdmin(tx: Tx, userId: string): Promise<void> {
   }
 }
 
+/**
+ * Persiste una Notification in-app para que el target vea un banner cuando se
+ * loguee. El modelo `Notification` ya existe (esquema); todavía no hay UI que
+ * lo consuma (la usaba el viejo flujo de confirmar-vida), pero dejamos la
+ * traza para que la próxima ola de UX la enganche.
+ */
+async function createTargetConfirmNotification(
+  tx: Tx,
+  args: {
+    targetUserId: string;
+    pendingId: string;
+    projectName: string;
+    shareCount: number;
+    proposerName: string;
+    confirmTokenPlain: string;
+  }
+): Promise<void> {
+  await tx.notification.create({
+    data: {
+      userId: args.targetUserId,
+      kind: "PENDING_ASSIGNMENT_TARGET_CONFIRM",
+      payload: {
+        pendingId: args.pendingId,
+        projectName: args.projectName,
+        shareCount: args.shareCount,
+        proposerName: args.proposerName,
+        confirmUrl: `/confirmar-asignacion/${args.confirmTokenPlain}`,
+      },
+    },
+  });
+}
+
 // ─── Crear propuesta desde un Lead ──────────────────────────────────
 
 export type CreatePendingFromLeadInput = {
@@ -112,6 +173,12 @@ export type CreatePendingFromLeadInput = {
 export type CreatePendingResult = {
   pendingId: string;
   shareCount: number;
+  /**
+   * Token plano (base64url) que debe viajar en el link de confirmación al
+   * target. La DB sólo guarda el hash; este string nunca debe loggearse.
+   */
+  targetConfirmationToken: string;
+  targetConfirmationExpiresAt: Date;
 };
 
 export async function createPendingFromLead(
@@ -173,6 +240,9 @@ export async function createPendingFromLead(
       );
     }
 
+    const tokenInfo = newTargetConfirmationToken();
+    const now = new Date();
+
     const pending = await tx.pendingAssignment.create({
       data: {
         projectId: input.projectId,
@@ -183,6 +253,11 @@ export async function createPendingFromLead(
         shareCount: input.shareCount,
         reason: input.reason ?? null,
         status: "PENDING",
+        // Validación bilateral: el proposer acepta implícitamente al crear.
+        // El target debe confirmar via /confirmar-asignacion/<token>.
+        proposerAcceptedAt: now,
+        targetConfirmationTokenHash: tokenInfo.hash,
+        targetConfirmationTokenExpiresAt: tokenInfo.expiresAt,
       },
     });
 
@@ -197,10 +272,38 @@ export async function createPendingFromLead(
         leadId: lead.id,
         targetUserId: lead.user.id,
         shareCount: input.shareCount,
+        proposerAcceptedAt: now.toISOString(),
       },
     });
 
-    return { pendingId: pending.id, shareCount: input.shareCount };
+    // Notification in-app para el target. El target SIEMPRE existe en LEAD.
+    const [project, proposer] = await Promise.all([
+      tx.project.findUnique({
+        where: { id: input.projectId },
+        select: { name: true },
+      }),
+      tx.user.findUnique({
+        where: { id: input.proposedById },
+        select: { fullName: true, alias: true },
+      }),
+    ]);
+    if (project && proposer) {
+      await createTargetConfirmNotification(tx, {
+        targetUserId: lead.user.id,
+        pendingId: pending.id,
+        projectName: project.name,
+        shareCount: input.shareCount,
+        proposerName: proposer.alias ?? proposer.fullName,
+        confirmTokenPlain: tokenInfo.plain,
+      });
+    }
+
+    return {
+      pendingId: pending.id,
+      shareCount: input.shareCount,
+      targetConfirmationToken: tokenInfo.plain,
+      targetConfirmationExpiresAt: tokenInfo.expiresAt,
+    };
   });
 }
 
@@ -267,6 +370,9 @@ export async function createPendingFromInvite(
       );
     }
 
+    const tokenInfo = newTargetConfirmationToken();
+    const now = new Date();
+
     const pending = await tx.pendingAssignment.create({
       data: {
         projectId: input.projectId,
@@ -279,6 +385,10 @@ export async function createPendingFromInvite(
         shareCount: input.shareCount,
         reason: input.reason ?? null,
         status: "PENDING",
+        // Validación bilateral
+        proposerAcceptedAt: now,
+        targetConfirmationTokenHash: tokenInfo.hash,
+        targetConfirmationTokenExpiresAt: tokenInfo.expiresAt,
       },
     });
 
@@ -295,10 +405,41 @@ export async function createPendingFromInvite(
         targetUserId,
         shareCount: input.shareCount,
         wasExistingUser: !!targetUserId,
+        proposerAcceptedAt: now.toISOString(),
       },
     });
 
-    return { pendingId: pending.id, shareCount: input.shareCount };
+    // Notification in-app sólo si el target ya es usuario. Si es invitación a
+    // un email nuevo (sin user), el flujo de confirmación llega 100% por mail.
+    if (targetUserId) {
+      const [project, proposer] = await Promise.all([
+        tx.project.findUnique({
+          where: { id: input.projectId },
+          select: { name: true },
+        }),
+        tx.user.findUnique({
+          where: { id: input.proposedById },
+          select: { fullName: true, alias: true },
+        }),
+      ]);
+      if (project && proposer) {
+        await createTargetConfirmNotification(tx, {
+          targetUserId,
+          pendingId: pending.id,
+          projectName: project.name,
+          shareCount: input.shareCount,
+          proposerName: proposer.alias ?? proposer.fullName,
+          confirmTokenPlain: tokenInfo.plain,
+        });
+      }
+    }
+
+    return {
+      pendingId: pending.id,
+      shareCount: input.shareCount,
+      targetConfirmationToken: tokenInfo.plain,
+      targetConfirmationExpiresAt: tokenInfo.expiresAt,
+    };
   });
 }
 
@@ -307,6 +448,14 @@ export async function createPendingFromInvite(
 export type ApprovePendingInput = {
   pendingId: string;
   adminId: string;
+  /**
+   * Si true, el admin override la regla de validación bilateral: ejecuta la
+   * asignación aunque el target no haya confirmado. Queda auditado como
+   * `PARTICIPATION.ASSIGN_ADMIN_OVERRIDE`. Default: false.
+   */
+  override?: boolean;
+  /** Nota obligatoria si `override = true`, para justificar el bypass. */
+  overrideNote?: string;
 };
 
 export type ApprovePendingResult = {
@@ -361,6 +510,42 @@ export async function approvePendingAssignment(
         "PR_05_PROJECT_INACTIVE",
         "El proyecto no está activo; no se puede aprobar la asignación."
       );
+    }
+
+    // Validación bilateral: el admin sólo puede ejecutar si ambas partes
+    // confirmaron. El override existe para casos excepcionales (e.g. target
+    // confirmó por fuera de la plataforma y el admin lo registra a mano);
+    // queda auditado con la nota.
+    const proposerAccepted = pending.proposerAcceptedAt !== null;
+    const targetAccepted = pending.targetAcceptedAt !== null;
+    if (!proposerAccepted || !targetAccepted) {
+      if (!input.override) {
+        throw new InvariantViolation(
+          "PA_09_BILATERAL_PENDING",
+          !proposerAccepted
+            ? "El project owner todavía no confirmó la propuesta."
+            : "El destinatario todavía no confirmó la asignación. Reenviá el mail o usá override."
+        );
+      }
+      const note = (input.overrideNote ?? "").trim();
+      if (note.length < 10) {
+        throw new ValidationError(
+          "overrideNote",
+          "Para hacer override la nota debe tener al menos 10 caracteres."
+        );
+      }
+      await recordAudit(tx, {
+        actorId: input.adminId,
+        projectId: pending.projectId,
+        action: "PARTICIPATION.ASSIGN_ADMIN_OVERRIDE",
+        entityType: "PendingAssignment",
+        entityId: pending.id,
+        payload: {
+          proposerAccepted,
+          targetAccepted,
+          note,
+        },
+      });
     }
 
     let participationId: string;
@@ -522,13 +707,17 @@ export async function approvePendingAssignment(
       toUserId = inviteeId;
     }
 
-    // Marcar pending como aprobada
+    // Marcar pending como aprobada. Nulleamos el token de confirmación del
+    // target — la propuesta dejó de estar abierta, el link de mail ya no debe
+    // funcionar (defense in depth).
     await tx.pendingAssignment.update({
       where: { id: pending.id },
       data: {
         status: "APPROVED",
         reviewedAt: new Date(),
         reviewedById: input.adminId,
+        targetConfirmationTokenHash: null,
+        targetConfirmationTokenExpiresAt: null,
       },
     });
 
@@ -628,6 +817,9 @@ export async function rejectPendingAssignment(
         reviewedAt: new Date(),
         reviewedById: input.adminId,
         reviewNote: note,
+        // Si el target todavía no confirmó, el link debe quedar invalidado.
+        targetConfirmationTokenHash: null,
+        targetConfirmationTokenExpiresAt: null,
       },
     });
 
@@ -874,3 +1066,242 @@ async function assignSharesFromLeadWithinTx(
 // entrypoint público para callers que quieran asignar fuera de tx. Internamente
 // acá no lo usamos porque ya estamos dentro de una transacción.
 void assignSharesFromLead;
+
+// ─── Validación bilateral: confirmación del target ──────────────────
+
+export type InspectTargetTokenResult =
+  | {
+      ok: true;
+      pendingId: string;
+      projectName: string;
+      projectSlug: string;
+      proposerName: string;
+      proposerEmail: string;
+      targetEmail: string;
+      targetFullName: string;
+      shareCount: number;
+      message: string | null;
+      alreadyAcceptedAt: Date | null;
+      expiresAt: Date;
+    }
+  | { ok: false; error: "TOKEN_NOT_FOUND" | "TOKEN_EXPIRED" | "TOKEN_RESOLVED" };
+
+/**
+ * Inspecciona el token sin consumirlo: lo usamos en la página
+ * `/confirmar-asignacion/[token]` para decidir si mostrar el form o un mensaje
+ * de error. La rama `TOKEN_RESOLVED` cubre el caso donde el pending ya fue
+ * aprobado/rechazado por el admin: el link debe quedar invalidado y el target
+ * recibe feedback claro.
+ */
+export async function inspectTargetConfirmationToken(
+  plainToken: string
+): Promise<InspectTargetTokenResult> {
+  const hash = hashTargetConfirmationToken(plainToken);
+  const pending = await prisma.pendingAssignment.findUnique({
+    where: { targetConfirmationTokenHash: hash },
+    include: {
+      project: { select: { name: true, slug: true } },
+      proposedBy: { select: { fullName: true, alias: true, email: true } },
+      targetUser: { select: { email: true, fullName: true } },
+    },
+  });
+  if (!pending) return { ok: false, error: "TOKEN_NOT_FOUND" };
+  if (pending.status !== "PENDING") return { ok: false, error: "TOKEN_RESOLVED" };
+  if (
+    !pending.targetConfirmationTokenExpiresAt ||
+    pending.targetConfirmationTokenExpiresAt.getTime() < Date.now()
+  ) {
+    return { ok: false, error: "TOKEN_EXPIRED" };
+  }
+  return {
+    ok: true,
+    pendingId: pending.id,
+    projectName: pending.project.name,
+    projectSlug: pending.project.slug,
+    proposerName: pending.proposedBy.alias ?? pending.proposedBy.fullName,
+    proposerEmail: pending.proposedBy.email,
+    targetEmail: pending.targetUser?.email ?? pending.inviteEmail ?? "",
+    targetFullName:
+      pending.targetUser?.fullName ?? pending.inviteFullName ?? "",
+    shareCount: pending.shareCount,
+    message: pending.inviteMessage,
+    alreadyAcceptedAt: pending.targetAcceptedAt,
+    expiresAt: pending.targetConfirmationTokenExpiresAt,
+  };
+}
+
+export type ConfirmTargetAcceptanceResult = {
+  pendingId: string;
+  projectName: string;
+  projectSlug: string;
+  shareCount: number;
+  /** True si ambas partes ya confirmaron y queda esperando al admin. */
+  bothPartiesConfirmed: boolean;
+};
+
+/**
+ * El target hace click en el link del email y confirma la asignación.
+ * Single-use: nulleamos el token. Idempotente sobre el mismo pending si por
+ * algún motivo el mismo token llega dos veces (devolvemos el mismo resultado).
+ */
+export async function confirmTargetAcceptance(
+  plainToken: string
+): Promise<ConfirmTargetAcceptanceResult> {
+  const hash = hashTargetConfirmationToken(plainToken);
+
+  return prisma.$transaction(async (tx) => {
+    const pending = await tx.pendingAssignment.findUnique({
+      where: { targetConfirmationTokenHash: hash },
+      include: {
+        project: { select: { name: true, slug: true } },
+      },
+    });
+    if (!pending) {
+      throw new NotFoundError("PendingAssignment", "by token");
+    }
+    if (pending.status !== "PENDING") {
+      throw new InvariantViolation(
+        "PA_03_NOT_PENDING",
+        `La propuesta ya fue resuelta (${pending.status}).`
+      );
+    }
+    if (
+      !pending.targetConfirmationTokenExpiresAt ||
+      pending.targetConfirmationTokenExpiresAt.getTime() < Date.now()
+    ) {
+      throw new InvariantViolation(
+        "PA_10_TOKEN_EXPIRED",
+        "Este link de confirmación expiró. Pedile al equipo que reenvíe uno nuevo."
+      );
+    }
+
+    const now = new Date();
+    await tx.pendingAssignment.update({
+      where: { id: pending.id },
+      data: {
+        targetAcceptedAt: now,
+        // Consumir el token (single-use).
+        targetConfirmationTokenHash: null,
+        targetConfirmationTokenExpiresAt: null,
+      },
+    });
+
+    // Marcar como leído el banner in-app del target (si existía).
+    if (pending.targetUserId) {
+      await tx.notification.updateMany({
+        where: {
+          userId: pending.targetUserId,
+          kind: "PENDING_ASSIGNMENT_TARGET_CONFIRM",
+          readAt: null,
+        },
+        data: { readAt: now },
+      });
+    }
+
+    await recordAudit(tx, {
+      actorId: pending.targetUserId,
+      projectId: pending.projectId,
+      action: "PARTICIPATION.ASSIGN_TARGET_CONFIRMED",
+      entityType: "PendingAssignment",
+      entityId: pending.id,
+      payload: {
+        targetUserId: pending.targetUserId,
+        targetEmail: pending.inviteEmail,
+        confirmedAt: now.toISOString(),
+        source: pending.source,
+      },
+    });
+
+    return {
+      pendingId: pending.id,
+      projectName: pending.project.name,
+      projectSlug: pending.project.slug,
+      shareCount: pending.shareCount,
+      bothPartiesConfirmed:
+        pending.proposerAcceptedAt !== null,
+    };
+  });
+}
+
+export type RegenerateTargetTokenResult = {
+  pendingId: string;
+  targetConfirmationToken: string;
+  targetConfirmationExpiresAt: Date;
+  targetEmail: string;
+  targetFullName: string;
+  projectName: string;
+  projectSlug: string;
+  proposerFullName: string;
+  shareCount: number;
+};
+
+/**
+ * Re-genera el token de confirmación y devuelve el plain para que el admin
+ * pueda re-enviar el mail al target. Sólo válido si el pending sigue
+ * PENDING y el target todavía no aceptó. Queda registrado en AuditLog.
+ */
+export async function regenerateTargetConfirmationToken(input: {
+  pendingId: string;
+  adminId: string;
+}): Promise<RegenerateTargetTokenResult> {
+  return prisma.$transaction(async (tx) => {
+    await assertAdmin(tx, input.adminId);
+    const pending = await tx.pendingAssignment.findUnique({
+      where: { id: input.pendingId },
+      include: {
+        project: { select: { name: true, slug: true } },
+        proposedBy: { select: { fullName: true, alias: true } },
+        targetUser: { select: { email: true, fullName: true } },
+      },
+    });
+    if (!pending) throw new NotFoundError("PendingAssignment", input.pendingId);
+    if (pending.status !== "PENDING") {
+      throw new InvariantViolation(
+        "PA_03_NOT_PENDING",
+        `La propuesta ya fue resuelta (${pending.status}); no se puede re-enviar el mail.`
+      );
+    }
+    if (pending.targetAcceptedAt) {
+      throw new InvariantViolation(
+        "PA_11_TARGET_ALREADY_CONFIRMED",
+        "El destinatario ya confirmó la asignación."
+      );
+    }
+
+    const tokenInfo = newTargetConfirmationToken();
+    const now = new Date();
+    await tx.pendingAssignment.update({
+      where: { id: pending.id },
+      data: {
+        targetConfirmationTokenHash: tokenInfo.hash,
+        targetConfirmationTokenExpiresAt: tokenInfo.expiresAt,
+        targetReminderSentAt: now,
+      },
+    });
+
+    await recordAudit(tx, {
+      actorId: input.adminId,
+      projectId: pending.projectId,
+      action: "PARTICIPATION.ASSIGN_TARGET_REMINDER_SENT",
+      entityType: "PendingAssignment",
+      entityId: pending.id,
+      payload: {
+        sentAt: now.toISOString(),
+        newExpiresAt: tokenInfo.expiresAt.toISOString(),
+      },
+    });
+
+    return {
+      pendingId: pending.id,
+      targetConfirmationToken: tokenInfo.plain,
+      targetConfirmationExpiresAt: tokenInfo.expiresAt,
+      targetEmail: pending.targetUser?.email ?? pending.inviteEmail ?? "",
+      targetFullName:
+        pending.targetUser?.fullName ?? pending.inviteFullName ?? "",
+      projectName: pending.project.name,
+      projectSlug: pending.project.slug,
+      proposerFullName: pending.proposedBy.alias ?? pending.proposedBy.fullName,
+      shareCount: pending.shareCount,
+    };
+  });
+}

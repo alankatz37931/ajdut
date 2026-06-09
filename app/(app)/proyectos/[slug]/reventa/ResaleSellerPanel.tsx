@@ -13,6 +13,7 @@ import {
   cancelResaleAction,
 } from "./actions";
 import { useSafeAction } from "@/components/hooks/useSafeAction";
+import { formatCurrency } from "@/lib/utils/format";
 
 type Member = { id: string; name: string };
 
@@ -20,8 +21,14 @@ type Row = {
   participationId: string;
   serialCode: string;
   shareCount: number;
+  availableShares: number;
   status: string;
-  listing: { id: string; status: string } | null;
+  listing: {
+    id: string;
+    status: string;
+    shareCount: number;
+    proposedPricePerShare: string | null;
+  } | null;
 };
 
 type ReventaDict = Dict["reventa"];
@@ -30,11 +37,18 @@ export function ResaleSellerPanel({
   projectSlug,
   rows,
   members,
+  defaultPricePerShare,
+  currency,
+  locale,
   dict,
 }: {
   projectSlug: string;
   rows: Row[];
   members: Member[];
+  /** Precio estimado por participación (preMoney / totalShares). String para preservar precisión. Null si el proyecto no tiene valuation cargada. */
+  defaultPricePerShare: string | null;
+  currency: string;
+  locale: string;
   dict: ReventaDict;
 }) {
   return (
@@ -45,6 +59,9 @@ export function ResaleSellerPanel({
           projectSlug={projectSlug}
           row={row}
           members={members}
+          defaultPricePerShare={defaultPricePerShare}
+          currency={currency}
+          locale={locale}
           dict={dict}
         />
       ))}
@@ -58,38 +75,63 @@ function fmtInt(n: number): string {
   return n.toLocaleString("es-MX");
 }
 
-type ListInput = { intentNote: string; contactChannel: string };
+type ListInput = {
+  intentNote: string;
+  contactChannel: string;
+  shareCount: number;
+  proposedPricePerShare: string;
+};
 
 function SellerRow({
   projectSlug,
   row,
   members,
+  defaultPricePerShare,
+  currency,
+  locale,
   dict,
 }: {
   projectSlug: string;
   row: Row;
   members: Member[];
+  defaultPricePerShare: string | null;
+  currency: string;
+  locale: string;
   dict: ReventaDict;
 }) {
   const s = dict.seller;
   const [mode, setMode] = useState<"idle" | "listing" | "designating">("idle");
   const [intentNote, setIntentNote] = useState("");
   const [contact, setContact] = useState("");
+  // Defaults: shareCount = todo lo disponible; pricePerShare = estimado del
+  // proyecto (preMoney/totalShares). Si no hay disponibilidad → "0".
+  const [shareCountStr, setShareCountStr] = useState(
+    String(row.availableShares > 0 ? row.availableShares : 1)
+  );
+  const [pricePerShareStr, setPricePerShareStr] = useState(
+    defaultPricePerShare ?? ""
+  );
   const [buyerId, setBuyerId] = useState(members[0]?.id ?? "");
   // Validación client-side (sin viaje al server) — el hook solo cubre errores
   // que llegan del action.
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const canList = row.status === "ASSIGNED";
-  const inResale = row.status === "IN_RESALE";
+  // El seller puede listar si tiene al menos 1 participación disponible (no
+  // listada ya). En el modelo parcial, ASSIGNED e IN_RESALE pueden ambas
+  // aceptar nuevos listings si queda stock.
+  const canList =
+    (row.status === "ASSIGNED" || row.status === "IN_RESALE") &&
+    row.availableShares > 0 &&
+    !row.listing;
+  const inResale = row.listing !== null;
   const transferPending = row.status === "TRANSFER_PENDING";
 
   // Cada acción tiene su propio hook (tipo de input distinto + onSuccess
   // distinto). Compartimos los flags via OR para que cualquier botón quede
   // disabled mientras alguna está pendiente.
   const listFn = useCallback(
-    ({ intentNote: n, contactChannel: c }: ListInput) =>
-      listForResaleAction(projectSlug, row.participationId, n, c),
+    ({ intentNote: n, contactChannel: c, shareCount: sc, proposedPricePerShare: pp }: ListInput) =>
+      listForResaleAction(projectSlug, row.participationId, n, c, sc, pp),
     [projectSlug, row.participationId]
   );
   const {
@@ -150,6 +192,16 @@ function SellerRow({
   function doList() {
     resetList();
     setValidationError(null);
+    const shareCount = parseInt(shareCountStr, 10);
+    if (!Number.isInteger(shareCount) || shareCount < 1 || shareCount > row.availableShares) {
+      setValidationError(s.errShareCountOutOfRange);
+      return;
+    }
+    const priceNum = Number(pricePerShareStr);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      setValidationError(s.errPriceInvalid);
+      return;
+    }
     if (intentNote.trim().length < 10) {
       setValidationError(s.errNoteTooShort);
       return;
@@ -158,7 +210,12 @@ function SellerRow({
       setValidationError(s.errContactRequired);
       return;
     }
-    runList({ intentNote, contactChannel: contact });
+    runList({
+      intentNote,
+      contactChannel: contact,
+      shareCount,
+      proposedPricePerShare: pricePerShareStr,
+    });
   }
 
   function doDesignate() {
@@ -229,6 +286,42 @@ function SellerRow({
 
       {mode === "listing" && (
         <div className="mt-4 space-y-4">
+          {/* Cantidad — defaultea al máximo disponible. El user puede bajar
+              el número para hacer venta parcial. */}
+          <FloatingInput
+            id={`shares-${row.participationId}`}
+            label={s.listingShareCountLabel}
+            type="number"
+            inputMode="numeric"
+            step="1"
+            value={shareCountStr}
+            onChange={setShareCountStr}
+          />
+          <p className="eyebrow !text-navy/50">
+            {s.listingShareCountHelperFmt
+              .replace("{total}", fmtInt(row.shareCount))
+              .replace("{available}", fmtInt(row.availableShares))}
+          </p>
+
+          {/* Precio por participación — defaultea al estimado del proyecto. */}
+          <FloatingInput
+            id={`price-${row.participationId}`}
+            label={s.listingPricePerShareLabelFmt.replace("{currency}", currency)}
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            value={pricePerShareStr}
+            onChange={setPricePerShareStr}
+          />
+          <p className="eyebrow !text-navy/50">
+            {defaultPricePerShare
+              ? s.listingPricePerShareHelperFmt.replace(
+                  "{price}",
+                  formatCurrency(defaultPricePerShare, currency, 2, locale)
+                )
+              : s.listingPricePerShareHelperNoEstimate}
+          </p>
+
           <FloatingTextarea
             id={`note-${row.participationId}`}
             label={s.listingNoteLabel}
@@ -245,6 +338,24 @@ function SellerRow({
             onChange={setContact}
             maxLength={160}
           />
+
+          {/* Total pedido — live preview. Si los inputs no son válidos
+              mostramos un guion para no engañar al user. */}
+          {(() => {
+            const sc = parseInt(shareCountStr, 10);
+            const pp = Number(pricePerShareStr);
+            const valid =
+              Number.isInteger(sc) && sc > 0 && Number.isFinite(pp) && pp > 0;
+            return (
+              <p className="eyebrow !text-navy">
+                {s.listingTotalAskLabelFmt.replace(
+                  "{total}",
+                  valid ? formatCurrency(sc * pp, currency, 2, locale) : "—"
+                )}
+              </p>
+            );
+          })()}
+
           {error && (
             <p className="eyebrow !text-navy" role="alert">
               {error}
@@ -285,7 +396,7 @@ function SellerRow({
               <p className="text-sm text-navy/60 leading-relaxed">
                 {s.designatingNoteWithShares.replace(
                   "{shares}",
-                  fmtInt(row.shareCount)
+                  fmtInt(row.listing?.shareCount ?? row.shareCount)
                 )}
               </p>
             </>

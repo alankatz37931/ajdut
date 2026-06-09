@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/client";
 import {
   approvePendingAssignment,
   rejectPendingAssignment,
+  regenerateTargetConfirmationToken,
 } from "@/lib/services/pending-assignment";
 import { DomainError } from "@/lib/services/errors";
 import {
@@ -14,6 +15,7 @@ import {
   notifyFounderPendingAssignmentRejected,
   notifyInvestorSharesAssigned,
   notifyFounderInvite,
+  notifyTargetPendingAssignmentConfirm,
 } from "@/lib/email/notifications";
 
 export type AdminActionResult =
@@ -27,7 +29,8 @@ function firstName(full: string): string {
 }
 
 export async function approvePendingAssignmentAction(
-  pendingId: string
+  pendingId: string,
+  options?: { override?: boolean; overrideNote?: string }
 ): Promise<AdminActionResult> {
   const admin = await requireRole(["ADMIN"]);
 
@@ -36,6 +39,8 @@ export async function approvePendingAssignmentAction(
     result = await approvePendingAssignment({
       pendingId,
       adminId: admin.id,
+      override: options?.override,
+      overrideNote: options?.overrideNote,
     });
   } catch (e) {
     if (e instanceof DomainError) {
@@ -181,4 +186,49 @@ function appUrl(): string {
     process.env.AUTH_URL ??
     "http://localhost:3001"
   );
+}
+
+/**
+ * Admin reenvía el mail de confirmación al receptor (validación bilateral).
+ * Re-genera el token (single-use, el viejo queda invalidado) y manda el mail.
+ * Permite avanzar cuando el target perdió el email original o el link venció.
+ */
+export async function resendTargetConfirmationAction(
+  pendingId: string
+): Promise<AdminActionResult> {
+  const admin = await requireRole(["ADMIN"]);
+
+  let result: Awaited<ReturnType<typeof regenerateTargetConfirmationToken>>;
+  try {
+    result = await regenerateTargetConfirmationToken({
+      pendingId,
+      adminId: admin.id,
+    });
+  } catch (e) {
+    if (e instanceof DomainError) {
+      return { ok: false, error: e.message, code: e.code };
+    }
+    console.error("resendTargetConfirmationAction", e);
+    return { ok: false, error: "Error interno del servidor." };
+  }
+
+  revalidatePath("/admin/asignaciones");
+
+  after(async () => {
+    if (!result.targetEmail) return;
+    const targetFirstName =
+      result.targetFullName.split(/\s+/)[0] ?? result.targetFullName;
+    await notifyTargetPendingAssignmentConfirm({
+      to: result.targetEmail,
+      targetFirstName,
+      proposerName: result.proposerFullName,
+      projectName: result.projectName,
+      shareCount: result.shareCount,
+      message: null,
+      confirmToken: result.targetConfirmationToken,
+      expiresAt: result.targetConfirmationExpiresAt,
+    });
+  });
+
+  return { ok: true };
 }

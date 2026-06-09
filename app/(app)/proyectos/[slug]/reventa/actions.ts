@@ -9,22 +9,34 @@ import {
   listForResale,
   closeResaleDeal,
   cancelResale,
+  confirmResaleOwner,
 } from "@/lib/services/participation";
+import {
+  notifyResaleBuyerConfirm,
+  notifyOwnerResalePending,
+} from "@/lib/email/notifications";
 
 export type ResaleResult = { ok: true } | { ok: false; error: string };
 
 /**
  * El titular de una participación la pone en el tablón de reventa.
+ *
+ * Soporta reventa parcial: `shareCount` puede ser menor a la cantidad total
+ * de la participación. `proposedPricePerShare` es un decimal en formato
+ * string (preserve precisión, evita pérdida por float al cruzar la red).
  */
 export async function listForResaleAction(
   projectSlug: string,
   participationId: string,
   intentNote: string,
-  contactChannel: string
+  contactChannel: string,
+  shareCount: number,
+  proposedPricePerShare: string
 ): Promise<ResaleResult> {
   const user = await requireSession();
   const dict = await getDict();
   const e = dict.reventa.errors;
+  const s = dict.reventa.seller;
 
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
@@ -45,6 +57,15 @@ export async function listForResaleAction(
   if (contactChannel.trim().length < 3) {
     return { ok: false, error: e.contactInvalid };
   }
+  if (!Number.isInteger(shareCount) || shareCount < 1) {
+    return { ok: false, error: s.errShareCountOutOfRange };
+  }
+  // Decimal parse de boundary: rechazar NaN, negativo o cero. El servicio
+  // re-valida con Prisma.Decimal, esto es defensa en profundidad.
+  const priceNum = Number(proposedPricePerShare);
+  if (!Number.isFinite(priceNum) || priceNum <= 0) {
+    return { ok: false, error: s.errPriceInvalid };
+  }
 
   try {
     await listForResale({
@@ -52,6 +73,8 @@ export async function listForResaleAction(
       sellerId: user.id,
       intentNote,
       contactChannel: contactChannel.trim(),
+      shareCount,
+      proposedPricePerShare,
     });
   } catch (err) {
     if (err instanceof DomainError) return { ok: false, error: err.message };
@@ -83,12 +106,53 @@ export async function proposeBuyerAction(
   }
 
   try {
-    await closeResaleDeal({
+    const result = await closeResaleDeal({
       resaleListingId,
       sellerId: user.id,
       proposedBuyerId,
       sellerSignedAt: new Date(),
     });
+
+    // Validación tripartita: email + banner in-app ya disparados. Enviamos los
+    // mails fuera de la transacción (fire-and-forget, no rompen el flujo).
+    const firstName = result.buyerFullName.trim().split(/\s+/)[0] || "Hola";
+    const priceNum = result.pricePerShare ? Number(result.pricePerShare) : null;
+    const fmtMoney = (n: number) =>
+      new Intl.NumberFormat("es-MX", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 2,
+      }).format(n);
+
+    await notifyResaleBuyerConfirm({
+      to: result.buyerEmail,
+      buyerFirstName: firstName,
+      sellerName: result.sellerName,
+      projectName: result.projectName,
+      shareCount: result.shareCount,
+      pricePerShareFormatted: priceNum !== null ? fmtMoney(priceNum) : null,
+      totalFormatted:
+        priceNum !== null ? fmtMoney(priceNum * result.shareCount) : null,
+      confirmToken: result.buyerConfirmationToken,
+      expiresAt: result.buyerConfirmationExpiresAt,
+    });
+
+    // Email al founder avisándole que tiene una reventa para validar.
+    const owner = await prisma.user.findUnique({
+      where: { id: result.ownerId },
+      select: { email: true },
+    });
+    if (owner?.email) {
+      await notifyOwnerResalePending({
+        to: owner.email,
+        projectSlug,
+        projectName: result.projectName,
+        sellerName: result.sellerName,
+        buyerName: result.buyerFullName,
+        shareCount: result.shareCount,
+        intentNote: "",
+      });
+    }
   } catch (err) {
     if (err instanceof DomainError) return { ok: false, error: err.message };
     console.error("proposeBuyerAction", err);
@@ -98,6 +162,31 @@ export async function proposeBuyerAction(
   revalidatePath(`/proyectos/${projectSlug}/reventa`);
   revalidatePath(`/proyectos/${projectSlug}`);
   revalidatePath("/partner");
+  revalidatePath("/admin/reventas");
+  return { ok: true };
+}
+
+/**
+ * El project owner (founder) valida una reventa de su proyecto. Parte de la
+ * validación tripartita: sin su OK el admin no puede ejecutar el traspaso.
+ */
+export async function confirmResaleOwnerAction(
+  projectSlug: string,
+  resaleListingId: string
+): Promise<ResaleResult> {
+  const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.reventa.errors;
+
+  try {
+    await confirmResaleOwner({ resaleListingId, actorId: user.id });
+  } catch (err) {
+    if (err instanceof DomainError) return { ok: false, error: err.message };
+    console.error("confirmResaleOwnerAction", err);
+    return { ok: false, error: e.serverError };
+  }
+
+  revalidatePath(`/proyectos/${projectSlug}/reventa`);
   revalidatePath("/admin/reventas");
   return { ok: true };
 }

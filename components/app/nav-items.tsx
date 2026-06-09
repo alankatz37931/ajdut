@@ -10,7 +10,6 @@ import {
   ApplicationsIcon,
   AssignmentsIcon,
   ResalesIcon,
-  HeirsIcon,
   AuditIcon,
   NoticesIcon,
   ProfileIcon,
@@ -145,11 +144,6 @@ export async function navItemsFor(
     const pendingAssignmentsCount = await safeCount(() =>
       prisma.pendingAssignment.count({ where: { status: "PENDING" } })
     );
-    const escalatedHeirs = await safeCount(() =>
-      prisma.user.count({
-        where: { heirsEscalated: true, isActive: true, deletedAt: null },
-      })
-    );
     const pendingResales = await safeCount(() =>
       prisma.resaleListing.count({
         where: { status: "AWAITING_VALIDATION" },
@@ -184,14 +178,6 @@ export async function navItemsFor(
         badgeHighlight: true,
         group: SEC_ADMIN,
         icon: <ResalesIcon />,
-      },
-      {
-        label: n.heirs,
-        href: "/admin/herederos" as Route,
-        badge: escalatedHeirs,
-        badgeHighlight: true,
-        group: SEC_ADMIN,
-        icon: <HeirsIcon />,
       },
       { label: n.audit, href: "/admin/auditoria" as Route, group: SEC_ADMIN, icon: <AuditIcon /> },
       { label: n.notices, href: "/admin/avisos" as Route, group: SEC_ADMIN, icon: <NoticesIcon /> },

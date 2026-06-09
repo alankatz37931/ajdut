@@ -90,6 +90,8 @@ export async function updateProjectInfoAction(
       policyShares: pickOptionalStr("policyShares"),
       policyDividends: pickOptionalStr("policyDividends"),
       dividendsFrequency: pickOptionalStr("dividendsFrequency"),
+      // Fecha de inicio de reventa: vacío → null (sin restricción).
+      resaleAllowedFrom: pickOptionalStr("resaleAllowedFrom"),
     });
 
     // Acciones disponibles (opcional — solo si el founder cambia el valor)

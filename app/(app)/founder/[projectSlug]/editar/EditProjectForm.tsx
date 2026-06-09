@@ -3,9 +3,9 @@
 import { useCallback, useMemo, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { updateProjectInfoAction } from "./actions";
-import { derivePriceAndShares } from "@/lib/utils/shares";
 import { useSafeAction } from "@/components/hooks/useSafeAction";
 import {
+  FloatingDate,
   FloatingInput,
   FloatingSelect,
   FloatingTextarea,
@@ -43,6 +43,8 @@ type Initial = {
   policyDividends: string;
   dividendsFrequency: string;
   availableShares: number;
+  /** "YYYY-MM-DD" para el <input type="date">, o "" si no hay fecha. */
+  resaleAllowedFrom: string;
 };
 
 // Hoisted fuera del render: solo ids + dict-keys. Los labels se resuelven
@@ -343,6 +345,21 @@ export function EditProjectForm({
                 </div>
               )}
             </div>
+
+            {/* Fecha de inicio de reventa — gate opcional. Vacío = reventa
+                habilitada desde siempre. El campo `name` lo toma el FloatingDate
+                de su id, así que el value viaja en el FormData del submit. */}
+            <div>
+              <FloatingDate
+                id="resaleAllowedFrom"
+                label={dict.resaleAllowedFromLabel}
+                value={form.resaleAllowedFrom}
+                onChange={(v) => update("resaleAllowedFrom", v)}
+              />
+              <p className="eyebrow !text-navy/40 mt-1.5">
+                {dict.resaleAllowedFromHelper}
+              </p>
+            </div>
           </section>
 
           {/* Valoración */}
@@ -422,14 +439,6 @@ function DerivedShares({
   locale: string;
 }) {
   const val = Number.parseFloat(valuationRaw);
-  if (!Number.isFinite(val) || val <= 0) {
-    return <p className="eyebrow !text-navy/40">{dict.valuationHint}</p>;
-  }
-  const derived = derivePriceAndShares(val);
-  if (!derived) {
-    return <p className="eyebrow !text-gold">{dict.valuationWarnTitle}</p>;
-  }
-  const { pricePerShare, totalShares: derivedShares } = derived;
   const fmtMoney = (n: number) =>
     new Intl.NumberFormat(locale, {
       style: "currency",
@@ -438,16 +447,21 @@ function DerivedShares({
     }).format(n);
   const fmtInt = (n: number) => n.toLocaleString(locale);
 
-  const mismatch = derivedShares !== currentTotalShares;
+  // El total de participaciones de un proyecto YA EMITIDO queda fijo (cambiarlo
+  // rompería el cap table). Si el founder ajusta la valoración, recalculamos el
+  // precio efectivo sobre el total existente — sin algoritmo de derivación.
+  const hasValuation = Number.isFinite(val) && val > 0;
   const effectivePrice =
-    currentTotalShares > 0 ? val / currentTotalShares : pricePerShare;
+    hasValuation && currentTotalShares > 0 ? val / currentTotalShares : null;
 
   return (
     <div className="hairline p-4 bg-paper space-y-3 font-mono text-sm">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <p className="eyebrow !text-navy/40">{dict.pricePerShareLabel}</p>
-          <p className="mt-1 text-navy">{fmtMoney(effectivePrice)}</p>
+          <p className="mt-1 text-navy">
+            {effectivePrice !== null ? fmtMoney(effectivePrice) : "—"}
+          </p>
         </div>
         <div>
           <p className="eyebrow !text-navy/40">{dict.totalSharesLabel}</p>
@@ -455,22 +469,9 @@ function DerivedShares({
         </div>
       </div>
 
-      {!mismatch && <p className="eyebrow">{dict.valuationClean}</p>}
-
-      {mismatch && (
-        <div className="hairline-t pt-3 space-y-2">
-          <p className="eyebrow !text-gold">{dict.valuationWarnTitle}</p>
-          <p className="text-navy/85 text-xs leading-relaxed">
-            {dict.valuationWarnBodyFmt
-              .replace("{price}", fmtMoney(pricePerShare))
-              .replace("{shares}", fmtInt(derivedShares))
-              .replace("{current}", fmtInt(currentTotalShares))}
-          </p>
-          <p className="text-navy/85 text-xs leading-relaxed">
-            {dict.valuationWarnBody2}
-          </p>
-        </div>
-      )}
+      <p className="eyebrow !text-navy/55 leading-relaxed">
+        {dict.emissionLegend}
+      </p>
     </div>
   );
 }

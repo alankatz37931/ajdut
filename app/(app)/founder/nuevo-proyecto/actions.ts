@@ -38,7 +38,8 @@ export async function createProjectAction(
   const problemStatement = get("problemStatement");
   const solutionStatement = get("solutionStatement");
   const businessModel = get("businessModel");
-  const valuationRaw = get("preMoneyValuation");
+  const totalParticipationsRaw = get("totalParticipations");
+  const pricePerParticipationRaw = get("pricePerParticipation");
   const currency = get("valuationCurrency") || "USD";
   const legalName = get("legalName") || name;
   const jurisdiction = get("jurisdiction");
@@ -91,15 +92,31 @@ export async function createProjectAction(
     return { ok: false, error: "Moneda inválida." };
   }
 
-  const valuation = Number.parseFloat(valuationRaw);
-  if (!Number.isFinite(valuation) || valuation <= 0) {
-    return { ok: false, error: "Ingresá una valoración válida." };
+  // Emisión directa: el founder define el total de participaciones y el
+  // valor por participación. La valoración se deriva (total × precio).
+  const totalParticipations = Number.parseInt(totalParticipationsRaw, 10);
+  if (!Number.isFinite(totalParticipations) || totalParticipations < 1) {
+    return {
+      ok: false,
+      error: "Ingresá un total de participaciones válido (entero ≥ 1).",
+    };
   }
-  // Cap defensivo: > USD 1 cuatrillón es siempre input erróneo (o
-  // intento de overflow numérico). El cap real lo aplica el dominio,
-  // este es solo el sanity check para no propagar floats absurdos.
+  // Máximo sano para evitar overflow (el dominio reaplica el mismo límite).
+  if (totalParticipations > 1_000_000_000) {
+    return {
+      ok: false,
+      error: "El total de participaciones excede el límite permitido.",
+    };
+  }
+  const pricePerParticipation = Number.parseFloat(pricePerParticipationRaw);
+  if (!Number.isFinite(pricePerParticipation) || pricePerParticipation <= 0) {
+    return { ok: false, error: "Ingresá un valor por participación válido." };
+  }
+  // Cap defensivo sobre la valoración derivada: > USD 1 cuatrillón es siempre
+  // input erróneo (o intento de overflow numérico).
+  const valuation = totalParticipations * pricePerParticipation;
   if (valuation > 1e15) {
-    return { ok: false, error: "La valoración excede el límite permitido." };
+    return { ok: false, error: "La valoración derivada excede el límite permitido." };
   }
 
   let created;
@@ -117,7 +134,8 @@ export async function createProjectAction(
       problemStatement,
       solutionStatement,
       businessModel,
-      preMoneyValuation: valuation,
+      totalParticipations,
+      pricePerParticipation,
       valuationCurrency: currency as "USD" | "MXN",
       websiteUrl: urls.websiteUrl,
       videoUrl: urls.videoUrl,

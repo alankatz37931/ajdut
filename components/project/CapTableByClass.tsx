@@ -24,6 +24,10 @@ type Props = {
   formatPct: (n: number) => string;
   /** Devuelve "3 personas" / "1 persona" según el idioma del viewer. */
   peopleLabel: (n: number) => string;
+  /** Etiqueta de la fila de verificación (suma %). Si no se pasa, no se renderiza. */
+  verificationLabel?: string;
+  /** Mensaje a mostrar cuando la suma de shares excede totalShares. */
+  overcommitWarn?: string;
 };
 
 export function CapTableByClass({
@@ -33,14 +37,22 @@ export function CapTableByClass({
   formatShares,
   formatPct,
   peopleLabel,
+  verificationLabel,
+  overcommitWarn,
 }: Props) {
   if (rows.length === 0 || totalShares <= 0) return null;
 
   const sorted = [...rows].sort((a, b) => b.shares - a.shares);
   const max = sorted[0]?.shares ?? 1;
+  // Verificación: suma de TODOS los rows. El miembro confía en que esto
+  // sume ~100% — si no, hay un desfase con accionistas pre-existentes.
+  const sumShares = sorted.reduce((s, r) => s + r.shares, 0);
+  const sumPct = (sumShares / totalShares) * 100;
+  const isOvercommit = sumShares > totalShares;
 
   return (
-    <ul>
+    <div>
+      <ul>
       {sorted.map((r, i) => {
         const pct = (r.shares / totalShares) * 100;
         const widthPct = max > 0 ? (r.shares / max) * 100 : 0;
@@ -86,6 +98,25 @@ export function CapTableByClass({
           </li>
         );
       })}
-    </ul>
+      </ul>
+      {verificationLabel && (
+        <div className="hairline-t px-5 py-3 flex flex-wrap items-baseline justify-between gap-x-3">
+          <p className="eyebrow !text-navy/50">{verificationLabel}</p>
+          <p
+            className={`font-mono text-sm shrink-0 ${
+              isOvercommit ? "text-red-700" : "text-navy"
+            }`}
+          >
+            {formatShares(sumShares)} {ofTotalLabel}
+            <span className="ml-3">{formatPct(sumPct)}</span>
+          </p>
+        </div>
+      )}
+      {isOvercommit && overcommitWarn && (
+        <p className="px-5 pb-4 text-xs text-red-700 leading-relaxed">
+          {overcommitWarn}
+        </p>
+      )}
+    </div>
   );
 }

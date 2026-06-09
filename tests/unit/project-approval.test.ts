@@ -34,7 +34,9 @@ function makeProject(overrides: Partial<{ totalShares: number; status: string; k
     totalShares: overrides.totalShares ?? 1_250_000,
     startupProfile: {
       id: "sp-1",
-      platformEquityPercent: new Prisma.Decimal(10),
+      // platformEquityPercent ya no se usa en el flujo de aprobación, pero
+      // dejamos el campo para reflejar el shape real de la query.
+      platformEquityPercent: new Prisma.Decimal(0),
     },
   };
 }
@@ -81,59 +83,42 @@ describe("approveProject — validaciones de estado", () => {
       approveProject({ projectId: "p1", adminId: "admin-1" })
     ).rejects.toBeInstanceOf(InvariantViolation);
   });
-
-  it("rechaza si no existe usuario PLATFORM (bootstrap incompleto)", async () => {
-    tx.user.findUnique.mockResolvedValueOnce(makeAdmin());
-    tx.project.findUnique.mockResolvedValueOnce(makeProject());
-    tx.user.findUnique.mockResolvedValueOnce(null); // no platform user
-    await expect(
-      approveProject({ projectId: "p1", adminId: "admin-1" })
-    ).rejects.toBeInstanceOf(InvariantViolation);
-  });
 });
 
-describe("approveProject — materialización del cap table", () => {
+describe("approveProject — materialización del pool inicial", () => {
   function setupHappyPath(totalShares: number) {
     tx.user.findUnique.mockResolvedValueOnce(makeAdmin()); // assertAdmin
     tx.project.findUnique.mockResolvedValueOnce(makeProject({ totalShares }));
-    tx.user.findUnique.mockResolvedValueOnce({ id: "platform-1" }); // platform user lookup
-    tx.participation.create.mockResolvedValueOnce({ id: "part-platform" });
+    tx.participation.create.mockResolvedValueOnce({ id: "part-pool" });
     tx.chatChannel.findUnique.mockResolvedValueOnce(null);
   }
 
-  it("emite EXACTAMENTE 10% para AJDUT (Pushka: 125,000 de 1,250,000)", async () => {
+  it("NO emite Participation institucional para AJDUT (sin stake automático)", async () => {
     setupHappyPath(1_250_000);
     await approveProject({ projectId: "p1", adminId: "admin-1" });
 
-    // Primer participation.create es el institucional
-    const platformCall = tx.participation.create.mock.calls[0]?.[0];
-    expect(platformCall.data.shareCount).toBe(125_000);
-    expect(platformCall.data.isPlatformStake).toBe(true);
-    expect(platformCall.data.status).toBe("ASSIGNED");
-    expect(platformCall.data.currentOwnerId).toBe("platform-1");
+    const calls = tx.participation.create.mock.calls;
+    // Solo se crea una participación: el pool AVAILABLE.
+    expect(calls.length).toBe(1);
+    const first = calls[0]?.[0];
+    expect(first.data.isPlatformStake).toBe(false);
+    expect(first.data.status).toBe("AVAILABLE");
   });
 
-  it("el pool AVAILABLE recibe el resto (totalShares - platform)", async () => {
+  it("el pool AVAILABLE recibe el 100% del total de acciones", async () => {
     setupHappyPath(1_250_000);
     await approveProject({ projectId: "p1", adminId: "admin-1" });
 
-    // Segundo participation.create es el pool
-    const poolCall = tx.participation.create.mock.calls[1]?.[0];
-    expect(poolCall.data.shareCount).toBe(1_125_000); // 1.25M - 125k
+    const poolCall = tx.participation.create.mock.calls[0]?.[0];
+    expect(poolCall.data.shareCount).toBe(1_250_000);
     expect(poolCall.data.status).toBe("AVAILABLE");
     expect(poolCall.data.isPlatformStake).toBe(false);
   });
 
-  it("registra OwnershipHistory inmutable para el stake institucional", async () => {
+  it("NO registra OwnershipHistory (no hay stake institucional auto-emitido)", async () => {
     setupHappyPath(1_250_000);
     await approveProject({ projectId: "p1", adminId: "admin-1" });
-
-    expect(tx.ownershipHistory.create).toHaveBeenCalledTimes(1);
-    const hist = tx.ownershipHistory.create.mock.calls[0]?.[0];
-    expect(hist.data.fromUserId).toBeNull();
-    expect(hist.data.toUserId).toBe("platform-1");
-    expect(hist.data.blockHash).toMatch(/^[0-9a-f]{64}$/);
-    expect(hist.data.prevHash).toBeNull();
+    expect(tx.ownershipHistory.create).not.toHaveBeenCalled();
   });
 
   it("crea el ChatChannel si no existe", async () => {
@@ -147,8 +132,7 @@ describe("approveProject — materialización del cap table", () => {
   it("NO duplica el ChatChannel si ya existe", async () => {
     tx.user.findUnique.mockResolvedValueOnce(makeAdmin());
     tx.project.findUnique.mockResolvedValueOnce(makeProject());
-    tx.user.findUnique.mockResolvedValueOnce({ id: "platform-1" });
-    tx.participation.create.mockResolvedValueOnce({ id: "part-platform" });
+    tx.participation.create.mockResolvedValueOnce({ id: "part-pool" });
     tx.chatChannel.findUnique.mockResolvedValueOnce({ id: "channel-existing" });
 
     await approveProject({ projectId: "p1", adminId: "admin-1" });
@@ -172,7 +156,7 @@ describe("approveProject — materialización del cap table", () => {
     expect(updateCall.data.approvedAt).toBeInstanceOf(Date);
   });
 
-  it("registra auditoría PARTICIPATION.CREATED + PROJECT.APPROVED", async () => {
+  it("registra auditoría PARTICIPATION.CREATED (pool inicial) + PROJECT.APPROVED", async () => {
     setupHappyPath(1_250_000);
     await approveProject({ projectId: "p1", adminId: "admin-1" });
     const actions = tx.auditLog.create.mock.calls.map(
@@ -180,23 +164,5 @@ describe("approveProject — materialización del cap table", () => {
     );
     expect(actions).toContain("PARTICIPATION.CREATED");
     expect(actions).toContain("PROJECT.APPROVED");
-  });
-});
-
-describe("approveProject — invariante 10% exacto", () => {
-  it.each([
-    [180_000, 18_000],
-    [620_000, 62_000],
-    [440_000, 44_000],
-    [1_250_000, 125_000],
-  ])("totalShares=%i → platformShares=%i (10% exacto)", async (total, expectedPlatform) => {
-    tx.user.findUnique.mockResolvedValueOnce(makeAdmin());
-    tx.project.findUnique.mockResolvedValueOnce(makeProject({ totalShares: total }));
-    tx.user.findUnique.mockResolvedValueOnce({ id: "platform-1" });
-    tx.participation.create.mockResolvedValueOnce({ id: "part" });
-    tx.chatChannel.findUnique.mockResolvedValueOnce(null);
-
-    await approveProject({ projectId: "p1", adminId: "admin-1" });
-    expect(tx.participation.create.mock.calls[0]?.[0].data.shareCount).toBe(expectedPlatform);
   });
 });

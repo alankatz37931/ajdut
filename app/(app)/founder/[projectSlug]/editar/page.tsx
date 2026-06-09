@@ -115,6 +115,11 @@ export default async function EditProjectPage({ params }: Params) {
           policyDividends: project.startupProfile?.policyDividends ?? "",
           dividendsFrequency: project.startupProfile?.dividendsFrequency ?? "",
           availableShares: currentAvailable,
+          // <input type="date"> exige "YYYY-MM-DD"; tomamos la parte de fecha
+          // del ISO (UTC) del DateTime. "" cuando no hay restricción.
+          resaleAllowedFrom: project.resaleAllowedFrom
+            ? project.resaleAllowedFrom.toISOString().slice(0, 10)
+            : "",
         }}
         hasStartupProfile={!!project.startupProfile}
         maxAvailable={maxAvailable}

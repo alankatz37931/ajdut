@@ -79,6 +79,9 @@ import {
   pendingAssignmentRejectedToFounderEmail,
 } from "./templates/pending-assignment-rejected-to-founder";
 import {
+  pendingAssignmentTargetConfirmEmail,
+} from "./templates/pending-assignment-target-confirm";
+import {
   chatNewMessageEmail,
   type ChatNewMessageInput,
 } from "./templates/chat-new-message";
@@ -86,9 +89,6 @@ import {
   leadMoreInfoRequestEmail,
   type LeadMoreInfoRequestInput,
 } from "./templates/lead-more-info-request";
-import {
-  validationCheckEmail,
-} from "./templates/validation-check";
 import {
   resaleTransferToAdminEmail,
 } from "./templates/resale-transfer-to-admin";
@@ -98,6 +98,9 @@ import {
 import {
   resaleRejectedEmail,
 } from "./templates/resale-rejected";
+import {
+  resaleBuyerConfirmEmail,
+} from "./templates/resale-buyer-confirm";
 
 function appUrl(): string {
   return (
@@ -612,6 +615,40 @@ export async function notifyFounderPendingAssignmentRejected(input: {
   });
 }
 
+/**
+ * Email al target (receptor) pidiéndole que confirme la asignación antes de
+ * que el admin la ejecute. Validación bilateral. El `confirmToken` viaja como
+ * path-param de `/confirmar-asignacion/[token]` y es single-use.
+ */
+export async function notifyTargetPendingAssignmentConfirm(input: {
+  to: string;
+  targetFirstName: string;
+  proposerName: string;
+  projectName: string;
+  shareCount: number;
+  message: string | null;
+  confirmToken: string;
+  expiresAt: Date;
+}) {
+  const confirmUrl = `${appUrl()}/confirmar-asignacion/${input.confirmToken}`;
+  const { subject, html } = pendingAssignmentTargetConfirmEmail({
+    targetFirstName: input.targetFirstName,
+    proposerName: input.proposerName,
+    projectName: input.projectName,
+    shareCount: input.shareCount,
+    message: input.message,
+    confirmUrl,
+    expiresAt: input.expiresAt,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "pending-assignment.target-confirm",
+  });
+}
+
 // ─── Chat por proyecto (Ola 7a) ───────────────────────────────────
 
 /**
@@ -652,93 +689,6 @@ export async function notifyChannelNewMessage(
     fireAndForget: true,
     kind: "chat.new-message",
   });
-}
-
-// ─── Verificación de vida (Ola 7b) ────────────────────────────────
-
-/**
- * Manda al miembro un email para que confirme que sigue activo. El link
- * lleva un token random (no el id del check) — la DB solo guarda el SHA-256
- * del token. La ruta /confirmar-vida/[token] hashea el path-param y busca
- * el check por tokenHash. Single-use: tras confirmar se setea tokenHash=null.
- */
-export async function notifyUserValidationCheck(input: {
-  to: string;
-  fullName: string;
-  token: string;
-  windowDays: number;
-}) {
-  const confirmUrl = `${appUrl()}/confirmar-vida/${input.token}`;
-  const { subject, html } = validationCheckEmail({
-    fullName: input.fullName,
-    confirmUrl,
-    windowDays: input.windowDays,
-  });
-  return sendEmail({
-    to: input.to,
-    subject,
-    html,
-    fireAndForget: true,
-    kind: "validation.check",
-  });
-}
-
-/**
- * Alerta al equipo de admins: este miembro acumuló suficientes verificaciones
- * sin responder y hay que contactar a sus herederos manualmente.
- */
-export async function notifyAdminsHeirsEscalation(input: {
-  userFullName: string;
-  userEmail: string;
-  missedCount: number;
-}) {
-  const admins = getAdminNotifyEmails();
-  if (admins.length === 0) {
-    console.warn(
-      "ADMIN_NOTIFY_EMAILS no configurado. Saltando alerta de herederos."
-    );
-    return { ok: false as const, error: "no admin recipients", via: "console" as const };
-  }
-  const reviewUrl = `${appUrl()}/admin/herederos`;
-  const { subject, html } = validationCheckEmail({
-    fullName: "equipo",
-    confirmUrl: reviewUrl,
-    windowDays: 0,
-  });
-  // Reusamos el shell visual pero pisamos subject con texto operativo.
-  const operSubject = `[AJDUT] Contactar herederos de ${input.userFullName}`;
-  return sendEmail({
-    to: admins,
-    subject: operSubject,
-    html: html
-      .replace(
-        "Verificación de vida",
-        "Alerta — contactar herederos"
-      )
-      .replace(
-        "Hola, equipo.",
-        `Hola, equipo.`
-      )
-      .replace(
-        /<p style="margin:0 0 16px 0;">[\s\S]*?<\/p>\s*<p style="margin:0 0 16px 0;">[\s\S]*?<\/p>/,
-        `<p style="margin:0 0 16px 0;">
-           <strong>${escapeHtml(input.userFullName)}</strong>
-           (${escapeHtml(input.userEmail)}) acumuló ${input.missedCount}
-           verificaciones de vida sin responder. Hay que ponerse en contacto
-           con los herederos cargados en su cuenta.
-         </p>
-         <p style="margin:0 0 16px 0;">
-           Entrá al panel para ver el listado de herederos y contactarlos
-           uno por uno.
-         </p>`
-      ),
-    fireAndForget: true,
-    kind: "validation.escalated",
-  });
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export async function notifyRequesterInfoRequestResolved(input: {
@@ -844,5 +794,75 @@ export async function notifyResaleRejected(input: {
     html,
     fireAndForget: true,
     kind: "resale.rejected",
+  });
+}
+
+// ─── Validación tripartita de la reventa ───────────────────────────
+
+/**
+ * Email al comprador propuesto pidiéndole que confirme la compra. Parte de la
+ * validación tripartita (comprador + founder + admin). El `confirmToken` viaja
+ * como path-param de `/confirmar-reventa/[token]` y es single-use.
+ */
+export async function notifyResaleBuyerConfirm(input: {
+  to: string;
+  buyerFirstName: string;
+  sellerName: string;
+  projectName: string;
+  shareCount: number;
+  pricePerShareFormatted: string | null;
+  totalFormatted: string | null;
+  confirmToken: string;
+  expiresAt: Date;
+}) {
+  const confirmUrl = `${appUrl()}/confirmar-reventa/${input.confirmToken}`;
+  const { subject, html } = resaleBuyerConfirmEmail({
+    buyerFirstName: input.buyerFirstName,
+    sellerName: input.sellerName,
+    projectName: input.projectName,
+    shareCount: input.shareCount,
+    pricePerShareFormatted: input.pricePerShareFormatted,
+    totalFormatted: input.totalFormatted,
+    confirmUrl,
+    expiresAt: input.expiresAt,
+  });
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    fireAndForget: true,
+    kind: "resale.buyer-confirm",
+  });
+}
+
+/**
+ * Email al project owner (founder) avisándole que una reventa de SU proyecto
+ * espera su validación. Reutiliza el template del aviso a admin (mismos campos)
+ * con CTA a la página de reventa del proyecto, donde el founder valida.
+ */
+export async function notifyOwnerResalePending(input: {
+  to: string;
+  projectSlug: string;
+  projectName: string;
+  sellerName: string;
+  buyerName: string;
+  shareCount: number;
+  intentNote: string;
+}) {
+  const reviewUrl = `${appUrl()}/proyectos/${input.projectSlug}/reventa`;
+  const { html } = resaleTransferToAdminEmail({
+    projectName: input.projectName,
+    sellerName: input.sellerName,
+    buyerName: input.buyerName,
+    shareCount: input.shareCount,
+    intentNote: input.intentNote,
+    reviewUrl,
+  });
+  return sendEmail({
+    to: input.to,
+    subject: `Reventa para validar — ${input.projectName}`,
+    html,
+    fireAndForget: true,
+    kind: "resale.owner-pending",
   });
 }

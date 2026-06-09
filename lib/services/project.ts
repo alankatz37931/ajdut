@@ -151,6 +151,9 @@ export type UpdateProjectInfoInput = {
   policyShares?: string | null;
   policyDividends?: string | null;
   dividendsFrequency?: string | null;
+  // Fecha a partir de la cual se habilita la reventa de participaciones.
+  // String "YYYY-MM-DD" del <input type="date"> o "" / null para limpiar.
+  resaleAllowedFrom?: string | null;
 };
 
 /**
@@ -180,6 +183,19 @@ export async function updateProjectInfo(input: UpdateProjectInfoInput) {
     if (input.shortPitch !== undefined) projectUpdates.shortPitch = input.shortPitch.trim();
     if (input.description !== undefined) projectUpdates.description = input.description.trim();
     if (input.kind !== undefined) projectUpdates.kind = input.kind;
+    // Fecha de inicio de reventa: vacío/null → limpiar (sin restricción). Si
+    // viene una fecha, la validamos antes de persistirla.
+    if (input.resaleAllowedFrom !== undefined) {
+      if (input.resaleAllowedFrom === null || input.resaleAllowedFrom === "") {
+        projectUpdates.resaleAllowedFrom = null;
+      } else {
+        const d = new Date(input.resaleAllowedFrom);
+        if (isNaN(d.getTime())) {
+          throw new ValidationError("resaleAllowedFrom", "Fecha de reventa inválida.");
+        }
+        projectUpdates.resaleAllowedFrom = d;
+      }
+    }
 
     if (Object.keys(projectUpdates).length > 0) {
       await tx.project.update({ where: { id: project.id }, data: projectUpdates });
@@ -272,7 +288,13 @@ export async function updateProjectInfo(input: UpdateProjectInfoInput) {
 
 // ─── Crear proyecto (founder) ───────────────────────────────────────
 
-import { derivePriceAndShares } from "@/lib/utils/shares";
+// Máximo sano para evitar overflow numérico / inputs absurdos. No es un
+// "cap de producto" como el viejo TARGET_MAX_SHARES — el founder define
+// libremente el total dentro de este rango.
+const MAX_TOTAL_PARTICIPATIONS = 1_000_000_000; // 1e9
+// NOTA: `derivePriceAndShares` (lib/utils/shares.ts) ya NO se usa en este
+// flujo. La emisión ahora es directa (total + precio). La función queda en
+// el repo solo para compat con código/seed legacy.
 
 export type CreateProjectInput = {
   ownerId: string;
@@ -287,7 +309,11 @@ export type CreateProjectInput = {
   problemStatement: string;
   solutionStatement: string;
   businessModel: string;
-  preMoneyValuation: number;
+  // Emisión directa: el founder define cuántas participaciones totales emite
+  // y a qué precio cada una. La valoración se deriva (total × precio) y se
+  // persiste en StartupProfile.preMoneyValuation.
+  totalParticipations: number;
+  pricePerParticipation: number;
   valuationCurrency: "USD" | "MXN";
   websiteUrl?: string;
   videoUrl?: string;
@@ -321,12 +347,27 @@ function slugify(text: string): string {
 /**
  * Crea un proyecto STARTUP en estado PENDING_APPROVAL.
  *
- * El admin lo verá en /proyectos y deberá aprobarlo. El cap table (10% AJDUT
- * + pool de acciones disponibles) se materializa en `approveProject`.
+ * El admin lo verá en /proyectos y deberá aprobarlo. El pool inicial de
+ * acciones disponibles (100% del total) se materializa en `approveProject`.
  */
 export async function createProject(input: CreateProjectInput) {
-  if (input.preMoneyValuation <= 0) {
-    throw new ValidationError("preMoneyValuation", "La valoración debe ser mayor que cero.");
+  if (!Number.isInteger(input.totalParticipations) || input.totalParticipations < 1) {
+    throw new ValidationError(
+      "totalParticipations",
+      "El total de participaciones debe ser un entero mayor o igual a 1."
+    );
+  }
+  if (input.totalParticipations > MAX_TOTAL_PARTICIPATIONS) {
+    throw new ValidationError(
+      "totalParticipations",
+      "El total de participaciones excede el límite permitido."
+    );
+  }
+  if (!Number.isFinite(input.pricePerParticipation) || input.pricePerParticipation <= 0) {
+    throw new ValidationError(
+      "pricePerParticipation",
+      "El valor por participación debe ser mayor que cero."
+    );
   }
   if (input.oneLiner.length > 160) {
     throw new ValidationError("oneLiner", "El one-liner máximo 160 caracteres.");
@@ -344,14 +385,12 @@ export async function createProject(input: CreateProjectInput) {
       throw new ForbiddenError("Solo founders pueden crear proyectos.");
     }
 
-    const derived = derivePriceAndShares(input.preMoneyValuation);
-    if (!derived) {
-      throw new ValidationError(
-        "preMoneyValuation",
-        "La valoración no permite calcular un precio por acción limpio (debe ser divisible por 10/20/50/100/...)."
-      );
-    }
-    const { pricePerShare, totalShares } = derived;
+    // Emisión directa: el founder define total + precio. La valoración es el
+    // producto. Sin algoritmo de derivación ni cap artificial — el total
+    // ingresado es exactamente el que se emite.
+    const totalShares = input.totalParticipations;
+    const pricePerShare = input.pricePerParticipation;
+    const valuation = totalShares * pricePerShare;
 
     // Generamos un slug único. Si choca, agregamos sufijo numérico.
     const baseSlug = slugify(input.name);
@@ -391,10 +430,10 @@ export async function createProject(input: CreateProjectInput) {
         solutionStatement: input.solutionStatement.trim(),
         businessModel: input.businessModel.trim(),
         stage: input.stage,
-        preMoneyValuation: new Prisma.Decimal(input.preMoneyValuation),
+        preMoneyValuation: new Prisma.Decimal(valuation),
         valuationCurrency: input.valuationCurrency,
         totalEquityShares: totalShares,
-        platformEquityPercent: new Prisma.Decimal(10),
+        platformEquityPercent: new Prisma.Decimal(0),
         websiteUrl: input.websiteUrl?.trim() || null,
         videoUrl: input.videoUrl?.trim() || null,
         assetBackingNote: input.assetBackingNote?.trim() || null,

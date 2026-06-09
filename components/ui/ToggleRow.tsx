@@ -5,8 +5,8 @@
  * label izquierda, resumen + chevron derecha, hairline-b debajo, altura
  * fija. Al expandir, el contenido cae abajo con respiración.
  *
- * Usada tanto por HeirsAndValidation como por ProfileSurface para que el
- * patrón "fila colapsable" sea uno solo en toda la app.
+ * Usada por ProfileSurface para que el patrón "fila colapsable" sea uno
+ * solo en toda la app.
  */
 export function ToggleRow({
   label,

@@ -30,6 +30,7 @@ export default async function LegalPage() {
       <Section n="03" title={t.sections.stake.title} body={t.sections.stake.body} />
       <Section n="04" title={t.sections.distributions.title} body={t.sections.distributions.body} />
       <Section n="05" title={t.sections.resale.title} body={t.sections.resale.body} />
+      <Section n="06" title={t.sections.liability.title} body={t.sections.liability.body} />
     </div>
   );
 }
