@@ -62,15 +62,19 @@ export const dict: Dict = {
 
   home: {
     eyebrow: "— Where projects build their community",
-    titleLine1: "Connecting capital, projects and",
-    titleLine2: "high-impact communities.",
+    titleLine1: "The system that coordinates",
+    titleLine2: "the most valuable part of your company:",
+    titleLine3: "Partners, collaborators and investors.",
     pillarsEyebrow: "Transparency · Unity · Value",
     valueTransparency: "Transparency",
     valueUnity: "Unity",
     valueValue: "Value",
     valueLegacy: "Legacy",
     description:
-      "AJDUT brings together visionary project owners and members who want to back high-value initiatives: from tech startups to real-estate developments and commerce. Fully backed, certified and transparent.",
+      "With Ajdut you can structure partner participation, communicate, send reports and connect with the right people to grow your business through collaborative economy.",
+    descriptionBold: "All recorded, verified and coordinated.",
+    quote:
+      "When everyone shares the vision and does their part, we all grow. This is the economy of us.",
     ctaSignIn: "Sign in",
     ctaApply: "Apply to be part",
     pillarsHeading: "Why members choose AJDUT",
@@ -246,6 +250,7 @@ export const dict: Dict = {
     founderEquipo: "Team · AJDUT",
     founderHitos: "Milestones · AJDUT",
     founderInvitar: "Invite member · AJDUT",
+    founderVesting: "Vesting · AJDUT",
     founderMetricas: "Metrics · AJDUT",
     home: "AJDUT",
     founderHome: "Founder · AJDUT",
@@ -477,6 +482,19 @@ export const dict: Dict = {
     noneFiltered: "No project matches the current filters.",
     noneAdmin: "There are no projects on AJDUT yet.",
     noneMember: "There are no active projects on AJDUT yet.",
+    // Discovery category tabs
+    tabBuscando: "Seeking participants",
+    tabArmados: "Established projects",
+    tabReventas: "Participations for sale",
+    emptyBuscando: "No project is seeking participants right now.",
+    emptyArmados: "There are no established projects yet.",
+    emptyReventas: "There are no participations for sale right now.",
+    // Resale listing (secondary market)
+    resaleBy: "Sold by",
+    resalePartial: "Partial sale",
+    resaleSharesLabel: "Participations",
+    resalePriceLabel: "Price / participation",
+    resaleTotalLabel: "Total",
     colValuation: "Valuation",
     colTargetRaise: "Target raise",
     colAvailable: "Available",
@@ -1470,6 +1488,7 @@ export const dict: Dict = {
     chatBtn: "Open chat →",
     viewPublicLink: "View public page",
     newProjectLink: "+ Another project",
+    vestingLink: "Vesting / scheduled grants",
     sectionResumen: "Summary",
     sectionEquipo: "Founding team",
     sectionHitos: "Roadmap milestones",
@@ -2110,5 +2129,78 @@ export const dict: Dict = {
 
   loading: {
     loading: "Loading…",
+  },
+
+  founderVesting: {
+    section: "Vesting / scheduled grants",
+    description:
+      "Define a schedule to deliver participations over time (for example, 1,000 participations across 10 monthly installments). The system creates each grant automatically on its date: it becomes a pending proposal that goes through the same validation as a direct invite. You don't have to do it by hand every month.",
+    poolLabel: "— Pool available now",
+
+    listTitle: "Schedules",
+    emptyList:
+      "You haven't created any vesting schedule yet. Use the form below to schedule the first grant.",
+    colTotal: "Total",
+    colProgress: "Delivered",
+    colNext: "Next grant",
+    progressFmt: "{x}/{y} installments",
+    cancelBtn: "Cancel schedule",
+    cancelConfirm: "Cancel the pending grants?",
+
+    scheduleStatus: {
+      ACTIVE: "Active",
+      COMPLETED: "Completed",
+      CANCELLED: "Cancelled",
+    },
+    releaseStatus: {
+      PENDING: "Scheduled",
+      RELEASED: "Released",
+      SKIPPED: "Skipped",
+      CANCELLED: "Cancelled",
+    },
+
+    formTitle: "New schedule",
+    formIntro:
+      "Choose the recipient, the total to deliver and how it splits over time. The monthly option generates equal installments automatically.",
+
+    targetModeLabel: "Recipient",
+    targetModeUser: "Existing member",
+    targetModeEmail: "By email (new)",
+    targetUserLabel: "Member",
+    emailLabel: "Recipient email",
+    nameLabel: "Full name",
+    nameHelper: "Used to create the account if the email isn't registered yet.",
+
+    totalLabel: "Total participations",
+    totalAvailableFmt: "Available now: {n} (the pool may change)",
+
+    modeLabel: "Schedule mode",
+    modeMonthly: "Equal monthly installments",
+    modeCustom: "Custom installments",
+
+    installmentsLabel: "Number of installments",
+    startAtLabel: "First installment date",
+    perInstallmentFmt: "≈ {n} participations per installment (the last one adjusts the remainder)",
+
+    customHelper:
+      "Add each installment with its amount and date. The sum must match the total.",
+    customSharesLabel: "Participations",
+    customDateLabel: "Date",
+    addRowBtn: "+ Add installment",
+    removeRowBtn: "Remove",
+    customSumFmt: "Installment sum: {n}",
+
+    reasonLabel: "Reason / note (optional)",
+
+    createBtn: "Create schedule →",
+    creatingBtn: "Creating…",
+    disclaimer:
+      "Each grant is created on its own on its date as a pending proposal; participations are only assigned once an admin validates it.",
+
+    successEyebrow: "Schedule created",
+    successBodyFmt:
+      "You scheduled {count} grants for a total of {total} participations. The system will create each proposal automatically on its date.",
+    exceedsWarning:
+      "Heads up: the total exceeds the currently available pool. Grants that don't find enough participations on their date will be skipped for manual review.",
   },
 };

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/vesting",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}

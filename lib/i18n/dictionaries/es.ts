@@ -66,15 +66,19 @@ export const dict = {
 
   home: {
     eyebrow: "— Donde los proyectos construyen su comunidad",
-    titleLine1: "Conectamos capital, proyectos y",
-    titleLine2: "comunidades de alto impacto.",
+    titleLine1: "El sistema que coordina",
+    titleLine2: "lo más valioso de tu empresa:",
+    titleLine3: "Socios, colaboradores e inversionistas.",
     pillarsEyebrow: "Transparencia · Unidad · Valor",
     valueTransparency: "Transparencia",
     valueUnity: "Unidad",
     valueValue: "Valor",
     valueLegacy: "Legado",
     description:
-      "AJDUT une a emprendedores visionarios con miembros que buscan respaldar iniciativas de alto valor: desde startups tecnológicas hasta desarrollos inmobiliarios y comercio. Todo respaldado, certificado y transparente.",
+      "Con Ajdut puedes estructurar la participación de socios, comunicarse, enviar reportes y conectar con las personas correctas para crecer tu negocio mediante economía colaborativa.",
+    descriptionBold: "Todo registrado, verificado y coordinado.",
+    quote:
+      "Cuando cada uno comparte la visión y hace su parte, todos crecemos. Esto es la economía del nosotros.",
     ctaSignIn: "Acceder",
     ctaApply: "Aplica para ser parte",
     pillarsHeading: "Por qué los miembros eligen AJDUT",
@@ -250,6 +254,7 @@ export const dict = {
     founderEquipo: "Equipo · AJDUT",
     founderHitos: "Hitos · AJDUT",
     founderInvitar: "Invitar miembro · AJDUT",
+    founderVesting: "Vesting · AJDUT",
     founderMetricas: "Métricas · AJDUT",
     home: "AJDUT",
     founderHome: "Founder · AJDUT",
@@ -482,6 +487,19 @@ export const dict = {
     noneFiltered: "Ningún proyecto coincide con los filtros aplicados.",
     noneAdmin: "Aún no hay proyectos creados en AJDUT.",
     noneMember: "Aún no hay proyectos activos en AJDUT.",
+    // Tabs de categoría del discovery
+    tabBuscando: "En búsqueda de participantes",
+    tabArmados: "Proyectos armados",
+    tabReventas: "Participaciones en venta",
+    emptyBuscando: "Ningún proyecto está buscando participantes en este momento.",
+    emptyArmados: "Aún no hay proyectos armados.",
+    emptyReventas: "No hay participaciones en venta por ahora.",
+    // Listing de reventa (mercado secundario)
+    resaleBy: "Vendido por",
+    resalePartial: "Venta parcial",
+    resaleSharesLabel: "Participaciones",
+    resalePriceLabel: "Precio / participación",
+    resaleTotalLabel: "Total",
     colValuation: "Valoración",
     colTargetRaise: "A levantar",
     colAvailable: "Disponibles",
@@ -1478,6 +1496,7 @@ export const dict = {
     chatBtn: "Abrir chat →",
     viewPublicLink: "Ver ficha pública",
     newProjectLink: "+ Otro proyecto",
+    vestingLink: "Vesting / entregas programadas",
     sectionResumen: "Resumen",
     sectionEquipo: "Equipo fundador",
     sectionHitos: "Hitos del roadmap",
@@ -2119,6 +2138,82 @@ export const dict = {
 
   loading: {
     loading: "Cargando…",
+  },
+
+  founderVesting: {
+    section: "Vesting / entregas programadas",
+    description:
+      "Definí un cronograma para entregar participaciones a través del tiempo (por ejemplo, 1.000 participaciones en 10 tramos mensuales). El sistema crea cada entrega automáticamente en su fecha: queda como una propuesta pendiente que pasa por la misma validación que una invitación directa. No tenés que hacerlo a mano cada mes.",
+    poolLabel: "— Pool disponible ahora",
+
+    // Lista de cronogramas
+    listTitle: "Cronogramas",
+    emptyList:
+      "Todavía no creaste ningún cronograma de vesting. Usá el formulario de abajo para programar la primera entrega.",
+    colTotal: "Total",
+    colProgress: "Entregadas",
+    colNext: "Próxima entrega",
+    progressFmt: "{x}/{y} tramos",
+    cancelBtn: "Cancelar cronograma",
+    cancelConfirm: "¿Cancelar las entregas pendientes?",
+
+    scheduleStatus: {
+      ACTIVE: "Activo",
+      COMPLETED: "Completado",
+      CANCELLED: "Cancelado",
+    },
+    releaseStatus: {
+      PENDING: "Programado",
+      RELEASED: "Liberado",
+      SKIPPED: "Saltado",
+      CANCELLED: "Cancelado",
+    },
+
+    // Formulario
+    formTitle: "Nuevo cronograma",
+    formIntro:
+      "Elegí el destinatario, el total a entregar y cómo se reparte en el tiempo. La opción mensual genera tramos iguales automáticamente.",
+
+    targetModeLabel: "Destinatario",
+    targetModeUser: "Socio existente",
+    targetModeEmail: "Por email (nuevo)",
+    targetUserLabel: "Socio",
+    emailLabel: "Email del destinatario",
+    nameLabel: "Nombre completo",
+    nameHelper:
+      "Se usa para crear la cuenta si el email no está registrado todavía.",
+
+    totalLabel: "Total de participaciones",
+    totalAvailableFmt: "Disponibles ahora: {n} (el pool puede cambiar)",
+
+    modeLabel: "Modo del cronograma",
+    modeMonthly: "Tramos iguales por mes",
+    modeCustom: "Tramos personalizados",
+
+    installmentsLabel: "Número de tramos",
+    startAtLabel: "Fecha del primer tramo",
+    perInstallmentFmt: "≈ {n} participaciones por tramo (el último ajusta el resto)",
+
+    customHelper:
+      "Agregá cada tramo con su cantidad y fecha. La suma debe coincidir con el total.",
+    customSharesLabel: "Participaciones",
+    customDateLabel: "Fecha",
+    addRowBtn: "+ Agregar tramo",
+    removeRowBtn: "Quitar",
+    customSumFmt: "Suma de tramos: {n}",
+
+    reasonLabel: "Motivo / nota (opcional)",
+
+    createBtn: "Crear cronograma →",
+    creatingBtn: "Creando…",
+    disclaimer:
+      "Cada entrega se crea sola en su fecha como propuesta pendiente; recién cuando el admin la valida se asignan las participaciones.",
+
+    successEyebrow: "Cronograma creado",
+    successBodyFmt:
+      "Programaste {count} entregas por un total de {total} participaciones. El sistema va a crear cada propuesta automáticamente en su fecha.",
+    exceedsWarning:
+      "Atención: el total supera el pool disponible actual. Las entregas que no encuentren participaciones suficientes en su fecha quedarán saltadas para revisión manual.",
   },
 };
 

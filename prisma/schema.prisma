@@ -150,6 +150,8 @@ model User {
   pendingProposed       PendingAssignment[]    @relation("PendingAssignmentProposer")
   pendingTargeted       PendingAssignment[]    @relation("PendingAssignmentTarget")
   pendingReviewed       PendingAssignment[]    @relation("PendingAssignmentReviewer")
+  vestingTargeted       VestingSchedule[]      @relation("VestingTarget")
+  vestingCreated        VestingSchedule[]      @relation("VestingCreator")
 
   @@index([role, isActive])
 }
@@ -241,6 +243,7 @@ model Project {
   pendingAssignments PendingAssignment[]
   shareholderClasses ShareholderClass[]
   externalHoldings   ExternalHolding[]
+  vestingSchedules   VestingSchedule[]
 
   @@index([status, kind])
   @@index([ownerId])
@@ -1075,4 +1078,76 @@ model PendingAssignment {
 
   @@index([projectId, status])
   @@index([status])
+}
+
+// ─── VESTING — entrega programada de participaciones a través del tiempo ──
+//
+// El founder define un cronograma (ej: 1000 participaciones a Niv, 100/mes
+// durante 10 meses). Cada "release" del cronograma, al llegar su fecha, crea
+// automáticamente un PendingAssignment (vía el cron `/api/cron/vesting`) que
+// entra al MISMO flujo de validación bilateral + aprobación de admin que una
+// invitación directa. No hay camino de asignación paralelo: el release sólo
+// arranca el flujo existente; la asignación real la ejecuta `approvePendingAssignment`.
+//
+// Pool: no reservamos el pool al crear el schedule (sólo validamos como sanity
+// check que el total entre en el available actual). Cada release valida el pool
+// al ejecutarse; si no alcanza queda SKIPPED para revisión manual.
+
+enum VestingScheduleStatus {
+  ACTIVE // releases pendientes
+  COMPLETED // todos los releases ejecutados (RELEASED/SKIPPED)
+  CANCELLED // el founder lo canceló
+}
+
+enum VestingReleaseStatus {
+  PENDING // todavía no llegó su fecha
+  RELEASED // se creó el PendingAssignment al llegar la fecha
+  SKIPPED // se saltó (ej: pool insuficiente al momento; queda para revisar)
+  CANCELLED
+}
+
+model VestingSchedule {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  // Destinatario: puede ser un user existente o un email (nuevo, se crea al
+  // ejecutar via el flujo de invite del PendingAssignment).
+  targetUserId String?
+  targetUser   User?   @relation("VestingTarget", fields: [targetUserId], references: [id])
+  targetEmail  String? // si targetUserId es null, invitación por email
+  targetName   String? // nombre para mostrar / crear cuenta
+
+  createdById String // founder que lo creó
+  createdBy   User   @relation("VestingCreator", fields: [createdById], references: [id])
+
+  totalShares Int // total a entregar en todo el cronograma
+  reason      String?
+
+  status    VestingScheduleStatus @default(ACTIVE)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  releases VestingRelease[]
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model VestingRelease {
+  id         String          @id @default(cuid())
+  scheduleId String
+  schedule   VestingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  shareCount Int // cuántas participaciones libera este tramo
+  releaseAt  DateTime // fecha en que se debe crear el PendingAssignment
+
+  status              VestingReleaseStatus @default(PENDING)
+  releasedAt          DateTime?
+  pendingAssignmentId String? // el PendingAssignment creado al ejecutar
+
+  createdAt DateTime @default(now())
+
+  @@index([status, releaseAt])
+  @@index([scheduleId])
 }

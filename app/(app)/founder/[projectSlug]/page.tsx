@@ -250,6 +250,12 @@ export default async function FounderDashboardPage({ params }: Params) {
             </Link>
             <span className="eyebrow !text-navy/30">·</span>
             <Link
+              href={`/founder/${project.slug}/vesting` as Route}
+              className="eyebrow hover:!text-gold transition-colors"
+            >
+              {t.vestingLink}
+            </Link>
+            <Link
               href={`/proyectos/${project.slug}` as Route}
               className="eyebrow hover:!text-gold transition-colors"
             >

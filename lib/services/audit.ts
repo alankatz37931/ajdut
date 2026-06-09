@@ -65,7 +65,11 @@ export type AuditAction =
   | "CHAT.MESSAGE_DELETED"
   | "CHAT.POLL_CREATED"
   | "CHAT.POLL_VOTED"
-  | "CHAT.POLL_CLOSED";
+  | "CHAT.POLL_CLOSED"
+  | "VESTING.SCHEDULE_CREATED"
+  | "VESTING.SCHEDULE_CANCELLED"
+  | "VESTING.RELEASE_EXECUTED"
+  | "VESTING.RELEASE_SKIPPED";
 
 export type AuditEntry = {
   actorId: string | null;

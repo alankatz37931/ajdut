@@ -23,15 +23,19 @@ export function ProjectFilters({ dict }: { dict: FilterDict }) {
   // Búsqueda instantánea: empuja la URL ~250ms después de dejar de tipear.
   // `replace` (no `push`) para no inundar el historial con cada tecla.
   // Al cambiar la query, descarta `page` — el usuario espera empezar desde la
-  // primera página con el filtro nuevo.
+  // primera página con el filtro nuevo. Preserva `tab` para que la búsqueda
+  // sea combinable con la categoría activa (armados / buscando).
   useEffect(() => {
     const current = params.get("q") ?? "";
     const next = query.trim();
     if (next === current) return;
     const t = setTimeout(() => {
-      router.replace(
-        next ? `/proyectos?q=${encodeURIComponent(next)}` : "/proyectos"
-      );
+      const sp = new URLSearchParams();
+      const tab = params.get("tab");
+      if (tab) sp.set("tab", tab);
+      if (next) sp.set("q", next);
+      const qs = sp.toString();
+      router.replace(qs ? `/proyectos?${qs}` : "/proyectos");
     }, 250);
     return () => clearTimeout(t);
   }, [query, params, router]);
