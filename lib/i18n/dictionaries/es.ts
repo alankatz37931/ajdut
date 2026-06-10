@@ -626,7 +626,7 @@ export const dict = {
       CAC: "CAC",
       LTV: "LTV",
       GROSS_MARGIN: "Margen bruto",
-      HEADCOUNT: "Headcount",
+      HEADCOUNT: "Socios directivos y operativos",
       CUSTOM: "Custom",
     } as Record<string, string>,
     policies: {
@@ -1767,7 +1767,7 @@ export const dict = {
       CAC: "CAC",
       LTV: "LTV",
       GROSS_MARGIN: "Gross margin",
-      HEADCOUNT: "Headcount",
+      HEADCOUNT: "Socios directivos y operativos",
       CUSTOM: "Personalizada",
     } as Record<string, string>,
     form: {

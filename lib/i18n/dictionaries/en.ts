@@ -621,7 +621,7 @@ export const dict: Dict = {
       CAC: "CAC",
       LTV: "LTV",
       GROSS_MARGIN: "Gross margin",
-      HEADCOUNT: "Headcount",
+      HEADCOUNT: "Directive and operational partners",
       CUSTOM: "Custom",
     } as Record<string, string>,
     policies: {
@@ -1759,7 +1759,7 @@ export const dict: Dict = {
       CAC: "CAC",
       LTV: "LTV",
       GROSS_MARGIN: "Gross margin",
-      HEADCOUNT: "Headcount",
+      HEADCOUNT: "Directive and operational partners",
       CUSTOM: "Custom",
     } as Record<string, string>,
     form: {
