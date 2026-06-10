@@ -161,7 +161,7 @@ export async function upsertExternalHoldingAction(
     if (newCommitted > totalShares && newCommitted > currentCommitted) {
       throw new ValidationError(
         "shareCount",
-        "El cap table superaría el 100%. El equipo + tenencias + asignados no pueden exceder el total de participaciones emitidas. Ajustá los porcentajes o consultá con los propietarios para emitir más."
+        "El cap table superaría el 100%. El equipo + tenencias + asignados no pueden exceder el total de participaciones emitidas. Una opción es revisar los porcentajes; otra, emitir más junto con los propietarios."
       );
     }
 

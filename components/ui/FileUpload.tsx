@@ -30,10 +30,10 @@ const DEFAULT_DICT: FileUploadDict = {
   imageLoaded: "Imagen cargada",
   viewFile: "ver archivo ↗",
   remove: "quitar ×",
-  dropHere: "Soltá el archivo acá",
-  dragOrPick: "Arrastrá un archivo o hacé clic para elegir",
+  dropHere: "Archivo listo para soltar acá",
+  dragOrPick: "Un archivo arrastrado acá, o un clic para elegirlo",
   tooBigFmt: "El archivo supera {n}MB.",
-  uploadError: "No se pudo subir el archivo. Probá de nuevo.",
+  uploadError: "No se pudo subir el archivo. Puede reintentarse.",
   previewAlt: "Vista previa",
 };
 

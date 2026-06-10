@@ -89,7 +89,7 @@ export async function requestMoreInfoAction(
   }
   const trimmed = question.trim();
   if (trimmed.length < 5) {
-    return { ok: false, error: "Escribí al menos 5 caracteres de pregunta." };
+    return { ok: false, error: "La pregunta necesita al menos 5 caracteres." };
   }
 
   // Cargar datos necesarios para el email antes de la transacción.

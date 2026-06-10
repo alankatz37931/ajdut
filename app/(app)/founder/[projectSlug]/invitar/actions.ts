@@ -57,10 +57,10 @@ export async function inviteMemberAction(
   const shareCount = Number.parseInt(sharesRaw, 10);
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { ok: false, error: "Ingresá un email válido." };
+    return { ok: false, error: "El email no es válido." };
   }
   if (fullName.length < 2) {
-    return { ok: false, error: "Ingresá el nombre completo del invitado." };
+    return { ok: false, error: "Falta el nombre completo del invitado." };
   }
   if (!Number.isFinite(shareCount) || shareCount < 1) {
     return { ok: false, error: "La cantidad de acciones debe ser un entero mayor o igual a 1." };

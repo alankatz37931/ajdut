@@ -120,7 +120,7 @@ export const dict: Dict = {
     backToHome: "Back to home",
     title: "I want to be part of AJDUT",
     intro:
-      "We believe in real connections and in the value of every member. Fill in your details and let's start building together.",
+      "We believe in real connections and in the value of every member. With your details, we start building together.",
     backStep: "Back to ",
     backShort: "← Back",
     continue: "Continue →",
@@ -136,7 +136,7 @@ export const dict: Dict = {
     },
     kind: {
       eyebrow: "— How would you like to join?",
-      intro: "Choose the type of application.",
+      intro: "The type of application.",
       personTitle: "Partner",
       personSubtitle: "I want to be a member of the community",
       personDescription:
@@ -232,10 +232,10 @@ export const dict: Dict = {
     imageLoaded: "Image loaded",
     viewFile: "view file ↗",
     remove: "remove ×",
-    dropHere: "Drop the file here",
-    dragOrPick: "Drag a file or click to choose",
+    dropHere: "The file goes here",
+    dragOrPick: "A file dragged here, or a click to choose",
     tooBigFmt: "File exceeds {n}MB.",
-    uploadError: "Couldn't upload the file. Try again.",
+    uploadError: "The file couldn't be uploaded. It can be retried.",
     previewAlt: "Preview",
   },
 
@@ -271,9 +271,9 @@ export const dict: Dict = {
     emailLabel: "Your account email",
     submitBtn: "Send recovery link",
     submittingBtn: "Sending…",
-    errEmailInvalid: "Enter a valid email.",
+    errEmailInvalid: "The email is not valid.",
     submittedEyebrow: "Request received",
-    submittedTitle: "Check your email.",
+    submittedTitle: "The link is in your email.",
     submittedBody:
       "If {email} is registered with AJDUT, we sent a single-use link to reset your password. The link is valid for 1 hour.",
     submittedDisclaimer:
@@ -285,7 +285,7 @@ export const dict: Dict = {
     back: "Access approved",
     helloName: "Hi, {name}.",
     intro:
-      "Your application was approved. Set your password to enter AJDUT.",
+      "Your application was approved. A password gives you access to AJDUT.",
     accountLabel: "Account:",
     passwordLabel: "Password",
     repeatLabel: "Repeat password",
@@ -296,19 +296,19 @@ export const dict: Dict = {
     loggingInBtn: "Signing in…",
     submitBtn: "Set and sign in",
     autoLoginFailed:
-      "Password set, but automatic sign-in failed. Try signing in at /acceder.",
+      "Password set, but automatic sign-in failed. Access is available at /acceder.",
     errPasswordMismatch: "Passwords don't match.",
     invalid: {
       back: "Invalid link",
       notFoundTitle: "Invalid link",
       notFoundBody:
-        "The link you used doesn't match any record. If you were approved recently, check your inbox for the most recent link.",
+        "The link you used doesn't match any record. If you were approved recently, the most recent link is in your email.",
       usedTitle: "Link already used",
       usedBody:
-        "This single-use link has already been consumed. If you need to reset your password, contact the AJDUT team.",
+        "This single-use link has already been consumed. To reset your password, the AJDUT team can help.",
       expiredTitle: "Link expired",
       expiredBody:
-        "More than 72 hours passed since the approval. Ask the AJDUT admin to send you a new link.",
+        "More than 72 hours passed since the approval. The AJDUT admin can send you a new link.",
     },
   },
 
@@ -360,7 +360,7 @@ export const dict: Dict = {
     composer: {
       bodyLabel: "Message",
       linkLabel: "Attach link (optional)",
-      errEmpty: "Write a message or attach a link.",
+      errEmpty: "A message or a link is needed.",
       errBadUrl: "The link must start with http:// or https://",
       sendBtn: "Send",
       sendingBtn: "Sending…",
@@ -378,7 +378,7 @@ export const dict: Dict = {
       closesLabel: "Closes on",
       closesOptional: "(optional)",
       errEmptyQuestion: "Question cannot be empty.",
-      errTooFewOpts: "Add at least 2 options with content.",
+      errTooFewOpts: "At least 2 options with content are needed.",
       submitBtn: "Create poll",
       submittingBtn: "Creating…",
       pollLabel: "Poll",
@@ -416,7 +416,7 @@ export const dict: Dict = {
     aliasLabel: "Alias",
     aliasHint: "(how other members see you)",
     aliasPlaceholder:
-      "Optional — if you leave it empty, other members see your full name.",
+      "Optional — if left empty, other members see your full name.",
     aliasFootnote:
       "Appears on the project cap tables. Your real name is still used on your own certificate and portfolio.",
     countryLabel: "Country",
@@ -447,17 +447,17 @@ export const dict: Dict = {
     uploadAriaNew: "Upload profile photo",
     uploadAriaChange: "Change profile photo",
     uploadTooBig: "File exceeds {n}MB.",
-    uploadFailed: "Upload failed. Try again.",
+    uploadFailed: "Upload failed. It can be retried.",
     idPhotoLabel: "Official ID",
     idPhotoHelper:
-      "Upload a photo or scan of your ID, passport, INE or DNI. Only you and the AJDUT team can see it.",
+      "A photo or scan of your ID, passport, INE or DNI. Only you and the AJDUT team can see it.",
     idPhotoUploadBtn: "Upload ID",
     idPhotoChangeBtn: "Replace ID",
     idPhotoUploaded: "ID uploaded",
     errors: {
       nameTooShort: "Name must be at least 2 characters.",
       aliasTooShort:
-        "Alias must be at least 2 characters (or leave it empty).",
+        "Alias must be at least 2 characters (or empty).",
       aliasTooLong: "Alias cannot exceed 60 characters.",
       avatarInvalid: "The profile photo URL is not valid.",
       countryTooLong: "Country cannot exceed 60 characters.",
@@ -475,7 +475,7 @@ export const dict: Dict = {
     pendingApproval: "pending approval",
     pendingApprovalSingular: "pending approval",
     intro:
-      "Find the project that shares your vision and take part.",
+      "Among these projects is the one that shares your vision.",
     searchLabel: "Search by name",
     searchClear: "Clear",
     searchPlaceholder: "Pushka, Mercurio, ...",
@@ -659,7 +659,7 @@ export const dict: Dict = {
       preExistingFallback: "Pre-existing shareholders",
       verificationLabel: "Verification",
       overcommitWarn:
-        "The cap table exceeds total issued participations. Review pre-existing shareholders in Composition.",
+        "The cap table exceeds total issued participations. Pre-existing shareholders can be reviewed in Composition.",
     },
     participationStatus: {
       ASSIGNED: "Assigned",
@@ -701,7 +701,7 @@ export const dict: Dict = {
     cancel: "Cancel",
     notAvailableYet: "Participation not yet available",
     noValuationBody:
-      "This project has not yet declared its valuation — you cannot specify an amount. Check back later; the project owner will publish the valuation when ready.",
+      "This project has not yet declared its valuation — an amount cannot be specified. The valuation becomes available later; the project owner publishes it when ready.",
     supportKindLabel: "Type of support",
     supportKind: {
       CAPITAL: "Capital",
@@ -732,7 +732,7 @@ export const dict: Dict = {
       "This project has not yet declared its valuation — you cannot specify an amount.",
     errorMinAmount: "Minimum:",
     errorOneShare: "(1 participation)",
-    errorEnterValid: "Enter a valid amount.",
+    errorEnterValid: "The amount is not valid.",
     errorOverMax: "The amount exceeds availability. Maximum:",
     errorMaxShares: "Maximum available:",
     footerNote:
@@ -748,7 +748,7 @@ export const dict: Dict = {
     backShort: "← Back",
     cancel: "Cancel",
     explainBody:
-      "Ask the project owner for access to extended information —documents and reports— to get to know the project in depth.",
+      "A request to the project owner opens access to extended information —documents and reports— to get to know the project in depth.",
     messageLabel: "Message to the project owner",
     messageOptional: "(optional)",
     messagePlaceholderPrefix: "My name is",
@@ -931,15 +931,15 @@ export const dict: Dict = {
       designatingSubmitBtn: "Designate and send for approval",
       designatingSubmittingBtn: "Sending…",
       errNoteTooShort: "The note must be at least 10 characters.",
-      errContactRequired: "Please provide a contact method.",
-      errBuyerRequired: "Please pick a buyer.",
+      errContactRequired: "A contact method is required.",
+      errBuyerRequired: "A buyer is required.",
       listingShareCountLabel: "How many participations to sell",
       listingShareCountHelperFmt:
         "You have {total} participations; you can resell up to {available}.",
       listingPricePerShareLabelFmt: "Price per participation ({currency})",
       listingPricePerShareHelperFmt: "Current estimated price: {price}.",
       listingPricePerShareHelperNoEstimate:
-        "Set the price per participation freely.",
+        "The price per participation is set freely.",
       listingTotalAskLabelFmt: "Total ask: {total}",
       errShareCountOutOfRange: "Quantity out of range.",
       errPriceInvalid: "Invalid price.",
@@ -970,8 +970,8 @@ export const dict: Dict = {
       projectNotFound: "Project not found.",
       participationNotFound: "Participation not found.",
       notOwner: "Only the holder can list this participation.",
-      contactInvalid: "Please provide a valid contact method.",
-      buyerRequired: "Please pick a buyer.",
+      contactInvalid: "The contact method is not valid.",
+      buyerRequired: "A buyer is required.",
       cannotAcquireOwn: "You can't acquire your own participation.",
       serverError: "Internal server error.",
     },
@@ -999,10 +999,10 @@ export const dict: Dict = {
       "Your confirmation was recorded on {date}. No further action needed.",
     invalidTitle: "Invalid link",
     invalidBody:
-      "This link doesn't match any active resale. If you got it recently, check your most recent email.",
+      "This link doesn't match any active resale. If you got it recently, the most recent email is the valid one.",
     expiredTitle: "Link expired",
     expiredBody:
-      "This confirmation link is expired. Ask the seller to restart the deal to get a new one.",
+      "This confirmation link is expired. The seller can restart the deal to generate a new one.",
     resolvedTitle: "Resale already resolved",
     resolvedBody:
       "This resale has already been executed or cancelled. Nothing more to confirm.",
@@ -1025,7 +1025,7 @@ export const dict: Dict = {
         "",
       fileLabel: "",
       fileHelper: "PDF, Excel or Word · 25 MB max.",
-      errNoFile: "Upload a file first.",
+      errNoFile: "A file is needed first.",
       publishBtn: "Publish report →",
       publishingBtn: "Publishing…",
       cancelBtn: "Cancel",
@@ -1034,7 +1034,7 @@ export const dict: Dict = {
       projectNotFound: "Project not found.",
       noPermission: "You don't have permission for this project.",
       nameRequired: "The report needs a name.",
-      fileRequired: "Upload the report file.",
+      fileRequired: "The report file is required.",
       uploadError: "Error uploading the report.",
       notFound: "Report not found.",
       deleteError: "Error removing the report.",
@@ -1105,7 +1105,7 @@ export const dict: Dict = {
       overrideBtn: "Tripartite override",
       overrideTitle: "Tripartite validation override",
       overrideDescription:
-        "You're about to execute the transfer even though the buyer or the project owner hasn't confirmed in-platform. Only use this if they confirmed off-channel. It will be recorded in the audit log.",
+        "You're about to execute the transfer even though the buyer or the project owner hasn't confirmed in-platform. This is valid only if they confirmed off-channel. It will be recorded in the audit log.",
       overrideNoteLabel: "Justification (min 10 characters)",
       overrideConfirmBtn: "Yes, force and execute",
     },
@@ -1253,11 +1253,11 @@ export const dict: Dict = {
     bothPartiesPendingTooltip:
       "Waiting for the recipient to confirm before approving.",
     targetPendingTooltip:
-      "The recipient hasn't confirmed by email yet. Re-send or use override.",
+      "The recipient hasn't confirmed by email yet. Re-sending or override remain as options.",
     overrideBtn: "Bilateral override",
     overrideTitle: "Bilateral validation override",
     overrideDescription:
-      "You're about to execute the assignment even though the recipient hasn't confirmed in-platform. Only use this if they confirmed off-channel. It will be recorded in the audit log.",
+      "You're about to execute the assignment even though the recipient hasn't confirmed in-platform. This is valid only if they confirmed off-channel. It will be recorded in the audit log.",
     overrideNoteLabel: "Justification (min 10 characters)",
     overrideConfirmBtn: "Yes, force and execute",
     confirmAsignacionTitle: "Confirm your assignment",
@@ -1278,10 +1278,10 @@ export const dict: Dict = {
       "Your confirmation was recorded on {date}. No further action needed.",
     confirmAsignacionInvalidTitle: "Invalid link",
     confirmAsignacionInvalidBody:
-      "This link doesn't match any active proposal. If you got it recently, check your most recent email from the team.",
+      "This link doesn't match any active proposal. If you got it recently, the most recent email from the team is the valid one.",
     confirmAsignacionExpiredTitle: "Link expired",
     confirmAsignacionExpiredBody:
-      "This confirmation link is expired. Ask the AJDUT team for a new one.",
+      "This confirmation link is expired. The AJDUT team can send you a new one.",
     confirmAsignacionResolvedTitle: "Assignment already resolved",
     confirmAsignacionResolvedBody:
       "The AJDUT team already closed this assignment proposal. Nothing more to confirm.",
@@ -1425,7 +1425,7 @@ export const dict: Dict = {
     back: "Project owner · New project",
     title: "Register your company",
     intro:
-      "Fill in your company details and current valuation. Once submitted, the AJDUT team reviews the information before activating the project for members. You'll get an email confirming.",
+      "This form covers your company details and current valuation. Once submitted, the AJDUT team reviews the information before activating the project for members. You'll get an email confirming.",
     sectionIdentity: "Identity",
     sectionLegal: "Legal data",
     sectionCategorization: "Categorization",
@@ -1457,12 +1457,12 @@ export const dict: Dict = {
     policyDividendsLabel: "Dividend policy (optional)",
     dividendsFreqLabel: "Dividend frequency (optional)",
     videoIntro:
-      "If you have a pitch video, paste the link here.",
+      "If there's a pitch video, its link goes here.",
     videoUrlLabel: "Video URL (YouTube / Vimeo)",
     videoHelper:
-      "If you paste a YouTube or Vimeo link it shows as an embedded video on the project page.",
+      "With a YouTube or Vimeo link, it shows as an embedded video on the project page.",
     valuationIntro:
-      "Define how many total participations your company issues and the value of each. The valuation is computed as total × value. The full total becomes the pool available to members.",
+      "How many total participations your company issues and the value of each. The valuation is computed as total × value. The full total becomes the pool available to members.",
     valuationLabel: "Amount",
     currencyLabel: "Currency",
     currencyUsd: "USD · Dollars",
@@ -1498,7 +1498,7 @@ export const dict: Dict = {
     newProjectLink: "+ Another project",
     vestingLink: "Vesting / scheduled grants",
     vestingHint:
-      "Grant participations to members in tranches over time, not all at once.",
+      "Participations granted to members in tranches over time, not all at once.",
     sectionResumen: "Summary",
     sectionEquipo: "Project team",
     sectionHitos: "Roadmap milestones",
@@ -1529,13 +1529,13 @@ export const dict: Dict = {
     },
     team: {
       inactive: "inactive",
-      empty: "Add who's behind the project.",
+      empty: "Who's behind the project isn't loaded yet.",
       cta: "Load team →",
     },
     milestones: {
       statusAchieved: "Achieved",
       statusPlanned: "Planned",
-      empty: "Set your roadmap — what was promised and what was delivered.",
+      empty: "Your roadmap — what was promised and what was delivered — goes here.",
       cta: "Add first milestone →",
     },
     leads: {
@@ -1547,7 +1547,7 @@ export const dict: Dict = {
       requestsHintFmt: "{n} unresolved",
     },
     metrics: {
-      empty: "Upload your first measurement (MRR, DAU, runway, etc.).",
+      empty: "Your first measurement (MRR, DAU, runway, etc.) goes here.",
       cta: "Add metric →",
     },
     notices: {
@@ -1575,7 +1575,7 @@ export const dict: Dict = {
       preExistingFallback: "Pre-existing shareholders",
       verificationLabel: "Verification",
       overcommitWarn:
-        "The cap table exceeds total issued participations. Review the team and pre-existing shareholders in Composition.",
+        "The cap table exceeds total issued participations. The team and pre-existing shareholders can be reviewed in Composition.",
     },
     checklist: {
       completeBtn: "Complete →",
@@ -1605,9 +1605,9 @@ export const dict: Dict = {
     sectionCategorization: "Categorization",
     sectionVideo: "Video",
     videoIntro:
-      "If you have a pitch video, paste the link here.",
+      "If there's a pitch video, its link goes here.",
     videoHelper:
-      "If you paste a YouTube or Vimeo link it shows as an embedded video on the project page.",
+      "With a YouTube or Vimeo link, it shows as an embedded video on the project page.",
     sectionWhat: "What does it do?",
     sectionStructure: "Structure and backing",
     sectionPolicies: "Policies",
@@ -1643,7 +1643,7 @@ export const dict: Dict = {
     openLeadsWarnSingle: "⚠ You have {n} open lead",
     openLeadsWarnPlural: "⚠ You have {n} open leads",
     openLeadsBody:
-      "If you leave available at zero, those requests become impossible to fulfill. Review them in",
+      "With availability at zero, those requests become impossible to fulfill. They appear in",
     openLeadsLink: "Purchase interest",
     openLeadsTail: "before lowering the pool.",
     valuationLabel: "Amount",
@@ -1652,7 +1652,7 @@ export const dict: Dict = {
     currencyMxn: "MXN · Pesos",
     targetRaiseLabel: "Amount to raise (optional)",
     valuationHint:
-      "Enter the valuation to see the derived price per participation.",
+      "With the valuation, the derived price per participation appears.",
     pricePerShareLabel: "Price per participation (effective)",
     totalSharesLabel: "Total participations",
     valuationClean:
@@ -1661,7 +1661,7 @@ export const dict: Dict = {
     valuationWarnBodyFmt:
       "With this valuation, the \"clean\" split would be {price}/participation × {shares} participations. But your project already has {current} issued participations, so changing the total now would break the cap table.",
     valuationWarnBody2:
-      "You can update the valuation: the effective price per participation recalculates over existing participations. If you want to reissue the cap table, contact the AJDUT team.",
+      "You can update the valuation: the effective price per participation recalculates over existing participations. To reissue the cap table, the AJDUT team can help.",
     emissionLegend:
       "The total of issued participations stays fixed. To issue new participations you'll need to consult with the owners. You can update the valuation: the value per participation recalculates over the existing total.",
     saveBtn: "Save changes",
@@ -1677,13 +1677,13 @@ export const dict: Dict = {
     stageScale: "Scale",
     resaleAllowedFromLabel: "Resale allowed from",
     resaleAllowedFromHelper:
-      "Leave empty to allow resale from the start. If you set a date, holders can't resell before it.",
+      "If left empty, resale is enabled from the start. With a date, holders can't resell before that date.",
   },
 
   founderComposicion: {
     section: "Shareholder composition",
     description:
-      "Reassign each shareholder to one of the 4 classes. Members see the aggregated cap table by class — number of people and percentage — without names.",
+      "Each shareholder belongs to one of the 4 classes. Members see the aggregated cap table by class — number of people and percentage — without names.",
     genericError: "An error occurred.",
     teamLink: "Project team →",
     classes: {
@@ -1692,7 +1692,7 @@ export const dict: Dict = {
     holders: {
       eyebrow: "— AJDUT shareholders",
       helper:
-        "People who received participations through the platform. Assign a class to each one.",
+        "People who received participations through the platform. Each one can have its own class.",
       empty: "No shareholders assigned through AJDUT yet.",
       sharesAndPctFmt: "{n} participations · {pct}%",
       noClass: "— No class —",
@@ -1700,7 +1700,7 @@ export const dict: Dict = {
     external: {
       eyebrow: "— Pre-existing shareholders",
       helper:
-        "Investors who already held participations before AJDUT and aren't part of the founding team (you manage founders in Project team). You declare how many people, how many participations and their class.",
+        "Investors who already held participations before AJDUT and aren't part of the founding team (founders are managed in Project team). It includes how many people, how many participations and their class.",
       addBtn: "+ Add",
       defaultLabel: "Holding",
       peopleSingleFmt: "{n} person · {cls}",
@@ -1728,7 +1728,7 @@ export const dict: Dict = {
   founderAvisos: {
     section: "Notices to members",
     description:
-      "Send an email to all members of your project, or to a single one, to announce reports, votes or relevant information.",
+      "An email to all members of your project, or to a single one, to announce reports, votes or relevant information.",
     emptyNoMembers:
       "Your project doesn't have members with assigned participations yet. Once participations are distributed, you'll be able to send notices from here.",
     recipientsLabel: "Recipients",
@@ -1737,8 +1737,8 @@ export const dict: Dict = {
     memberLabel: "Member",
     subjectLabel: "Subject",
     bodyLabel: "Message",
-    errEmpty: "Fill in the subject and message.",
-    errSelectMember: "Choose a recipient member.",
+    errEmpty: "The subject and message are missing.",
+    errSelectMember: "A recipient member is missing.",
     sendBtnFallback: "Send →",
     sendBtnAllFmtSingle: "Send to {n} member →",
     sendBtnAllFmtPlural: "Send to {n} members →",
@@ -1936,12 +1936,12 @@ export const dict: Dict = {
     actions: {
       proposeTitle: "Propose assignment to admin",
       proposeDescFmt:
-        "You're about to propose assigning {n} participations to {name}. The proposal stays pending validation from the AJDUT team — only when an admin approves it the pool is decremented and the certificate is issued. Make sure to close the payment off-platform first.",
+        "You're about to propose assigning {n} participations to {name}. The proposal stays pending validation from the AJDUT team — only when an admin approves it the pool is decremented and the certificate is issued. Important: the payment is closed off-platform first.",
       proposeSubmitBtn: "Yes, send proposal to admin",
       proposeSubmittingBtn: "Proposing…",
       askMoreInfoTitle: "Request more information",
       askMoreInfoDescFmt:
-        "Write what you need to know before moving forward. {name} gets an email with your question and replies outside the platform.",
+        "Here goes what you need to know before moving forward. {name} gets an email with your question and replies outside the platform.",
       askMoreInfoPlaceholder:
         "E.g.: Could you tell me a bit more about your experience in the sector and why this project interests you?",
       askMoreInfoSendBtn: "Send question",
@@ -1998,7 +1998,7 @@ export const dict: Dict = {
     countingBtn: "Computing…",
     countResultSingle: "{n} recipient",
     countResultPlural: "{n} recipients",
-    countStale: "Filters changed — recompute.",
+    countStale: "Filters changed — the count is out of date.",
     sendBtnIdle: "Send →",
     sendBtnFmt: "Send to {n} recipients →",
     sendBtnFmtSingle: "Send to {n} recipient →",
@@ -2006,8 +2006,8 @@ export const dict: Dict = {
     sendDisclaimer: "The email is sent as “AJDUT Team”.",
     successFmt: "Notice sent to {n} recipients.",
     successFmtSingle: "Notice sent to {n} recipient.",
-    errEmpty: "Fill in the subject and message.",
-    errNotCounted: "Compute recipients before sending.",
+    errEmpty: "The subject and message are missing.",
+    errNotCounted: "The recipients still need to be computed before sending.",
   },
 
   legal: {
@@ -2164,12 +2164,12 @@ export const dict: Dict = {
   founderVesting: {
     section: "Vesting / scheduled grants",
     description:
-      "Define a schedule to deliver participations over time (for example, 1,000 participations across 10 monthly installments). The system creates each grant automatically on its date: it becomes a pending proposal that goes through the same validation as a direct invite. You don't have to do it by hand every month.",
+      "A schedule to deliver participations over time (for example, 1,000 participations across 10 monthly installments). The system creates each grant automatically on its date: it becomes a pending proposal that goes through the same validation as a direct invite. You don't have to do it by hand every month.",
     poolLabel: "— Pool available now",
 
     listTitle: "Schedules",
     emptyList:
-      "You haven't created any vesting schedule yet. Use the form below to schedule the first grant.",
+      "You haven't created any vesting schedule yet. The form below schedules the first grant.",
     colTotal: "Total",
     colProgress: "Delivered",
     colNext: "Next grant",
@@ -2191,7 +2191,7 @@ export const dict: Dict = {
 
     formTitle: "New schedule",
     formIntro:
-      "Choose the recipient, the total to deliver and how it splits over time. The monthly option generates equal installments automatically.",
+      "The recipient, the total to deliver and how it splits over time. The monthly option generates equal installments automatically.",
 
     targetModeLabel: "Recipient",
     targetModeUser: "Existing member",
@@ -2213,7 +2213,7 @@ export const dict: Dict = {
     perInstallmentFmt: "≈ {n} participations per installment (the last one adjusts the remainder)",
 
     customHelper:
-      "Add each installment with its amount and date. The sum must match the total.",
+      "Each installment has its amount and date. The sum must match the total.",
     customSharesLabel: "Participations",
     customDateLabel: "Date",
     addRowBtn: "+ Add installment",

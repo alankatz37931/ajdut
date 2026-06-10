@@ -85,10 +85,10 @@ export async function createVestingScheduleAction(
     targetUserId = targetUserIdRaw;
   } else {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return { ok: false, error: "Ingresá un email válido para el destinatario." };
+      return { ok: false, error: "El email del destinatario no es válido." };
     }
     if (name.length < 2) {
-      return { ok: false, error: "Ingresá el nombre del destinatario." };
+      return { ok: false, error: "Falta el nombre del destinatario." };
     }
     targetEmail = email;
     targetName = name;
@@ -108,7 +108,7 @@ export async function createVestingScheduleAction(
       return { ok: false, error: "El número de tramos debe ser un entero mayor o igual a 1." };
     }
     if (!startAt) {
-      return { ok: false, error: "Ingresá una fecha de inicio válida." };
+      return { ok: false, error: "La fecha de inicio no es válida." };
     }
     monthly = { installments, startAt };
   } else {
@@ -121,7 +121,7 @@ export async function createVestingScheduleAction(
       return { ok: false, error: "No se pudieron leer los tramos personalizados." };
     }
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      return { ok: false, error: "Agregá al menos un tramo." };
+      return { ok: false, error: "Hace falta al menos un tramo." };
     }
     const built: Array<{ shareCount: number; releaseAt: Date }> = [];
     for (const r of parsed) {

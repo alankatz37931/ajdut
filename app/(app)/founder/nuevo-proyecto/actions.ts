@@ -71,9 +71,9 @@ export async function createProjectAction(
   const dividendsFrequency = get("dividendsFrequency") || undefined;
 
   if (name.length < 2) return { ok: false, error: "Falta el nombre del proyecto." };
-  if (oneLiner.length < 10) return { ok: false, error: "Escribí un one-liner descriptivo." };
-  if (description.length < 30) return { ok: false, error: "Agregá una descripción más completa (mín 30 caracteres)." };
-  if (sector.length < 2) return { ok: false, error: "Indicá un sector." };
+  if (oneLiner.length < 10) return { ok: false, error: "Falta un one-liner descriptivo." };
+  if (description.length < 30) return { ok: false, error: "La descripción necesita más detalle (mín 30 caracteres)." };
+  if (sector.length < 2) return { ok: false, error: "Falta el sector." };
   if (!VALID_STAGES.includes(stageRaw as Stage)) return { ok: false, error: "Stage inválido." };
   const kind: Kind = VALID_KINDS.includes(kindRaw as Kind) ? (kindRaw as Kind) : "STARTUP";
   let targetRaiseAmount: number | undefined;
@@ -84,10 +84,10 @@ export async function createProjectAction(
     }
     targetRaiseAmount = n;
   }
-  if (problemStatement.length < 20) return { ok: false, error: "Contá más sobre el problema (mín 20 caracteres)." };
-  if (solutionStatement.length < 20) return { ok: false, error: "Contá más sobre la solución (mín 20 caracteres)." };
-  if (businessModel.length < 10) return { ok: false, error: "Definí el modelo de negocio." };
-  if (jurisdiction.length < 2) return { ok: false, error: "Indicá la jurisdicción legal." };
+  if (problemStatement.length < 20) return { ok: false, error: "El problema necesita más detalle (mín 20 caracteres)." };
+  if (solutionStatement.length < 20) return { ok: false, error: "La solución necesita más detalle (mín 20 caracteres)." };
+  if (businessModel.length < 10) return { ok: false, error: "Falta el modelo de negocio." };
+  if (jurisdiction.length < 2) return { ok: false, error: "Falta la jurisdicción legal." };
   if (currency !== "USD" && currency !== "MXN") {
     return { ok: false, error: "Moneda inválida." };
   }
@@ -98,7 +98,7 @@ export async function createProjectAction(
   if (!Number.isFinite(totalParticipations) || totalParticipations < 1) {
     return {
       ok: false,
-      error: "Ingresá un total de participaciones válido (entero ≥ 1).",
+      error: "El total de participaciones debe ser un entero válido (≥ 1).",
     };
   }
   // Máximo sano para evitar overflow (el dominio reaplica el mismo límite).
@@ -110,7 +110,7 @@ export async function createProjectAction(
   }
   const pricePerParticipation = Number.parseFloat(pricePerParticipationRaw);
   if (!Number.isFinite(pricePerParticipation) || pricePerParticipation <= 0) {
-    return { ok: false, error: "Ingresá un valor por participación válido." };
+    return { ok: false, error: "El valor por participación no es válido." };
   }
   // Cap defensivo sobre la valoración derivada: > USD 1 cuatrillón es siempre
   // input erróneo (o intento de overflow numérico).

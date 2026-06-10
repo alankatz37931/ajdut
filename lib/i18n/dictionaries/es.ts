@@ -140,11 +140,11 @@ export const dict = {
     } as Record<string, string>,
     kind: {
       eyebrow: "— ¿Cómo querés sumarte?",
-      intro: "Elegí el tipo de aplicación.",
+      intro: "Hay dos tipos de aplicación.",
       personTitle: "Socio",
       personSubtitle: "Quiero ser miembro de la comunidad",
       personDescription:
-        "Sumate como socio individual: ver proyectos, manifestar interés y participar de la red.",
+        "Para sumarse como socio individual: ver proyectos, manifestar interés y participar de la red.",
       companyTitle: "Empresa",
       companySubtitle: "Quiero registrar mi proyecto",
       companyDescription:
@@ -236,10 +236,10 @@ export const dict = {
     imageLoaded: "Imagen cargada",
     viewFile: "ver archivo ↗",
     remove: "quitar ×",
-    dropHere: "Soltá el archivo acá",
-    dragOrPick: "Arrastrá un archivo o hacé clic para elegir",
+    dropHere: "Acá va el archivo",
+    dragOrPick: "Un archivo arrastrado acá, o un clic para elegir",
     tooBigFmt: "El archivo supera {n}MB.",
-    uploadError: "No se pudo subir el archivo. Probá de nuevo.",
+    uploadError: "No se pudo subir el archivo. Puede reintentarse.",
     previewAlt: "Vista previa",
   },
 
@@ -275,9 +275,9 @@ export const dict = {
     emailLabel: "Email de tu cuenta",
     submitBtn: "Enviar link de recuperación",
     submittingBtn: "Enviando…",
-    errEmailInvalid: "Ingresá un email válido.",
+    errEmailInvalid: "El email no es válido.",
     submittedEyebrow: "Solicitud recibida",
-    submittedTitle: "Revisá tu email.",
+    submittedTitle: "Hay un email en camino.",
     submittedBody:
       "Si {email} está registrado en AJDUT, te enviamos un link de un solo uso para restablecer tu contraseña. El link es válido por 1 hora.",
     submittedDisclaimer:
@@ -289,7 +289,7 @@ export const dict = {
     back: "Acceso aprobado",
     helloName: "Hola, {name}.",
     intro:
-      "Tu aplicación fue aprobada. Establecé tu contraseña para entrar a AJDUT.",
+      "Tu aplicación fue aprobada. Con una contraseña ya tenés acceso a AJDUT.",
     accountLabel: "Cuenta:",
     passwordLabel: "Contraseña",
     repeatLabel: "Repetir contraseña",
@@ -300,19 +300,19 @@ export const dict = {
     loggingInBtn: "Entrando…",
     submitBtn: "Establecer y entrar",
     autoLoginFailed:
-      "Contraseña establecida, pero falló el login automático. Probá entrar en /acceder.",
+      "Contraseña establecida, pero falló el login automático. El acceso queda disponible en /acceder.",
     errPasswordMismatch: "Las contraseñas no coinciden.",
     invalid: {
       back: "Link inválido",
       notFoundTitle: "Link no válido",
       notFoundBody:
-        "El link que usaste no corresponde a ningún registro. Si te aprobaron recientemente, revisá tu email por el link más reciente.",
+        "El link que usaste no corresponde a ningún registro. Si te aprobaron recientemente, el link más reciente está en tu email.",
       usedTitle: "Link ya utilizado",
       usedBody:
-        "Este link de un solo uso ya fue consumido. Si necesitás restablecer tu contraseña, contactá al equipo de AJDUT.",
+        "Este link de un solo uso ya fue consumido. Para restablecer tu contraseña, el equipo de AJDUT puede ayudarte.",
       expiredTitle: "Link expirado",
       expiredBody:
-        "Pasaron más de 72 horas desde la aprobación. Pedile al admin de AJDUT que te envíe un link nuevo.",
+        "Pasaron más de 72 horas desde la aprobación. El admin de AJDUT puede enviarte un link nuevo.",
     },
   },
 
@@ -353,7 +353,7 @@ export const dict = {
     sectionNewPoll: "Nueva encuesta",
     feed: {
       empty:
-        "Todavía no hay nada por acá. Empezá la conversación con un mensaje o creá la primera encuesta.",
+        "Todavía no hay nada por acá. Un mensaje arranca la conversación, o la primera encuesta.",
       you: "(vos)",
       deleted: "Mensaje ocultado por moderación",
       confirmDelete:
@@ -364,7 +364,7 @@ export const dict = {
     composer: {
       bodyLabel: "Mensaje",
       linkLabel: "Adjuntar link (opcional)",
-      errEmpty: "Escribí un mensaje o adjuntá un link.",
+      errEmpty: "Hace falta un mensaje o un link.",
       errBadUrl: "El link debe empezar con http:// o https://",
       sendBtn: "Enviar",
       sendingBtn: "Enviando…",
@@ -382,7 +382,7 @@ export const dict = {
       closesLabel: "Cierra el",
       closesOptional: "(opcional)",
       errEmptyQuestion: "La pregunta no puede estar vacía.",
-      errTooFewOpts: "Agregá al menos 2 opciones con contenido.",
+      errTooFewOpts: "Hacen falta al menos 2 opciones con contenido.",
       submitBtn: "Crear encuesta",
       submittingBtn: "Creando…",
       pollLabel: "Encuesta",
@@ -452,10 +452,10 @@ export const dict = {
     uploadAriaNew: "Subir foto de perfil",
     uploadAriaChange: "Cambiar foto de perfil",
     uploadTooBig: "El archivo supera {n}MB.",
-    uploadFailed: "Error al subir. Probá de nuevo.",
+    uploadFailed: "Error al subir. Puede reintentarse.",
     idPhotoLabel: "Identificación oficial",
     idPhotoHelper:
-      "Subí una foto o scan de tu cédula, pasaporte, INE o DNI. Solo vos y el equipo de AJDUT pueden verla.",
+      "Una foto o scan de tu cédula, pasaporte, INE o DNI. Solo vos y el equipo de AJDUT pueden verla.",
     idPhotoUploadBtn: "Subir identificación",
     idPhotoChangeBtn: "Reemplazar identificación",
     idPhotoUploaded: "Identificación cargada",
@@ -664,7 +664,7 @@ export const dict = {
       preExistingFallback: "Socios pre-existentes",
       verificationLabel: "Verificación",
       overcommitWarn:
-        "El cap table excede el total emitido. Revisá socios pre-existentes en Composición.",
+        "El cap table excede el total emitido. Los socios pre-existentes figuran en Composición.",
     },
     participationStatus: {
       ASSIGNED: "Asignada",
@@ -706,7 +706,7 @@ export const dict = {
     cancel: "Cancelar",
     notAvailableYet: "Participación no disponible aún",
     noValuationBody:
-      "Este proyecto todavía no declaró su valoración — no podés indicar un monto. Volvé a revisar más adelante; el project owner publicará la valoración cuando esté lista.",
+      "Este proyecto todavía no declaró su valoración — no se puede indicar un monto. La valoración queda disponible más adelante; el project owner la publica cuando esté lista.",
     supportKindLabel: "Tipo de apoyo",
     supportKind: {
       CAPITAL: "Capital",
@@ -737,7 +737,7 @@ export const dict = {
       "Este proyecto todavía no declaró su valoración — no podés indicar un monto.",
     errorMinAmount: "Mínimo:",
     errorOneShare: "(1 participación)",
-    errorEnterValid: "Ingresá un monto válido.",
+    errorEnterValid: "El monto no es válido.",
     errorOverMax: "El monto excede lo disponible. Máximo:",
     errorMaxShares: "Máximo disponible:",
     footerNote:
@@ -753,7 +753,7 @@ export const dict = {
     backShort: "← Volver",
     cancel: "Cancelar",
     explainBody:
-      "Pedile al responsable del proyecto acceso a la información ampliada —documentos y reportes— para conocer el proyecto en profundidad.",
+      "El responsable del proyecto puede dar acceso a la información ampliada —documentos y reportes— para conocer el proyecto en profundidad.",
     messageLabel: "Mensaje al project owner",
     messageOptional: "(opcional)",
     messagePlaceholderPrefix: "Mi nombre es",
@@ -936,15 +936,15 @@ export const dict = {
       designatingSubmitBtn: "Designar y enviar a aprobación",
       designatingSubmittingBtn: "Enviando…",
       errNoteTooShort: "La nota debe tener al menos 10 caracteres.",
-      errContactRequired: "Indicá un medio de contacto.",
-      errBuyerRequired: "Elegí un comprador.",
+      errContactRequired: "Falta un medio de contacto.",
+      errBuyerRequired: "Falta elegir un comprador.",
       listingShareCountLabel: "Cuántas participaciones querés vender",
       listingShareCountHelperFmt:
         "Tenés {total} participaciones; podés revender hasta {available}.",
       listingPricePerShareLabelFmt: "Precio por participación ({currency})",
       listingPricePerShareHelperFmt: "Precio estimado actual: {price}.",
       listingPricePerShareHelperNoEstimate:
-        "Definí libremente el precio por participación.",
+        "El precio por participación es libre.",
       listingTotalAskLabelFmt: "Total pedido: {total}",
       errShareCountOutOfRange: "Cantidad fuera de rango.",
       errPriceInvalid: "Precio inválido.",
@@ -975,8 +975,8 @@ export const dict = {
       projectNotFound: "Proyecto no encontrado.",
       participationNotFound: "Participación no encontrada.",
       notOwner: "Solo el titular puede listar esta participación.",
-      contactInvalid: "Indicá un medio de contacto válido.",
-      buyerRequired: "Elegí un comprador.",
+      contactInvalid: "El medio de contacto no es válido.",
+      buyerRequired: "Falta elegir un comprador.",
       cannotAcquireOwn: "No podés adquirir tu propia participación.",
       serverError: "Error interno del servidor.",
     },
@@ -984,7 +984,7 @@ export const dict = {
 
   // Página pública donde el comprador propuesto confirma una reventa (token).
   confirmarReventa: {
-    title: "Confirmá tu compra",
+    title: "Tu compra, pendiente de confirmación",
     eyebrow: "— Reventa pendiente de tu confirmación",
     body:
       "{seller} acordó venderte {shares} participaciones de {project}. Antes de ejecutar el traspaso, el project owner y el equipo de AJDUT validan la operación. Necesitamos tu OK.",
@@ -1004,10 +1004,10 @@ export const dict = {
       "Tu confirmación quedó registrada el {date}. No hace falta volver a confirmar.",
     invalidTitle: "Link no válido",
     invalidBody:
-      "Este link no corresponde a ninguna reventa activa. Si te llegó por mail recientemente, revisá el email más reciente.",
+      "Este link no corresponde a ninguna reventa activa. Si te llegó por mail recientemente, el email más reciente es el válido.",
     expiredTitle: "Link expirado",
     expiredBody:
-      "Este link de confirmación venció. Pedile al vendedor que reinicie el trato para recibir uno nuevo.",
+      "Este link de confirmación venció. El vendedor puede reiniciar el trato para generar uno nuevo.",
     resolvedTitle: "Reventa ya resuelta",
     resolvedBody:
       "Esta reventa ya fue ejecutada o cancelada. No hay nada más que confirmar de tu lado.",
@@ -1030,7 +1030,7 @@ export const dict = {
       description: "",
       fileLabel: "",
       fileHelper: "PDF, Excel o Word · máximo 25 MB.",
-      errNoFile: "Subí un archivo primero.",
+      errNoFile: "Falta un archivo.",
       publishBtn: "Publicar reporte →",
       publishingBtn: "Publicando…",
       cancelBtn: "Cancelar",
@@ -1039,7 +1039,7 @@ export const dict = {
       projectNotFound: "Proyecto no encontrado.",
       noPermission: "No tenés permiso sobre este proyecto.",
       nameRequired: "El reporte necesita un nombre.",
-      fileRequired: "Subí el archivo del reporte.",
+      fileRequired: "Falta el archivo del reporte.",
       uploadError: "Error al subir el reporte.",
       notFound: "Reporte no encontrado.",
       deleteError: "Error al eliminar el reporte.",
@@ -1112,7 +1112,7 @@ export const dict = {
       overrideBtn: "Override tripartito",
       overrideTitle: "Override de validación tripartita",
       overrideDescription:
-        "Vas a ejecutar el traspaso aunque el comprador o el project owner no hayan confirmado por la plataforma. Usalo sólo si confirmaron por otro canal. Quedará registrado en la auditoría.",
+        "Vas a ejecutar el traspaso aunque el comprador o el project owner no hayan confirmado por la plataforma. Es válido sólo si confirmaron por otro canal. Quedará registrado en la auditoría.",
       overrideNoteLabel: "Justificación (mínimo 10 caracteres)",
       overrideConfirmBtn: "Sí, forzar y ejecutar",
     },
@@ -1261,14 +1261,14 @@ export const dict = {
     bothPartiesPendingTooltip:
       "Esperando que el receptor confirme antes de poder aprobar.",
     targetPendingTooltip:
-      "El destinatario todavía no confirmó por mail. Re-enviá o usá override.",
+      "El destinatario todavía no confirmó por mail. Queda reenviar o usar override.",
     overrideBtn: "Override bilateral",
     overrideTitle: "Override de validación bilateral",
     overrideDescription:
-      "Vas a ejecutar la asignación aunque el receptor no haya confirmado por la plataforma. Usalo sólo si confirmó por otro canal. Quedará registrado en la auditoría.",
+      "Vas a ejecutar la asignación aunque el receptor no haya confirmado por la plataforma. Es válido sólo si confirmó por otro canal. Quedará registrado en la auditoría.",
     overrideNoteLabel: "Justificación (mínimo 10 caracteres)",
     overrideConfirmBtn: "Sí, forzar y ejecutar",
-    confirmAsignacionTitle: "Confirmá tu asignación",
+    confirmAsignacionTitle: "Tu asignación, pendiente de confirmación",
     confirmAsignacionEyebrow: "— Asignación pendiente de tu confirmación",
     confirmAsignacionBody:
       "{proposer} propuso asignarte {shares} participaciones de {project}. Antes de que el equipo de AJDUT ejecute la operación, necesitamos tu OK.",
@@ -1286,10 +1286,10 @@ export const dict = {
       "Tu confirmación quedó registrada el {date}. No hace falta volver a confirmar.",
     confirmAsignacionInvalidTitle: "Link no válido",
     confirmAsignacionInvalidBody:
-      "Este link no corresponde a ninguna propuesta activa. Si te llegó por mail recientemente, revisá el email más reciente del equipo.",
+      "Este link no corresponde a ninguna propuesta activa. Si te llegó por mail recientemente, el email más reciente del equipo es el válido.",
     confirmAsignacionExpiredTitle: "Link expirado",
     confirmAsignacionExpiredBody:
-      "Este link de confirmación venció. Pedile al equipo de AJDUT que te envíe uno nuevo.",
+      "Este link de confirmación venció. El equipo de AJDUT puede enviarte uno nuevo.",
     confirmAsignacionResolvedTitle: "Asignación ya resuelta",
     confirmAsignacionResolvedBody:
       "El equipo de AJDUT ya cerró esta propuesta de asignación. No hay nada más que confirmar de tu lado.",
@@ -1431,9 +1431,9 @@ export const dict = {
 
   founderNuevoProyecto: {
     back: "Project owner · Nuevo proyecto",
-    title: "Registrá tu empresa",
+    title: "Registro de tu empresa",
     intro:
-      "Completá los datos de tu compañía y la valoración actual. Una vez enviado, el equipo de AJDUT revisa la información antes de activar el proyecto para los miembros. Recibís un email con la confirmación.",
+      "Acá van los datos de tu compañía y la valoración actual. Una vez enviado, el equipo de AJDUT revisa la información antes de activar el proyecto para los miembros. Recibís un email con la confirmación.",
     sectionIdentity: "Identidad",
     sectionLegal: "Datos legales",
     sectionCategorization: "Categorización",
@@ -1465,12 +1465,12 @@ export const dict = {
     policyDividendsLabel: "Política de dividendos (opcional)",
     dividendsFreqLabel: "Frecuencia de dividendos (opcional)",
     videoIntro:
-      "Si tenés un video de presentación del proyecto, pegá el link acá.",
+      "Si hay un video de presentación del proyecto, su link va acá.",
     videoUrlLabel: "URL del video (YouTube / Vimeo)",
     videoHelper:
-      "Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.",
+      "Con un link de YouTube o Vimeo, el video se muestra embebido en la ficha.",
     valuationIntro:
-      "Definí cuántas participaciones totales emite tu empresa y el valor de cada una. La valoración se calcula como total × valor. El total queda como pool disponible para los miembros.",
+      "Acá van cuántas participaciones totales emite tu empresa y el valor de cada una. La valoración se calcula como total × valor. El total queda como pool disponible para los miembros.",
     valuationLabel: "Monto",
     currencyLabel: "Moneda",
     currencyUsd: "USD · Dólares",
@@ -1506,7 +1506,7 @@ export const dict = {
     newProjectLink: "+ Otro proyecto",
     vestingLink: "Vesting / entregas programadas",
     vestingHint:
-      "Asigná participaciones a los miembros por tramos en el tiempo, no todo de una vez.",
+      "Las participaciones se asignan a los miembros por tramos en el tiempo, no todo de una vez.",
     sectionResumen: "Resumen",
     sectionEquipo: "Equipo del proyecto",
     sectionHitos: "Hitos del roadmap",
@@ -1537,13 +1537,13 @@ export const dict = {
     },
     team: {
       inactive: "inactivo",
-      empty: "Cargá quiénes están detrás del proyecto.",
+      empty: "Todavía no se cargó quiénes están detrás del proyecto.",
       cta: "Cargar equipo →",
     },
     milestones: {
       statusAchieved: "Logrado",
       statusPlanned: "Planeado",
-      empty: "Marcá tu roadmap — lo prometido y lo cumplido.",
+      empty: "Tu roadmap — lo prometido y lo cumplido — va acá.",
       cta: "Agregar primer hito →",
     },
     leads: {
@@ -1555,7 +1555,7 @@ export const dict = {
       requestsHintFmt: "{n} sin resolver",
     },
     metrics: {
-      empty: "Subí tu primera medición (MRR, DAU, runway, etc.).",
+      empty: "Acá va tu primera medición (MRR, DAU, runway, etc.).",
       cta: "Cargar métrica →",
     },
     notices: {
@@ -1583,7 +1583,7 @@ export const dict = {
       preExistingFallback: "Socios pre-existentes",
       verificationLabel: "Verificación",
       overcommitWarn:
-        "El cap table excede el total emitido. Revisá el equipo y los socios pre-existentes en Composición.",
+        "El cap table excede el total emitido. El equipo y los socios pre-existentes figuran en Composición.",
     },
     checklist: {
       completeBtn: "Completar →",
@@ -1613,9 +1613,9 @@ export const dict = {
     sectionCategorization: "Categorización",
     sectionVideo: "Video",
     videoIntro:
-      "Si tenés un video de presentación, pegá el link acá.",
+      "Si hay un video de presentación, su link va acá.",
     videoHelper:
-      "Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.",
+      "Con un link de YouTube o Vimeo, el video se muestra embebido en la ficha.",
     sectionWhat: "¿Qué hace?",
     sectionStructure: "Estructura y respaldo",
     sectionPolicies: "Políticas",
@@ -1651,7 +1651,7 @@ export const dict = {
     openLeadsWarnSingle: "⚠ Tenés {n} lead abierto",
     openLeadsWarnPlural: "⚠ Tenés {n} leads abiertos",
     openLeadsBody:
-      "Si dejás disponibles en cero, esos pedidos quedan imposibles de cumplir. Revisalos en",
+      "Con disponibles en cero, esos pedidos quedan imposibles de cumplir. Figuran en",
     openLeadsLink: "Interés de compra",
     openLeadsTail: "antes de bajar el pool.",
     valuationLabel: "Monto",
@@ -1660,7 +1660,7 @@ export const dict = {
     currencyMxn: "MXN · Pesos",
     targetRaiseLabel: "Monto a levantar (opcional)",
     valuationHint:
-      "Cargá la valoración para ver el precio por participación derivado.",
+      "Con la valoración cargada se ve el precio por participación derivado.",
     pricePerShareLabel: "Precio por participación (efectivo)",
     totalSharesLabel: "Participaciones totales",
     valuationClean:
@@ -1669,7 +1669,7 @@ export const dict = {
     valuationWarnBodyFmt:
       "Con esta valoración, lo \"limpio\" sería {price}/participación × {shares} participaciones. Pero tu proyecto ya tiene {current} participaciones emitidas, así que cambiar el total ahora rompería el cap table.",
     valuationWarnBody2:
-      "Podés actualizar la valoración: el precio por participación efectivo se recalcula sobre las participaciones existentes. Si querés reemitir el cap table, contactá al equipo de AJDUT.",
+      "Podés actualizar la valoración: el precio por participación efectivo se recalcula sobre las participaciones existentes. Para reemitir el cap table, el equipo de AJDUT puede ayudarte.",
     emissionLegend:
       "El total de participaciones emitidas queda fijo. Para emitir nuevas participaciones deberás consultarlo con los propietarios. Podés actualizar la valoración: el valor por participación se recalcula sobre el total existente.",
     saveBtn: "Guardar cambios",
@@ -1685,13 +1685,13 @@ export const dict = {
     stageScale: "Scale",
     resaleAllowedFromLabel: "Reventa habilitada a partir de",
     resaleAllowedFromHelper:
-      "Dejá vacío para permitir reventa desde el inicio. Si ponés una fecha, los socios no podrán revender antes.",
+      "Si queda vacío, la reventa está habilitada desde el inicio. Con una fecha, los socios no pueden revender antes de esa fecha.",
   },
 
   founderComposicion: {
     section: "Composición de participaciones",
     description:
-      "Reasigná a cada participante a una de las 4 clases. Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres.",
+      "Cada participante pertenece a una de las 4 clases. Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres.",
     genericError: "Ocurrió un error.",
     teamLink: "Equipo del proyecto →",
     classes: {
@@ -1700,7 +1700,7 @@ export const dict = {
     holders: {
       eyebrow: "— Participantes de AJDUT",
       helper:
-        "Personas que recibieron participaciones a través de la plataforma. Asigná una clase a cada una.",
+        "Personas que recibieron participaciones a través de la plataforma. Cada una puede tener su clase.",
       empty: "Todavía no hay participantes asignados a través de AJDUT.",
       sharesAndPctFmt: "{n} participaciones · {pct}%",
       noClass: "— Sin clase —",
@@ -1708,7 +1708,7 @@ export const dict = {
     external: {
       eyebrow: "— Participantes pre-existentes",
       helper:
-        "Inversores que ya tenían participaciones antes de AJDUT y que no son parte del equipo fundador (a los fundadores los gestionás en Equipo del proyecto). Declarás cuántas personas, cuántas participaciones y su clase.",
+        "Inversores que ya tenían participaciones antes de AJDUT y que no son parte del equipo fundador (los fundadores se gestionan en Equipo del proyecto). Incluye cuántas personas, cuántas participaciones y su clase.",
       addBtn: "+ Agregar",
       defaultLabel: "Tenencia",
       peopleSingleFmt: "{n} persona · {cls}",
@@ -1736,7 +1736,7 @@ export const dict = {
   founderAvisos: {
     section: "Avisos a miembros",
     description:
-      "Enviá un email a todos los miembros de tu proyecto, o a uno en particular, para avisar reportes, votaciones o información relevante.",
+      "Un email a todos los miembros de tu proyecto, o a uno en particular, para avisar reportes, votaciones o información relevante.",
     emptyNoMembers:
       "Tu proyecto todavía no tiene miembros con participaciones asignadas. Cuando se distribuyan participaciones, vas a poder enviarles avisos desde acá.",
     recipientsLabel: "Destinatarios",
@@ -1745,8 +1745,8 @@ export const dict = {
     memberLabel: "Miembro",
     subjectLabel: "Asunto",
     bodyLabel: "Mensaje",
-    errEmpty: "Completá el asunto y el mensaje del aviso.",
-    errSelectMember: "Elegí un miembro destinatario.",
+    errEmpty: "Faltan el asunto y el mensaje del aviso.",
+    errSelectMember: "Falta un miembro destinatario.",
     sendBtnFallback: "Enviar →",
     sendBtnAllFmtSingle: "Enviar a {n} miembro →",
     sendBtnAllFmtPlural: "Enviar a {n} miembros →",
@@ -1816,7 +1816,7 @@ export const dict = {
     removeConfirm: "¿Eliminar este miembro?",
     classLabel: "Clase / tipo",
     classNone: "Sin clasificar",
-    classHintNoClasses: "Creá clases de participantes en Composición.",
+    classHintNoClasses: "Las clases de participantes se crean en Composición.",
     vestingModeLabel: "Asignación de participaciones",
     vestingModeAllAtOnce: "Todas juntas",
     vestingModeGradual: "De a poco",
@@ -1880,7 +1880,7 @@ export const dict = {
   founderInvitar: {
     section: "Invitar miembro",
     description:
-      "Proponé agregar un socio a tu proyecto. La propuesta queda pendiente de validación por el equipo de AJDUT. Cuando un admin la apruebe se crea la cuenta (si hace falta), se asignan las participaciones desde el pool y se le envía el email al invitado.",
+      "Una propuesta para agregar un socio a tu proyecto. La propuesta queda pendiente de validación por el equipo de AJDUT. Cuando un admin la apruebe se crea la cuenta (si hace falta), se asignan las participaciones desde el pool y se le envía el email al invitado.",
     poolLabel: "— Pool disponible para proponer",
     emailLabel: "Email del invitado",
     fullNameLabel: "Nombre completo",
@@ -1893,7 +1893,7 @@ export const dict = {
     successBodyFmt:
       "Propusiste asignar {n} participaciones a {name} ({email}). El equipo de AJDUT recibió el aviso. Cuando lo aprueben, se va a crear la cuenta (si hace falta), se va a emitir el certificado y vamos a avisarle al invitado por email.",
     emptyPool:
-      "No hay participaciones disponibles en el pool. Para invitar nuevos miembros, primero recuperá participaciones desde el pool del proyecto.",
+      "No hay participaciones disponibles en el pool. Para invitar nuevos miembros, primero hace falta recuperar participaciones desde el pool del proyecto.",
     sendBtn: "Proponer al admin →",
     sendingBtn: "Enviando…",
     disclaimer:
@@ -1903,7 +1903,7 @@ export const dict = {
   founderLeads: {
     section: "Interés de compra",
     description:
-      "Quienes piden información primero y quienes ya quieren participar. Aprobá solicitudes, contactá leads y proponé al admin las asignaciones.",
+      "Quienes piden información primero y quienes ya quieren participar. Desde acá se aprueban solicitudes, se contactan leads y se proponen al admin las asignaciones.",
     statRequests: "Solicitudes",
     statRequestsHint: "pendientes",
     statOpen: "Sin contactar",
@@ -1945,12 +1945,12 @@ export const dict = {
     actions: {
       proposeTitle: "Proponer asignación al admin",
       proposeDescFmt:
-        "Vas a proponer la asignación de {n} participaciones a {name}. La propuesta queda pendiente de validación por el equipo de AJDUT — recién cuando un admin la apruebe se decrementa el pool y se emite el certificado. Asegurate de haber cerrado el pago por fuera antes.",
+        "Vas a proponer la asignación de {n} participaciones a {name}. La propuesta queda pendiente de validación por el equipo de AJDUT — recién cuando un admin la apruebe se decrementa el pool y se emite el certificado. Es importante tener el pago cerrado por fuera antes.",
       proposeSubmitBtn: "Sí, enviar propuesta al admin",
       proposeSubmittingBtn: "Proponiendo…",
       askMoreInfoTitle: "Pedir más información",
       askMoreInfoDescFmt:
-        "Escribí qué necesitás saber antes de avanzar. {name} recibe un email con tu pregunta y responde por fuera de la plataforma.",
+        "Acá va lo que necesitás saber antes de avanzar. {name} recibe un email con tu pregunta y responde por fuera de la plataforma.",
       askMoreInfoPlaceholder:
         "Ej: ¿Podrías contarme un poco más sobre tu experiencia en el sector y por qué te interesa este proyecto?",
       askMoreInfoSendBtn: "Enviar pregunta",
@@ -1984,7 +1984,7 @@ export const dict = {
   adminAvisos: {
     eyebrow: "— Admin",
     title: "Avisos a usuarios",
-    intro: "Enviá emails a los miembros filtrados por rol o proyecto.",
+    intro: "Emails a los miembros filtrados por rol o proyecto.",
     sectionFilters: "Filtros",
     sectionMessage: "Mensaje",
     sectionSend: "Envío",
@@ -2015,8 +2015,8 @@ export const dict = {
     sendDisclaimer: "El email se envía como “Equipo AJDUT”.",
     successFmt: "Aviso enviado a {n} destinatarios.",
     successFmtSingle: "Aviso enviado a {n} destinatario.",
-    errEmpty: "Completá el asunto y el mensaje del aviso.",
-    errNotCounted: "Calculá los destinatarios antes de enviar.",
+    errEmpty: "Faltan el asunto y el mensaje del aviso.",
+    errNotCounted: "Falta calcular los destinatarios antes de enviar.",
   },
 
   legal: {
@@ -2173,13 +2173,13 @@ export const dict = {
   founderVesting: {
     section: "Vesting / entregas programadas",
     description:
-      "Definí un cronograma para entregar participaciones a través del tiempo (por ejemplo, 1.000 participaciones en 10 tramos mensuales). El sistema crea cada entrega automáticamente en su fecha: queda como una propuesta pendiente que pasa por la misma validación que una invitación directa. No tenés que hacerlo a mano cada mes.",
+      "Un cronograma entrega participaciones a través del tiempo (por ejemplo, 1.000 participaciones en 10 tramos mensuales). El sistema crea cada entrega automáticamente en su fecha: queda como una propuesta pendiente que pasa por la misma validación que una invitación directa. No hace falta hacerlo a mano cada mes.",
     poolLabel: "— Pool disponible ahora",
 
     // Lista de cronogramas
     listTitle: "Cronogramas",
     emptyList:
-      "Todavía no creaste ningún cronograma de vesting. Usá el formulario de abajo para programar la primera entrega.",
+      "Todavía no hay ningún cronograma de vesting. El formulario de abajo programa la primera entrega.",
     colTotal: "Total",
     colProgress: "Entregadas",
     colNext: "Próxima entrega",
@@ -2202,7 +2202,7 @@ export const dict = {
     // Formulario
     formTitle: "Nuevo cronograma",
     formIntro:
-      "Elegí el destinatario, el total a entregar y cómo se reparte en el tiempo. La opción mensual genera tramos iguales automáticamente.",
+      "Incluye el destinatario, el total a entregar y cómo se reparte en el tiempo. La opción mensual genera tramos iguales automáticamente.",
 
     targetModeLabel: "Destinatario",
     targetModeUser: "Socio existente",
@@ -2225,7 +2225,7 @@ export const dict = {
     perInstallmentFmt: "≈ {n} participaciones por tramo (el último ajusta el resto)",
 
     customHelper:
-      "Agregá cada tramo con su cantidad y fecha. La suma debe coincidir con el total.",
+      "Cada tramo tiene su cantidad y fecha. La suma debe coincidir con el total.",
     customSharesLabel: "Participaciones",
     customDateLabel: "Fecha",
     addRowBtn: "+ Agregar tramo",
