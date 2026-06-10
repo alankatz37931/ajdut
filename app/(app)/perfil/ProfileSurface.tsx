@@ -453,22 +453,52 @@ function IdPhotoRow({
   }
 
   const hasPhoto = url.trim() !== "";
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="hairline-b py-5">
-      <label className="eyebrow !text-navy/50 block">{dict.idPhotoLabel}</label>
-      <div className="mt-3">
-        <FileUpload
-          scope="id-photo"
-          accept="image/png,image/jpeg,application/pdf"
-          maxSizeMb={5}
-          currentUrl={url}
-          onUploaded={handleUploaded}
-          helperText={hasPhoto ? undefined : dict.idPhotoHelper}
-          showImagePreview
-          subtle
-        />
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <span className="eyebrow !text-navy/50 block">
+            {dict.idPhotoLabel}
+          </span>
+          <p
+            className={`mt-2 font-sans ${
+              hasPhoto ? "text-navy" : "text-navy/30"
+            }`}
+          >
+            {hasPhoto ? dict.idPhotoUploaded : dict.empty}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={(open ? dict.collapseAriaFmt : dict.expandAriaFmt).replace(
+            "{field}",
+            dict.idPhotoLabel
+          )}
+          className="shrink-0 text-navy/40 hover:text-navy p-0 m-0 border-0 bg-transparent cursor-pointer transition-colors"
+        >
+          <ChevronIcon open={open} />
+        </button>
       </div>
+
+      {open && (
+        <div className="mt-4">
+          <FileUpload
+            scope="id-photo"
+            accept="image/png,image/jpeg,application/pdf"
+            maxSizeMb={5}
+            currentUrl={url}
+            onUploaded={handleUploaded}
+            helperText={dict.idPhotoHelper}
+            showImagePreview
+            subtle
+          />
+        </div>
+      )}
+
       {error && (
         <p className="mt-2 eyebrow !text-navy" role="alert">
           {error}
