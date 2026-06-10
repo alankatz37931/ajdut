@@ -1633,6 +1633,8 @@ export const dict = {
     dividendsFreqLabel: "Frecuencia de dividendos (opcional)",
     availableLabelFmt: "Disponibles (máximo {n})",
     todayAvailableFmt: "Hoy: {n} disponibles.",
+    emissionConsultLegend:
+      "El máximo es el total de participaciones emitidas. Para emitir más, tenés que consultarlo con los propietarios.",
     openLeadsWarnSingle: "⚠ Tenés {n} lead abierto",
     openLeadsWarnPlural: "⚠ Tenés {n} leads abiertos",
     openLeadsBody:

@@ -1625,6 +1625,8 @@ export const dict: Dict = {
     dividendsFreqLabel: "Dividend frequency (optional)",
     availableLabelFmt: "Available (max {n})",
     todayAvailableFmt: "Today: {n} available.",
+    emissionConsultLegend:
+      "The maximum is the total participations issued. To issue more, you must consult with the owners.",
     openLeadsWarnSingle: "⚠ You have {n} open lead",
     openLeadsWarnPlural: "⚠ You have {n} open leads",
     openLeadsBody:

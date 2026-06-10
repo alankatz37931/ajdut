@@ -40,16 +40,17 @@ export type UpdateAvailableSharesInput = {
 };
 
 /**
- * Actualiza la cantidad de acciones a la venta (pool AVAILABLE).
+ * Actualiza la cantidad de participaciones a la venta (pool AVAILABLE).
  *
  * Modelo:
  *  - Toma la Participation con status=AVAILABLE del proyecto (o la crea).
  *  - Setea su shareCount al valor solicitado.
  *  - Si shareCount = 0, elimina el pool.
  *
- * Validación:
- *  - shareCount ≥ 0
- *  - shareCount ≤ Project.totalShares - shares ya asignados (no podemos sobreemitir).
+ * El TOTAL emitido del proyecto NO se cambia acá: el project owner puede
+ * mover cuántas de las participaciones ya emitidas están a la venta, pero
+ * para EMITIR MÁS (superar el total) debe consultarlo con los propietarios.
+ * Por eso el tope es `totalShares - asignadas`.
  */
 export async function updateAvailableShares(input: UpdateAvailableSharesInput) {
   return prisma.$transaction(async (tx) => {
@@ -75,7 +76,7 @@ export async function updateAvailableShares(input: UpdateAvailableSharesInput) {
     if (input.shareCount > maxAvailable) {
       throw new ValidationError(
         "shareCount",
-        `No podés poner más de ${maxAvailable} acciones disponibles (el resto ya está asignado o reservado).`
+        `No podés superar las ${maxAvailable} participaciones emitidas. Para emitir más, consultá con los propietarios.`
       );
     }
 

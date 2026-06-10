@@ -324,6 +324,9 @@ export function EditProjectForm({
                   initial.availableShares.toLocaleString(locale)
                 )}
               </p>
+              <p className="text-sm text-navy/55 leading-relaxed mt-2">
+                {dict.emissionConsultLegend}
+              </p>
               {form.availableShares === 0 && openLeadsCount > 0 && (
                 <div className="hairline mt-3 p-3 bg-paper">
                   <p className="eyebrow !text-gold">
