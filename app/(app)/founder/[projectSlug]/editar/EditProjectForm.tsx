@@ -161,7 +161,7 @@ export function EditProjectForm({
           {/* Categorización */}
           <section className="space-y-5 hairline-t pt-8">
             <p className="eyebrow">{dict.sectionCategorization}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
               <div>
                 <FloatingSelect
                   id="kind"
@@ -179,7 +179,7 @@ export function EditProjectForm({
                 onChange={(v) => update("location", v)}
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
               <FloatingInput
                 id="sector"
                 label={dict.sectorLabel}
@@ -368,7 +368,10 @@ export function EditProjectForm({
           {/* Valoración */}
           <section className="space-y-5 hairline-t pt-8">
             <p className="eyebrow">{dict.sectionValuation}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            {/* items-end: el FloatingInput (label flotante) y el FloatingSelect
+                (label estático) tienen alturas internas distintas; alinear al
+                fondo deja las líneas/valores de Monto y Moneda a la misma altura. */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
               <FloatingInput
                 id="preMoneyValuation"
                 type="number"

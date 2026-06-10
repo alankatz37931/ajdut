@@ -226,7 +226,7 @@ export function NewProjectForm({
       {/* Categorización */}
       <section className="space-y-5 hairline-t pt-8">
         <p className="eyebrow">{dict.sectionCategorization}</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
           <div>
             <FloatingSelect
               id="kind"
@@ -244,7 +244,7 @@ export function NewProjectForm({
             onChange={handler("location")}
           />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
           <FloatingInput
             id="sector"
             label={dict.sectorLabel}
@@ -393,7 +393,7 @@ export function NewProjectForm({
             required
           />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
           <div>
             <FloatingSelect
               id="valuationCurrency"
