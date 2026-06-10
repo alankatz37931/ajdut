@@ -480,7 +480,7 @@ export const dict = {
     pendingApproval: "pendientes de aprobación",
     pendingApprovalSingular: "pendiente de aprobación",
     intro:
-      "Todos los proyectos en AJDUT son aprobados manualmente. Si te interesa una idea y los números cierran para vos, podés decir “me interesa participar” desde la página del proyecto.",
+      "Encontrá el proyecto que comparta tu visión y participá.",
     searchLabel: "Buscar por nombre",
     searchClear: "Limpiar",
     searchPlaceholder: "Pushka, Mercurio, ...",

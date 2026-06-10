@@ -475,7 +475,7 @@ export const dict: Dict = {
     pendingApproval: "pending approval",
     pendingApprovalSingular: "pending approval",
     intro:
-      "Every project on AJDUT is manually approved. If an idea resonates and the numbers work for you, you can say “I'm interested in participating” from the project page.",
+      "Find the project that shares your vision and take part.",
     searchLabel: "Search by name",
     searchClear: "Clear",
     searchPlaceholder: "Pushka, Mercurio, ...",
