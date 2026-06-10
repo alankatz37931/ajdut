@@ -1575,7 +1575,7 @@ export const dict = {
       poolName: "Disponible (pool)",
       platformName: "AJDUT plataforma",
       unassignedClass: "Sin clasificar",
-      manageLink: "Gestionar clases de participantes →",
+      manageLink: "Gestionar clases →",
       preExistingFallback: "Socios pre-existentes",
       verificationLabel: "Verificación",
       overcommitWarn:

@@ -621,25 +621,6 @@ export default async function FounderDashboardPage({ params }: Params) {
               />
             ))}
           </ul>
-          {/* Verificación: suma del cap table. Si está sobre-comprometido se
-              pinta en rojo y se muestra el aviso para que el owner lo corrija. */}
-          <div className="px-5 py-3 hairline-t flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <span className="eyebrow !text-navy/50">
-              {t.capTable.verificationLabel}
-            </span>
-            <span
-              className={`font-mono text-sm shrink-0 ${
-                byClass.overcommit ? "text-red-700" : "text-navy"
-              }`}
-            >
-              {formatPercent(byClass.verificationPct, 1, locale)}
-            </span>
-          </div>
-          {byClass.overcommit && (
-            <p className="px-5 pb-3 text-xs text-red-700 leading-relaxed">
-              {t.capTable.overcommitWarn}
-            </p>
-          )}
           <div className="px-5 py-3 hairline-t">
             <Link
               href={`/founder/${project.slug}/composicion` as Route}

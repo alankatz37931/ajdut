@@ -794,8 +794,6 @@ export default async function ProjectPage({ params }: Params) {
         formatShares={(n) => formatNumber(n, undefined, locale)}
         formatPct={(p) => formatPercent(p, 2, locale)}
         othersLabel={t.capTable.others}
-        verificationLabel={t.capTable.verificationLabel}
-        overcommitWarn={t.capTable.overcommitWarn}
       />
     ) : null;
 
@@ -813,8 +811,6 @@ export default async function ProjectPage({ params }: Params) {
             n === 1 ? t.capTable.person : t.capTable.people
           }`
         }
-        verificationLabel={t.capTable.verificationLabel}
-        overcommitWarn={t.capTable.overcommitWarn}
       />
     ) : null;
 

@@ -26,10 +26,6 @@ type Props = {
   othersLabel: string;
   /** Cuántos holders mostrar antes de agrupar como "Otros". */
   topN?: number;
-  /** Etiqueta de la fila de verificación (suma %). Si no se pasa, no se renderiza. */
-  verificationLabel?: string;
-  /** Mensaje a mostrar cuando la suma de shares excede totalShares. */
-  overcommitWarn?: string;
 };
 
 export function CapTableViz({
@@ -40,8 +36,6 @@ export function CapTableViz({
   formatPct,
   othersLabel,
   topN = 10,
-  verificationLabel,
-  overcommitWarn,
 }: Props) {
   if (rows.length === 0 || totalShares <= 0) return null;
 
@@ -53,13 +47,6 @@ export function CapTableViz({
   if (restShares > 0) {
     displayRows.push({ holder: othersLabel, isPlatform: false, shares: restShares });
   }
-
-  // Verificación: suma de TODOS los rows (no solo los visibles agrupados).
-  // Si el founder declara accionistas pre-existentes que solapan con el pool
-  // AVAILABLE, este número puede pasar 100% y dispara el aviso.
-  const sumShares = sorted.reduce((s, r) => s + r.shares, 0);
-  const sumPct = (sumShares / totalShares) * 100;
-  const isOvercommit = sumShares > totalShares;
 
   // Anchor: el holder más grande define el 100% visual.
   const max = displayRows[0]?.shares ?? 1;
@@ -99,27 +86,6 @@ export function CapTableViz({
           );
         })}
       </ul>
-      {/* Fila de verificación — suma de % del cap table. Sirve para que el
-          founder/admin detecte cualquier desfase entre platform + asignados +
-          pre-existentes + disponibles, sin tener que sumar a mano. */}
-      {verificationLabel && (
-        <div className="hairline-t px-5 py-3 flex flex-wrap items-baseline justify-between gap-x-3">
-          <p className="eyebrow !text-navy/50">{verificationLabel}</p>
-          <p
-            className={`font-mono text-sm shrink-0 ${
-              isOvercommit ? "text-red-700" : "text-navy"
-            }`}
-          >
-            {formatShares(sumShares)} {ofTotalLabel}
-            <span className="ml-3">{formatPct(sumPct)}</span>
-          </p>
-        </div>
-      )}
-      {isOvercommit && overcommitWarn && (
-        <p className="px-5 pb-4 text-xs text-red-700 leading-relaxed">
-          {overcommitWarn}
-        </p>
-      )}
     </div>
   );
 }

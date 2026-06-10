@@ -1567,7 +1567,7 @@ export const dict: Dict = {
       poolName: "Available (pool)",
       platformName: "AJDUT platform",
       unassignedClass: "Unclassified",
-      manageLink: "Manage shareholder classes →",
+      manageLink: "Manage classes →",
       preExistingFallback: "Pre-existing shareholders",
       verificationLabel: "Verification",
       overcommitWarn:
