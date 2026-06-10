@@ -257,12 +257,12 @@ export const dict = {
     founderVesting: "Vesting · AJDUT",
     founderMetricas: "Métricas · AJDUT",
     home: "AJDUT",
-    founderHome: "Founder · AJDUT",
+    founderHome: "Project owner · AJDUT",
     partner: "Socio · AJDUT",
     proyectos: "Proyectos · AJDUT",
     proyectoDetailFallback: "Proyecto · AJDUT",
-    founderDashboardFallback: "Founder · AJDUT",
-    founderLeadsFallback: "Leads · Founder · AJDUT",
+    founderDashboardFallback: "Project owner · AJDUT",
+    founderLeadsFallback: "Leads · Project owner · AJDUT",
     adminApplicationDetail: "Aplicación · Admin · AJDUT",
     adminProjects: "Proyectos · Admin · AJDUT",
   },
@@ -688,7 +688,7 @@ export const dict = {
     stageInfo: {
       IDEA: "Concepto en validación, sin producto en mercado.",
       PRE_SEED:
-        "Primer capital del fundador / familia / amigos para construir un MVP.",
+        "Primer capital del project owner / familia / amigos para construir un MVP.",
       SEED: "Primera ronda formal para validar el modelo de negocio.",
       EARLY_REVENUE:
         "El producto ya genera ingresos pero sigue iterando el ajuste con el mercado.",
@@ -858,7 +858,7 @@ export const dict = {
     eyebrow: "— Tus proyectos",
     title: "Reportes periódicos",
     intro:
-      "Todos los reportes que los founders compartieron en los proyectos donde tenés participaciones, en un solo lugar.",
+      "Todos los reportes que los project owners compartieron en los proyectos donde tenés participaciones, en un solo lugar.",
     filterAll: "Todos",
     emptyNoProjects: "Todavía no tenés participaciones en ningún proyecto.",
     emptyNoDocs: "No hay reportes compartidos por ahora.",
@@ -899,7 +899,7 @@ export const dict = {
     metaTitle: "Reventa de participaciones · AJDUT",
     title: "Reventa de participaciones",
     intro:
-      "Listá tus participaciones para que otros miembros de la comunidad puedan adquirirlas desde el tablón. Cuando alguien las adquiere, el founder y el equipo de AJDUT aprueban el traspaso para que quede registrado.",
+      "Listá tus participaciones para que otros miembros de la comunidad puedan adquirirlas desde el tablón. Cuando alguien las adquiere, el project owner y el equipo de AJDUT aprueban el traspaso para que quede registrado.",
     sectionYours: "01 · Tus participaciones",
     sectionBoard: "02 · Tablón de reventa",
     emptyNoShares: "No tenés participaciones en este proyecto para revender.",
@@ -986,7 +986,7 @@ export const dict = {
     title: "Confirmá tu compra",
     eyebrow: "— Reventa pendiente de tu confirmación",
     body:
-      "{seller} acordó venderte {shares} participaciones de {project}. Antes de ejecutar el traspaso, el founder y el equipo de AJDUT validan la operación. Necesitamos tu OK.",
+      "{seller} acordó venderte {shares} participaciones de {project}. Antes de ejecutar el traspaso, el project owner y el equipo de AJDUT validan la operación. Necesitamos tu OK.",
     projectLabel: "Proyecto",
     sellerLabel: "Vendedor",
     shareLabel: "Participaciones",
@@ -997,7 +997,7 @@ export const dict = {
     confirmingBtn: "Confirmando…",
     doneTitle: "¡Gracias!",
     doneBody:
-      "Tu confirmación quedó registrada. Cuando el founder valide la operación, el equipo de AJDUT ejecutará el traspaso y recibirás tu certificado por mail.",
+      "Tu confirmación quedó registrada. Cuando el project owner valide la operación, el equipo de AJDUT ejecutará el traspaso y recibirás tu certificado por mail.",
     alreadyTitle: "Ya confirmaste esta compra",
     alreadyBody:
       "Tu confirmación quedó registrada el {date}. No hace falta volver a confirmar.",
@@ -1102,16 +1102,16 @@ export const dict = {
     tripartite: {
       buyerConfirmed: "Comprador confirmó ✓",
       buyerPending: "Comprador pendiente —",
-      ownerConfirmed: "Founder validó ✓",
-      ownerPending: "Founder pendiente —",
+      ownerConfirmed: "Project owner validó ✓",
+      ownerPending: "Project owner pendiente —",
       approveGatedHint:
-        "Esperando que el comprador y el founder confirmen antes de poder aprobar.",
+        "Esperando que el comprador y el project owner confirmen antes de poder aprobar.",
       approveGatedTooltip:
-        "El comprador y/o el founder todavía no validaron la reventa.",
+        "El comprador y/o el project owner todavía no validaron la reventa.",
       overrideBtn: "Override tripartito",
       overrideTitle: "Override de validación tripartita",
       overrideDescription:
-        "Vas a ejecutar el traspaso aunque el comprador o el founder no hayan confirmado por la plataforma. Usalo sólo si confirmaron por otro canal. Quedará registrado en la auditoría.",
+        "Vas a ejecutar el traspaso aunque el comprador o el project owner no hayan confirmado por la plataforma. Usalo sólo si confirmaron por otro canal. Quedará registrado en la auditoría.",
       overrideNoteLabel: "Justificación (mínimo 10 caracteres)",
       overrideConfirmBtn: "Sí, forzar y ejecutar",
     },
@@ -1505,7 +1505,7 @@ export const dict = {
     newProjectLink: "+ Otro proyecto",
     vestingLink: "Vesting / entregas programadas",
     sectionResumen: "Resumen",
-    sectionEquipo: "Equipo fundador",
+    sectionEquipo: "Equipo del proyecto",
     sectionHitos: "Hitos del roadmap",
     sectionInteres: "Interés de compra",
     sectionMetricas: "Métricas",
@@ -1576,7 +1576,7 @@ export const dict = {
       completeBtn: "Completar →",
       itemBasicLabel: "Información básica del proyecto",
       itemBasicHint: "One-liner, problema, solución, modelo.",
-      itemTeamLabel: "Equipo fundador cargado",
+      itemTeamLabel: "Equipo del proyecto cargado",
       itemTeamHint: "Quiénes están detrás del proyecto.",
       itemMilestonesLabel: "Hitos del roadmap",
       itemMilestonesHint: "Lo prometido y lo cumplido.",
@@ -1699,7 +1699,7 @@ export const dict = {
     external: {
       eyebrow: "— Participantes pre-existentes",
       helper:
-        "Gente que ya tenía participaciones antes de AJDUT (fundadores, inversores previos). Declarás cuántas personas, cuántas participaciones y su clase.",
+        "Gente que ya tenía participaciones antes de AJDUT (project owners, inversores previos). Declarás cuántas personas, cuántas participaciones y su clase.",
       addBtn: "+ Agregar",
       defaultLabel: "Tenencia",
       peopleSingleFmt: "{n} persona · {cls}",
@@ -1711,7 +1711,7 @@ export const dict = {
       removeConfirm: "¿Eliminar esta tenencia?",
       form: {
         labelLabel: "Etiqueta (opcional)",
-        labelPlaceholder: "ej. Fundadores",
+        labelPlaceholder: "ej. Project owners",
         classLabel: "Clase",
         noClass: "— Sin clase —",
         peopleLabel: "Cantidad de personas",
@@ -1793,9 +1793,9 @@ export const dict = {
   },
 
   founderEquipo: {
-    section: "Equipo fundador",
+    section: "Equipo del proyecto",
     description:
-      "Quiénes son los founders detrás del proyecto. Se muestra en la ficha pública a quienes tengan acceso.",
+      "Quiénes son los project owners detrás del proyecto. Se muestra en la ficha pública a quienes tengan acceso.",
     equityTotalFmt: "Equity asignado total: {pct}%",
     addBtn: "+ Agregar miembro",
     empty: "Todavía no agregaste a nadie al equipo.",

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     .catch(() => null);
   return {
     title: project
-      ? `${project.name} · Founder · AJDUT`
+      ? `${project.name} · Project owner · AJDUT`
       : dict.metaTitles.founderDashboardFallback,
   };
 }

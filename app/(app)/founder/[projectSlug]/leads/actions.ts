@@ -283,7 +283,7 @@ export async function approveInfoRequestAction(
       projectSlug: req.project.slug,
       requesterFirstName: requesterFirst,
       projectName: req.project.name,
-      founderName: owner?.fullName ?? "el founder",
+      founderName: owner?.fullName ?? "el project owner",
       decision: "APPROVED",
       note,
     });
@@ -323,7 +323,7 @@ export async function rejectInfoRequestAction(
       projectSlug: req.project.slug,
       requesterFirstName: requesterFirst,
       projectName: req.project.name,
-      founderName: owner?.fullName ?? "el founder",
+      founderName: owner?.fullName ?? "el project owner",
       decision: "REJECTED",
       note,
     });

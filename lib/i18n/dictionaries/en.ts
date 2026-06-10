@@ -253,12 +253,12 @@ export const dict: Dict = {
     founderVesting: "Vesting · AJDUT",
     founderMetricas: "Metrics · AJDUT",
     home: "AJDUT",
-    founderHome: "Founder · AJDUT",
+    founderHome: "Project owner · AJDUT",
     partner: "Partner · AJDUT",
     proyectos: "Projects · AJDUT",
     proyectoDetailFallback: "Project · AJDUT",
-    founderDashboardFallback: "Founder · AJDUT",
-    founderLeadsFallback: "Leads · Founder · AJDUT",
+    founderDashboardFallback: "Project owner · AJDUT",
+    founderLeadsFallback: "Leads · Project owner · AJDUT",
     adminApplicationDetail: "Application · Admin · AJDUT",
     adminProjects: "Projects · Admin · AJDUT",
   },
@@ -683,7 +683,7 @@ export const dict: Dict = {
     stageInfo: {
       IDEA: "Concept under validation, no product in market yet.",
       PRE_SEED:
-        "First capital from founder / family / friends to build an MVP.",
+        "First capital from project owner / family / friends to build an MVP.",
       SEED: "First formal round to validate the business model.",
       EARLY_REVENUE:
         "The product already generates revenue but is still iterating on product-market fit.",
@@ -853,7 +853,7 @@ export const dict: Dict = {
     eyebrow: "— Your projects",
     title: "Periodic reports",
     intro:
-      "All reports shared by founders across the projects where you hold participations, in one place.",
+      "All reports shared by project owners across the projects where you hold participations, in one place.",
     filterAll: "All",
     emptyNoProjects: "You don't hold participations in any project yet.",
     emptyNoDocs: "No reports shared yet.",
@@ -894,7 +894,7 @@ export const dict: Dict = {
     metaTitle: "Participation resale · AJDUT",
     title: "Participation resale",
     intro:
-      "List your participations so other community members can acquire them from the board. When someone acquires them, the founder and the AJDUT team approve the transfer so it's recorded.",
+      "List your participations so other community members can acquire them from the board. When someone acquires them, the project owner and the AJDUT team approve the transfer so it's recorded.",
     sectionYours: "01 · Your participations",
     sectionBoard: "02 · Resale board",
     emptyNoShares: "You don't hold any participations in this project to resell.",
@@ -981,7 +981,7 @@ export const dict: Dict = {
     title: "Confirm your purchase",
     eyebrow: "— Resale pending your confirmation",
     body:
-      "{seller} agreed to sell you {shares} participations of {project}. Before executing the transfer, the founder and the AJDUT team validate the operation. We need your OK.",
+      "{seller} agreed to sell you {shares} participations of {project}. Before executing the transfer, the project owner and the AJDUT team validate the operation. We need your OK.",
     projectLabel: "Project",
     sellerLabel: "Seller",
     shareLabel: "Participations",
@@ -992,7 +992,7 @@ export const dict: Dict = {
     confirmingBtn: "Confirming…",
     doneTitle: "Thanks!",
     doneBody:
-      "Your confirmation is on record. Once the founder validates, the AJDUT team will execute the transfer and you'll receive your certificate by email.",
+      "Your confirmation is on record. Once the project owner validates, the AJDUT team will execute the transfer and you'll receive your certificate by email.",
     alreadyTitle: "You already confirmed this purchase",
     alreadyBody:
       "Your confirmation was recorded on {date}. No further action needed.",
@@ -1095,16 +1095,16 @@ export const dict: Dict = {
     tripartite: {
       buyerConfirmed: "Buyer confirmed ✓",
       buyerPending: "Buyer pending —",
-      ownerConfirmed: "Founder validated ✓",
-      ownerPending: "Founder pending —",
+      ownerConfirmed: "Project owner validated ✓",
+      ownerPending: "Project owner pending —",
       approveGatedHint:
-        "Waiting for the buyer and the founder to confirm before approving.",
+        "Waiting for the buyer and the project owner to confirm before approving.",
       approveGatedTooltip:
-        "The buyer and/or the founder haven't validated the resale yet.",
+        "The buyer and/or the project owner haven't validated the resale yet.",
       overrideBtn: "Tripartite override",
       overrideTitle: "Tripartite validation override",
       overrideDescription:
-        "You're about to execute the transfer even though the buyer or the founder hasn't confirmed in-platform. Only use this if they confirmed off-channel. It will be recorded in the audit log.",
+        "You're about to execute the transfer even though the buyer or the project owner hasn't confirmed in-platform. Only use this if they confirmed off-channel. It will be recorded in the audit log.",
       overrideNoteLabel: "Justification (min 10 characters)",
       overrideConfirmBtn: "Yes, force and execute",
     },
@@ -1497,7 +1497,7 @@ export const dict: Dict = {
     newProjectLink: "+ Another project",
     vestingLink: "Vesting / scheduled grants",
     sectionResumen: "Summary",
-    sectionEquipo: "Founding team",
+    sectionEquipo: "Project team",
     sectionHitos: "Roadmap milestones",
     sectionInteres: "Purchase interest",
     sectionMetricas: "Metrics",
@@ -1568,7 +1568,7 @@ export const dict: Dict = {
       completeBtn: "Complete →",
       itemBasicLabel: "Basic project information",
       itemBasicHint: "One-liner, problem, solution, model.",
-      itemTeamLabel: "Founding team loaded",
+      itemTeamLabel: "Project team loaded",
       itemTeamHint: "Who's behind the project.",
       itemMilestonesLabel: "Roadmap milestones",
       itemMilestonesHint: "What was promised and what was delivered.",
@@ -1691,7 +1691,7 @@ export const dict: Dict = {
     external: {
       eyebrow: "— Pre-existing shareholders",
       helper:
-        "People who held participations before AJDUT (founders, prior investors). You declare how many people, how many participations and their class.",
+        "People who held participations before AJDUT (project owners, prior investors). You declare how many people, how many participations and their class.",
       addBtn: "+ Add",
       defaultLabel: "Holding",
       peopleSingleFmt: "{n} person · {cls}",
@@ -1703,7 +1703,7 @@ export const dict: Dict = {
       removeConfirm: "Remove this holding?",
       form: {
         labelLabel: "Label (optional)",
-        labelPlaceholder: "e.g. Founders",
+        labelPlaceholder: "e.g. Project owners",
         classLabel: "Class",
         noClass: "— No class —",
         peopleLabel: "Number of people",
@@ -1785,9 +1785,9 @@ export const dict: Dict = {
   },
 
   founderEquipo: {
-    section: "Founding team",
+    section: "Project team",
     description:
-      "Who the founders behind the project are. Shown on the public project page to those with access.",
+      "Who the project owners behind the project are. Shown on the public project page to those with access.",
     equityTotalFmt: "Total equity assigned: {pct}%",
     addBtn: "+ Add member",
     empty: "You haven't added anyone to the team yet.",

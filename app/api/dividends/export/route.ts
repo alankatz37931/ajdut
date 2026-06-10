@@ -14,7 +14,7 @@ import { prisma } from "@/lib/db/client";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Pendiente",
-  SENT: "Enviado por founder",
+  SENT: "Enviado por project owner",
   RECEIVED: "Confirmado",
   DISPUTED: "En disputa",
   WAIVED: "Renunciado",
