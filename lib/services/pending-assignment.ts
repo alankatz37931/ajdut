@@ -6,6 +6,7 @@ import {
   assignSharesFromLead,
   assignSharesToInvestor,
 } from "./share-assignment";
+import { passiveClassId } from "./shareholder-class";
 import { createPasswordSetupToken } from "./password-setup";
 import { computeBlockHash } from "@/lib/crypto/ownership-chain";
 import {
@@ -973,6 +974,8 @@ async function assignSharesFromLeadWithinTx(
       currentOwnerId: lead.user.id,
       isPlatformStake: false,
       acquiredAt: effectiveAt,
+      // Clase por defecto de quien adquiere: Inversor pasivo (reasignable).
+      shareholderClassId: await passiveClassId(tx, lead.project.id),
     },
   });
 

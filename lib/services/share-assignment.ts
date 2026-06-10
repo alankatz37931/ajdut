@@ -9,6 +9,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "./errors";
+import { passiveClassId } from "./shareholder-class";
 
 type Tx = Prisma.TransactionClient;
 
@@ -130,6 +131,8 @@ export async function assignSharesFromLead(
         currentOwnerId: lead.user.id,
         isPlatformStake: false,
         acquiredAt: effectiveAt,
+        // Clase por defecto de quien adquiere: Inversor pasivo (reasignable).
+        shareholderClassId: await passiveClassId(tx, lead.project.id),
       },
     });
 
@@ -321,6 +324,8 @@ export async function assignSharesToInvestor(
       currentOwnerId: investor.id,
       isPlatformStake: false,
       acquiredAt: effectiveAt,
+      // Clase por defecto de quien adquiere: Inversor pasivo (reasignable).
+      shareholderClassId: await passiveClassId(tx, project.id),
     },
   });
 

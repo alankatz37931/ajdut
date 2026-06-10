@@ -38,6 +38,21 @@ export function kindFromName(name: string): ParticipantClass | null {
 type Db = PrismaClient | Prisma.TransactionClient;
 
 /**
+ * Id de la clase Inversor pasivo de un proyecto — la clase POR DEFECTO de quien
+ * compra/adquiere participaciones en AJDUT (el owner la puede reasignar luego).
+ * Si por algún motivo la clase no existe, la crea (ensureProjectClasses).
+ */
+export async function passiveClassId(db: Db, projectId: string): Promise<string> {
+  const found = await db.shareholderClass.findFirst({
+    where: { projectId, kind: INVESTOR_PASSIVE_KIND },
+    select: { id: true },
+  });
+  if (found) return found.id;
+  const classes = await ensureProjectClasses(db, projectId);
+  return classes.find((c) => c.kind === INVESTOR_PASSIVE_KIND)!.id;
+}
+
+/**
  * Garantiza que el proyecto tenga exactamente las 4 clases canónicas, con su
  * `kind` y nombre. Idempotente:
  *  - Setea `kind`/`name`/`order` en clases existentes que matcheen por nombre.

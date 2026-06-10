@@ -1691,7 +1691,7 @@ export const dict = {
   founderComposicion: {
     section: "Composición de participaciones",
     description:
-      "Reasigná a cada participante a una de las 4 clases fijas (Directivo, Administrativo, Embajador, Inversor pasivo). Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres.",
+      "Reasigná a cada participante a una de las 4 clases. Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres.",
     genericError: "Ocurrió un error.",
     classes: {
       eyebrow: "— Clases de participantes (fijas)",

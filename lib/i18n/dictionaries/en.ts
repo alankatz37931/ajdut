@@ -1683,7 +1683,7 @@ export const dict: Dict = {
   founderComposicion: {
     section: "Shareholder composition",
     description:
-      "Reassign each shareholder to one of the 4 fixed classes (Directive, Administrative, Ambassador, Passive investor). Members see the aggregated cap table by class — number of people and percentage — without names.",
+      "Reassign each shareholder to one of the 4 classes. Members see the aggregated cap table by class — number of people and percentage — without names.",
     genericError: "An error occurred.",
     classes: {
       eyebrow: "— Shareholder classes (fixed)",

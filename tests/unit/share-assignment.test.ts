@@ -30,6 +30,9 @@ const tx = vi.hoisted(() => ({
   auditLog: {
     create: vi.fn(),
   },
+  shareholderClass: {
+    findFirst: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/db/client", () => ({
@@ -102,6 +105,8 @@ beforeEach(() => {
   // afecta 1 fila y el cleanup del pool vacío no encuentra nada.
   tx.participation.updateMany.mockResolvedValue({ count: 1 });
   tx.participation.deleteMany.mockResolvedValue({ count: 0 });
+  // Clase por defecto (Inversor pasivo) para quien adquiere.
+  tx.shareholderClass.findFirst.mockResolvedValue({ id: "cls-passive" });
 });
 
 describe("assignSharesFromLead — autorización", () => {

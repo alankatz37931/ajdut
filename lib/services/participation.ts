@@ -10,6 +10,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "./errors";
+import { passiveClassId } from "./shareholder-class";
 import { canTransition } from "@/lib/state-machine/participation";
 
 /**
@@ -814,6 +815,8 @@ export async function validateTransfer(input: ValidateTransferInput) {
           status: "ASSIGNED",
           currentOwnerId: listing.proposedBuyerId,
           acquiredAt: effectiveAt,
+          // El comprador entra como Inversor pasivo por defecto (reasignable).
+          shareholderClassId: await passiveClassId(tx, participation.projectId),
         },
       });
 
@@ -883,6 +886,8 @@ export async function validateTransfer(input: ValidateTransferInput) {
         currentOwnerId: listing.proposedBuyerId,
         isPlatformStake: false,
         acquiredAt: effectiveAt,
+        // El comprador entra como Inversor pasivo por defecto (reasignable).
+        shareholderClassId: await passiveClassId(tx, participation.projectId),
       },
     });
 
