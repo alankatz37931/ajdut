@@ -75,18 +75,23 @@ export default async function HomePage() {
           </p>
           <Pillar
             icon={<ShieldIcon />}
-            title={t.pillarLegacyTitle}
-            body={t.pillarLegacyBody}
+            title={t.pillarCoordinationTitle}
+            body={t.pillarCoordinationBody}
           />
           <Pillar
             icon={<EyeIcon />}
-            title={t.pillarReportsTitle}
-            body={t.pillarReportsBody}
+            title={t.pillarVerifiedTitle}
+            body={t.pillarVerifiedBody}
           />
           <Pillar
             icon={<HandshakeIcon />}
-            title={t.pillarResaleTitle}
-            body={t.pillarResaleBody}
+            title={t.pillarConnectionTitle}
+            body={t.pillarConnectionBody}
+          />
+          <Pillar
+            icon={<GrowthIcon />}
+            title={t.pillarGrowthTitle}
+            body={t.pillarGrowthBody}
           />
         </aside>
       </div>
@@ -193,6 +198,27 @@ function HandshakeIcon() {
       <path d="M21 3v5h-5" />
       <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
       <path d="M8 16H3v5" />
+    </svg>
+  );
+}
+
+// Tendencia ascendente — "Acompañamiento en tu crecimiento":
+// progreso, evolución hacia la siguiente etapa.
+function GrowthIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 17 9 11l4 4 8-8" />
+      <path d="M16 4h5v5" />
     </svg>
   );
 }

@@ -82,15 +82,18 @@ export const dict = {
     ctaSignIn: "Acceder",
     ctaApply: "Aplica para ser parte",
     pillarsHeading: "Por qué los miembros eligen AJDUT",
-    pillarLegacyTitle: "Propiedad Inmutable",
-    pillarLegacyBody:
-      "Tu propiedad y legado quedan registrados bajo los más altos estándares de seguridad digital.",
-    pillarReportsTitle: "Información Exclusiva",
-    pillarReportsBody:
-      "Entrega periódica de reportes detallados y balances de evolución cada trimestre.",
-    pillarResaleTitle: "Liquidez y Traspaso",
-    pillarResaleBody:
-      "Facilitamos la transferencia de participaciones y el contacto entre miembros, certificando cada cambio de manera ágil y segura.",
+    pillarCoordinationTitle: "Coordinación entre socios",
+    pillarCoordinationBody:
+      "Asigna participaciones, define roles y mantén a todos alineados con la misma información en tiempo real.",
+    pillarVerifiedTitle: "Transacciones verificadas",
+    pillarVerifiedBody:
+      "Cada cambio de participación queda registrado y certificado. Tu cap table siempre actualizado y seguro.",
+    pillarConnectionTitle: "Conexión con personas afines",
+    pillarConnectionBody:
+      "AJDUT acerca a emprendedores, inversionistas y colaboradores que comparten valores y visión.",
+    pillarGrowthTitle: "Acompañamiento en tu crecimiento",
+    pillarGrowthBody:
+      "Asesoría directa para estructurar tu empresa, definir tu valuación y prepararte para la siguiente etapa.",
   },
 
   publicNav: {

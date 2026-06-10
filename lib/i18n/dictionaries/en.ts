@@ -78,15 +78,18 @@ export const dict: Dict = {
     ctaSignIn: "Sign in",
     ctaApply: "Apply to be part",
     pillarsHeading: "Why members choose AJDUT",
-    pillarLegacyTitle: "Immutable Ownership",
-    pillarLegacyBody:
-      "Your ownership and legacy are recorded under the highest digital security standards.",
-    pillarReportsTitle: "Exclusive Information",
-    pillarReportsBody:
-      "Regular delivery of detailed reports and quarterly progress updates.",
-    pillarResaleTitle: "Liquidity and Transfer",
-    pillarResaleBody:
-      "We facilitate the transfer of participations and the contact between members, certifying every change swiftly and safely.",
+    pillarCoordinationTitle: "Coordination between partners",
+    pillarCoordinationBody:
+      "Assign participations, define roles and keep everyone aligned with the same information in real time.",
+    pillarVerifiedTitle: "Verified transactions",
+    pillarVerifiedBody:
+      "Every change in participation is recorded and certified. Your cap table always up to date and secure.",
+    pillarConnectionTitle: "Connection with like-minded people",
+    pillarConnectionBody:
+      "AJDUT brings together entrepreneurs, investors and collaborators who share values and vision.",
+    pillarGrowthTitle: "Support for your growth",
+    pillarGrowthBody:
+      "Direct advisory to structure your company, define your valuation and prepare for the next stage.",
   },
 
   publicNav: {
