@@ -5,6 +5,7 @@
  */
 import { sendEmail } from "./send";
 import { getAdminNotifyEmails } from "./client";
+import { appUrl } from "@/lib/utils/app-url";
 import {
   applicationReceivedEmail,
   type ApplicationReceivedInput,
@@ -101,14 +102,6 @@ import {
 import {
   resaleBuyerConfirmEmail,
 } from "./templates/resale-buyer-confirm";
-
-function appUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.AUTH_URL ??
-    "http://localhost:3001"
-  );
-}
 
 export async function notifyApplicantReceived(input: { to: string } & ApplicationReceivedInput) {
   const { subject, html } = applicationReceivedEmail(input);

@@ -10,6 +10,7 @@ import {
   regenerateTargetConfirmationToken,
 } from "@/lib/services/pending-assignment";
 import { DomainError } from "@/lib/services/errors";
+import { appUrl } from "@/lib/utils/app-url";
 import {
   notifyFounderPendingAssignmentApproved,
   notifyFounderPendingAssignmentRejected,
@@ -178,14 +179,6 @@ export async function rejectPendingAssignmentAction(
   });
 
   return { ok: true };
-}
-
-function appUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.AUTH_URL ??
-    "http://localhost:3001"
-  );
 }
 
 /**

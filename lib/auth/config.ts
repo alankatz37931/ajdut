@@ -38,6 +38,10 @@ const PUBLIC_PAGES = [
 ] as const;
 
 export const authConfig: NextAuthConfig = {
+  // Confía en el host de la request (dominio real del deploy) para resolver
+  // callbacks/redirects de auth. Evita que el logout y los redirects de login
+  // caigan a localhost cuando AUTH_URL no está seteada en el entorno.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/acceder",
