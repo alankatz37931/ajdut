@@ -118,7 +118,7 @@ export function CompositionEditor({
       <section className="space-y-4">
         <div>
           <p className="eyebrow">{dict.classes.eyebrow}</p>
-          <p className="mt-2 text-sm text-navy/70 leading-relaxed max-w-xl">
+          <p className="mt-2 text-sm text-navy/70 leading-relaxed">
             {dict.classes.helper}
           </p>
         </div>
@@ -139,7 +139,7 @@ export function CompositionEditor({
       <section className="space-y-4">
         <div>
           <p className="eyebrow">{dict.holders.eyebrow}</p>
-          <p className="mt-2 text-sm text-navy/70 leading-relaxed max-w-xl">
+          <p className="mt-2 text-sm text-navy/70 leading-relaxed">
             {dict.holders.helper}
           </p>
         </div>
@@ -170,7 +170,7 @@ export function CompositionEditor({
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="eyebrow">{dict.external.eyebrow}</p>
-            <p className="mt-2 text-sm text-navy/70 leading-relaxed max-w-xl">
+            <p className="mt-2 text-sm text-navy/70 leading-relaxed">
               {dict.external.helper}
             </p>
           </div>

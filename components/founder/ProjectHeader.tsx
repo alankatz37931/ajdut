@@ -46,7 +46,7 @@ export function ProjectHeader({
       </div>
 
       {description && (
-        <p className="mt-3 text-navy/75 leading-relaxed max-w-3xl">
+        <p className="mt-3 text-navy/75 leading-relaxed">
           {description}
         </p>
       )}
