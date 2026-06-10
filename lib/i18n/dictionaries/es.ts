@@ -84,7 +84,7 @@ export const dict = {
     pillarsHeading: "Por qué los miembros eligen AJDUT",
     pillarManagementTitle: "Coordinación entre socios",
     pillarManagementBody:
-      "Asigna roles, coordina a tus socios con información en tiempo real y mantén tu cap table siempre actualizado y seguro. Cada cambio queda registrado y certificado de forma transparente.",
+      "Asigna participaciones, define roles y mantén a todos alineados con la misma información en tiempo real.",
     pillarEcosystemTitle: "Conexión con personas afines",
     pillarEcosystemBody:
       "AJDUT acerca a emprendedores, inversionistas y colaboradores que comparten valores y visión.",
