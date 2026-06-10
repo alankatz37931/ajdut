@@ -111,7 +111,7 @@ export default async function ProjectsDiscoveryPage({
         {t.title}
       </h1>
       {!isAdmin && (
-        <p className="mt-3 max-w-2xl text-navy/75 leading-relaxed">{t.intro}</p>
+        <p className="mt-3 text-navy/75 leading-relaxed">{t.intro}</p>
       )}
     </header>
   );
