@@ -84,13 +84,13 @@ export const dict = {
     pillarsHeading: "Por qué los miembros eligen AJDUT",
     pillarManagementTitle: "Coordinación entre socios",
     pillarManagementBody:
-      "Asigna participaciones, define roles y mantén a todos alineados con la misma información en tiempo real.",
+      "Te facilitamos la asignación de roles y la coordinación en tiempo real, garantizando que cada cambio de participación quede registrado y certificado de forma segura.",
     pillarEcosystemTitle: "Conexión con personas afines",
     pillarEcosystemBody:
-      "AJDUT acerca a emprendedores, inversionistas y colaboradores que comparten valores y visión.",
+      "Te abrimos las puertas a una red de emprendedores, inversionistas y colaboradores que comparten tus valores para impulsar sinergias estratégicas.",
     pillarAdvisoryTitle: "Acompañamiento en tu crecimiento",
     pillarAdvisoryBody:
-      "Asesoría directa para estructurar tu empresa, definir tu valuación y prepararte para la siguiente etapa.",
+      "Te asesoramos directamente en la estructuración de tu empresa y en la definición de tu valuación, preparándote con éxito para tu siguiente etapa.",
   },
 
   publicNav: {

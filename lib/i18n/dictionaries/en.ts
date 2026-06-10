@@ -80,13 +80,13 @@ export const dict: Dict = {
     pillarsHeading: "Why members choose AJDUT",
     pillarManagementTitle: "Coordination between partners",
     pillarManagementBody:
-      "Assign participations, define roles and keep everyone aligned with the same information in real time.",
+      "We help you with role assignment and real-time coordination, ensuring every change in participation is recorded and certified securely.",
     pillarEcosystemTitle: "Connection with like-minded people",
     pillarEcosystemBody:
-      "AJDUT brings together entrepreneurs, investors and collaborators who share values and vision.",
+      "We open the doors to a network of entrepreneurs, investors and collaborators who share your values, to drive strategic synergies.",
     pillarAdvisoryTitle: "Support for your growth",
     pillarAdvisoryBody:
-      "Direct advisory to structure your company, define your valuation and prepare for the next stage.",
+      "We advise you directly on structuring your company and defining your valuation, preparing you successfully for your next stage.",
   },
 
   publicNav: {
