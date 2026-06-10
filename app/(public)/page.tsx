@@ -217,8 +217,8 @@ function GrowthIcon() {
       strokeLinejoin="round"
       aria-hidden
     >
-      <path d="M3 17 9 11l4 4 8-8" />
-      <path d="M16 4h5v5" />
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
     </svg>
   );
 }
