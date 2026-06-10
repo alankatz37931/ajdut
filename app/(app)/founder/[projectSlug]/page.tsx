@@ -316,13 +316,14 @@ export default async function FounderDashboardPage({ params }: Params) {
           title={t.sectionEquipo}
           editHref={`/founder/${project.slug}/equipo` as Route}
           editLabel={t.editLabelEquipo}
+          flush={!!sp?.founders.length}
         >
           {sp?.founders.length ? (
             <ul className="hairline-t">
               {sp.founders.map((f) => (
                 <li
                   key={f.id}
-                  className="grid grid-cols-12 items-baseline gap-3 hairline-b last:border-b-0 py-3"
+                  className="grid grid-cols-12 items-baseline gap-3 hairline-b py-3"
                 >
                   <span className="col-span-7 sm:col-span-5 text-navy break-words">
                     {f.fullName}
@@ -356,6 +357,7 @@ export default async function FounderDashboardPage({ params }: Params) {
           title={t.sectionHitos}
           editHref={`/founder/${project.slug}/hitos` as Route}
           editLabel={t.editLabelHitos}
+          flush={!!sp?.milestones.length}
         >
           {sp?.milestones.length ? (
             <ul className="hairline-t">
@@ -365,7 +367,7 @@ export default async function FounderDashboardPage({ params }: Params) {
                 return (
                   <li
                     key={m.id}
-                    className="hairline-b last:border-b-0 py-3 flex items-baseline gap-4 flex-wrap sm:flex-nowrap"
+                    className="hairline-b py-3 flex items-baseline gap-4 flex-wrap sm:flex-nowrap"
                   >
                     {/* Status: dot + label compactos, no se empujan al extremo */}
                     <span className="inline-flex items-baseline gap-2 shrink-0 min-w-[6.5rem]">
@@ -484,6 +486,7 @@ export default async function FounderDashboardPage({ params }: Params) {
           id="documentos"
           editHref={`/founder/${project.slug}?addDoc=1#documentos` as Route}
           editLabel={dict.documentsPanel.newDocEyebrow}
+          flush={project.documents.length > 0}
         >
           <DocumentsPanel
             projectSlug={project.slug}
@@ -676,6 +679,7 @@ function FounderSection({
   editHref,
   editLabel,
   id,
+  flush,
   children,
 }: {
   n: string;
@@ -684,10 +688,16 @@ function FounderSection({
   editLabel?: string;
   urgent?: boolean;
   id?: string;
+  /** Cuando el contenido ya cierra con su propia divisoria (la última fila de
+   *  una lista), `flush` anula el hairline-b de la sección para no duplicarla. */
+  flush?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="py-8 sm:py-10 hairline-b last:border-b-0">
+    <section
+      id={id}
+      className={`py-8 sm:py-10${flush ? "" : " hairline-b last:border-b-0"}`}
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <WidgetHeader n={n} title={title} />
         {editHref && editLabel && (
