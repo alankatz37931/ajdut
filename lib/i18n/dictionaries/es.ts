@@ -1481,7 +1481,7 @@ export const dict = {
     pricePerParticipationLabel: "Valor por participación",
     derivedValuationFmt: "Valoración: {value}",
     emissionLegend:
-      "Para emitir nuevas participaciones más adelante deberás consultarlo con la administración de AJDUT. El total definido acá queda fijo salvo acuerdo.",
+      "Para emitir nuevas participaciones más adelante deberás consultarlo con los propietarios. El total definido acá queda fijo salvo acuerdo.",
     finalNote:
       "Al crear el proyecto queda en estado pendiente de aprobación. El equipo de AJDUT revisa los datos antes de activarlo y notificarte por email.",
     submitBtn: "Crear proyecto y enviar para revisión",
@@ -1658,7 +1658,7 @@ export const dict = {
     valuationWarnBody2:
       "Podés actualizar la valoración: el precio por participación efectivo se recalcula sobre las participaciones existentes. Si querés reemitir el cap table, contactá al equipo de AJDUT.",
     emissionLegend:
-      "El total de participaciones emitidas queda fijo. Para emitir nuevas participaciones deberás consultarlo con la administración de AJDUT. Podés actualizar la valoración: el valor por participación se recalcula sobre el total existente.",
+      "El total de participaciones emitidas queda fijo. Para emitir nuevas participaciones deberás consultarlo con los propietarios. Podés actualizar la valoración: el valor por participación se recalcula sobre el total existente.",
     saveBtn: "Guardar cambios",
     savingBtn: "Guardando…",
     kindRealEstate: "Inmobiliario",

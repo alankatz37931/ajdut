@@ -1473,7 +1473,7 @@ export const dict: Dict = {
     pricePerParticipationLabel: "Value per participation",
     derivedValuationFmt: "Valuation: {value}",
     emissionLegend:
-      "To issue new participations later you'll need to consult with the AJDUT administration. The total defined here stays fixed unless agreed otherwise.",
+      "To issue new participations later you'll need to consult with the owners. The total defined here stays fixed unless agreed otherwise.",
     finalNote:
       "When you create the project it stays in pending approval status. The AJDUT team reviews the data before activating it and emailing you.",
     submitBtn: "Create project and submit for review",
@@ -1650,7 +1650,7 @@ export const dict: Dict = {
     valuationWarnBody2:
       "You can update the valuation: the effective price per participation recalculates over existing participations. If you want to reissue the cap table, contact the AJDUT team.",
     emissionLegend:
-      "The total of issued participations stays fixed. To issue new participations you'll need to consult with the AJDUT administration. You can update the valuation: the value per participation recalculates over the existing total.",
+      "The total of issued participations stays fixed. To issue new participations you'll need to consult with the owners. You can update the valuation: the value per participation recalculates over the existing total.",
     saveBtn: "Save changes",
     savingBtn: "Saving…",
     kindRealEstate: "Real estate",
