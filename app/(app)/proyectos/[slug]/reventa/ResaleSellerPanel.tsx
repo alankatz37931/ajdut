@@ -35,6 +35,7 @@ type ReventaDict = Dict["reventa"];
 
 export function ResaleSellerPanel({
   projectSlug,
+  projectName,
   rows,
   members,
   defaultPricePerShare,
@@ -43,6 +44,7 @@ export function ResaleSellerPanel({
   dict,
 }: {
   projectSlug: string;
+  projectName: string;
   rows: Row[];
   members: Member[];
   /** Precio estimado por participación (preMoney / totalShares). String para preservar precisión. Null si el proyecto no tiene valuation cargada. */
@@ -57,6 +59,7 @@ export function ResaleSellerPanel({
         <SellerRow
           key={row.participationId}
           projectSlug={projectSlug}
+          projectName={projectName}
           row={row}
           members={members}
           defaultPricePerShare={defaultPricePerShare}
@@ -84,6 +87,7 @@ type ListInput = {
 
 function SellerRow({
   projectSlug,
+  projectName,
   row,
   members,
   defaultPricePerShare,
@@ -92,6 +96,7 @@ function SellerRow({
   dict,
 }: {
   projectSlug: string;
+  projectName: string;
   row: Row;
   members: Member[];
   defaultPricePerShare: string | null;
@@ -238,12 +243,7 @@ function SellerRow({
 
   return (
     <li className="hairline p-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="font-mono text-sm text-navy">{row.serialCode}</span>
-        <span className="eyebrow !text-navy/50">
-          {fmtInt(row.shareCount)} {s.sharesSuffix}
-        </span>
-      </div>
+      <p className="font-sans text-navy">{projectName}</p>
 
       {transferPending && (
         <p className="mt-3 eyebrow !text-gold" role="status">
@@ -253,6 +253,9 @@ function SellerRow({
 
       {canList && mode === "idle" && (
         <div className="mt-4">
+          <p className="eyebrow !text-navy/50 mb-3">
+            {fmtInt(row.availableShares)} {s.sharesSuffix}
+          </p>
           <button onClick={() => setMode("listing")} className="btn-outline">
             {s.listBtn}
           </button>
@@ -260,7 +263,7 @@ function SellerRow({
       )}
 
       {inResale && mode === "idle" && (
-        <div className="mt-4 space-y-3">
+        <div className="mt-3 space-y-4">
           {/* Resumen de lo listado: cantidad + precio + total. Para listings
               legacy sin precio (null) mostramos "precio a convenir". */}
           {(() => {
@@ -277,30 +280,34 @@ function SellerRow({
                       formatCurrency(lc * ppNum, currency, 2, locale)
                     )
                 : s.listedSummaryNoPriceFmt.replace("{shares}", fmtInt(lc));
-            return <p className="font-mono text-sm text-navy">{summary}</p>;
+            return (
+              <div>
+                <p className="font-mono text-sm text-navy">{summary}</p>
+                <p className="mt-1 eyebrow !text-navy/50">{s.inBoard}</p>
+              </div>
+            );
           })()}
-          <div className="flex flex-wrap items-center gap-4">
-          <span className="eyebrow !text-navy/60">{s.inBoard}</span>
-          <button
-            onClick={() => setMode("designating")}
-            disabled={isPending}
-            className="btn-primary disabled:opacity-50"
-          >
-            {s.designateBtn}
-          </button>
-          <button
-            onClick={doCancel}
-            disabled={isPending}
-            className="eyebrow !text-navy/40 hover:!text-navy p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
-          >
-            {isCancelPending ? s.removingBtn : s.removeBtn}
-          </button>
-          {error && (
-            <span className="eyebrow !text-navy" role="alert">
-              {error}
-            </span>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setMode("designating")}
+              disabled={isPending}
+              className="btn-primary disabled:opacity-50"
+            >
+              {s.designateBtn}
+            </button>
+            <button
+              onClick={doCancel}
+              disabled={isPending}
+              className="eyebrow !text-navy/40 hover:!text-navy p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
+            >
+              {isCancelPending ? s.removingBtn : s.removeBtn}
+            </button>
           </div>
+          {error && (
+            <p className="eyebrow !text-navy" role="alert">
+              {error}
+            </p>
+          )}
         </div>
       )}
 

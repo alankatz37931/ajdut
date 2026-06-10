@@ -284,6 +284,7 @@ export default async function ProjectResalePage({ params }: Params) {
         ) : (
           <ResaleSellerPanel
             projectSlug={project.slug}
+            projectName={project.name}
             rows={sellerRows}
             members={projectMembers}
             defaultPricePerShare={defaultPricePerShare}
