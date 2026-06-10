@@ -118,9 +118,6 @@ export function CompositionEditor({
       <section className="space-y-4">
         <div>
           <p className="eyebrow">{dict.classes.eyebrow}</p>
-          <p className="mt-2 text-sm text-navy/70 leading-relaxed">
-            {dict.classes.helper}
-          </p>
         </div>
 
         <ul className="hairline-t">

@@ -1694,9 +1694,7 @@ export const dict = {
       "Reasigná a cada participante a una de las 4 clases. Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres.",
     genericError: "Ocurrió un error.",
     classes: {
-      eyebrow: "— Clases de participantes (fijas)",
-      helper:
-        "Las 4 clases son fijas para todos los proyectos: Directivo, Administrativo, Embajador e Inversor pasivo. No se crean ni se borran — solo reasignás a cada participante a la clase que corresponda. Los miembros las ven en la ficha con la cantidad de personas y el % de cada una.",
+      eyebrow: "— Clases de participantes",
     },
     holders: {
       eyebrow: "— Participantes de AJDUT",

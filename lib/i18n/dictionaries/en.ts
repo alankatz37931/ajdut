@@ -1686,9 +1686,7 @@ export const dict: Dict = {
       "Reassign each shareholder to one of the 4 classes. Members see the aggregated cap table by class — number of people and percentage — without names.",
     genericError: "An error occurred.",
     classes: {
-      eyebrow: "— Shareholder classes (fixed)",
-      helper:
-        "The 4 classes are fixed for every project: Directive, Administrative, Ambassador and Passive investor. They can't be created or deleted — you just reassign each shareholder to the matching class. Members see them on the project page with the number of people and the % of each one.",
+      eyebrow: "— Shareholder classes",
     },
     holders: {
       eyebrow: "— AJDUT shareholders",
