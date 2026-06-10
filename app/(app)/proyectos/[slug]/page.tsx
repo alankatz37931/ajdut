@@ -487,6 +487,8 @@ export default async function ProjectPage({ params }: Params) {
     withInlineCta?: boolean;
     /** Ancla para links internos del sidebar (ej. "politicas"). */
     anchorId?: string;
+    /** Acción alineada a la derecha del header (ej. botón Revender). */
+    headerAction?: React.ReactNode;
     node: React.ReactNode;
   };
   const sections: SectionDef[] = [];
@@ -659,9 +661,30 @@ export default async function ProjectPage({ params }: Params) {
 
   // — Tu participación (ref, solo si tenés acciones).
   if (myShares > 0) {
+    // CTA Revender — vive arriba a la derecha del header de la sección.
+    // Si el project owner definió una fecha de inicio de reventa que todavía
+    // no llegó, el botón queda deshabilitado (la fecha se muestra bajo las
+    // tarjetas). Fecha pasada (o null) → botón habilitado normal.
+    const revenderAction = resaleLocked ? (
+      <span
+        className="btn-outline !px-4 !py-2 !text-xs whitespace-nowrap inline-flex items-center gap-1.5 opacity-50 cursor-not-allowed pointer-events-none"
+        aria-disabled="true"
+      >
+        {t.revenderBtn}
+      </span>
+    ) : (
+      <Link
+        href={`/proyectos/${project.slug}/reventa` as Route}
+        className="btn-outline !px-4 !py-2 !text-xs whitespace-nowrap inline-flex items-center gap-1.5 hover:border-gold hover:!text-gold transition-colors"
+      >
+        {t.revenderBtn}
+        <span aria-hidden>→</span>
+      </Link>
+    );
     sections.push({
       title: t.sections.yourParticipation,
       tone: "ref",
+      headerAction: revenderAction,
       node: (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -696,37 +719,17 @@ export default async function ProjectPage({ params }: Params) {
             />
           </div>
 
-          {/* CTA Revender — promovido como botón outline para que la
-              acción se descubra desde "Tu participación". El destino es la
-              página dedicada de reventa del proyecto.
-              Si el project owner definió una fecha de inicio de reventa que
-              todavía no llegó, el botón queda deshabilitado y mostramos la
-              fecha. Fecha pasada (o null) → botón habilitado normal. */}
-          <div className="mt-6">
-            {resaleLocked ? (
-              <>
-                <span
-                  className="btn-outline inline-flex opacity-50 cursor-not-allowed pointer-events-none"
-                  aria-disabled="true"
-                >
-                  {t.revenderBtn}
-                </span>
-                <p className="mt-2 eyebrow !text-gold">
-                  {t.resaleLockedFmt.replace(
-                    "{date}",
-                    formatDate(project.resaleAllowedFrom!, locale)
-                  )}
-                </p>
-              </>
-            ) : (
-              <Link
-                href={`/proyectos/${project.slug}/reventa` as Route}
-                className="btn-outline inline-flex"
-              >
-                {t.revenderBtn}
-              </Link>
-            )}
-          </div>
+          {/* El botón Revender vive en el header de la sección (headerAction).
+              Acá solo dejamos el aviso de fecha cuando la reventa todavía no
+              está habilitada por el project owner. */}
+          {resaleLocked && (
+            <p className="mt-4 eyebrow !text-gold">
+              {t.resaleLockedFmt.replace(
+                "{date}",
+                formatDate(project.resaleAllowedFrom!, locale)
+              )}
+            </p>
+          )}
 
           {myParticipations.length > 0 && (
             <ul className="mt-6 space-y-5">
@@ -1022,6 +1025,7 @@ export default async function ProjectPage({ params }: Params) {
                 tone={s.tone}
                 isFirst={i === 0}
                 anchorId={s.anchorId}
+                headerAction={s.headerAction}
               >
                 {s.node}
               </ProjectSection>

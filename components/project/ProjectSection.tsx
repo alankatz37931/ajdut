@@ -23,6 +23,8 @@ type Props = {
   /** Ancla opcional para links internos (ej. "#politicas"). `scroll-mt`
    *  deja aire arriba para que el header sticky no tape el título. */
   anchorId?: string;
+  /** Acción opcional alineada a la derecha del header (ej. botón Revender). */
+  headerAction?: React.ReactNode;
   /** CTA al final del bloque. */
   trailingCta?: React.ReactNode;
   children: React.ReactNode;
@@ -33,6 +35,7 @@ export function ProjectSection({
   title,
   isFirst,
   anchorId,
+  headerAction,
   trailingCta,
   children,
 }: Props) {
@@ -47,14 +50,18 @@ export function ProjectSection({
         anchorId && "scroll-mt-24"
       )}
     >
-      {/* Header único: NN gold mono + título sans medio. */}
-      <div className="flex items-baseline gap-3 mb-5">
-        <span className="font-mono text-sm text-gold tracking-wider">{num}</span>
-        {title && (
-          <h2 className="font-sans text-lg sm:text-xl text-navy leading-none">
-            {title}
-          </h2>
-        )}
+      {/* Header único: NN gold mono + título sans medio. La acción opcional
+          se ancla a la derecha (en mobile baja a una segunda línea). */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-5">
+        <div className="flex items-baseline gap-3 min-w-0">
+          <span className="font-mono text-sm text-gold tracking-wider">{num}</span>
+          {title && (
+            <h2 className="font-sans text-lg sm:text-xl text-navy leading-none">
+              {title}
+            </h2>
+          )}
+        </div>
+        {headerAction && <div className="shrink-0">{headerAction}</div>}
       </div>
 
       <div>{children}</div>
