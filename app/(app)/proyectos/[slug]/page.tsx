@@ -485,9 +485,21 @@ export default async function ProjectPage({ params }: Params) {
     tone: "vitrina" | "ref";
     /** Pegamos el "próximo paso" inline solo en algunas secciones vitrina. */
     withInlineCta?: boolean;
+    /** Ancla para links internos del sidebar (ej. "politicas"). */
+    anchorId?: string;
     node: React.ReactNode;
   };
   const sections: SectionDef[] = [];
+
+  // ¿El proyecto tiene políticas propias visibles? Lo reusamos para la
+  // sección y para el link del sidebar (que ancla a ella).
+  const hasProjectPolicies =
+    canSeePoliciesGated &&
+    !!(
+      project.startupProfile?.policyShares ||
+      project.startupProfile?.policyDividends ||
+      project.startupProfile?.dividendsFrequency
+    );
 
   // — Resumen — la sección que más "vende".
   if (project.startupProfile) {
@@ -820,27 +832,23 @@ export default async function ProjectPage({ params }: Params) {
   }
 
   // — Políticas (ref, gated).
-  if (
-    canSeePoliciesGated &&
-    (project.startupProfile?.policyShares ||
-      project.startupProfile?.policyDividends ||
-      project.startupProfile?.dividendsFrequency)
-  ) {
+  if (hasProjectPolicies) {
     sections.push({
       title: t.sections.policies,
       tone: "ref",
+      anchorId: "politicas",
       node: (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3 max-w-4xl">
-          {project.startupProfile.policyShares && (
+          {project.startupProfile?.policyShares && (
             <Block title={t.policies.shares} body={project.startupProfile.policyShares} />
           )}
-          {project.startupProfile.policyDividends && (
+          {project.startupProfile?.policyDividends && (
             <Block
               title={t.policies.dividends}
               body={project.startupProfile.policyDividends}
             />
           )}
-          {project.startupProfile.dividendsFrequency && (
+          {project.startupProfile?.dividendsFrequency && (
             <Block
               title={t.policies.frequency}
               body={project.startupProfile.dividendsFrequency}
@@ -1013,6 +1021,7 @@ export default async function ProjectPage({ params }: Params) {
                 title={s.title}
                 tone={s.tone}
                 isFirst={i === 0}
+                anchorId={s.anchorId}
               >
                 {s.node}
               </ProjectSection>
@@ -1107,16 +1116,21 @@ export default async function ProjectPage({ params }: Params) {
               </div>
             )}
 
-            {/* Link sutil a las políticas generales de la plataforma —
-                vive en /legal y aplica a todos los proyectos. */}
-            <div className="pt-1">
-              <Link
-                href={"/legal" as Route}
-                className="block text-center eyebrow !text-navy/40 hover:!text-gold transition-colors"
-              >
-                {t.politicasLink}
-              </Link>
-            </div>
+            {/* Link a las políticas DEL PROYECTO (participaciones, dividendos,
+                frecuencia) — ancla a la sección de políticas más abajo en la
+                misma ficha. Solo se muestra si el proyecto las cargó y el
+                viewer puede verlas. Las políticas generales de AJDUT viven en
+                el footer del sitio, no acá. */}
+            {hasProjectPolicies && (
+              <div className="pt-1">
+                <a
+                  href="#politicas"
+                  className="block text-center eyebrow !text-navy/40 hover:!text-gold transition-colors"
+                >
+                  {t.politicasLink}
+                </a>
+              </div>
+            )}
           </aside>
         </div>
       </ProjectBody>

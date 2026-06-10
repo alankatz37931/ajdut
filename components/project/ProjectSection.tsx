@@ -20,6 +20,9 @@ type Props = {
   tone?: "vitrina" | "ref";
   /** Si es la primera sección no pintamos hairline-t. */
   isFirst?: boolean;
+  /** Ancla opcional para links internos (ej. "#politicas"). `scroll-mt`
+   *  deja aire arriba para que el header sticky no tape el título. */
+  anchorId?: string;
   /** CTA al final del bloque. */
   trailingCta?: React.ReactNode;
   children: React.ReactNode;
@@ -29,13 +32,21 @@ export function ProjectSection({
   index,
   title,
   isFirst,
+  anchorId,
   trailingCta,
   children,
 }: Props) {
   const num = String(index).padStart(2, "0");
 
   return (
-    <section className={cn(isFirst ? "" : "hairline-t", "pt-7 sm:pt-8 pb-1")}>
+    <section
+      id={anchorId}
+      className={cn(
+        isFirst ? "" : "hairline-t",
+        "pt-7 sm:pt-8 pb-1",
+        anchorId && "scroll-mt-24"
+      )}
+    >
       {/* Header único: NN gold mono + título sans medio. */}
       <div className="flex items-baseline gap-3 mb-5">
         <span className="font-mono text-sm text-gold tracking-wider">{num}</span>
