@@ -1456,7 +1456,7 @@ export const dict: Dict = {
     policyDividendsLabel: "Dividend policy (optional)",
     dividendsFreqLabel: "Dividend frequency (optional)",
     videoIntro:
-      "If you have a pitch video, paste the link here. Reports are uploaded later from the Periodic reports section.",
+      "If you have a pitch video, paste the link here.",
     videoUrlLabel: "Video URL (YouTube / Vimeo)",
     videoHelper:
       "If you paste a YouTube or Vimeo link it shows as an embedded video on the project page.",
@@ -1592,7 +1592,7 @@ export const dict: Dict = {
     sectionCategorization: "Categorization",
     sectionVideo: "Video",
     videoIntro:
-      "If you have a pitch video, paste the link here. Project reports are uploaded from the Periodic reports section.",
+      "If you have a pitch video, paste the link here.",
     videoHelper:
       "If you paste a YouTube or Vimeo link it shows as an embedded video on the project page.",
     sectionWhat: "What does it do?",

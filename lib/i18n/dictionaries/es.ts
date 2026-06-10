@@ -1464,7 +1464,7 @@ export const dict = {
     policyDividendsLabel: "Política de dividendos (opcional)",
     dividendsFreqLabel: "Frecuencia de dividendos (opcional)",
     videoIntro:
-      "Si tenés un video de presentación del proyecto, pegá el link acá. Los reportes se suben después desde la sección Reportes periódicos.",
+      "Si tenés un video de presentación del proyecto, pegá el link acá.",
     videoUrlLabel: "URL del video (YouTube / Vimeo)",
     videoHelper:
       "Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.",
@@ -1600,7 +1600,7 @@ export const dict = {
     sectionCategorization: "Categorización",
     sectionVideo: "Video",
     videoIntro:
-      "Si tenés un video de presentación, pegá el link acá. Los reportes del proyecto se suben desde la sección Reportes periódicos.",
+      "Si tenés un video de presentación, pegá el link acá.",
     videoHelper:
       "Si pegás un link de YouTube o Vimeo se muestra como video embebido en la ficha.",
     sectionWhat: "¿Qué hace?",
