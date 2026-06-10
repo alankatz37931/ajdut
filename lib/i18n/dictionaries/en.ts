@@ -62,15 +62,17 @@ export const dict: Dict = {
 
   home: {
     eyebrow: "— Where projects build their community",
-    titleLine1: "Connecting capital, projects and",
-    titleLine2: "high-impact communities.",
+    titleLine1: "The system that coordinates",
+    titleLine2: "the most valuable part of your company:",
+    titleLine3: "Partners, collaborators and investors.",
     pillarsEyebrow: "Transparency · Unity · Value",
     valueTransparency: "Transparency",
     valueUnity: "Unity",
     valueValue: "Value",
     valueLegacy: "Legacy",
     description:
-      "AJDUT brings together visionary project owners and members who want to back high-value initiatives: from tech startups to real-estate developments and commerce. Fully backed, certified and transparent.",
+      "With Ajdut you can structure partner participation, communicate, send reports and connect with the right people to grow your business through collaborative economy.",
+    descriptionBold: "All recorded, verified and coordinated.",
     quote:
       "When everyone shares the vision and does their part, we all grow. This is the economy of us.",
     ctaSignIn: "Sign in",

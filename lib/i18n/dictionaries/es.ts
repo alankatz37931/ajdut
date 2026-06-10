@@ -66,15 +66,17 @@ export const dict = {
 
   home: {
     eyebrow: "— Donde los proyectos construyen su comunidad",
-    titleLine1: "Conectamos capital, proyectos y",
-    titleLine2: "comunidades de alto impacto.",
+    titleLine1: "El sistema que coordina",
+    titleLine2: "lo más valioso de tu empresa:",
+    titleLine3: "Socios, colaboradores e inversionistas.",
     pillarsEyebrow: "Transparencia · Unidad · Valor",
     valueTransparency: "Transparencia",
     valueUnity: "Unidad",
     valueValue: "Valor",
     valueLegacy: "Legado",
     description:
-      "AJDUT une a emprendedores visionarios con miembros que buscan respaldar iniciativas de alto valor: desde startups tecnológicas hasta desarrollos inmobiliarios y comercio. Todo respaldado, certificado y transparente.",
+      "Con Ajdut puedes estructurar la participación de socios, comunicarse, enviar reportes y conectar con las personas correctas para crecer tu negocio mediante economía colaborativa.",
+    descriptionBold: "Todo registrado, verificado y coordinado.",
     quote:
       "Cuando cada uno comparte la visión y hace su parte, todos crecemos. Esto es la economía del nosotros.",
     ctaSignIn: "Acceder",
