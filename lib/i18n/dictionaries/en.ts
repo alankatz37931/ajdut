@@ -76,7 +76,7 @@ export const dict: Dict = {
     quote:
       "When everyone shares the vision and does their part, we all grow. This is the economy of us.",
     ctaSignIn: "Sign in",
-    ctaApply: "I want to be part",
+    ctaApply: "Apply to be part",
     pillarsHeading: "Why members choose AJDUT",
     pillarManagementTitle: "Coordination between partners",
     pillarManagementBody:
