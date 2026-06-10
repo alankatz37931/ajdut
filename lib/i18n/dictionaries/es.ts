@@ -85,6 +85,9 @@ export const dict = {
     pillarManagementTitle: "Coordinación entre socios",
     pillarManagementBody:
       "Asigna participaciones, define roles y mantén a todos alineados con la misma información en tiempo real.",
+    pillarVerifiedTitle: "Transacciones verificadas",
+    pillarVerifiedBody:
+      "Cada cambio de participación queda registrado y certificado. Así te aseguramos un control total y transparente sobre tu empresa.",
     pillarEcosystemTitle: "Conexión con personas afines",
     pillarEcosystemBody:
       "AJDUT acerca a emprendedores, inversionistas y colaboradores que comparten valores y visión.",

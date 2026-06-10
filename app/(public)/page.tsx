@@ -79,6 +79,11 @@ export default async function HomePage() {
             body={t.pillarManagementBody}
           />
           <Pillar
+            icon={<FileCheckIcon />}
+            title={t.pillarVerifiedTitle}
+            body={t.pillarVerifiedBody}
+          />
+          <Pillar
             icon={<HandshakeIcon />}
             title={t.pillarEcosystemTitle}
             body={t.pillarEcosystemBody}
@@ -140,6 +145,28 @@ function ShieldIcon() {
     >
       <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
       <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+// Documento con check — "Transacciones verificadas":
+// cada cambio queda registrado y certificado.
+function FileCheckIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="m9 15 2 2 4-4" />
     </svg>
   );
 }
