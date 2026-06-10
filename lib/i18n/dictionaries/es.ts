@@ -1811,7 +1811,7 @@ export const dict = {
     section: "Equipo del proyecto",
     description:
       "Quiénes son los project owners detrás del proyecto. Se muestra en la ficha pública a quienes tengan acceso.",
-    equityTotalFmt: "Equity asignado total: {pct}%",
+    equityTotalFmt: "Participaciones asignadas total: {pct}%",
     addBtn: "+ Agregar miembro",
     empty: "Todavía no agregaste a nadie al equipo.",
     linkedin: "LinkedIn →",
@@ -1827,7 +1827,7 @@ export const dict = {
     vestingModeAllAtOnce: "Todas juntas",
     vestingModeGradual: "De a poco",
     vestingMonthsLabel: "Tramos (meses)",
-    vestingMonthsHelper: "El equity se entrega en partes iguales, una por mes.",
+    vestingMonthsHelper: "Las participaciones se entregan en partes iguales, una por mes.",
     vestingStartLabel: "Inicio del vesting",
     vestingBadgeFmt: "Vesting · {n} meses desde {date}",
     vestingStartRequired: "Indicá la fecha de inicio del vesting.",
@@ -1835,7 +1835,7 @@ export const dict = {
     form: {
       fullNameLabel: "Nombre completo",
       roleLabel: "Rol",
-      equityLabel: "Equity %",
+      equityLabel: "Participaciones %",
       joinedAtLabel: "Se unió (opcional)",
       linkedinLabel: "LinkedIn (opcional)",
       bioLabel: "Bio / experiencia (opcional)",

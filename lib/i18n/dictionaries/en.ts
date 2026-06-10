@@ -1803,7 +1803,7 @@ export const dict: Dict = {
     section: "Project team",
     description:
       "Who the project owners behind the project are. Shown on the public project page to those with access.",
-    equityTotalFmt: "Total equity assigned: {pct}%",
+    equityTotalFmt: "Total participations assigned: {pct}%",
     addBtn: "+ Add member",
     empty: "You haven't added anyone to the team yet.",
     linkedin: "LinkedIn →",
@@ -1819,7 +1819,7 @@ export const dict: Dict = {
     vestingModeAllAtOnce: "All at once",
     vestingModeGradual: "Gradually",
     vestingMonthsLabel: "Tranches (months)",
-    vestingMonthsHelper: "Equity is granted in equal parts, one per month.",
+    vestingMonthsHelper: "Participations are granted in equal parts, one per month.",
     vestingStartLabel: "Vesting start",
     vestingBadgeFmt: "Vesting · {n} months from {date}",
     vestingStartRequired: "Enter the vesting start date.",
@@ -1827,7 +1827,7 @@ export const dict: Dict = {
     form: {
       fullNameLabel: "Full name",
       roleLabel: "Role",
-      equityLabel: "Equity %",
+      equityLabel: "Participations %",
       joinedAtLabel: "Joined (optional)",
       linkedinLabel: "LinkedIn (optional)",
       bioLabel: "Bio / experience (optional)",
