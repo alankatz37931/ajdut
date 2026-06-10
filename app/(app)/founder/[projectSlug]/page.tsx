@@ -282,6 +282,7 @@ export default async function FounderDashboardPage({ params }: Params) {
           title={t.sectionResumen}
           editHref={`/founder/${project.slug}/editar` as Route}
           editLabel={t.editLabelEditar}
+          flush
         >
           {sp?.problemStatement ||
           sp?.solutionStatement ||
@@ -414,6 +415,7 @@ export default async function FounderDashboardPage({ params }: Params) {
           editHref={`/founder/${project.slug}/leads` as Route}
           editLabel={t.editLabelLeads}
           urgent={pendingActions > 0}
+          flush
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-line">
             <MicroKpi
@@ -445,7 +447,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 05 · Métricas ────────────────────────────────────── */}
         {/* Las 4 métricas de comunidad/valuación, iguales que la ficha
             pública. Son calculadas (no editables) → sin link "Actualizar". */}
-        <FounderSection n="05" title={t.sectionMetricas}>
+        <FounderSection n="05" title={t.sectionMetricas} flush>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <MetricStat
               label={t.metricSociosDirectivos}
@@ -688,8 +690,9 @@ function FounderSection({
   editLabel?: string;
   urgent?: boolean;
   id?: string;
-  /** Cuando el contenido ya cierra con su propia divisoria (la última fila de
-   *  una lista), `flush` anula el hairline-b de la sección para no duplicarla. */
+  /** Anula el hairline-b de cierre de la sección. Se usa cuando el contenido ya
+   *  cierra con su propia divisoria (última fila de una lista) o cuando se
+   *  prefiere la sección sin línea divisoria. */
   flush?: boolean;
   children: React.ReactNode;
 }) {
