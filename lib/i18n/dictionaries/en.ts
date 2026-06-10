@@ -766,7 +766,7 @@ export const dict: Dict = {
     eyebrow: "— My portfolio",
     title: "My participations",
     intro:
-      "Exclusive access to the projects you back. You won't see other members or aggregate amounts from third parties.",
+      "All your participations in one place. The value of what you back.",
     exploreBtn: "Explore projects →",
     portfolioValue: "Total portfolio value",
     portfolioValueHintOneProject: "1 project",

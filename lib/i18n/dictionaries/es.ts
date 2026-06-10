@@ -771,7 +771,7 @@ export const dict = {
     eyebrow: "— Mi cartera",
     title: "Mis participaciones",
     intro:
-      "Acceso exclusivo a los proyectos que respaldas. No verás otros miembros ni montos agregados de terceros.",
+      "Tus participaciones en un solo lugar. El valor de lo que respaldas.",
     exploreBtn: "Explorar proyectos →",
     portfolioValue: "Valor total del portafolio",
     portfolioValueHintOneProject: "1 proyecto",
