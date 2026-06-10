@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getDict, getLocale } from "@/lib/i18n";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
+import { ensureProjectClasses } from "@/lib/services/shareholder-class";
 import { CompositionEditor } from "./CompositionEditor";
 
 type Params = { params: Promise<{ projectSlug: string }> };
@@ -23,7 +24,6 @@ export default async function FounderCompositionPage({ params }: Params) {
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
     include: {
-      shareholderClasses: { orderBy: { order: "asc" } },
       externalHoldings: { orderBy: { createdAt: "asc" } },
       participations: {
         where: { isPlatformStake: false, currentOwnerId: { not: null } },
@@ -36,7 +36,10 @@ export default async function FounderCompositionPage({ params }: Params) {
   if (!project) notFound();
   if (project.ownerId !== user.id) notFound();
 
-  const classes = project.shareholderClasses.map((c) => ({
+  // Las clases son FIJAS: siempre las 4 canónicas. `ensureProjectClasses` crea
+  // las que falten (side-effect idempotente, aceptable en una RSC) y devuelve
+  // las 4 ordenadas. El owner solo reasigna participantes entre ellas.
+  const classes = (await ensureProjectClasses(prisma, project.id)).map((c) => ({
     id: c.id,
     name: c.name,
   }));

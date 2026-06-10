@@ -7,6 +7,8 @@ const tx = vi.hoisted(() => ({
   ownershipHistory: { create: vi.fn() },
   chatChannel: { findUnique: vi.fn(), create: vi.fn() },
   auditLog: { create: vi.fn() },
+  // `ensureProjectClasses` asegura las 4 clases canónicas al aprobar.
+  shareholderClass: { findMany: vi.fn(), update: vi.fn(), create: vi.fn() },
 }));
 
 vi.mock("@/lib/db/client", () => ({
@@ -49,6 +51,9 @@ beforeEach(() => {
       }
     }
   }
+  // `ensureProjectClasses`: por defecto el proyecto no tiene clases → las crea.
+  tx.shareholderClass.findMany.mockResolvedValue([]);
+  tx.shareholderClass.create.mockResolvedValue({ id: "class-x" });
 });
 
 describe("approveProject — autorización", () => {

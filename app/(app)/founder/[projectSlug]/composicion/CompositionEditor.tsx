@@ -4,9 +4,6 @@ import { useState, useTransition } from "react";
 import type { Dict } from "@/lib/i18n";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
 import {
-  createClassAction,
-  renameClassAction,
-  deleteClassAction,
   assignHolderClassAction,
   upsertExternalHoldingAction,
   removeExternalHoldingAction,
@@ -54,13 +51,14 @@ export function CompositionEditor({
   dict: CompDict;
   locale: string;
 }) {
-  const [classes, setClasses] = useState<ClassRow[]>(initialClasses);
+  // Las clases son FIJAS (las 4 canónicas vienen por prop). No se crean,
+  // renombran ni borran acá — el owner solo reasigna participantes entre ellas.
+  const classes = initialClasses;
   const [holders, setHolders] = useState<HolderRow[]>(initialHolders);
   const [external, setExternal] = useState<ExternalRow[]>(initialExternal);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [newClass, setNewClass] = useState("");
   const [showNewExternal, setShowNewExternal] = useState(false);
   const [editingExternalId, setEditingExternalId] = useState<string | null>(null);
 
@@ -74,40 +72,6 @@ export function CompositionEditor({
       if (r.ok) onOk(r as Extract<R, { ok: true }>);
       else setError(r.error ?? dict.genericError);
     });
-  }
-
-  function addClass() {
-    const name = newClass.trim();
-    if (name.length < 2) return;
-    run(
-      () => createClassAction(projectSlug, name),
-      (r) => {
-        setClasses((c) => [...c, r.class]);
-        setNewClass("");
-      }
-    );
-  }
-
-  function renameClass(id: string, name: string) {
-    run(
-      () => renameClassAction(projectSlug, id, name),
-      () => setClasses((c) => c.map((x) => (x.id === id ? { ...x, name } : x)))
-    );
-  }
-
-  function deleteClass(id: string) {
-    run(
-      () => deleteClassAction(projectSlug, id),
-      () => {
-        setClasses((c) => c.filter((x) => x.id !== id));
-        setHolders((h) =>
-          h.map((x) => (x.classId === id ? { ...x, classId: "" } : x))
-        );
-        setExternal((e) =>
-          e.map((x) => (x.classId === id ? { ...x, classId: "" } : x))
-        );
-      }
-    );
   }
 
   function assignHolder(userId: string, classId: string) {
@@ -150,7 +114,7 @@ export function CompositionEditor({
         </p>
       )}
 
-      {/* ─── Clases ──────────────────────────────────────────────── */}
+      {/* ─── Clases (fijas) ──────────────────────────────────────── */}
       <section className="space-y-4">
         <div>
           <p className="eyebrow">{dict.classes.eyebrow}</p>
@@ -159,46 +123,16 @@ export function CompositionEditor({
           </p>
         </div>
 
-        {classes.length > 0 && (
-          <ul className="hairline-t">
-            {classes.map((c) => (
-              <ClassLine
-                key={c.id}
-                cls={c}
-                isPending={isPending}
-                onRename={(name) => renameClass(c.id, name)}
-                onDelete={() => deleteClass(c.id)}
-                saveLabel={dict.classes.saveBtn}
-                removeLabel={dict.classes.removeBtn}
-                removeConfirm={dict.classes.removeConfirm}
-              />
-            ))}
-          </ul>
-        )}
-
-        <div className="flex items-end gap-3">
-          <input
-            value={newClass}
-            onChange={(e) => setNewClass(e.target.value)}
-            maxLength={60}
-            placeholder={dict.classes.placeholder}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addClass();
-              }
-            }}
-            className={`flex-1 min-w-0 ${LINE_INPUT} text-base`}
-          />
-          <button
-            type="button"
-            onClick={addClass}
-            disabled={isPending || newClass.trim().length < 2}
-            className="btn-outline disabled:opacity-50 shrink-0"
-          >
-            {dict.classes.addBtn}
-          </button>
-        </div>
+        <ul className="hairline-t">
+          {classes.map((c) => (
+            <li
+              key={c.id}
+              className="hairline-b last:border-b-0 py-2.5 text-sm text-navy"
+            >
+              {c.name}
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* ─── Accionistas de AJDUT ────────────────────────────────── */}
@@ -299,53 +233,6 @@ export function CompositionEditor({
         )}
       </section>
     </div>
-  );
-}
-
-function ClassLine({
-  cls,
-  isPending,
-  onRename,
-  onDelete,
-  saveLabel,
-  removeLabel,
-  removeConfirm,
-}: {
-  cls: ClassRow;
-  isPending: boolean;
-  onRename: (name: string) => void;
-  onDelete: () => void;
-  saveLabel: string;
-  removeLabel: string;
-  removeConfirm: string;
-}) {
-  const [draft, setDraft] = useState(cls.name);
-  const dirty = draft.trim() !== cls.name && draft.trim().length >= 2;
-  return (
-    <li className="hairline-b last:border-b-0 flex items-center gap-3 py-2.5">
-      <input
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        maxLength={60}
-        className={`flex-1 min-w-0 ${LINE_INPUT}`}
-      />
-      {dirty && (
-        <button
-          type="button"
-          onClick={() => onRename(draft.trim())}
-          disabled={isPending}
-          className="eyebrow hover:!text-gold shrink-0"
-        >
-          {saveLabel}
-        </button>
-      )}
-      <InlineConfirm
-        label={removeLabel}
-        question={removeConfirm}
-        onConfirm={onDelete}
-        disabled={isPending}
-      />
-    </li>
   );
 }
 

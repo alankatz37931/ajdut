@@ -532,18 +532,31 @@ model OwnershipHistory {
 // ven el cap table agregado por clase (cantidad de personas + %), sin
 // nombres. Owner / admin siguen viendo el cap table nominal.
 
+// Las clases son FIJAS: cada proyecto tiene siempre estas 4 (no se crean ni
+// se borran). El owner solo reasigna participantes entre ellas. `kind` es el
+// identificador estable (independiente del id por proyecto); el stake de AJDUT
+// se cuenta dentro de INVERSOR_PASIVO.
+enum ParticipantClass {
+  DIRECTIVO
+  ADMINISTRATIVO
+  EMBAJADOR
+  INVERSOR_PASIVO
+}
+
 model ShareholderClass {
-  id        String   @id @default(cuid())
+  id        String            @id @default(cuid())
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project           @relation(fields: [projectId], references: [id])
   name      String
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
+  kind      ParticipantClass?
+  order     Int               @default(0)
+  createdAt DateTime          @default(now())
 
   participations   Participation[]
   externalHoldings ExternalHolding[]
   founders         Founder[]
 
+  @@unique([projectId, kind])
   @@index([projectId, order])
 }
 

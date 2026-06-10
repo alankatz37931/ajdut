@@ -212,9 +212,12 @@ export default async function ProjectPage({ params }: Params) {
     shares: number;
     tone?: "default" | "platform" | "muted";
   };
+  // Solo las 4 clases canónicas (con kind); AJDUT se fold en Inversor pasivo.
   const byClass = computeCapTableByClass(
     capInput,
-    project.shareholderClasses.map((c) => ({ id: c.id, name: c.name }))
+    project.shareholderClasses
+      .filter((c) => c.kind)
+      .map((c) => ({ id: c.id, name: c.name, kind: c.kind }))
   );
   const byClassRows: ByClassRow[] = byClass.rows
     .filter((row) => row.kind !== "platform")

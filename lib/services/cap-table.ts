@@ -307,18 +307,30 @@ export type CapTableByClass = {
 
 export function computeCapTableByClass(
   input: CapTableInput,
-  classes: { id: string; name: string }[]
+  classes: { id: string; name: string; kind?: string | null }[]
 ): CapTableByClass {
   const base = computeCapTable(input);
   const total = base.totalShares;
 
+  // El stake de AJDUT se contabiliza DENTRO de la clase Inversor pasivo (no es
+  // una fila aparte). Fallback a la fila "platform" si no existe esa clase.
+  const passiveId = classes.find((c) => c.kind === "INVERSOR_PASIVO")?.id ?? null;
+
   const UNCL = "__uncl__";
   type Bucket = { name: string; shares: number; owners: Set<string>; extPeople: number; founderPeople: number };
   const buckets = new Map<string, Bucket>();
+  // Las clases canónicas se muestran SIEMPRE (aunque queden en 0).
+  const canonicalIds = new Set<string>();
   for (const c of classes) {
     buckets.set(c.id, { name: c.name, shares: 0, owners: new Set(), extPeople: 0, founderPeople: 0 });
+    canonicalIds.add(c.id);
   }
   buckets.set(UNCL, { name: UNCL, shares: 0, owners: new Set(), extPeople: 0, founderPeople: 0 });
+
+  // Fold del stake de plataforma dentro de Inversor pasivo.
+  if (passiveId && base.platformShares > 0) {
+    buckets.get(passiveId)!.shares += base.platformShares;
+  }
 
   const bucketFor = (classId: string | null | undefined): Bucket => {
     if (classId && buckets.has(classId)) return buckets.get(classId)!;
@@ -373,7 +385,8 @@ export function computeCapTableByClass(
       kind: "reserved",
     });
   }
-  if (base.platformShares > 0) {
+  // Fila "platform" SOLO si no se pudo foldear en Inversor pasivo (fallback).
+  if (!passiveId && base.platformShares > 0) {
     rows.push({
       key: "platform",
       name: "__platform__",
@@ -385,7 +398,10 @@ export function computeCapTableByClass(
   }
   for (const [id, b] of buckets) {
     const people = b.owners.size + b.extPeople + b.founderPeople;
-    if (b.shares <= 0 && people <= 0) continue;
+    const isCanonical = canonicalIds.has(id);
+    // Clases canónicas: siempre se muestran (las 4 fijas). El resto (sin
+    // clasificar / legacy) solo si tiene algo.
+    if (!isCanonical && b.shares <= 0 && people <= 0) continue;
     rows.push({
       key: id,
       name: id === UNCL ? "__uncl__" : b.name,

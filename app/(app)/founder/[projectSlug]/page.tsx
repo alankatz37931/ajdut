@@ -67,7 +67,7 @@ export default async function FounderDashboardPage({ params }: Params) {
       },
       shareholderClasses: {
         orderBy: { order: "asc" },
-        select: { id: true, name: true, order: true },
+        select: { id: true, name: true, kind: true, order: true },
       },
       _count: { select: { shareholderClasses: true, externalHoldings: true } },
     },
@@ -98,9 +98,13 @@ export default async function FounderDashboardPage({ params }: Params) {
     ...h,
     label: h.label || t.capTable.preExistingFallback,
   }));
+  // Solo las 4 clases canónicas (con kind). El stake de AJDUT se fold dentro
+  // de Inversor pasivo; las 4 se muestran siempre, aunque queden en 0.
   const byClass = computeCapTableByClass(
     capInput,
-    project.shareholderClasses.map((c) => ({ id: c.id, name: c.name }))
+    project.shareholderClasses
+      .filter((c) => c.kind)
+      .map((c) => ({ id: c.id, name: c.name, kind: c.kind }))
   );
 
   // El bloque "Fondeo" usa el pool unificado (remanente) como "disponible" y

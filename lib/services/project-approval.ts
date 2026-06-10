@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { recordAudit } from "./audit";
 import { ForbiddenError, InvariantViolation, NotFoundError } from "./errors";
+import { ensureProjectClasses } from "./shareholder-class";
 
 type Tx = Prisma.TransactionClient;
 
@@ -86,7 +87,12 @@ export async function approveProject(input: ApproveProjectInput) {
       await tx.chatChannel.create({ data: { projectId: project.id } });
     }
 
-    // 4. Activar
+    // 4. Asegurar las 4 clases de participación canónicas (fijas). Todo
+    // proyecto arranca con ellas; el owner solo reasigna participantes entre
+    // ellas desde la página de composición. Idempotente.
+    await ensureProjectClasses(tx, project.id);
+
+    // 5. Activar
     await tx.project.update({
       where: { id: project.id },
       data: {

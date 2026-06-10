@@ -1691,17 +1691,12 @@ export const dict = {
   founderComposicion: {
     section: "Composición de participaciones",
     description:
-      "Agrupá a los participantes en clases (Directivo, Operativo, Inversionistas, etc.). Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres.",
+      "Reasigná a cada participante a una de las 4 clases fijas (Directivo, Administrativo, Embajador, Inversor pasivo). Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres.",
     genericError: "Ocurrió un error.",
     classes: {
-      eyebrow: "— Clases de participantes",
+      eyebrow: "— Clases de participantes (fijas)",
       helper:
-        "Las categorías en las que agrupás a tus participantes. Los miembros las ven en la ficha con la cantidad de personas y el % de cada una.",
-      placeholder: "Nueva clase — ej. Directivo",
-      addBtn: "Agregar clase",
-      saveBtn: "Guardar",
-      removeBtn: "Eliminar",
-      removeConfirm: "¿Eliminar esta clase?",
+        "Las 4 clases son fijas para todos los proyectos: Directivo, Administrativo, Embajador e Inversor pasivo. No se crean ni se borran — solo reasignás a cada participante a la clase que corresponda. Los miembros las ven en la ficha con la cantidad de personas y el % de cada una.",
     },
     holders: {
       eyebrow: "— Participantes de AJDUT",

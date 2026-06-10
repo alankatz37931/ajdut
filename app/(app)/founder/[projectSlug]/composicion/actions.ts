@@ -7,7 +7,6 @@ import { DomainError, ValidationError } from "@/lib/services/errors";
 import { buildCapTableInput, CAP_TABLE_INCLUDE } from "@/lib/services/project";
 import { computeCapTable } from "@/lib/services/cap-table";
 
-type ClassDTO = { id: string; name: string };
 type ExternalDTO = {
   id: string;
   label: string;
@@ -18,9 +17,6 @@ type ExternalDTO = {
 
 export type CompositionResult =
   | { ok: true }
-  | { ok: false; error: string; code?: string; field?: string };
-export type CreateClassResult =
-  | { ok: true; class: ClassDTO }
   | { ok: false; error: string; code?: string; field?: string };
 export type UpsertExternalResult =
   | { ok: true; holding: ExternalDTO }
@@ -59,80 +55,23 @@ async function ownedProject(projectSlug: string) {
   return project;
 }
 
-export async function createClassAction(
-  projectSlug: string,
-  name: string
-): Promise<CreateClassResult> {
-  try {
-    const project = await ownedProject(projectSlug);
-    const clean = name.trim();
-    if (clean.length < 2) return { ok: false, error: "El nombre de la clase es muy corto." };
-    if (clean.length > 60) return { ok: false, error: "Máximo 60 caracteres." };
-    const count = await prisma.shareholderClass.count({
-      where: { projectId: project.id },
-    });
-    const created = await prisma.shareholderClass.create({
-      data: { projectId: project.id, name: clean, order: count },
-    });
-    revalidatePath(`/founder/${projectSlug}/composicion`);
-    return { ok: true, class: { id: created.id, name: created.name } };
-  } catch (e) {
-    return toFailure(e, "createClassAction");
-  }
-}
-
-export async function renameClassAction(
-  projectSlug: string,
-  classId: string,
-  name: string
-): Promise<CompositionResult> {
-  try {
-    const project = await ownedProject(projectSlug);
-    const clean = name.trim();
-    if (clean.length < 2) return { ok: false, error: "Nombre muy corto." };
-    if (clean.length > 60) return { ok: false, error: "Máximo 60 caracteres." };
-    const cls = await prisma.shareholderClass.findUnique({ where: { id: classId } });
-    if (!cls || cls.projectId !== project.id) {
-      return { ok: false, error: "Clase no encontrada." };
-    }
-    await prisma.shareholderClass.update({
-      where: { id: classId },
-      data: { name: clean },
-    });
-    revalidatePath(`/founder/${projectSlug}/composicion`);
-    return { ok: true };
-  } catch (e) {
-    return toFailure(e, "renameClassAction");
-  }
-}
-
-export async function deleteClassAction(
-  projectSlug: string,
+/**
+ * Las 4 clases de participación son FIJAS (ver `lib/services/shareholder-class`):
+ * no se crean, renombran ni borran. El owner solo REASIGNA participantes entre
+ * ellas. Por eso este helper valida que la clase destino exista en el proyecto Y
+ * sea una de las canónicas (`kind != null`); las legacy sin `kind` no son
+ * destino válido. Devuelve el `id` resuelto o `null` para "sin clase".
+ */
+async function resolveCanonicalClass(
+  projectId: string,
   classId: string
-): Promise<CompositionResult> {
-  try {
-    const project = await ownedProject(projectSlug);
-    const cls = await prisma.shareholderClass.findUnique({ where: { id: classId } });
-    if (!cls || cls.projectId !== project.id) {
-      return { ok: false, error: "Clase no encontrada." };
-    }
-    // Desvincular participaciones y tenencias externas, después borrar la clase.
-    await prisma.$transaction([
-      prisma.participation.updateMany({
-        where: { shareholderClassId: classId },
-        data: { shareholderClassId: null },
-      }),
-      prisma.externalHolding.updateMany({
-        where: { shareholderClassId: classId },
-        data: { shareholderClassId: null },
-      }),
-      prisma.shareholderClass.delete({ where: { id: classId } }),
-    ]);
-    revalidatePath(`/founder/${projectSlug}/composicion`);
-    return { ok: true };
-  } catch (e) {
-    return toFailure(e, "deleteClassAction");
+): Promise<string | null> {
+  if (!classId) return null;
+  const cls = await prisma.shareholderClass.findUnique({ where: { id: classId } });
+  if (!cls || cls.projectId !== projectId || cls.kind === null) {
+    throw new ValidationError("classId", "Clase no encontrada.");
   }
+  return classId;
 }
 
 export async function assignHolderClassAction(
@@ -142,14 +81,7 @@ export async function assignHolderClassAction(
 ): Promise<CompositionResult> {
   try {
     const project = await ownedProject(projectSlug);
-    let resolved: string | null = null;
-    if (classId) {
-      const cls = await prisma.shareholderClass.findUnique({ where: { id: classId } });
-      if (!cls || cls.projectId !== project.id) {
-        return { ok: false, error: "Clase no encontrada." };
-      }
-      resolved = classId;
-    }
+    const resolved = await resolveCanonicalClass(project.id, classId);
     await prisma.participation.updateMany({
       where: { projectId: project.id, currentOwnerId: holderUserId },
       data: { shareholderClassId: resolved },
@@ -195,14 +127,7 @@ export async function upsertExternalHoldingAction(
     if (shareCount > 1e9) {
       return { ok: false, error: "La cantidad de acciones excede el límite permitido." };
     }
-    let resolved: string | null = null;
-    if (input.classId) {
-      const cls = await prisma.shareholderClass.findUnique({ where: { id: input.classId } });
-      if (!cls || cls.projectId !== project.id) {
-        return { ok: false, error: "Clase no encontrada." };
-      }
-      resolved = input.classId;
-    }
+    const resolved = await resolveCanonicalClass(project.id, input.classId);
 
     // ── Candado del cap table unificado ──────────────────────────────
     // equipo + plataforma + asignados + (todas las externas CON el cambio) no

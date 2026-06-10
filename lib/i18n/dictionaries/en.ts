@@ -1683,17 +1683,12 @@ export const dict: Dict = {
   founderComposicion: {
     section: "Shareholder composition",
     description:
-      "Group shareholders into classes (Founding, Operating, Investors, etc.). Members see the aggregated cap table by class — number of people and percentage — without names.",
+      "Reassign each shareholder to one of the 4 fixed classes (Directive, Administrative, Ambassador, Passive investor). Members see the aggregated cap table by class — number of people and percentage — without names.",
     genericError: "An error occurred.",
     classes: {
-      eyebrow: "— Shareholder classes",
+      eyebrow: "— Shareholder classes (fixed)",
       helper:
-        "The categories you group shareholders into. Members see them on the project page with the number of people and the % of each one.",
-      placeholder: "New class — e.g. Founding",
-      addBtn: "Add class",
-      saveBtn: "Save",
-      removeBtn: "Remove",
-      removeConfirm: "Remove this class?",
+        "The 4 classes are fixed for every project: Directive, Administrative, Ambassador and Passive investor. They can't be created or deleted — you just reassign each shareholder to the matching class. Members see them on the project page with the number of people and the % of each one.",
     },
     holders: {
       eyebrow: "— AJDUT shareholders",
