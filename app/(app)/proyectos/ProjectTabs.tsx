@@ -44,7 +44,7 @@ export function ProjectTabs({
 
   return (
     <nav
-      className="-mx-1 flex items-stretch gap-x-1 overflow-x-auto hairline-b"
+      className="-mx-1 flex items-stretch gap-x-1 overflow-x-auto hairline-b [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       aria-label="Categorías de proyectos"
     >
       {TABS.map((tab) => {
