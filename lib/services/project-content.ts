@@ -20,6 +20,8 @@ export type UpsertFounderInput = {
   joinedAt?: Date | null;
   isActive: boolean;
   shareholderClassId?: string | null;
+  vestingMonths?: number | null;
+  vestingStartAt?: string | null;
 };
 
 export async function upsertFounder(input: UpsertFounderInput) {
@@ -56,6 +58,35 @@ export async function upsertFounder(input: UpsertFounderInput) {
       }
     }
 
+    // ── Vesting: si hay tramos (>0), el equity se entrega de a poco ───
+    const hasVesting = Boolean(input.vestingMonths && input.vestingMonths > 0);
+    let vestingMonths: number | null = null;
+    let vestingStartAt: Date | null = null;
+    if (hasVesting) {
+      const months = input.vestingMonths as number;
+      if (!Number.isInteger(months) || months < 1 || months > 120) {
+        throw new ValidationError(
+          "vestingMonths",
+          "Los tramos deben ser entre 1 y 120 meses."
+        );
+      }
+      if (!input.vestingStartAt) {
+        throw new ValidationError(
+          "vestingStartAt",
+          "Indicá la fecha de inicio del vesting."
+        );
+      }
+      const start = new Date(input.vestingStartAt);
+      if (Number.isNaN(start.getTime())) {
+        throw new ValidationError(
+          "vestingStartAt",
+          "Indicá la fecha de inicio del vesting."
+        );
+      }
+      vestingMonths = months;
+      vestingStartAt = start;
+    }
+
     // ── Candado del cap table unificado ──────────────────────────────
     // El equipo (equity% → participaciones) + tenencias externas + plataforma
     // + asignados no pueden superar el total emitido (100%). Cargamos el resto
@@ -67,11 +98,14 @@ export async function upsertFounder(input: UpsertFounderInput) {
     if (!project) throw new NotFoundError("Project", input.projectId);
     const totalShares = project.totalShares;
 
-    // Resto comprometido (externas + plataforma + asignados) en participaciones:
-    // computeCapTable con founders vacíos deja committed = todo menos el equipo.
+    // Resto comprometido (externas + plataforma + asignados) en participaciones.
+    // founders:[] + reservedShares:0 → committed = todo MENOS el equipo (lo
+    // reservado por vesting es del equipo y se recalcula en newTeamShares como
+    // el target completo de cada founder).
     const restShares = computeCapTable({
       ...buildCapTableInput(project),
       founders: [],
+      reservedShares: 0,
     }).committedShares;
 
     // Equipo CON el cambio aplicado: solo founders ACTIVOS cuentan como equity
@@ -125,6 +159,8 @@ export async function upsertFounder(input: UpsertFounderInput) {
           joinedAt: input.joinedAt ?? null,
           isActive: input.isActive,
           shareholderClassId: input.shareholderClassId ?? null,
+          vestingMonths,
+          vestingStartAt,
         },
       });
     } else {
@@ -140,6 +176,8 @@ export async function upsertFounder(input: UpsertFounderInput) {
           joinedAt: input.joinedAt ?? null,
           isActive: input.isActive,
           shareholderClassId: input.shareholderClassId ?? null,
+          vestingMonths,
+          vestingStartAt,
         },
       });
     }

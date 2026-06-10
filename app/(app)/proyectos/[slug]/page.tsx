@@ -185,7 +185,9 @@ export default async function ProjectPage({ params }: Params) {
           ? t.capTable.unassigned
           : row.name === "__platform__"
             ? t.capTable.platform
-            : row.name;
+            : row.name === "__reserved__"
+              ? t.capTable.reserved
+              : row.name;
       capRows.push({
         holder,
         isPlatform: row.kind === "platform",
@@ -220,6 +222,14 @@ export default async function ProjectPage({ params }: Params) {
       if (row.kind === "pool") {
         return {
           label: t.capTable.unassigned,
+          people: null,
+          shares: row.shares,
+          tone: "muted" as const,
+        };
+      }
+      if (row.kind === "reserved") {
+        return {
+          label: t.capTable.reserved,
           people: null,
           shares: row.shares,
           tone: "muted" as const,

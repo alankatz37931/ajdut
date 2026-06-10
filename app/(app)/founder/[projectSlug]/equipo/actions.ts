@@ -65,6 +65,12 @@ export async function upsertFounderAction(
   const isActive = String(formData.get("isActive") ?? "true") === "true";
   const shareholderClassIdRaw = String(formData.get("shareholderClassId") ?? "").trim();
   const shareholderClassId = shareholderClassIdRaw || null;
+  const vestingMonthsRaw = String(formData.get("vestingMonths") ?? "").trim();
+  const vestingMonths = vestingMonthsRaw
+    ? Number.parseInt(vestingMonthsRaw, 10)
+    : null;
+  const vestingStartAtRaw = String(formData.get("vestingStartAt") ?? "").trim();
+  const vestingStartAt = vestingStartAtRaw || null;
 
   try {
     await upsertFounder({
@@ -80,6 +86,8 @@ export async function upsertFounderAction(
       joinedAt,
       isActive,
       shareholderClassId,
+      vestingMonths: vestingMonths !== null && Number.isFinite(vestingMonths) ? vestingMonths : null,
+      vestingStartAt,
     });
     revalidatePath(`/founder/${projectSlug}/equipo`);
     revalidatePath(`/founder/${projectSlug}`);

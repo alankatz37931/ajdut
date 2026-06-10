@@ -51,6 +51,10 @@ export default async function FounderTeamPage({ params }: Params) {
     joinedAt: f.joinedAt ? f.joinedAt.toISOString().slice(0, 10) : "",
     isActive: f.isActive,
     shareholderClassId: f.shareholderClassId ?? "",
+    vestingMonths: f.vestingMonths ?? 0,
+    vestingStartAt: f.vestingStartAt
+      ? f.vestingStartAt.toISOString().slice(0, 10)
+      : "",
   }));
 
   return (

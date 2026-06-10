@@ -351,12 +351,21 @@ model Founder {
   bio              String?
   references       String?
   linkedinUrl      String?
+  // equityPercent es el TOTAL acordado del socio. Si tiene vesting, lo
+  // efectivamente entregado (vested) se calcula en vivo desde vestingStartAt +
+  // vestingMonths (lineal por tramos mensuales). Lo no entregado queda
+  // RESERVADO/bloqueado en el cap table (no vuelve al pool).
   equityPercent    Decimal        @db.Decimal(5, 2)
   // Clase/tipo de participación del founder en el cap table (Directivo,
   // Administrativo, etc.). Null = sin clasificar. Agrupa al founder junto a
   // las participaciones y tenencias externas de la misma clase.
   shareholderClassId String?
   shareholderClass   ShareholderClass? @relation(fields: [shareholderClassId], references: [id])
+  // Vesting del equity del socio. null/0 = se entrega TODO de una. Si hay
+  // vestingMonths > 0 y vestingStartAt, el equity se entrega en N tramos
+  // mensuales iguales desde la fecha de inicio (calculado en vivo, sin cron).
+  vestingMonths    Int?
+  vestingStartAt   DateTime?
   joinedAt         DateTime?
   isActive         Boolean        @default(true)
 

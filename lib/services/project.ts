@@ -4,6 +4,8 @@ import { recordAudit } from "./audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "./errors";
 import {
   computeCapTable,
+  equityPercentToShares,
+  vestedEquityPercent,
   type CapTableInput,
 } from "./cap-table";
 
@@ -24,6 +26,8 @@ export const CAP_TABLE_INCLUDE = {
           equityPercent: true,
           isActive: true,
           shareholderClassId: true,
+          vestingMonths: true,
+          vestingStartAt: true,
         },
       },
     },
@@ -62,6 +66,8 @@ export type CapTableProjectShape = {
       equityPercent: Prisma.Decimal;
       isActive: boolean;
       shareholderClassId?: string | null;
+      vestingMonths?: number | null;
+      vestingStartAt?: Date | null;
     }[];
   } | null;
   externalHoldings: {
@@ -87,15 +93,37 @@ export type CapTableProjectShape = {
 export function buildCapTableInput(
   project: CapTableProjectShape
 ): CapTableInput {
+  const total = project.totalShares;
+  const now = new Date();
+  const activeFounders = (project.startupProfile?.founders ?? []).filter(
+    (f) => f.isActive
+  );
+
+  // Vesting: el equity de cada founder se entrega en vivo. El cap table muestra
+  // lo ENTREGADO (vested); lo no entregado (target − vested) se acumula como
+  // `reservedShares` → bloqueado, descuenta del pool, no se da a otros.
+  let reservedShares = 0;
+  const founders = activeFounders.map((f) => {
+    const target = Number(f.equityPercent);
+    const vested = vestedEquityPercent(
+      target,
+      f.vestingMonths,
+      f.vestingStartAt,
+      now
+    );
+    reservedShares +=
+      equityPercentToShares(target, total) - equityPercentToShares(vested, total);
+    return {
+      name: f.fullName,
+      equityPercent: vested,
+      classId: f.shareholderClassId ?? null,
+    };
+  });
+
   return {
-    totalShares: project.totalShares,
-    founders: (project.startupProfile?.founders ?? [])
-      .filter((f) => f.isActive)
-      .map((f) => ({
-        name: f.fullName,
-        equityPercent: Number(f.equityPercent),
-        classId: f.shareholderClassId ?? null,
-      })),
+    totalShares: total,
+    reservedShares: Math.max(0, reservedShares),
+    founders,
     externalHoldings: (project.externalHoldings ?? []).map((h) => ({
       label: h.label ?? "",
       shareCount: h.shareCount,

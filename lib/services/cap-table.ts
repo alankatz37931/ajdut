@@ -46,6 +46,11 @@ export type CapTableInput = {
   founders: CapTableFounderInput[];
   externalHoldings: CapTableExternalInput[];
   participations: CapTableParticipationInput[];
+  /** Participaciones comprometidas a socios con vesting pero AÚN NO entregadas.
+   *  Quedan bloqueadas: descuentan del pool, no se pueden dar a otros. El
+   *  caller (buildCapTableInput) las calcula como Σ(target − vested) de los
+   *  founders con vesting activo. */
+  reservedShares?: number;
 };
 
 export type CapTableRowKind =
@@ -53,7 +58,8 @@ export type CapTableRowKind =
   | "external"
   | "platform"
   | "holder"
-  | "pool";
+  | "pool"
+  | "reserved";
 
 export type CapTableRow = {
   key: string;
@@ -71,7 +77,9 @@ export type CapTable = {
   externalShares: number;
   platformShares: number;
   assignedShares: number;
-  /** founders + externas + plataforma + asignados (todo lo NO disponible). */
+  /** Reservado por vesting (comprometido a founders, no entregado). */
+  reservedShares: number;
+  /** founders + externas + plataforma + asignados + reservado (todo lo NO disponible). */
   committedShares: number;
   /** total − committed, nunca negativo. 0 si está sobre-comprometido. */
   poolShares: number;
@@ -90,6 +98,33 @@ export function equityPercentToShares(equityPercent: number, totalShares: number
   return Math.round((equityPercent / 100) * totalShares);
 }
 
+/** Meses enteros completos entre dos fechas (>= 0). */
+function monthsBetween(from: Date, to: Date): number {
+  let m = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
+  if (to.getDate() < from.getDate()) m -= 1; // todavía no completó el mes en curso
+  return Math.max(0, m);
+}
+
+/**
+ * Equity% efectivamente ENTREGADO (vested) de un socio a una fecha dada.
+ *
+ * Sin vesting (vestingMonths null/0 o sin fecha) → se entrega TODO de una
+ * (= equityPercent). Con vesting: N tramos mensuales iguales; el primero se
+ * entrega en la fecha de inicio y luego uno por mes hasta completar. Antes
+ * de la fecha de inicio: 0. Es una función pura (recibe `now`), sin cron.
+ */
+export function vestedEquityPercent(
+  equityPercent: number,
+  vestingMonths: number | null | undefined,
+  vestingStartAt: Date | null | undefined,
+  now: Date
+): number {
+  if (!vestingMonths || vestingMonths <= 0 || !vestingStartAt) return equityPercent;
+  if (now < vestingStartAt) return 0;
+  const delivered = Math.min(vestingMonths, monthsBetween(vestingStartAt, now) + 1);
+  return (equityPercent * delivered) / vestingMonths;
+}
+
 /**
  * Suma de participaciones comprometidas (founders + externas + plataforma +
  * asignados) EXCLUYENDO una de las fuentes. Útil para validar en escritura:
@@ -103,9 +138,13 @@ export function capTableCommittedExcluding(
 ): number {
   const ct = computeCapTable(input);
   if (exclude === "founder") {
+    // Al recomputar el equipo, lo reservado (vesting de founders) se recalcula
+    // aparte → no lo contamos como "resto".
     return ct.externalShares + ct.platformShares + ct.assignedShares;
   }
-  return ct.founderShares + ct.platformShares + ct.assignedShares;
+  // Al recomputar externas, lo reservado por vesting SÍ es parte del resto
+  // comprometido (es de los founders) y debe contar contra el tope.
+  return ct.founderShares + ct.platformShares + ct.assignedShares + ct.reservedShares;
 }
 
 export function computeCapTable(input: CapTableInput): CapTable {
@@ -167,8 +206,12 @@ export function computeCapTable(input: CapTableInput): CapTable {
   );
   const assignedShares = holderRows.reduce((s, r) => s + r.shares, 0);
 
-  // 5. Pool disponible = remanente.
-  const committedShares = founderShares + externalShares + platformShares + assignedShares;
+  // 5. Reservado por vesting (comprometido a founders, no entregado aún).
+  const reservedShares = Math.max(0, input.reservedShares ?? 0);
+
+  // 6. Pool disponible = remanente. Lo reservado también descuenta del pool.
+  const committedShares =
+    founderShares + externalShares + platformShares + assignedShares + reservedShares;
   const poolShares = Math.max(0, total - committedShares);
   const overcommit = committedShares > total;
 
@@ -180,6 +223,15 @@ export function computeCapTable(input: CapTableInput): CapTable {
       shares: poolShares,
       pct: total > 0 ? (poolShares / total) * 100 : 0,
       kind: "pool",
+    });
+  }
+  if (reservedShares > 0) {
+    rows.push({
+      key: "reserved",
+      name: "__reserved__",
+      shares: reservedShares,
+      pct: total > 0 ? (reservedShares / total) * 100 : 0,
+      kind: "reserved",
     });
   }
   if (platformShares > 0) {
@@ -203,6 +255,7 @@ export function computeCapTable(input: CapTableInput): CapTable {
     externalShares,
     platformShares,
     assignedShares,
+    reservedShares,
     committedShares,
     poolShares,
     verificationPct,
@@ -225,9 +278,9 @@ export type CapTableClassRow = {
   shares: number;
   pct: number;
   /** Cantidad de personas en la clase (founders + holders distintos + externas).
-   *  null para pool/plataforma. */
+   *  null para pool/plataforma/reservado. */
   people: number | null;
-  kind: "pool" | "platform" | "class" | "unclassified";
+  kind: "pool" | "platform" | "class" | "unclassified" | "reserved";
 };
 
 export type CapTableByClass = {
@@ -295,6 +348,16 @@ export function computeCapTableByClass(
       pct: total > 0 ? (base.poolShares / total) * 100 : 0,
       people: null,
       kind: "pool",
+    });
+  }
+  if (base.reservedShares > 0) {
+    rows.push({
+      key: "reserved",
+      name: "__reserved__",
+      shares: base.reservedShares,
+      pct: total > 0 ? (base.reservedShares / total) * 100 : 0,
+      people: null,
+      kind: "reserved",
     });
   }
   if (base.platformShares > 0) {

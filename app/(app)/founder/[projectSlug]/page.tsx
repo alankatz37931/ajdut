@@ -344,21 +344,6 @@ export default async function FounderDashboardPage({ params }: Params) {
               cta={t.team.cta}
             />
           )}
-
-          {/* Entregas programadas (vesting) — vive en Equipo porque sirve para
-              asignar participaciones a los miembros por tramos en el tiempo,
-              no todo de una. */}
-          <div className="mt-5 hairline-t pt-4">
-            <Link
-              href={`/founder/${project.slug}/vesting` as Route}
-              className="eyebrow !text-gold hover:!text-navy transition-colors"
-            >
-              {t.vestingLink} →
-            </Link>
-            <p className="mt-1.5 eyebrow !text-navy/40 normal-case tracking-normal">
-              {t.vestingHint}
-            </p>
-          </div>
         </FounderSection>
 
         {/* ─── 03 · Hitos del roadmap ───────────────────────────── */}
@@ -618,13 +603,19 @@ export default async function FounderDashboardPage({ params }: Params) {
                     ? t.capTable.poolName
                     : row.name === "__platform__"
                       ? t.capTable.platformName
-                      : row.name === "__uncl__"
-                        ? t.capTable.unassignedClass
-                        : row.name
+                      : row.name === "__reserved__"
+                        ? t.capTable.reservedLabel
+                        : row.name === "__uncl__"
+                          ? t.capTable.unassignedClass
+                          : row.name
                 }
                 shares={row.shares}
                 totalShares={totalShares}
-                muted={row.kind === "pool" || row.kind === "unclassified"}
+                muted={
+                  row.kind === "pool" ||
+                  row.kind === "unclassified" ||
+                  row.kind === "reserved"
+                }
                 gold={row.kind === "platform"}
                 locale={locale}
               />

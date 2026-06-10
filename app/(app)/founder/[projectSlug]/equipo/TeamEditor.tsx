@@ -10,6 +10,7 @@ import {
   FloatingTextarea,
   FloatingDate,
 } from "@/components/ui/Floating";
+import { formatDate } from "@/lib/utils/format";
 
 type EquipoDict = Dict["founderEquipo"];
 
@@ -26,6 +27,8 @@ type Founder = {
   joinedAt: string;
   isActive: boolean;
   shareholderClassId: string;
+  vestingMonths: number;
+  vestingStartAt: string;
 };
 
 const empty: Founder = {
@@ -39,6 +42,8 @@ const empty: Founder = {
   joinedAt: "",
   isActive: true,
   shareholderClassId: "",
+  vestingMonths: 0,
+  vestingStartAt: "",
 };
 
 export function TeamEditor({
@@ -165,6 +170,18 @@ export function TeamEditor({
                 </div>
                 <div className="col-span-6 sm:col-span-2 font-mono text-navy">
                   {fmtPct2(f.equityPercent)}%
+                  {f.vestingMonths > 0 && (
+                    <span className="mt-1 block eyebrow !text-gold font-sans normal-case">
+                      {dict.vestingBadgeFmt
+                        .replace("{n}", String(f.vestingMonths))
+                        .replace(
+                          "{date}",
+                          f.vestingStartAt
+                            ? formatDate(f.vestingStartAt, locale)
+                            : "—"
+                        )}
+                    </span>
+                  )}
                 </div>
                 <div className="col-span-6 sm:col-span-2 eyebrow">
                   {f.isActive ? dict.active : dict.inactive}
@@ -225,6 +242,13 @@ function FounderForm({
   const [shareholderClassId, setShareholderClassId] = useState(
     founder.shareholderClassId
   );
+  const [vestingMode, setVestingMode] = useState(
+    founder.vestingMonths > 0 ? "gradual" : "all"
+  );
+  const [vestingMonths, setVestingMonths] = useState(
+    founder.vestingMonths > 0 ? String(founder.vestingMonths) : ""
+  );
+  const [vestingStartAt, setVestingStartAt] = useState(founder.vestingStartAt);
 
   const hasClasses = shareholderClasses.length > 0;
   const classOptions = [
@@ -267,6 +291,49 @@ function FounderForm({
           onChange={setJoinedAt}
         />
       </div>
+
+      <div>
+        <FloatingSelect
+          id="vestingMode"
+          label={dict.vestingModeLabel}
+          value={vestingMode}
+          onChange={setVestingMode}
+          options={[
+            { value: "all", label: dict.vestingModeAllAtOnce },
+            { value: "gradual", label: dict.vestingModeGradual },
+          ]}
+        />
+        {vestingMode === "gradual" ? (
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            <div>
+              <FloatingInput
+                id="vestingMonths"
+                type="number"
+                step="1"
+                label={dict.vestingMonthsLabel}
+                value={vestingMonths}
+                onChange={setVestingMonths}
+              />
+              <p className="mt-1.5 eyebrow !text-navy/60">
+                {dict.vestingMonthsHelper}
+              </p>
+            </div>
+            <FloatingDate
+              id="vestingStartAt"
+              label={dict.vestingStartLabel}
+              value={vestingStartAt}
+              onChange={setVestingStartAt}
+            />
+          </div>
+        ) : (
+          // "Todas juntas": aseguramos que el FormData mande los campos vacíos.
+          <>
+            <input type="hidden" name="vestingMonths" value="" />
+            <input type="hidden" name="vestingStartAt" value="" />
+          </>
+        )}
+      </div>
+
       <FloatingInput
         id="linkedinUrl"
         type="url"
