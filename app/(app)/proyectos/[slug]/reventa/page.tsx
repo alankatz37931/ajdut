@@ -223,7 +223,7 @@ export default async function ProjectResalePage({ params }: Params) {
         <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
           {t.title}
         </h1>
-        <p className="mt-3 text-navy/75 leading-relaxed max-w-2xl">{t.intro}</p>
+        <p className="mt-3 text-navy/75 leading-relaxed">{t.intro}</p>
       </div>
 
       {isOwner && ownerValidationRows.length > 0 && (
@@ -272,13 +272,15 @@ export default async function ProjectResalePage({ params }: Params) {
         )}
       </section>
 
-      <section className="mt-14">
-        <p className="eyebrow !text-navy hairline-b pb-3 mb-6">
-          {t.sectionBoard}
-        </p>
-        {boardListings.length === 0 ? (
-          <p className="text-navy/60">{t.emptyNoBoard}</p>
-        ) : (
+      {/* Tablón: solo se muestra si hay publicaciones de OTROS socios. Tu
+          propia publicación se excluye de boardListings (no podés comprártela),
+          así que si sos el único que listó, esta sección no aparece. La compra
+          también vive en la pestaña global "Participaciones en venta". */}
+      {boardListings.length > 0 && (
+        <section className="mt-14">
+          <p className="eyebrow !text-navy hairline-b pb-3 mb-6">
+            {t.sectionBoard}
+          </p>
           <ul className="space-y-4">
             {boardListings.map((l) => {
               const listedShares = l.shareCount ?? l.participation.shareCount;
@@ -347,8 +349,8 @@ export default async function ProjectResalePage({ params }: Params) {
               );
             })}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

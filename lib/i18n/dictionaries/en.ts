@@ -894,7 +894,7 @@ export const dict: Dict = {
     metaTitle: "Participation resale · AJDUT",
     title: "Participation resale",
     intro:
-      "List your participations so other community members can acquire them. When you reach an agreement with a buyer, designate them here, and the AJDUT team approves the transfer so it's recorded.",
+      "List your participations so other community members can acquire them from the board. When someone acquires them, the founder and the AJDUT team approve the transfer so it's recorded.",
     sectionYours: "01 · Your participations",
     sectionBoard: "02 · Resale board",
     emptyNoShares: "You don't hold any participations in this project to resell.",

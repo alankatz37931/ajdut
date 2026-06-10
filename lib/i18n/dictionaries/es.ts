@@ -899,7 +899,7 @@ export const dict = {
     metaTitle: "Reventa de participaciones · AJDUT",
     title: "Reventa de participaciones",
     intro:
-      "Listá tus participaciones para que otros miembros de la comunidad puedan adquirirlas. Cuando acordás con un comprador lo designás acá, y el equipo de AJDUT aprueba el traspaso para que quede registrado.",
+      "Listá tus participaciones para que otros miembros de la comunidad puedan adquirirlas desde el tablón. Cuando alguien las adquiere, el founder y el equipo de AJDUT aprueban el traspaso para que quede registrado.",
     sectionYours: "01 · Tus participaciones",
     sectionBoard: "02 · Tablón de reventa",
     emptyNoShares: "No tenés participaciones en este proyecto para revender.",
