@@ -322,7 +322,7 @@ export default async function FounderDashboardPage({ params }: Params) {
               {sp.founders.map((f) => (
                 <li
                   key={f.id}
-                  className="grid grid-cols-12 items-baseline gap-3 hairline-b py-3"
+                  className="grid grid-cols-12 items-baseline gap-3 hairline-b last:border-b-0 py-3"
                 >
                   <span className="col-span-7 sm:col-span-5 text-navy break-words">
                     {f.fullName}
@@ -365,7 +365,7 @@ export default async function FounderDashboardPage({ params }: Params) {
                 return (
                   <li
                     key={m.id}
-                    className="hairline-b py-3 flex items-baseline gap-4 flex-wrap sm:flex-nowrap"
+                    className="hairline-b last:border-b-0 py-3 flex items-baseline gap-4 flex-wrap sm:flex-nowrap"
                   >
                     {/* Status: dot + label compactos, no se empujan al extremo */}
                     <span className="inline-flex items-baseline gap-2 shrink-0 min-w-[6.5rem]">

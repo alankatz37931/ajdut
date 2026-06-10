@@ -101,7 +101,7 @@ function DocRow({
   }
 
   return (
-    <li className="hairline-b py-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+    <li className="hairline-b last:border-b-0 py-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
       <div className="min-w-0 flex-1">
         <p className="text-navy break-words">{doc.title}</p>
         <p className="mt-0.5 eyebrow !text-navy/40">
