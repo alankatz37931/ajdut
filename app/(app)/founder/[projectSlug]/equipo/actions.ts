@@ -69,8 +69,18 @@ export async function upsertFounderAction(
   const vestingMonths = vestingMonthsRaw
     ? Number.parseInt(vestingMonthsRaw, 10)
     : null;
-  const vestingStartAtRaw = String(formData.get("vestingStartAt") ?? "").trim();
-  const vestingStartAt = vestingStartAtRaw || null;
+  const vestingInitialRaw = String(
+    formData.get("vestingInitialPercent") ?? ""
+  ).trim();
+  const vestingInitialPercent = vestingInitialRaw
+    ? Number.parseFloat(vestingInitialRaw)
+    : null;
+  const vestingFinalRaw = String(
+    formData.get("vestingFinalPercent") ?? ""
+  ).trim();
+  const vestingFinalPercent = vestingFinalRaw
+    ? Number.parseFloat(vestingFinalRaw)
+    : null;
 
   try {
     await upsertFounder({
@@ -87,7 +97,14 @@ export async function upsertFounderAction(
       isActive,
       shareholderClassId,
       vestingMonths: vestingMonths !== null && Number.isFinite(vestingMonths) ? vestingMonths : null,
-      vestingStartAt,
+      vestingInitialPercent:
+        vestingInitialPercent !== null && Number.isFinite(vestingInitialPercent)
+          ? vestingInitialPercent
+          : null,
+      vestingFinalPercent:
+        vestingFinalPercent !== null && Number.isFinite(vestingFinalPercent)
+          ? vestingFinalPercent
+          : null,
     });
     revalidatePath(`/founder/${projectSlug}/equipo`);
     revalidatePath(`/founder/${projectSlug}`);

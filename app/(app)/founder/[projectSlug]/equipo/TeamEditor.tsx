@@ -10,7 +10,6 @@ import {
   FloatingTextarea,
   FloatingDate,
 } from "@/components/ui/Floating";
-import { formatDate } from "@/lib/utils/format";
 
 type EquipoDict = Dict["founderEquipo"];
 
@@ -28,7 +27,8 @@ type Founder = {
   isActive: boolean;
   shareholderClassId: string;
   vestingMonths: number;
-  vestingStartAt: string;
+  vestingInitialPercent: number;
+  vestingFinalPercent: number;
 };
 
 const empty: Founder = {
@@ -43,7 +43,8 @@ const empty: Founder = {
   isActive: true,
   shareholderClassId: "",
   vestingMonths: 0,
-  vestingStartAt: "",
+  vestingInitialPercent: 0,
+  vestingFinalPercent: 0,
 };
 
 export function TeamEditor({
@@ -172,14 +173,10 @@ export function TeamEditor({
                   {fmtPct2(f.equityPercent)}%
                   {f.vestingMonths > 0 && (
                     <span className="mt-1 block eyebrow !text-gold font-sans normal-case">
-                      {dict.vestingBadgeFmt
-                        .replace("{n}", String(f.vestingMonths))
-                        .replace(
-                          "{date}",
-                          f.vestingStartAt
-                            ? formatDate(f.vestingStartAt, locale)
-                            : "—"
-                        )}
+                      {dict.vestingBadgeFmt.replace(
+                        "{n}",
+                        String(f.vestingMonths)
+                      )}
                     </span>
                   )}
                 </div>
@@ -248,7 +245,24 @@ function FounderForm({
   const [vestingMonths, setVestingMonths] = useState(
     founder.vestingMonths > 0 ? String(founder.vestingMonths) : ""
   );
-  const [vestingStartAt, setVestingStartAt] = useState(founder.vestingStartAt);
+  const [vestingInitialPercent, setVestingInitialPercent] = useState(
+    founder.vestingMonths > 0 ? String(founder.vestingInitialPercent) : ""
+  );
+  const [vestingFinalPercent, setVestingFinalPercent] = useState(
+    founder.vestingMonths > 0 ? String(founder.vestingFinalPercent) : ""
+  );
+
+  const totalPct = Number.parseFloat(equityPercent) || 0;
+  const initialPct = Number.parseFloat(vestingInitialPercent) || 0;
+  const finalPct = Number.parseFloat(vestingFinalPercent) || 0;
+  const monthsN = Number.parseInt(vestingMonths, 10) || 0;
+  const monthlyTotal = totalPct - initialPct - finalPct;
+  const monthlyNegative = monthlyTotal < 0;
+  const fmtPctPreview = (n: number) =>
+    n.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
 
   const hasClasses = shareholderClasses.length > 0;
   const classOptions = [
@@ -304,8 +318,8 @@ function FounderForm({
           ]}
         />
         {vestingMode === "gradual" ? (
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-            <div>
+          <div className="mt-3 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3">
               <FloatingInput
                 id="vestingMonths"
                 type="number"
@@ -314,22 +328,40 @@ function FounderForm({
                 value={vestingMonths}
                 onChange={setVestingMonths}
               />
-              <p className="mt-1.5 eyebrow !text-navy/60">
-                {dict.vestingMonthsHelper}
-              </p>
+              <FloatingInput
+                id="vestingInitialPercent"
+                type="number"
+                step="any"
+                label={dict.vestingInitialLabel}
+                value={vestingInitialPercent}
+                onChange={setVestingInitialPercent}
+              />
+              <FloatingInput
+                id="vestingFinalPercent"
+                type="number"
+                step="any"
+                label={dict.vestingFinalLabel}
+                value={vestingFinalPercent}
+                onChange={setVestingFinalPercent}
+              />
             </div>
-            <FloatingDate
-              id="vestingStartAt"
-              label={dict.vestingStartLabel}
-              value={vestingStartAt}
-              onChange={setVestingStartAt}
-            />
+            <p className="eyebrow !text-navy/60">{dict.vestingMonthsHelper}</p>
+            {monthlyNegative ? (
+              <p className="eyebrow !text-navy">{dict.vestingSumError}</p>
+            ) : (
+              <p className="eyebrow !text-gold normal-case font-sans">
+                {dict.vestingMonthlyPreviewFmt
+                  .replace("{pct}", fmtPctPreview(monthlyTotal))
+                  .replace("{n}", String(monthsN || 0))}
+              </p>
+            )}
           </div>
         ) : (
           // "Todas juntas": aseguramos que el FormData mande los campos vacíos.
           <>
             <input type="hidden" name="vestingMonths" value="" />
-            <input type="hidden" name="vestingStartAt" value="" />
+            <input type="hidden" name="vestingInitialPercent" value="" />
+            <input type="hidden" name="vestingFinalPercent" value="" />
           </>
         )}
       </div>

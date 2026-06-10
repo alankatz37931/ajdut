@@ -28,6 +28,8 @@ export const CAP_TABLE_INCLUDE = {
           shareholderClassId: true,
           vestingMonths: true,
           vestingStartAt: true,
+          vestingInitialPercent: true,
+          vestingFinalPercent: true,
         },
       },
     },
@@ -68,6 +70,8 @@ export type CapTableProjectShape = {
       shareholderClassId?: string | null;
       vestingMonths?: number | null;
       vestingStartAt?: Date | null;
+      vestingInitialPercent?: Prisma.Decimal | null;
+      vestingFinalPercent?: Prisma.Decimal | null;
     }[];
   } | null;
   externalHoldings: {
@@ -109,7 +113,9 @@ export function buildCapTableInput(
       target,
       f.vestingMonths,
       f.vestingStartAt,
-      now
+      now,
+      f.vestingInitialPercent != null ? Number(f.vestingInitialPercent) : null,
+      f.vestingFinalPercent != null ? Number(f.vestingFinalPercent) : null
     );
     reservedShares +=
       equityPercentToShares(target, total) - equityPercentToShares(vested, total);

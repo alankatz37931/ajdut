@@ -6,31 +6,46 @@ import {
   computeCapTableByClass,
 } from "@/lib/services/cap-table";
 
-describe("vestedEquityPercent — vesting en vivo del equity de un socio", () => {
+describe("vestedEquityPercent — entrega gradual (inicial + mensual + final)", () => {
   const start = new Date("2026-01-15T00:00:00Z");
 
-  it("sin vesting (months null) → entrega TODO de una", () => {
+  it("sin programación (months null) → entrega TODO de una", () => {
     expect(vestedEquityPercent(30, null, null, new Date("2026-06-01"))).toBe(30);
     expect(vestedEquityPercent(30, 0, start, new Date("2026-06-01"))).toBe(30);
   });
 
-  it("antes de la fecha de inicio → 0", () => {
-    expect(vestedEquityPercent(30, 12, start, new Date("2026-01-01"))).toBe(0);
+  it("ejemplo del cliente: 2% inicial + resto en 24m + 2% final (total 10%)", () => {
+    // total 10, inicial 2, final 2 → mensual = 6 repartido en 24 meses.
+    // En el inicio (mes 0): solo el inicial = 2.
+    expect(
+      vestedEquityPercent(10, 24, start, new Date("2026-01-15"), 2, 2)
+    ).toBeCloseTo(2, 5);
+    // A los 12 meses: 2 (inicial) + 6 × 12/24 = 2 + 3 = 5.
+    expect(
+      vestedEquityPercent(10, 24, start, new Date("2027-01-15"), 2, 2)
+    ).toBeCloseTo(5, 5);
+    // A los 24 meses (completo): 2 + 6 + 2 = 10.
+    expect(
+      vestedEquityPercent(10, 24, start, new Date("2028-01-15"), 2, 2)
+    ).toBeCloseTo(10, 5);
   });
 
-  it("en la fecha de inicio → primer tramo (1/N)", () => {
-    // 12 tramos, en el inicio entrega 1/12 de 30 = 2.5
-    expect(vestedEquityPercent(30, 12, start, new Date("2026-01-15"))).toBeCloseTo(2.5, 5);
+  it("el final solo se entrega al completar los N meses", () => {
+    // A los 23 meses: 2 + 6×23/24 = 2 + 5.75 = 7.75 (sin el final todavía).
+    expect(
+      vestedEquityPercent(10, 24, start, new Date("2027-12-15"), 2, 2)
+    ).toBeCloseTo(7.75, 2);
   });
 
-  it("a mitad de camino → proporcional", () => {
-    // a los 5 meses completos → tramos entregados = 6 (1 al inicio + 5)
-    // 6/12 de 30 = 15
-    expect(vestedEquityPercent(30, 12, start, new Date("2026-06-15"))).toBeCloseTo(15, 5);
+  it("sin inicial/final (0/0) → lineal puro sobre N meses", () => {
+    // 30% en 12 meses, a los 6 meses → 15.
+    expect(vestedEquityPercent(30, 12, start, new Date("2026-07-15"), 0, 0)).toBeCloseTo(15, 5);
+    // En el inicio → 0 (no hay inicial).
+    expect(vestedEquityPercent(30, 12, start, new Date("2026-01-15"), 0, 0)).toBeCloseTo(0, 5);
   });
 
-  it("pasado el final → entrega completa (no supera el target)", () => {
-    expect(vestedEquityPercent(30, 12, start, new Date("2030-01-01"))).toBe(30);
+  it("pasado el final → entrega completa, no supera el target", () => {
+    expect(vestedEquityPercent(30, 12, start, new Date("2030-01-01"), 5, 5)).toBe(30);
   });
 });
 

@@ -52,9 +52,10 @@ export default async function FounderTeamPage({ params }: Params) {
     isActive: f.isActive,
     shareholderClassId: f.shareholderClassId ?? "",
     vestingMonths: f.vestingMonths ?? 0,
-    vestingStartAt: f.vestingStartAt
-      ? f.vestingStartAt.toISOString().slice(0, 10)
-      : "",
+    vestingInitialPercent:
+      f.vestingInitialPercent != null ? Number(f.vestingInitialPercent) : 0,
+    vestingFinalPercent:
+      f.vestingFinalPercent != null ? Number(f.vestingFinalPercent) : 0,
   }));
 
   return (

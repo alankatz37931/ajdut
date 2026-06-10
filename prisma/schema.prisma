@@ -361,11 +361,17 @@ model Founder {
   // las participaciones y tenencias externas de la misma clase.
   shareholderClassId String?
   shareholderClass   ShareholderClass? @relation(fields: [shareholderClassId], references: [id])
-  // Vesting del equity del socio. null/0 = se entrega TODO de una. Si hay
-  // vestingMonths > 0 y vestingStartAt, el equity se entrega en N tramos
-  // mensuales iguales desde la fecha de inicio (calculado en vivo, sin cron).
-  vestingMonths    Int?
-  vestingStartAt   DateTime?
+  // Entrega gradual del equity del socio. null/0 = se entrega TODO de una.
+  // Si hay vestingMonths > 0, el equity se entrega así (calculado en vivo,
+  // sin cron, desde vestingStartAt = momento de creación):
+  //   · vestingInitialPercent → al inicio (mes 0).
+  //   · el resto (total − inicial − final) → lineal en N meses.
+  //   · vestingFinalPercent → al completar los N meses.
+  // No hay fecha de inicio editable: arranca cuando se crea el socio.
+  vestingMonths         Int?
+  vestingStartAt        DateTime?
+  vestingInitialPercent Decimal?  @db.Decimal(5, 2)
+  vestingFinalPercent   Decimal?  @db.Decimal(5, 2)
   joinedAt         DateTime?
   isActive         Boolean        @default(true)
 

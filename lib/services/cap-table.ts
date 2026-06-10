@@ -106,23 +106,36 @@ function monthsBetween(from: Date, to: Date): number {
 }
 
 /**
- * Equity% efectivamente ENTREGADO (vested) de un socio a una fecha dada.
+ * Equity% efectivamente ENTREGADO de un socio a una fecha dada (entrega gradual).
  *
- * Sin vesting (vestingMonths null/0 o sin fecha) → se entrega TODO de una
- * (= equityPercent). Con vesting: N tramos mensuales iguales; el primero se
- * entrega en la fecha de inicio y luego uno por mes hasta completar. Antes
- * de la fecha de inicio: 0. Es una función pura (recibe `now`), sin cron.
+ * Sin programación (vestingMonths null/0 o sin fecha) → se entrega TODO de una
+ * (= equityPercent). Con programación, el equity total se reparte así:
+ *   · `initialPercent` → al inicio (mes 0, desde el primer momento).
+ *   · el resto (total − inicial − final) → lineal en N meses.
+ *   · `finalPercent` → al completar los N meses.
+ * Es una función pura (recibe `now`), sin cron.
  */
 export function vestedEquityPercent(
   equityPercent: number,
   vestingMonths: number | null | undefined,
   vestingStartAt: Date | null | undefined,
-  now: Date
+  now: Date,
+  initialPercent?: number | null,
+  finalPercent?: number | null
 ): number {
   if (!vestingMonths || vestingMonths <= 0 || !vestingStartAt) return equityPercent;
   if (now < vestingStartAt) return 0;
-  const delivered = Math.min(vestingMonths, monthsBetween(vestingStartAt, now) + 1);
-  return (equityPercent * delivered) / vestingMonths;
+  const initial = Math.max(0, initialPercent ?? 0);
+  const final = Math.max(0, finalPercent ?? 0);
+  const monthly = Math.max(0, equityPercent - initial - final);
+  const elapsed = monthsBetween(vestingStartAt, now); // 0 en el inicio
+  // El % inicial se entrega desde el primer momento.
+  let vested = initial;
+  // Tramo mensual: lineal sobre los N meses.
+  vested += (monthly * Math.min(elapsed, vestingMonths)) / vestingMonths;
+  // % final: al completar el período.
+  if (elapsed >= vestingMonths) vested += final;
+  return Math.min(equityPercent, vested);
 }
 
 /**

@@ -21,7 +21,8 @@ export type UpsertFounderInput = {
   isActive: boolean;
   shareholderClassId?: string | null;
   vestingMonths?: number | null;
-  vestingStartAt?: string | null;
+  vestingInitialPercent?: number | null;
+  vestingFinalPercent?: number | null;
 };
 
 export async function upsertFounder(input: UpsertFounderInput) {
@@ -58,10 +59,14 @@ export async function upsertFounder(input: UpsertFounderInput) {
       }
     }
 
-    // ── Vesting: si hay tramos (>0), el equity se entrega de a poco ───
+    // ── Entrega gradual: si hay tramos (>0), el equity se entrega de a poco ─
+    // Esquema flexible: % inicial (al arranque) + resto mensual durante N meses
+    // + % al final. La entrega arranca desde el primer momento (creación).
     const hasVesting = Boolean(input.vestingMonths && input.vestingMonths > 0);
     let vestingMonths: number | null = null;
     let vestingStartAt: Date | null = null;
+    let vestingInitialPercent: number | null = null;
+    let vestingFinalPercent: number | null = null;
     if (hasVesting) {
       const months = input.vestingMonths as number;
       if (!Number.isInteger(months) || months < 1 || months > 120) {
@@ -70,21 +75,41 @@ export async function upsertFounder(input: UpsertFounderInput) {
           "Los tramos deben ser entre 1 y 120 meses."
         );
       }
-      if (!input.vestingStartAt) {
+      const initial = input.vestingInitialPercent ?? 0;
+      const final = input.vestingFinalPercent ?? 0;
+      if (!Number.isFinite(initial) || initial < 0) {
         throw new ValidationError(
-          "vestingStartAt",
-          "Indicá la fecha de inicio del vesting."
+          "vestingInitialPercent",
+          "El % inicial debe ser 0 o mayor."
         );
       }
-      const start = new Date(input.vestingStartAt);
-      if (Number.isNaN(start.getTime())) {
+      if (!Number.isFinite(final) || final < 0) {
         throw new ValidationError(
-          "vestingStartAt",
-          "Indicá la fecha de inicio del vesting."
+          "vestingFinalPercent",
+          "El % al final debe ser 0 o mayor."
+        );
+      }
+      if (initial + final > input.equityPercent) {
+        throw new ValidationError(
+          "vestingInitialPercent",
+          "El % inicial + final no puede superar el total del socio."
         );
       }
       vestingMonths = months;
-      vestingStartAt = start;
+      vestingInitialPercent = initial;
+      vestingFinalPercent = final;
+
+      // vestingStartAt: en CREATE arranca ahora; en UPDATE preservamos el
+      // existente si ya había uno, sino (recién se activa) seteamos ahora.
+      if (input.founderId) {
+        const existing = await tx.founder.findUnique({
+          where: { id: input.founderId },
+          select: { vestingStartAt: true },
+        });
+        vestingStartAt = existing?.vestingStartAt ?? new Date();
+      } else {
+        vestingStartAt = new Date();
+      }
     }
 
     // ── Candado del cap table unificado ──────────────────────────────
@@ -161,6 +186,14 @@ export async function upsertFounder(input: UpsertFounderInput) {
           shareholderClassId: input.shareholderClassId ?? null,
           vestingMonths,
           vestingStartAt,
+          vestingInitialPercent:
+            vestingInitialPercent != null
+              ? new Prisma.Decimal(vestingInitialPercent)
+              : null,
+          vestingFinalPercent:
+            vestingFinalPercent != null
+              ? new Prisma.Decimal(vestingFinalPercent)
+              : null,
         },
       });
     } else {
@@ -178,6 +211,14 @@ export async function upsertFounder(input: UpsertFounderInput) {
           shareholderClassId: input.shareholderClassId ?? null,
           vestingMonths,
           vestingStartAt,
+          vestingInitialPercent:
+            vestingInitialPercent != null
+              ? new Prisma.Decimal(vestingInitialPercent)
+              : null,
+          vestingFinalPercent:
+            vestingFinalPercent != null
+              ? new Prisma.Decimal(vestingFinalPercent)
+              : null,
         },
       });
     }
