@@ -113,7 +113,7 @@ async function assertProjectEditor(
   if (actor && actor.isActive && actor.role === "ADMIN") return;
 
   throw new ForbiddenError(
-    "Solo el founder, un co-admin o un admin pueden proponer asignaciones."
+    "Solo el project owner, un co-admin o un admin pueden proponer asignaciones."
   );
 }
 

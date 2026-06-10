@@ -423,7 +423,7 @@ export async function closeResaleDeal(
       });
       if (!project) throw new NotFoundError("Project", listing.projectId);
       if (project.ownerId !== input.rofrWaivedById) {
-        throw new ForbiddenError("Solo el founder del proyecto puede renunciar al ROFR.");
+        throw new ForbiddenError("Solo el project owner del proyecto puede renunciar al ROFR.");
       }
     }
 
@@ -724,10 +724,10 @@ export async function validateTransfer(input: ValidateTransferInput) {
         throw new InvariantViolation(
           "R_04_TRIPARTITE_PENDING",
           !buyerConfirmed && !ownerConfirmed
-            ? "El comprador y el founder todavía no validaron la reventa."
+            ? "El comprador y el project owner todavía no validaron la reventa."
             : !buyerConfirmed
             ? "El comprador todavía no confirmó la reventa."
-            : "El founder todavía no validó la reventa."
+            : "El project owner todavía no validó la reventa."
         );
       }
       const note = (input.overrideNote ?? "").trim();

@@ -145,7 +145,7 @@ async function assertProjectOwner(
     });
     if (!actor || !actor.isActive || actor.role !== "ADMIN") {
       throw new ForbiddenError(
-        "Solo el founder dueño del proyecto puede crear cronogramas de vesting."
+        "Solo el project owner dueño del proyecto puede crear cronogramas de vesting."
       );
     }
   }
@@ -376,7 +376,7 @@ export async function cancelVestingSchedule(
       });
       if (!actor || !actor.isActive || actor.role !== "ADMIN") {
         throw new ForbiddenError(
-          "Solo el founder dueño o un admin pueden cancelar el cronograma."
+          "Solo el project owner dueño o un admin pueden cancelar el cronograma."
         );
       }
     }

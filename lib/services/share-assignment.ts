@@ -61,7 +61,7 @@ export async function assignSharesFromLead(
     });
     if (!lead) throw new NotFoundError("Lead", input.leadId);
     if (lead.project.ownerId !== input.actorId) {
-      throw new ForbiddenError("Solo el founder del proyecto puede aceptar el pedido.");
+      throw new ForbiddenError("Solo el project owner del proyecto puede aceptar el pedido.");
     }
     if (lead.status !== "OPEN" && lead.status !== "CONTACTED") {
       throw new InvariantViolation(

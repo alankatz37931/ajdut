@@ -29,7 +29,7 @@ export async function assertCanEditProject(
   });
   if (!project) throw new NotFoundError("Project", projectId);
   if (project.ownerId !== actorId) {
-    throw new ForbiddenError("Solo el founder del proyecto puede editar esta información.");
+    throw new ForbiddenError("Solo el project owner del proyecto puede editar esta información.");
   }
 }
 
@@ -382,7 +382,7 @@ export async function createProject(input: CreateProjectInput) {
       throw new ForbiddenError("Sesión inválida.");
     }
     if (owner.role !== "PROJECT_OWNER" && owner.role !== "ADMIN") {
-      throw new ForbiddenError("Solo founders pueden crear proyectos.");
+      throw new ForbiddenError("Solo project owners pueden crear proyectos.");
     }
 
     // Emisión directa: el founder define total + precio. La valoración es el
