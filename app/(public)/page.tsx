@@ -66,6 +66,14 @@ export default async function HomePage() {
               <span aria-hidden className="ml-1">→</span>
             </Link>
           </div>
+
+          {/* Quote — la "economía del nosotros". Pull-quote a la izquierda,
+              acento gold, cierra la columna del hero. */}
+          <blockquote className="mt-8 sm:mt-10 border-l-2 border-gold/60 pl-4 sm:pl-5 max-w-md">
+            <p className="font-sans text-lg sm:text-xl text-navy !leading-snug font-medium text-balance italic">
+              “{t.quote}”
+            </p>
+          </blockquote>
         </section>
 
         {/* Pilares (col derecha en desktop, debajo en mobile) */}
@@ -96,15 +104,6 @@ export default async function HomePage() {
         </aside>
       </div>
 
-      {/* Quote de cierre — la "economía del nosotros". Ancho completo, centrado,
-          separado por hairline para que respire al final de la landing. */}
-      <div className="mt-12 sm:mt-16 hairline-t pt-8 sm:pt-10">
-        <blockquote className="mx-auto max-w-3xl text-center">
-          <p className="font-sans text-lg sm:text-2xl text-navy !leading-snug font-medium text-balance">
-            “{t.quote}”
-          </p>
-        </blockquote>
-      </div>
     </div>
   );
 }
