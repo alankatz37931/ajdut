@@ -1496,6 +1496,8 @@ export const dict: Dict = {
     viewPublicLink: "View public page",
     newProjectLink: "+ Another project",
     vestingLink: "Vesting / scheduled grants",
+    vestingHint:
+      "Grant participations to members in tranches over time, not all at once.",
     sectionResumen: "Summary",
     sectionEquipo: "Project team",
     sectionHitos: "Roadmap milestones",

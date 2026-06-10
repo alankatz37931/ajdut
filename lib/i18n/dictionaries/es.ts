@@ -1504,6 +1504,8 @@ export const dict = {
     viewPublicLink: "Ver ficha pública",
     newProjectLink: "+ Otro proyecto",
     vestingLink: "Vesting / entregas programadas",
+    vestingHint:
+      "Asigná participaciones a los miembros por tramos en el tiempo, no todo de una vez.",
     sectionResumen: "Resumen",
     sectionEquipo: "Equipo del proyecto",
     sectionHitos: "Hitos del roadmap",
