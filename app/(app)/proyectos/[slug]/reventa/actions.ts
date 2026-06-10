@@ -8,6 +8,7 @@ import { DomainError } from "@/lib/services/errors";
 import {
   listForResale,
   closeResaleDeal,
+  acquireResale,
   cancelResale,
   confirmResaleOwner,
 } from "@/lib/services/participation";
@@ -89,6 +90,57 @@ export async function listForResaleAction(
 }
 
 /**
+ * Compra iniciada por el comprador (first-to-acquire): un socio aprobado
+ * adquiere una publicación libre del tablón. El primero en adquirirla la
+ * reserva → pasa a validación del founder + ejecución del admin. El comprador
+ * ya queda confirmado (la inició él logueado), por eso no se le manda email; el
+ * founder sí recibe aviso de que tiene una reventa para validar.
+ */
+export async function acquireResaleAction(
+  projectSlug: string,
+  resaleListingId: string
+): Promise<ResaleResult> {
+  const user = await requireSession();
+  const dict = await getDict();
+  const e = dict.reventa.errors;
+
+  try {
+    const r = await acquireResale({ resaleListingId, buyerId: user.id });
+
+    // Email al founder avisándole que tiene una reventa para validar.
+    const owner = await prisma.user.findUnique({
+      where: { id: r.ownerId },
+      select: { email: true },
+    });
+    if (owner?.email) {
+      await notifyOwnerResalePending({
+        to: owner.email,
+        projectSlug,
+        projectName: r.projectName,
+        sellerName: r.sellerName,
+        buyerName: r.buyerName,
+        shareCount: r.shareCount,
+        intentNote: "",
+      });
+    }
+  } catch (err) {
+    if (err instanceof DomainError) return { ok: false, error: err.message };
+    console.error("acquireResaleAction", err);
+    return { ok: false, error: e.serverError };
+  }
+
+  revalidatePath(`/proyectos/${projectSlug}/reventa`);
+  revalidatePath(`/proyectos/${projectSlug}`);
+  revalidatePath("/partner");
+  revalidatePath("/admin/reventas");
+  return { ok: true };
+}
+
+/**
+ * @deprecated Flujo viejo "seller-designa-comprador". Reemplazado por
+ * `acquireResaleAction`. Se mantiene en el archivo sin uso desde la UI para no
+ * romper imports; usa `closeResaleDeal` que también quedó deprecada.
+ *
  * El vendedor designa al comprador con quien cerró el trato. El traspaso
  * queda pendiente de aprobación del equipo de AJDUT.
  */

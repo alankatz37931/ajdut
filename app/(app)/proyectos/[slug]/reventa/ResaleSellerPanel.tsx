@@ -4,18 +4,14 @@ import { useCallback, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import {
   FloatingInput,
-  FloatingSelect,
   FloatingTextarea,
 } from "@/components/ui/Floating";
 import {
   listForResaleAction,
-  proposeBuyerAction,
   cancelResaleAction,
 } from "./actions";
 import { useSafeAction } from "@/components/hooks/useSafeAction";
 import { formatCurrency } from "@/lib/utils/format";
-
-type Member = { id: string; name: string };
 
 type Row = {
   participationId: string;
@@ -37,7 +33,6 @@ export function ResaleSellerPanel({
   projectSlug,
   projectName,
   rows,
-  members,
   defaultPricePerShare,
   currency,
   locale,
@@ -46,7 +41,6 @@ export function ResaleSellerPanel({
   projectSlug: string;
   projectName: string;
   rows: Row[];
-  members: Member[];
   /** Precio estimado por participación (preMoney / totalShares). String para preservar precisión. Null si el proyecto no tiene valuation cargada. */
   defaultPricePerShare: string | null;
   currency: string;
@@ -61,7 +55,6 @@ export function ResaleSellerPanel({
           projectSlug={projectSlug}
           projectName={projectName}
           row={row}
-          members={members}
           defaultPricePerShare={defaultPricePerShare}
           currency={currency}
           locale={locale}
@@ -89,7 +82,6 @@ function SellerRow({
   projectSlug,
   projectName,
   row,
-  members,
   defaultPricePerShare,
   currency,
   locale,
@@ -98,14 +90,13 @@ function SellerRow({
   projectSlug: string;
   projectName: string;
   row: Row;
-  members: Member[];
   defaultPricePerShare: string | null;
   currency: string;
   locale: string;
   dict: ReventaDict;
 }) {
   const s = dict.seller;
-  const [mode, setMode] = useState<"idle" | "listing" | "designating">("idle");
+  const [mode, setMode] = useState<"idle" | "listing">("idle");
   const [intentNote, setIntentNote] = useState("");
   const [contact, setContact] = useState("");
   // Defaults: shareCount = todo lo disponible; pricePerShare = estimado del
@@ -116,7 +107,6 @@ function SellerRow({
   const [pricePerShareStr, setPricePerShareStr] = useState(
     defaultPricePerShare ?? ""
   );
-  const [buyerId, setBuyerId] = useState(members[0]?.id ?? "");
   // Validación client-side (sin viaje al server) — el hook solo cubre errores
   // que llegan del action.
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -148,27 +138,6 @@ function SellerRow({
     onSuccess: () => reset(),
   });
 
-  const designateFn = useCallback(
-    (buyer: string) => {
-      if (!row.listing) {
-        // Defensa adicional: el botón solo aparece cuando hay listing, pero
-        // si la prop cambió entre render y click resolvemos a un error
-        // estándar del hook en vez de romper.
-        return Promise.resolve({ ok: false as const, error: s.errBuyerRequired });
-      }
-      return proposeBuyerAction(projectSlug, row.listing.id, buyer);
-    },
-    [projectSlug, row.listing, s.errBuyerRequired]
-  );
-  const {
-    run: runDesignate,
-    isPending: isDesignatePending,
-    error: designateError,
-    reset: resetDesignate,
-  } = useSafeAction<string>(designateFn, {
-    onSuccess: () => reset(),
-  });
-
   const cancelFn = useCallback(() => {
     if (!row.listing) {
       return Promise.resolve({ ok: false as const, error: s.errBuyerRequired });
@@ -182,15 +151,13 @@ function SellerRow({
     reset: resetCancel,
   } = useSafeAction<void>(cancelFn);
 
-  const isPending = isListPending || isDesignatePending || isCancelPending;
-  const error =
-    validationError ?? listError ?? designateError ?? cancelError;
+  const isPending = isListPending || isCancelPending;
+  const error = validationError ?? listError ?? cancelError;
 
   function reset() {
     setMode("idle");
     setValidationError(null);
     resetList();
-    resetDesignate();
     resetCancel();
   }
 
@@ -221,17 +188,6 @@ function SellerRow({
       shareCount,
       proposedPricePerShare: pricePerShareStr,
     });
-  }
-
-  function doDesignate() {
-    resetDesignate();
-    setValidationError(null);
-    if (!row.listing) return;
-    if (!buyerId) {
-      setValidationError(s.errBuyerRequired);
-      return;
-    }
-    runDesignate(buyerId);
   }
 
   function doCancel() {
@@ -288,13 +244,6 @@ function SellerRow({
             );
           })()}
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setMode("designating")}
-              disabled={isPending}
-              className="btn-primary disabled:opacity-50"
-            >
-              {s.designateBtn}
-            </button>
             <button
               onClick={doCancel}
               disabled={isPending}
@@ -396,55 +345,6 @@ function SellerRow({
             >
               {isListPending ? s.listingConfirmingBtn : s.listingConfirmBtn}
             </button>
-            <button
-              onClick={reset}
-              disabled={isPending}
-              className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer"
-            >
-              {s.cancelBtn}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {mode === "designating" && (
-        <div className="mt-4 space-y-4">
-          {members.length === 0 ? (
-            <p className="text-sm text-navy/60">{s.designatingNoMembers}</p>
-          ) : (
-            <>
-              <FloatingSelect
-                id={`buyer-${row.participationId}`}
-                label={s.designatingBuyerLabel}
-                value={buyerId}
-                onChange={setBuyerId}
-                options={members.map((m) => ({ value: m.id, label: m.name }))}
-              />
-              <p className="text-sm text-navy/60 leading-relaxed">
-                {s.designatingNoteWithShares.replace(
-                  "{shares}",
-                  fmtInt(row.listing?.shareCount ?? row.shareCount)
-                )}
-              </p>
-            </>
-          )}
-          {error && (
-            <p className="eyebrow !text-navy" role="alert">
-              {error}
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-4">
-            {members.length > 0 && (
-              <button
-                onClick={doDesignate}
-                disabled={isPending}
-                className="btn-primary disabled:opacity-50"
-              >
-                {isDesignatePending
-                  ? s.designatingSubmittingBtn
-                  : s.designatingSubmitBtn}
-              </button>
-            )}
             <button
               onClick={reset}
               disabled={isPending}

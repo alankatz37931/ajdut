@@ -379,6 +379,12 @@ export type CloseResaleDealResult = {
   pricePerShare: string | null;
 };
 
+/**
+ * @deprecated Flujo viejo "seller-designa-comprador". Reemplazado por
+ * `acquireResale` (first-to-acquire, compra iniciada por el comprador). Se
+ * mantiene para no romper imports ni la página `/confirmar-reventa`, pero la UI
+ * ya no la invoca.
+ */
 export async function closeResaleDeal(
   input: CloseResaleDealInput
 ): Promise<CloseResaleDealResult> {
@@ -538,6 +544,139 @@ export async function closeResaleDeal(
       pricePerShare: listing.proposedPricePerShare
         ? listing.proposedPricePerShare.toString()
         : null,
+    };
+  });
+}
+
+// ─── REVENTA: compra iniciada por el comprador (first-to-acquire) ────
+//
+// Modelo vigente: el vendedor sólo publica (cantidad + precio) y NO elige al
+// comprador. Cualquier socio aprobado adquiere la publicación desde el tablón;
+// el primero en adquirirla la reserva → pasa a AWAITING_VALIDATION (founder
+// valida + admin ejecuta). Como el comprador inicia la compra logueado, su
+// `buyerAcceptedAt` se setea acá mismo: no hace falta token ni email de
+// confirmación (a diferencia de `closeResaleDeal`).
+
+export type AcquireResaleInput = { resaleListingId: string; buyerId: string };
+
+export type AcquireResaleResult = {
+  ownerId: string;
+  projectName: string;
+  projectSlug: string;
+  sellerName: string;
+  buyerName: string;
+  shareCount: number;
+};
+
+export async function acquireResale(
+  input: AcquireResaleInput
+): Promise<AcquireResaleResult> {
+  return prisma.$transaction(async (tx) => {
+    const listing = await tx.resaleListing.findUnique({
+      where: { id: input.resaleListingId },
+    });
+    if (!listing) throw new NotFoundError("ResaleListing", input.resaleListingId);
+
+    // First-to-acquire: sólo se puede adquirir una publicación libre. Si ya
+    // está AWAITING_VALIDATION/IN_CONVERSATION significa que otro socio la
+    // reservó primero.
+    if (listing.status !== "LISTED") {
+      throw new IllegalTransition(listing.status, "RESALE_ACQUIRED");
+    }
+
+    // El comprador no puede ser el vendedor.
+    if (listing.sellerId === input.buyerId) {
+      throw new ForbiddenError("No podés adquirir tu propia participación.");
+    }
+
+    // El comprador debe existir, ser activo, no estar borrado y no ser el
+    // usuario institucional (PLATFORM). Cualquier socio aprobado puede comprar.
+    const buyer = await tx.user.findUnique({
+      where: { id: input.buyerId },
+      select: { isActive: true, role: true, deletedAt: true, fullName: true, alias: true },
+    });
+    if (!buyer || !buyer.isActive || buyer.deletedAt || buyer.role === "PLATFORM") {
+      throw new ForbiddenError("Comprador inválido o no autorizado.");
+    }
+
+    const participation = await loadParticipation(tx, listing.participationId);
+    const listingShareCount = listing.shareCount ?? participation.shareCount;
+    const isFullTransfer = listingShareCount === participation.shareCount;
+    if (isFullTransfer && !canTransition(participation.status, "RESALE_DEAL_CLOSED")) {
+      throw new IllegalTransition(participation.status, "RESALE_DEAL_CLOSED");
+    }
+
+    const now = new Date();
+
+    await tx.resaleListing.update({
+      where: { id: listing.id },
+      data: {
+        status: "AWAITING_VALIDATION",
+        proposedBuyerId: input.buyerId,
+        // El comprador inició la compra logueado: ESA es su confirmación. No
+        // hay token ni email del lado del comprador.
+        buyerAcceptedAt: now,
+        buyerSignedAt: now,
+        ownerAcceptedAt: null,
+        buyerConfirmationTokenHash: null,
+        buyerConfirmationTokenExpiresAt: null,
+      },
+    });
+    if (isFullTransfer) {
+      await tx.participation.update({
+        where: { id: participation.id },
+        data: { status: "TRANSFER_PENDING" },
+      });
+    }
+
+    await recordAudit(tx, {
+      actorId: input.buyerId,
+      projectId: listing.projectId,
+      action: "PARTICIPATION.RESALE_ACQUIRED",
+      entityType: "ResaleListing",
+      entityId: listing.id,
+      payload: { buyerId: input.buyerId, shareCount: listingShareCount },
+    });
+
+    // El founder necesita aviso de que hay una reventa para validar.
+    const [project, seller] = await Promise.all([
+      tx.project.findUnique({
+        where: { id: listing.projectId },
+        select: { name: true, slug: true, ownerId: true },
+      }),
+      tx.user.findUnique({
+        where: { id: listing.sellerId },
+        select: { fullName: true, alias: true },
+      }),
+    ]);
+    if (!project) throw new NotFoundError("Project", listing.projectId);
+    const sellerName = seller?.alias ?? seller?.fullName ?? "Un miembro";
+    const buyerName = buyer.alias ?? buyer.fullName;
+
+    // Notification in-app al founder: hay una reventa esperando su validación.
+    await tx.notification.create({
+      data: {
+        userId: project.ownerId,
+        kind: "RESALE_OWNER_CONFIRM",
+        payload: {
+          resaleListingId: listing.id,
+          projectName: project.name,
+          projectSlug: project.slug,
+          sellerName,
+          buyerName,
+          shareCount: listingShareCount,
+          reventaUrl: `/proyectos/${project.slug}/reventa`,
+        },
+      },
+    });
+
+    return {
+      ownerId: project.ownerId,
+      projectName: project.name,
+      projectSlug: project.slug,
+      sellerName,
+      buyerName,
+      shareCount: listingShareCount,
     };
   });
 }

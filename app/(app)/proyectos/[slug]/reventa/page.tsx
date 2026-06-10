@@ -9,6 +9,7 @@ import { BackLink } from "@/components/app/BackLink";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils/format";
 import { ResaleSellerPanel } from "./ResaleSellerPanel";
 import { OwnerResaleValidation } from "./OwnerResaleValidation";
+import { AcquireButton } from "./AcquireButton";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -127,29 +128,6 @@ export default async function ProjectResalePage({ params }: Params) {
       })
     : [];
   const ownerBuyerMap = new Map(ownerBuyers.map((b) => [b.id, b]));
-
-  const holders = await prisma.participation.findMany({
-    where: {
-      projectId: project.id,
-      isPlatformStake: false,
-      currentOwnerId: { not: null },
-    },
-    select: {
-      currentOwner: { select: { id: true, fullName: true, alias: true } },
-    },
-  });
-  const memberMap = new Map<string, { id: string; name: string }>();
-  for (const h of holders) {
-    if (h.currentOwner && h.currentOwner.id !== user.id) {
-      memberMap.set(h.currentOwner.id, {
-        id: h.currentOwner.id,
-        name: h.currentOwner.alias ?? h.currentOwner.fullName,
-      });
-    }
-  }
-  const projectMembers = Array.from(memberMap.values()).sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
 
   const myListingByPart = new Map<string, (typeof listings)[number]>();
   for (const l of listings) {
@@ -286,7 +264,6 @@ export default async function ProjectResalePage({ params }: Params) {
             projectSlug={project.slug}
             projectName={project.name}
             rows={sellerRows}
-            members={projectMembers}
             defaultPricePerShare={defaultPricePerShare}
             currency={currency}
             locale={locale}
@@ -349,6 +326,23 @@ export default async function ProjectResalePage({ params }: Params) {
                     {t.boardContactLabel}{" "}
                     <span className="!text-navy">{l.contactChannel}</span>
                   </p>
+                  {/* First-to-acquire: cualquier socio aprobado adquiere una
+                      publicación libre (LISTED). El vendedor de la publicación
+                      no ve el botón (ve "Tu publicación"). */}
+                  {l.sellerId === user.id ? (
+                    <p className="mt-4 eyebrow !text-navy/40">
+                      {t.boardOwnListing}
+                    </p>
+                  ) : (
+                    l.status === "LISTED" && (
+                      <AcquireButton
+                        projectSlug={project.slug}
+                        resaleListingId={l.id}
+                        label={t.boardAcquireBtn}
+                        acquiringLabel={t.boardAcquiringBtn}
+                      />
+                    )
+                  )}
                 </li>
               );
             })}
