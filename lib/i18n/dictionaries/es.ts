@@ -1693,6 +1693,7 @@ export const dict = {
     description:
       "Reasigná a cada participante a una de las 4 clases. Los miembros ven el cap table agregado por clase — cantidad de personas y porcentaje — sin nombres.",
     genericError: "Ocurrió un error.",
+    teamLink: "Equipo del proyecto →",
     classes: {
       eyebrow: "— Clases de participantes",
     },
@@ -1707,7 +1708,7 @@ export const dict = {
     external: {
       eyebrow: "— Participantes pre-existentes",
       helper:
-        "Gente que ya tenía participaciones antes de AJDUT (project owners, inversores previos). Declarás cuántas personas, cuántas participaciones y su clase.",
+        "Inversores que ya tenían participaciones antes de AJDUT y que no son parte del equipo fundador (a los fundadores los gestionás en Equipo del proyecto). Declarás cuántas personas, cuántas participaciones y su clase.",
       addBtn: "+ Agregar",
       defaultLabel: "Tenencia",
       peopleSingleFmt: "{n} persona · {cls}",

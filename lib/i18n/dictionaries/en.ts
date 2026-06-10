@@ -1685,6 +1685,7 @@ export const dict: Dict = {
     description:
       "Reassign each shareholder to one of the 4 classes. Members see the aggregated cap table by class — number of people and percentage — without names.",
     genericError: "An error occurred.",
+    teamLink: "Project team →",
     classes: {
       eyebrow: "— Shareholder classes",
     },
@@ -1699,7 +1700,7 @@ export const dict: Dict = {
     external: {
       eyebrow: "— Pre-existing shareholders",
       helper:
-        "People who held participations before AJDUT (project owners, prior investors). You declare how many people, how many participations and their class.",
+        "Investors who already held participations before AJDUT and aren't part of the founding team (you manage founders in Project team). You declare how many people, how many participations and their class.",
       addBtn: "+ Add",
       defaultLabel: "Holding",
       peopleSingleFmt: "{n} person · {cls}",
