@@ -17,11 +17,13 @@ export default async function HomePage() {
         <section>
           <p className="eyebrow leading-tight">{t.eyebrow}</p>
 
-          <h1 className="font-sans mt-3 sm:mt-4 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] !leading-[1.1] font-bold break-words">
-            <span className="text-navy">{t.titleLine1}</span>{" "}
-            <span className="text-navy">{t.titleLine2}</span>{" "}
-            {/* Tercera línea en gold — el foco de la propuesta de valor */}
-            <span className="text-gold">{t.titleLine3}</span>
+          <h1 className="font-sans mt-3 sm:mt-4 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] !leading-[1.1] font-bold break-words text-navy">
+            {t.titleLine1}
+            {/* Break solo en desktop — en mobile/tablet el texto fluye natural */}
+            <span className="hidden lg:inline">
+              <br />
+            </span>{" "}
+            {t.titleLine2}
           </h1>
 
           {/* Valores fundacionales — ícono + label en eyebrow, separados por
@@ -50,10 +52,6 @@ export default async function HomePage() {
 
           <p className="mt-4 sm:mt-5 text-base sm:text-lg text-navy/80 leading-relaxed">
             {t.description}
-          </p>
-
-          <p className="mt-3 text-base sm:text-lg text-navy font-bold leading-relaxed">
-            {t.descriptionBold}
           </p>
 
           {/* CTA único: 'Aplica para ser parte' — botón con presencia, hover premium */}
