@@ -82,18 +82,15 @@ export const dict = {
     ctaSignIn: "Acceder",
     ctaApply: "Aplica para ser parte",
     pillarsHeading: "Por qué los miembros eligen AJDUT",
-    pillarCoordinationTitle: "Coordinación entre socios",
-    pillarCoordinationBody:
-      "Asigna participaciones, define roles y mantén a todos alineados con la misma información en tiempo real.",
-    pillarVerifiedTitle: "Transacciones verificadas",
-    pillarVerifiedBody:
-      "Cada cambio de participación queda registrado y certificado. Tu cap table siempre actualizado y seguro.",
-    pillarConnectionTitle: "Conexión con personas afines",
-    pillarConnectionBody:
-      "AJDUT acerca a emprendedores, inversionistas y colaboradores que comparten valores y visión.",
-    pillarGrowthTitle: "Acompañamiento en tu crecimiento",
-    pillarGrowthBody:
-      "Asesoría directa para estructurar tu empresa, definir tu valuación y prepararte para la siguiente etapa.",
+    pillarManagementTitle: "Gestión y control de participaciones",
+    pillarManagementBody:
+      "Asigna roles, coordina a tus socios con información en tiempo real y mantén tu cap table siempre actualizado y seguro. Cada cambio queda registrado y certificado de forma transparente.",
+    pillarEcosystemTitle: "Conexión con el ecosistema",
+    pillarEcosystemBody:
+      "Accede a una red que acerca a emprendedores, inversionistas y colaboradores alineados con tus mismos valores y visión, facilitando la creación de sinergias clave.",
+    pillarAdvisoryTitle: "Asesoría y crecimiento integral",
+    pillarAdvisoryBody:
+      "Recibe acompañamiento y guía directa para estructurar tu empresa, definir una valuación precisa y prepararte estratégicamente para afrontar tu siguiente etapa de escalabilidad.",
   },
 
   publicNav: {

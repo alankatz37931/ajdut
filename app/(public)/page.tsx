@@ -75,23 +75,18 @@ export default async function HomePage() {
           </p>
           <Pillar
             icon={<ShieldIcon />}
-            title={t.pillarCoordinationTitle}
-            body={t.pillarCoordinationBody}
-          />
-          <Pillar
-            icon={<EyeIcon />}
-            title={t.pillarVerifiedTitle}
-            body={t.pillarVerifiedBody}
+            title={t.pillarManagementTitle}
+            body={t.pillarManagementBody}
           />
           <Pillar
             icon={<HandshakeIcon />}
-            title={t.pillarConnectionTitle}
-            body={t.pillarConnectionBody}
+            title={t.pillarEcosystemTitle}
+            body={t.pillarEcosystemBody}
           />
           <Pillar
             icon={<GrowthIcon />}
-            title={t.pillarGrowthTitle}
-            body={t.pillarGrowthBody}
+            title={t.pillarAdvisoryTitle}
+            body={t.pillarAdvisoryBody}
           />
         </aside>
       </div>
@@ -145,27 +140,6 @@ function ShieldIcon() {
     >
       <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
       <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-// Ojo — "Información Exclusiva":
-// ver lo que otros no ven. Visión privilegiada del miembro.
-function EyeIcon() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
     </svg>
   );
 }
