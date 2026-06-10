@@ -140,23 +140,37 @@ describe("upsertFounder — validaciones", () => {
   });
 });
 
-describe("upsertFounder — invariante equity ≤ 100%", () => {
-  it("RECHAZA si suma de equity supera 100%", async () => {
+describe("upsertFounder — invariante cap table ≤ 100%", () => {
+  // El candado nuevo convierte equity% → participaciones sobre totalShares y
+  // valida equipo + externas + plataforma + asignados ≤ total. Con
+  // total=1000 y sin externas/asignados, el equity% mapea 1:1 a % del total.
+  // Hay DOS project.findUnique: assertCanEditProject (ownerId) + cap table.
+  function mockCapTableProject(totalShares = 1000) {
+    tx.project.findUnique.mockResolvedValueOnce({
+      totalShares,
+      startupProfile: { founders: [] },
+      externalHoldings: [],
+      participations: [],
+    });
+  }
+
+  it("RECHAZA si el equipo supera el 100% del total", async () => {
     mockActorAndProject();
     tx.startupProfile.findUnique.mockResolvedValueOnce({
       id: "sp1",
       founders: [
-        { id: "f1", equityPercent: new Prisma.Decimal(60) },
-        { id: "f2", equityPercent: new Prisma.Decimal(30) },
+        { id: "f1", equityPercent: new Prisma.Decimal(60), isActive: true },
+        { id: "f2", equityPercent: new Prisma.Decimal(30), isActive: true },
       ],
     });
+    mockCapTableProject();
     await expect(
       upsertFounder({
         actorId: ACTOR,
         projectId: PROJECT_ID,
         fullName: "Ana",
         role: "CEO",
-        equityPercent: 20, // 60+30+20 = 110 > 100
+        equityPercent: 20, // 60+30+20 = 110% > 100%
         isActive: true,
       })
     ).rejects.toBeInstanceOf(ValidationError);
@@ -167,10 +181,11 @@ describe("upsertFounder — invariante equity ≤ 100%", () => {
     tx.startupProfile.findUnique.mockResolvedValueOnce({
       id: "sp1",
       founders: [
-        { id: "f1", equityPercent: new Prisma.Decimal(60) },
-        { id: "f2", equityPercent: new Prisma.Decimal(30) },
+        { id: "f1", equityPercent: new Prisma.Decimal(60), isActive: true },
+        { id: "f2", equityPercent: new Prisma.Decimal(30), isActive: true },
       ],
     });
+    mockCapTableProject();
     tx.founder.create.mockResolvedValueOnce({ id: "f-new", fullName: "Ana", role: "CEO" });
 
     await expect(
@@ -190,13 +205,14 @@ describe("upsertFounder — invariante equity ≤ 100%", () => {
     tx.startupProfile.findUnique.mockResolvedValueOnce({
       id: "sp1",
       founders: [
-        { id: "f1", equityPercent: new Prisma.Decimal(60) },
-        { id: "f2", equityPercent: new Prisma.Decimal(40) },
+        { id: "f1", equityPercent: new Prisma.Decimal(60), isActive: true },
+        { id: "f2", equityPercent: new Prisma.Decimal(40), isActive: true },
       ],
     });
+    mockCapTableProject();
     tx.founder.update.mockResolvedValueOnce({ id: "f1", fullName: "Ana", role: "CEO" });
 
-    // Edito f1 cambiándole equity de 60 a 70 → otros (40) + 70 = 110 > 100 → falla
+    // Edito f1 cambiándole equity de 60 a 70 → otros (40) + 70 = 110% > 100% → falla
     await expect(
       upsertFounder({
         actorId: ACTOR,

@@ -2,8 +2,90 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { recordAudit } from "./audit";
 import { ForbiddenError, NotFoundError, ValidationError } from "./errors";
+import {
+  computeCapTable,
+  type CapTableInput,
+} from "./cap-table";
 
 type Tx = Prisma.TransactionClient;
+
+/**
+ * Include necesario para reconstruir el `CapTableInput` de un proyecto: el
+ * equipo fundador (equity%), las tenencias externas y las participaciones con
+ * su holder. Lo reutilizan las validaciones de escritura que no pueden pasar
+ * el 100% (equipo / composición / disponibles).
+ */
+export const CAP_TABLE_INCLUDE = {
+  startupProfile: {
+    select: {
+      founders: {
+        select: { fullName: true, equityPercent: true, isActive: true },
+      },
+    },
+  },
+  externalHoldings: { select: { label: true, shareCount: true } },
+  participations: {
+    select: {
+      id: true,
+      status: true,
+      shareCount: true,
+      isPlatformStake: true,
+      currentOwner: { select: { id: true, alias: true, fullName: true } },
+    },
+  },
+} satisfies Prisma.ProjectInclude;
+
+/**
+ * Forma mínima estructural que necesita `buildCapTableInput`. Acepta cualquier
+ * proyecto cargado con (al menos) `CAP_TABLE_INCLUDE`; no exige campos extra
+ * como `participation.id`, así las queries que solo proyectan lo necesario
+ * (p.ej. editar/page.tsx) type-checkean sin fricción.
+ */
+export type CapTableProjectShape = {
+  totalShares: number;
+  startupProfile: {
+    founders: { fullName: string; equityPercent: Prisma.Decimal; isActive: boolean }[];
+  } | null;
+  externalHoldings: { label: string | null; shareCount: number }[];
+  participations: {
+    status: string;
+    shareCount: number;
+    isPlatformStake: boolean;
+    currentOwner: { id: string; alias: string | null; fullName: string } | null;
+  }[];
+};
+
+/**
+ * Proyecta un proyecto (cargado con `CAP_TABLE_INCLUDE`) al `CapTableInput`
+ * unificado. Misma proyección que el dashboard / la ficha pública: solo
+ * founders activos cuentan como equity.
+ */
+export function buildCapTableInput(
+  project: CapTableProjectShape
+): CapTableInput {
+  return {
+    totalShares: project.totalShares,
+    founders: (project.startupProfile?.founders ?? [])
+      .filter((f) => f.isActive)
+      .map((f) => ({ name: f.fullName, equityPercent: Number(f.equityPercent) })),
+    externalHoldings: (project.externalHoldings ?? []).map((h) => ({
+      label: h.label ?? "",
+      shareCount: h.shareCount,
+    })),
+    participations: project.participations.map((p) => ({
+      status: p.status,
+      shareCount: p.shareCount,
+      isPlatformStake: p.isPlatformStake,
+      currentOwner: p.currentOwner
+        ? {
+            id: p.currentOwner.id,
+            alias: p.currentOwner.alias,
+            fullName: p.currentOwner.fullName,
+          }
+        : null,
+    })),
+  };
+}
 
 /**
  * Garantiza que el actor sea EL FOUNDER del proyecto.
@@ -50,7 +132,12 @@ export type UpdateAvailableSharesInput = {
  * El TOTAL emitido del proyecto NO se cambia acá: el project owner puede
  * mover cuántas de las participaciones ya emitidas están a la venta, pero
  * para EMITIR MÁS (superar el total) debe consultarlo con los propietarios.
- * Por eso el tope es `totalShares - asignadas`.
+ *
+ * Cap table unificado: el pool disponible es el REMANENTE. El tope real no es
+ * `total - asignados` sino `total - comprometido`, donde comprometido =
+ * equipo (equity% → participaciones) + tenencias externas + plataforma +
+ * asignados (= `capTable.committedShares`). Así "disponibles" nunca empuja el
+ * cap table por encima del 100%.
  */
 export async function updateAvailableShares(input: UpdateAvailableSharesInput) {
   return prisma.$transaction(async (tx) => {
@@ -62,21 +149,18 @@ export async function updateAvailableShares(input: UpdateAvailableSharesInput) {
 
     const project = await tx.project.findUnique({
       where: { id: input.projectId },
-      include: {
-        participations: { select: { id: true, status: true, shareCount: true } },
-      },
+      include: CAP_TABLE_INCLUDE,
     });
     if (!project) throw new NotFoundError("Project", input.projectId);
 
-    const assigned = project.participations
-      .filter((p) => p.status !== "AVAILABLE")
-      .reduce((s, p) => s + p.shareCount, 0);
-
-    const maxAvailable = project.totalShares - assigned;
+    // `committedShares` ya suma equipo + externas + plataforma + asignados
+    // (todo lo NO disponible). El pool no puede exceder el remanente.
+    const capTable = computeCapTable(buildCapTableInput(project));
+    const maxAvailable = Math.max(0, project.totalShares - capTable.committedShares);
     if (input.shareCount > maxAvailable) {
       throw new ValidationError(
         "shareCount",
-        `No podés superar las ${maxAvailable} participaciones emitidas. Para emitir más, consultá con los propietarios.`
+        `No podés poner más de ${maxAvailable} participaciones disponibles. El resto ya está comprometido (equipo, tenencias y asignados). Para emitir más, consultá con los propietarios.`
       );
     }
 

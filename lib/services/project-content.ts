@@ -1,7 +1,8 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { recordAudit } from "./audit";
-import { assertCanEditProject } from "./project";
+import { assertCanEditProject, buildCapTableInput, CAP_TABLE_INCLUDE } from "./project";
+import { computeCapTable, equityPercentToShares } from "./cap-table";
 import { NotFoundError, ValidationError } from "./errors";
 
 // ─── Founders / Equipo ──────────────────────────────────────────────
@@ -26,7 +27,10 @@ export async function upsertFounder(input: UpsertFounderInput) {
 
     const profile = await tx.startupProfile.findUnique({
       where: { projectId: input.projectId },
-      select: { id: true, founders: { select: { id: true, equityPercent: true } } },
+      select: {
+        id: true,
+        founders: { select: { id: true, equityPercent: true, isActive: true } },
+      },
     });
     if (!profile) throw new NotFoundError("StartupProfile", input.projectId);
 
@@ -40,14 +44,58 @@ export async function upsertFounder(input: UpsertFounderInput) {
       throw new ValidationError("equityPercent", "El % debe estar entre 0 y 100.");
     }
 
-    // Suma de equity (excluyendo al founder que estamos editando)
-    const otherEquity = profile.founders
-      .filter((f) => f.id !== input.founderId)
-      .reduce((s, f) => s + Number(f.equityPercent), 0);
-    if (otherEquity + input.equityPercent > 100.01) {
+    // ── Candado del cap table unificado ──────────────────────────────
+    // El equipo (equity% → participaciones) + tenencias externas + plataforma
+    // + asignados no pueden superar el total emitido (100%). Cargamos el resto
+    // del cap table y recomputamos el equipo CON el cambio aplicado.
+    const project = await tx.project.findUnique({
+      where: { id: input.projectId },
+      include: CAP_TABLE_INCLUDE,
+    });
+    if (!project) throw new NotFoundError("Project", input.projectId);
+    const totalShares = project.totalShares;
+
+    // Resto comprometido (externas + plataforma + asignados) en participaciones:
+    // computeCapTable con founders vacíos deja committed = todo menos el equipo.
+    const restShares = computeCapTable({
+      ...buildCapTableInput(project),
+      founders: [],
+    }).committedShares;
+
+    // Equipo CON el cambio aplicado: solo founders ACTIVOS cuentan como equity
+    // (igual que el dashboard). Reemplazamos/agregamos el que se está guardando.
+    const isEditing = Boolean(input.founderId);
+    const editedActive = input.isActive;
+    const newTeamEquities: number[] = [];
+    for (const f of profile.founders) {
+      if (isEditing && f.id === input.founderId) {
+        if (editedActive) newTeamEquities.push(input.equityPercent);
+        continue; // si se desactiva, no suma
+      }
+      if (f.isActive) newTeamEquities.push(Number(f.equityPercent));
+    }
+    if (!isEditing && editedActive) {
+      newTeamEquities.push(input.equityPercent);
+    }
+    // Per-founder rounding, igual que computeCapTable (no redondear la suma).
+    const newTeamShares = newTeamEquities.reduce(
+      (s, eq) => s + equityPercentToShares(eq, totalShares),
+      0
+    );
+
+    // Estado actual (sin el cambio) para distinguir AUMENTO de REDUCCIÓN: en
+    // proyectos legacy ya >100% permitimos reducir/ajustar, solo bloqueamos
+    // cuando el nuevo total comprometido sube por encima del total.
+    const currentTeamShares = profile.founders
+      .filter((f) => f.isActive)
+      .reduce((s, f) => s + equityPercentToShares(Number(f.equityPercent), totalShares), 0);
+    const currentCommitted = currentTeamShares + restShares;
+    const newCommitted = newTeamShares + restShares;
+
+    if (newCommitted > totalShares && newCommitted > currentCommitted) {
       throw new ValidationError(
         "equityPercent",
-        `La suma de equity supera 100% (otros: ${otherEquity.toFixed(2)}%).`
+        "El cap table superaría el 100%. El equipo + tenencias + asignados no pueden exceder el total de participaciones emitidas. Ajustá los porcentajes o consultá con los propietarios para emitir más."
       );
     }
 

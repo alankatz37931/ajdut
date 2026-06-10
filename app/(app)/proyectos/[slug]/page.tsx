@@ -16,6 +16,7 @@ import { ProjectVideo } from "@/components/project/ProjectVideo";
 import { ProjectSection } from "@/components/project/ProjectSection";
 import { CapTableViz } from "@/components/project/CapTableViz";
 import { CapTableByClass } from "@/components/project/CapTableByClass";
+import { computeCapTable } from "@/lib/services/cap-table";
 import { BackLink } from "@/components/app/BackLink";
 import { embedUrl } from "@/lib/utils/embed";
 import {
@@ -112,100 +113,74 @@ export default async function ProjectPage({ params }: Params) {
   // el cap table mostraba "Disponible 90%" + "Fundadores 50%" → suma 140%
   // y eso es el desfase que reportó el cliente.
   //
-  // Fix de display (sin tocar el modelo):
-  //   · Sumamos external holdings al cap table nominal (owner/admin lo veían
-  //     ausente) y mantenemos el ya existente en la vista anónima.
-  //   · Reducimos el `availableForDisplay` por external shares: si el founder
-  //     comprometió X% pre-existente, el pool visible debe encogerse esa X%
-  //     (clamp a 0 si X% > pool actual).
-  //   · Mostramos una fila "Verificación" en ambas tablas + aviso si la suma
-  //     supera 100% (el founder comprometió de más).
+  // Fix de display vía cap table UNIFICADO (lib/services/cap-table):
+  //   · El helper junta equipo fundador (equity%), tenencias externas, stake
+  //     de plataforma, asignados vía AJDUT y el pool disponible (remanente)
+  //     sobre `totalShares`. El equipo fundador AHORA descuenta del pool.
+  //   · `poolShares` = total − comprometido (clamp a 0); reemplaza el viejo
+  //     `availableForDisplay = available − external`.
+  //   · `overcommit`/`verificationPct` alimentan la fila "Verificación" + aviso.
+  //   · Mismos inputs que el founder dashboard (/founder/[projectSlug]) → ambas
+  //     vistas muestran EXACTAMENTE el mismo cap table.
   const totalShares = project.totalShares;
-  const platformShares = project.participations
-    .filter((p) => p.isPlatformStake)
-    .reduce((s, p) => s + p.shareCount, 0);
-  const assignedShares = project.participations
-    .filter((p) => ["ASSIGNED", "IN_RESALE", "TRANSFER_PENDING"].includes(p.status))
-    .reduce((s, p) => s + p.shareCount, 0);
+  const sp = project.startupProfile;
+  const capTable = computeCapTable({
+    totalShares,
+    founders: (sp?.founders ?? [])
+      .filter((f) => f.isActive)
+      .map((f) => ({ name: f.fullName, equityPercent: Number(f.equityPercent) })),
+    externalHoldings: project.externalHoldings.map((h) => ({
+      label:
+        h.label && h.label.trim() !== ""
+          ? h.label
+          : t.capTable.preExistingFallback,
+      shareCount: h.shareCount,
+    })),
+    participations: project.participations.map((p) => ({
+      status: p.status,
+      shareCount: p.shareCount,
+      isPlatformStake: p.isPlatformStake,
+      currentOwner: p.currentOwner
+        ? {
+            id: p.currentOwner.id,
+            alias: p.currentOwner.alias,
+            fullName: p.currentOwner.fullName,
+          }
+        : null,
+    })),
+  });
+
+  const platformShares = capTable.platformShares;
+  // `availableShares` es el pool AVAILABLE CRUDO de participaciones — se usa
+  // para gatear el CTA "Me interesa" y el InterestForm (hay inventario real
+  // que vender). Distinto del pool unificado de display (`availableForDisplay`),
+  // que ya descuenta equipo + externas.
   const availableShares = project.participations
     .filter((p) => p.status === "AVAILABLE")
     .reduce((s, p) => s + p.shareCount, 0);
-  const externalShares = project.externalHoldings.reduce(
-    (s, h) => s + h.shareCount,
-    0
-  );
-  // El "disponible" que vamos a mostrar al usuario YA descuenta lo que el
-  // founder comprometió como pre-existente. Clamp a 0: si la suma se pasó,
-  // que se note en la fila de verificación, no en un número negativo.
-  const availableForDisplay = Math.max(0, availableShares - externalShares);
+  // El "disponible" que se muestra es el remanente del cap table unificado.
+  const availableForDisplay = capTable.poolShares;
 
-  // Cap table agrupado por dueño (solo para roles permitidos).
-  //
-  // TODO perf: si esta agregación se vuelve cara (proyectos con >>100
-  // participaciones), considerar mover la query de participations a una
-  // función separada envuelta en `unstable_cache` con
-  // `tags: [\`project:${projectId}:capTable\`]`, y disparar `revalidateTag`
-  // en cada mutation que afecte ownership (transferAction, resaleAction,
-  // approveLeadAction, etc.). No lo hicimos ahora porque las
-  // participations ya viajan en el `findUnique` de arriba (un solo round
-  // trip) y la CPU de los Maps/Sets es trivial para tamaños actuales —
-  // wrappear sin extraer la query no produce ganancia, sólo añade
-  // complejidad de invalidación.
+  // Cap table nominal (por holder) para roles permitidos — derivado de las
+  // filas del helper, con los sentinelas traducidos. Incluye AHORA al equipo
+  // fundador y a las tenencias externas, además de pool/plataforma/asignados.
   type CapRow = { holder: string; isPlatform: boolean; shares: number };
-  const capTable: CapRow[] = [];
+  const capRows: CapRow[] = [];
   if (access.canSeeCapTable) {
-    const byOwner = new Map<string, { name: string; isPlatform: boolean; shares: number }>();
-    for (const p of project.participations) {
-      if (!p.currentOwnerId || !p.currentOwner) continue;
-      const existing = byOwner.get(p.currentOwnerId);
-      if (existing) {
-        existing.shares += p.shareCount;
-      } else {
-        const displayName = p.isPlatformStake
-          ? t.capTable.platform
-          : p.currentOwner.alias ?? p.currentOwner.fullName;
-        byOwner.set(p.currentOwnerId, {
-          name: displayName,
-          isPlatform: p.isPlatformStake,
-          shares: p.shareCount,
-        });
-      }
-    }
-    capTable.push(
-      ...Array.from(byOwner.values()).map((v) => ({
-        holder: v.name,
-        isPlatform: v.isPlatform,
-        shares: v.shares,
-      }))
-    );
-    // External holdings — los accionistas declarados por el founder en
-    // /composicion deben verse acá; antes solo aparecían en la vista
-    // anónima (CapTableByClass) y el owner/admin no los veía en su nominal.
-    const classNameById = new Map<string, string>();
-    for (const c of project.shareholderClasses) {
-      classNameById.set(c.id, c.name);
-    }
-    for (const h of project.externalHoldings) {
-      const className = h.shareholderClassId
-        ? classNameById.get(h.shareholderClassId) ?? null
-        : null;
-      // Etiqueta editorial: label libre del founder > nombre de clase >
-      // fallback genérico. Mantiene el cap table legible aunque el founder
-      // no haya puesto un label.
+    for (const row of capTable.rows) {
       const holder =
-        (h.label && h.label.trim() !== "" ? h.label : null) ??
-        className ??
-        t.capTable.preExistingFallback;
-      capTable.push({ holder, isPlatform: false, shares: h.shareCount });
-    }
-    if (availableForDisplay > 0) {
-      capTable.push({
-        holder: t.capTable.unassigned,
-        isPlatform: false,
-        shares: availableForDisplay,
+        row.name === "__pool__"
+          ? t.capTable.unassigned
+          : row.name === "__platform__"
+            ? t.capTable.platform
+            : row.name;
+      capRows.push({
+        holder,
+        isPlatform: row.kind === "platform",
+        shares: row.shares,
       });
     }
-    capTable.sort((a, b) => b.shares - a.shares);
+    capRows.sort((a, b) => b.shares - a.shares);
   }
 
   // Cap table por clase (anonimizado) — lo ve el miembro normal: composición
@@ -322,16 +297,16 @@ export default async function ProjectPage({ params }: Params) {
   const myValue = pricePerShare !== null ? myShares * pricePerShare : null;
   const projectCurrency = project.startupProfile?.valuationCurrency ?? "USD";
 
-  // Fondeo: el bar visible refleja lo que el viewer puede ver.
+  // Fondeo: el bar visible refleja lo que el viewer puede ver, derivado del
+  // cap table UNIFICADO para que "colocadas" + "disponible (pool)" = total.
   //
-  // Para que el bar concuerde con el cap table corregido, "colocadas" incluye
-  // a los accionistas pre-existentes declarados por el founder (externalShares):
-  // si comprometió 40% afuera de AJDUT, eso es capital "ya colocado" desde la
-  // óptica del lector. El miembro común sigue sin ver el stake de Platform
-  // (`canSeeCapTable === false` → resta platformShares), pero sí ve external.
-  const visibleAssigned =
-    (access.canSeeCapTable ? assignedShares : assignedShares - platformShares) +
-    externalShares;
+  // "Colocadas" = todo lo comprometido (equipo fundador + externas + plataforma
+  // + asignados vía AJDUT). Para el viewer privilegiado es `committedShares`
+  // exacto (= total − poolShares). El miembro común NO ve el stake de Platform,
+  // así que se le resta de las colocadas.
+  const visibleAssigned = access.canSeeCapTable
+    ? capTable.committedShares
+    : capTable.committedShares - platformShares;
   const fundedPct =
     totalShares > 0
       ? Math.min(100, Math.max(0, (visibleAssigned / totalShares) * 100))
@@ -834,9 +809,9 @@ export default async function ProjectPage({ params }: Params) {
   // — Cap table (ref, gated). Va al sidebar — NO se incluye en sections.
   // Se renderiza directamente abajo dentro del aside sticky.
   const capTableNode =
-    access.canSeeCapTable && capTable.length > 0 ? (
+    access.canSeeCapTable && capRows.length > 0 ? (
       <CapTableViz
-        rows={capTable}
+        rows={capRows}
         totalShares={totalShares}
         ofTotalLabel={`${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
         formatShares={(n) => formatNumber(n, undefined, locale)}

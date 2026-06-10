@@ -1563,6 +1563,10 @@ export const dict: Dict = {
       poolName: "Available (pool)",
       platformName: "AJDUT platform",
       manageLink: "Manage shareholder classes →",
+      preExistingFallback: "Pre-existing shareholders",
+      verificationLabel: "Verification",
+      overcommitWarn:
+        "The cap table exceeds total issued participations. Review the team and pre-existing shareholders in Composition.",
     },
     checklist: {
       completeBtn: "Complete →",

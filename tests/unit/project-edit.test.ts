@@ -285,21 +285,35 @@ describe("updateAvailableShares — autorización y validaciones", () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
-  it("rechaza shareCount > maxAvailable (totalShares - assigned)", async () => {
+  it("rechaza shareCount > maxAvailable (total - comprometido)", async () => {
     tx.user.findUnique.mockResolvedValueOnce({ isActive: true });
     tx.project.findUnique
       .mockResolvedValueOnce({ ownerId: ACTOR }) // assert
       .mockResolvedValueOnce({
-        // findUnique en updateAvailableShares
+        // findUnique en updateAvailableShares (CAP_TABLE_INCLUDE)
         id: PROJECT_ID,
         totalShares: 1_000_000,
+        startupProfile: { founders: [] },
+        externalHoldings: [],
         participations: [
-          { id: "p-platform", status: "ASSIGNED", shareCount: 100_000 },
-          { id: "p-investor-1", status: "ASSIGNED", shareCount: 200_000 },
+          {
+            id: "p-investor-1",
+            status: "ASSIGNED",
+            shareCount: 100_000,
+            isPlatformStake: false,
+            currentOwner: { id: "u1", alias: null, fullName: "Inversor 1" },
+          },
+          {
+            id: "p-investor-2",
+            status: "ASSIGNED",
+            shareCount: 200_000,
+            isPlatformStake: false,
+            currentOwner: { id: "u2", alias: null, fullName: "Inversor 2" },
+          },
         ],
       });
 
-    // max disponible = 1M - 300k = 700k. Si pedís 800k → falla
+    // comprometido = 300k → max disponible = 1M - 300k = 700k. Si pedís 800k → falla
     await expect(
       updateAvailableShares({
         projectId: PROJECT_ID,

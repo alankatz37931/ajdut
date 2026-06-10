@@ -7,6 +7,7 @@ import { sequentialPrisma } from "@/lib/prisma/safe";
 import { StatusBadge } from "@/components/founder/StatusBadge";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { getDict, getLocale } from "@/lib/i18n";
+import { computeCapTable } from "@/lib/services/cap-table";
 import {
   formatNumber,
   formatPercent,
@@ -55,6 +56,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         orderBy: { createdAt: "desc" },
         select: { id: true, title: true, storageKey: true, createdAt: true },
       },
+      externalHoldings: { select: { label: true, shareCount: true } },
       _count: { select: { shareholderClasses: true, externalHoldings: true } },
     },
   });
@@ -69,36 +71,39 @@ export default async function FounderDashboardPage({ params }: Params) {
   const t = dict.founderDashboard;
   const sp = project.startupProfile;
 
-  // ─── Cap table (estructural + por holder individual) ──────────────
+  // ─── Cap table UNIFICADO ──────────────────────────────────────────
+  // Única fuente de verdad: el equipo fundador (equity%), las tenencias
+  // externas, el stake de plataforma y los asignados vía AJDUT, todos sobre
+  // `totalShares`. El pool disponible es el remanente. Misma proyección de
+  // inputs que la ficha pública (/proyectos/[slug]) → ambas vistas idénticas.
   const totalShares = project.totalShares;
-  const assigned = project.participations
-    .filter((p) => ["ASSIGNED", "IN_RESALE", "TRANSFER_PENDING"].includes(p.status))
-    .reduce((sum, p) => sum + p.shareCount, 0);
-  const available = project.participations
-    .filter((p) => p.status === "AVAILABLE")
-    .reduce((sum, p) => sum + p.shareCount, 0);
-  const platform = project.participations
-    .filter((p) => p.isPlatformStake)
-    .reduce((sum, p) => sum + p.shareCount, 0);
+  const capTable = computeCapTable({
+    totalShares,
+    founders: (sp?.founders ?? [])
+      .filter((f) => f.isActive)
+      .map((f) => ({ name: f.fullName, equityPercent: Number(f.equityPercent) })),
+    externalHoldings: (project.externalHoldings ?? []).map((h) => ({
+      label: h.label ?? t.capTable.preExistingFallback,
+      shareCount: h.shareCount,
+    })),
+    participations: project.participations.map((p) => ({
+      status: p.status,
+      shareCount: p.shareCount,
+      isPlatformStake: p.isPlatformStake,
+      currentOwner: p.currentOwner
+        ? {
+            id: p.currentOwner.id,
+            alias: p.currentOwner.alias,
+            fullName: p.currentOwner.fullName,
+          }
+        : null,
+    })),
+  });
 
-  // Lista detallada para el sidebar: agrupamos por holder (excluyendo
-  // disponibles y la cuota de plataforma — esos van como filas dedicadas).
-  const individualHoldings = new Map<string, { name: string; shares: number }>();
-  for (const p of project.participations) {
-    if (p.isPlatformStake) continue;
-    if (p.status === "AVAILABLE") continue;
-    if (!p.currentOwner) continue;
-    const key = p.currentOwner.id;
-    const name = p.currentOwner.alias ?? p.currentOwner.fullName;
-    const prev = individualHoldings.get(key);
-    individualHoldings.set(key, {
-      name,
-      shares: (prev?.shares ?? 0) + p.shareCount,
-    });
-  }
-  const individualRows = Array.from(individualHoldings.values()).sort(
-    (a, b) => b.shares - a.shares,
-  );
+  // El bloque "Fondeo" usa el pool unificado (remanente) como "disponible" y
+  // los comprometidos como "colocadas" para la barra de progreso.
+  const available = capTable.poolShares;
+  const assigned = capTable.committedShares;
 
   // ─── KPIs operativos (lo que requiere atención hoy) ───────────────
   // Secuencial: con connection_limit=1 los 3 paralelos pelean por la única
@@ -587,36 +592,47 @@ export default async function FounderDashboardPage({ params }: Params) {
             </Link>
           </div>
           {/* Filas con hairline-b explícito (0.5px) — match con el header
-              de arriba y con el resto del sistema editorial. */}
+              de arriba y con el resto del sistema editorial. Renderiza TODAS
+              las filas del cap table unificado: pool, plataforma, equipo
+              fundador, tenencias externas y holders asignados. */}
           <ul>
-            {available > 0 && (
+            {capTable.rows.map((row) => (
               <CapHolderRow
-                name={t.capTable.poolName}
-                shares={available}
-                totalShares={totalShares}
-                muted
-                locale={locale}
-              />
-            )}
-            {platform > 0 && (
-              <CapHolderRow
-                name={t.capTable.platformName}
-                shares={platform}
-                totalShares={totalShares}
-                gold
-                locale={locale}
-              />
-            )}
-            {individualRows.map((row) => (
-              <CapHolderRow
-                key={row.name}
-                name={row.name}
+                key={row.key}
+                name={
+                  row.name === "__pool__"
+                    ? t.capTable.poolName
+                    : row.name === "__platform__"
+                      ? t.capTable.platformName
+                      : row.name
+                }
                 shares={row.shares}
                 totalShares={totalShares}
+                muted={row.kind === "pool"}
+                gold={row.kind === "platform"}
                 locale={locale}
               />
             ))}
           </ul>
+          {/* Verificación: suma del cap table. Si está sobre-comprometido se
+              pinta en rojo y se muestra el aviso para que el owner lo corrija. */}
+          <div className="px-5 py-3 hairline-t flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <span className="eyebrow !text-navy/50">
+              {t.capTable.verificationLabel}
+            </span>
+            <span
+              className={`font-mono text-sm shrink-0 ${
+                capTable.overcommit ? "text-red-700" : "text-navy"
+              }`}
+            >
+              {formatPercent(capTable.verificationPct, 1, locale)}
+            </span>
+          </div>
+          {capTable.overcommit && (
+            <p className="px-5 pb-3 text-xs text-red-700 leading-relaxed">
+              {t.capTable.overcommitWarn}
+            </p>
+          )}
           <div className="px-5 py-3 hairline-t">
             <Link
               href={`/founder/${project.slug}/composicion` as Route}

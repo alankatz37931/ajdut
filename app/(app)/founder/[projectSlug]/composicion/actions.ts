@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
-import { DomainError } from "@/lib/services/errors";
+import { DomainError, ValidationError } from "@/lib/services/errors";
+import { buildCapTableInput, CAP_TABLE_INCLUDE } from "@/lib/services/project";
+import { computeCapTable } from "@/lib/services/cap-table";
 
 type ClassDTO = { id: string; name: string };
 type ExternalDTO = {
@@ -201,6 +203,43 @@ export async function upsertExternalHoldingAction(
       }
       resolved = input.classId;
     }
+
+    // ── Candado del cap table unificado ──────────────────────────────
+    // equipo + plataforma + asignados + (todas las externas CON el cambio) no
+    // pueden superar el total emitido (100%). Permitimos reducir en proyectos
+    // legacy ya >100%; solo bloqueamos cuando el cambio AUMENTA el comprometido
+    // por encima del total.
+    const capProject = await prisma.project.findUnique({
+      where: { id: project.id },
+      include: CAP_TABLE_INCLUDE,
+    });
+    if (!capProject) return { ok: false, error: "Proyecto no encontrado." };
+    const totalShares = capProject.totalShares;
+
+    // Resto comprometido sin externas (equipo + plataforma + asignados).
+    const restShares = computeCapTable({
+      ...buildCapTableInput(capProject),
+      externalHoldings: [],
+    }).committedShares;
+
+    const existingHoldings = await prisma.externalHolding.findMany({
+      where: { projectId: project.id },
+      select: { id: true, shareCount: true },
+    });
+    const currentExternalShares = existingHoldings.reduce((s, h) => s + h.shareCount, 0);
+    const newExternalShares = existingHoldings
+      .filter((h) => h.id !== input.id)
+      .reduce((s, h) => s + h.shareCount, 0) + shareCount;
+
+    const currentCommitted = restShares + currentExternalShares;
+    const newCommitted = restShares + newExternalShares;
+    if (newCommitted > totalShares && newCommitted > currentCommitted) {
+      throw new ValidationError(
+        "shareCount",
+        "El cap table superaría el 100%. El equipo + tenencias + asignados no pueden exceder el total de participaciones emitidas. Ajustá los porcentajes o consultá con los propietarios para emitir más."
+      );
+    }
+
     const data = {
       label: label || null,
       shareholderClassId: resolved,

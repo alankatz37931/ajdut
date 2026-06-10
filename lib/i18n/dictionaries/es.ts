@@ -1571,6 +1571,10 @@ export const dict = {
       poolName: "Disponible (pool)",
       platformName: "AJDUT plataforma",
       manageLink: "Gestionar clases de participantes →",
+      preExistingFallback: "Socios pre-existentes",
+      verificationLabel: "Verificación",
+      overcommitWarn:
+        "El cap table excede el total emitido. Revisá el equipo y los socios pre-existentes en Composición.",
     },
     checklist: {
       completeBtn: "Completar →",

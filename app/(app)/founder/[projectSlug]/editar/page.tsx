@@ -4,6 +4,8 @@ import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getDict, getLocale } from "@/lib/i18n";
 import { getProjectAccess } from "@/lib/services/project-access";
+import { computeCapTable } from "@/lib/services/cap-table";
+import { buildCapTableInput, CAP_TABLE_INCLUDE } from "@/lib/services/project";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { EditProjectForm } from "./EditProjectForm";
 import Link from "next/link";
@@ -26,8 +28,20 @@ export default async function EditProjectPage({ params }: Params) {
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
     include: {
-      startupProfile: true,
-      participations: { select: { status: true, shareCount: true } },
+      startupProfile: {
+        include: {
+          founders: { select: { fullName: true, equityPercent: true, isActive: true } },
+        },
+      },
+      externalHoldings: { select: { label: true, shareCount: true } },
+      participations: {
+        select: {
+          status: true,
+          shareCount: true,
+          isPlatformStake: true,
+          currentOwner: { select: { id: true, alias: true, fullName: true } },
+        },
+      },
     },
   });
   if (!project) notFound();
@@ -35,10 +49,12 @@ export default async function EditProjectPage({ params }: Params) {
   const currentAvailable = project.participations
     .filter((p) => p.status === "AVAILABLE")
     .reduce((s, p) => s + p.shareCount, 0);
-  const assigned = project.participations
-    .filter((p) => p.status !== "AVAILABLE")
-    .reduce((s, p) => s + p.shareCount, 0);
-  const maxAvailable = project.totalShares - assigned;
+
+  // Cap table unificado: el máximo a la venta es el REMANENTE
+  // (total − equipo − externas − plataforma − asignados). `committedShares`
+  // ya incluye todo lo NO disponible, así que maxAvailable = total − committed.
+  const capTable = computeCapTable(buildCapTableInput(project));
+  const maxAvailable = Math.max(0, project.totalShares - capTable.committedShares);
 
   // Leads OPEN/CONTACTED: si el founder reduce disponibles a 0 con leads abiertos,
   // estos quedan rotos (no se pueden cumplir). Avisamos para que actúe antes.
