@@ -34,6 +34,12 @@ export default async function FounderTeamPage({ params }: Params) {
   if (project.ownerId !== user.id) notFound();
   if (!project.startupProfile) notFound();
 
+  const shareholderClasses = await prisma.shareholderClass.findMany({
+    where: { projectId: project.id },
+    orderBy: { order: "asc" },
+    select: { id: true, name: true },
+  });
+
   const founders = project.startupProfile.founders.map((f) => ({
     id: f.id,
     fullName: f.fullName,
@@ -44,6 +50,7 @@ export default async function FounderTeamPage({ params }: Params) {
     equityPercent: Number(f.equityPercent),
     joinedAt: f.joinedAt ? f.joinedAt.toISOString().slice(0, 10) : "",
     isActive: f.isActive,
+    shareholderClassId: f.shareholderClassId ?? "",
   }));
 
   return (
@@ -59,6 +66,7 @@ export default async function FounderTeamPage({ params }: Params) {
       <TeamEditor
         projectSlug={projectSlug}
         initialFounders={founders}
+        shareholderClasses={shareholderClasses}
         dict={t}
         locale={locale}
       />

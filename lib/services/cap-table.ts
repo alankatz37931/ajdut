@@ -21,11 +21,16 @@ export type CapTableFounderInput = {
   name: string;
   /** equity % de la empresa (0-100). Se convierte a participaciones. */
   equityPercent: number;
+  /** Clase/tipo del founder (ShareholderClass.id). Null = sin clasificar. */
+  classId?: string | null;
 };
 
 export type CapTableExternalInput = {
   label: string;
   shareCount: number;
+  /** Cantidad de personas que representa esta tenencia (default 1). */
+  peopleCount?: number;
+  classId?: string | null;
 };
 
 export type CapTableParticipationInput = {
@@ -33,6 +38,7 @@ export type CapTableParticipationInput = {
   shareCount: number;
   isPlatformStake: boolean;
   currentOwner: { id: string; alias: string | null; fullName: string } | null;
+  classId?: string | null;
 };
 
 export type CapTableInput = {
@@ -201,5 +207,125 @@ export function computeCapTable(input: CapTableInput): CapTable {
     poolShares,
     verificationPct,
     overcommit,
+  };
+}
+
+// ─── Cap table AGRUPADO POR CLASE ───────────────────────────────────
+//
+// Misma matemática (pool = remanente, overcommit, verificación) pero las
+// filas se agregan por clase/tipo de participación en vez de por holder
+// individual. Cada clase suma founders + tenencias externas + asignados de
+// esa clase. Lo que no tiene clase cae en "sin clasificar". Pool y plataforma
+// son filas propias (no tienen clase).
+
+export type CapTableClassRow = {
+  key: string;
+  /** Nombre de la clase, o sentinela "__pool__" / "__platform__" / "__uncl__". */
+  name: string;
+  shares: number;
+  pct: number;
+  /** Cantidad de personas en la clase (founders + holders distintos + externas).
+   *  null para pool/plataforma. */
+  people: number | null;
+  kind: "pool" | "platform" | "class" | "unclassified";
+};
+
+export type CapTableByClass = {
+  totalShares: number;
+  rows: CapTableClassRow[];
+  committedShares: number;
+  poolShares: number;
+  verificationPct: number;
+  overcommit: boolean;
+};
+
+export function computeCapTableByClass(
+  input: CapTableInput,
+  classes: { id: string; name: string }[]
+): CapTableByClass {
+  const base = computeCapTable(input);
+  const total = base.totalShares;
+
+  const UNCL = "__uncl__";
+  type Bucket = { name: string; shares: number; owners: Set<string>; extPeople: number; founderPeople: number };
+  const buckets = new Map<string, Bucket>();
+  for (const c of classes) {
+    buckets.set(c.id, { name: c.name, shares: 0, owners: new Set(), extPeople: 0, founderPeople: 0 });
+  }
+  buckets.set(UNCL, { name: UNCL, shares: 0, owners: new Set(), extPeople: 0, founderPeople: 0 });
+
+  const bucketFor = (classId: string | null | undefined): Bucket => {
+    if (classId && buckets.has(classId)) return buckets.get(classId)!;
+    return buckets.get(UNCL)!;
+  };
+
+  // Founders (equity% → participaciones).
+  for (const f of input.founders) {
+    if (f.equityPercent <= 0) continue;
+    const shares = equityPercentToShares(f.equityPercent, total);
+    if (shares <= 0) continue;
+    const b = bucketFor(f.classId);
+    b.shares += shares;
+    b.founderPeople += 1;
+  }
+  // Tenencias externas.
+  for (const h of input.externalHoldings) {
+    if (h.shareCount <= 0) continue;
+    const b = bucketFor(h.classId);
+    b.shares += h.shareCount;
+    b.extPeople += h.peopleCount ?? 1;
+  }
+  // Asignados vía AJDUT.
+  for (const p of input.participations) {
+    if (p.isPlatformStake) continue;
+    if (p.status === "AVAILABLE") continue;
+    if (!ASSIGNED_STATUSES.includes(p.status)) continue;
+    if (!p.currentOwner) continue;
+    const b = bucketFor(p.classId);
+    b.shares += p.shareCount;
+    b.owners.add(p.currentOwner.id);
+  }
+
+  const rows: CapTableClassRow[] = [];
+  if (base.poolShares > 0) {
+    rows.push({
+      key: "pool",
+      name: "__pool__",
+      shares: base.poolShares,
+      pct: total > 0 ? (base.poolShares / total) * 100 : 0,
+      people: null,
+      kind: "pool",
+    });
+  }
+  if (base.platformShares > 0) {
+    rows.push({
+      key: "platform",
+      name: "__platform__",
+      shares: base.platformShares,
+      pct: total > 0 ? (base.platformShares / total) * 100 : 0,
+      people: null,
+      kind: "platform",
+    });
+  }
+  for (const [id, b] of buckets) {
+    const people = b.owners.size + b.extPeople + b.founderPeople;
+    if (b.shares <= 0 && people <= 0) continue;
+    rows.push({
+      key: id,
+      name: id === UNCL ? "__uncl__" : b.name,
+      shares: b.shares,
+      pct: total > 0 ? (b.shares / total) * 100 : 0,
+      people,
+      kind: id === UNCL ? "unclassified" : "class",
+    });
+  }
+
+  return {
+    totalShares: total,
+    rows,
+    committedShares: base.committedShares,
+    poolShares: base.poolShares,
+    verificationPct: base.verificationPct,
+    overcommit: base.overcommit,
   };
 }

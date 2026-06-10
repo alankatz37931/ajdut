@@ -1566,6 +1566,7 @@ export const dict: Dict = {
       detailLink: "Detail →",
       poolName: "Available (pool)",
       platformName: "AJDUT platform",
+      unassignedClass: "Unclassified",
       manageLink: "Manage shareholder classes →",
       preExistingFallback: "Pre-existing shareholders",
       verificationLabel: "Verification",
@@ -1807,6 +1808,9 @@ export const dict: Dict = {
     editBtn: "Edit",
     removeBtn: "Remove",
     removeConfirm: "Remove this member?",
+    classLabel: "Class / type",
+    classNone: "Unclassified",
+    classHintNoClasses: "Create participant classes in Composition.",
     form: {
       fullNameLabel: "Full name",
       roleLabel: "Role",

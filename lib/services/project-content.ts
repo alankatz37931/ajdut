@@ -19,6 +19,7 @@ export type UpsertFounderInput = {
   equityPercent: number;
   joinedAt?: Date | null;
   isActive: boolean;
+  shareholderClassId?: string | null;
 };
 
 export async function upsertFounder(input: UpsertFounderInput) {
@@ -42,6 +43,17 @@ export async function upsertFounder(input: UpsertFounderInput) {
     }
     if (input.equityPercent < 0 || input.equityPercent > 100) {
       throw new ValidationError("equityPercent", "El % debe estar entre 0 y 100.");
+    }
+
+    // Si vino una clase, validamos que pertenezca a este proyecto.
+    if (input.shareholderClassId) {
+      const cls = await tx.shareholderClass.findUnique({
+        where: { id: input.shareholderClassId },
+        select: { projectId: true },
+      });
+      if (!cls || cls.projectId !== input.projectId) {
+        throw new ValidationError("shareholderClassId", "Clase inválida.");
+      }
     }
 
     // ── Candado del cap table unificado ──────────────────────────────
@@ -112,6 +124,7 @@ export async function upsertFounder(input: UpsertFounderInput) {
           equityPercent: new Prisma.Decimal(input.equityPercent),
           joinedAt: input.joinedAt ?? null,
           isActive: input.isActive,
+          shareholderClassId: input.shareholderClassId ?? null,
         },
       });
     } else {
@@ -126,6 +139,7 @@ export async function upsertFounder(input: UpsertFounderInput) {
           equityPercent: new Prisma.Decimal(input.equityPercent),
           joinedAt: input.joinedAt ?? null,
           isActive: input.isActive,
+          shareholderClassId: input.shareholderClassId ?? null,
         },
       });
     }

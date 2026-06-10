@@ -16,7 +16,7 @@ import { ProjectVideo } from "@/components/project/ProjectVideo";
 import { ProjectSection } from "@/components/project/ProjectSection";
 import { CapTableViz } from "@/components/project/CapTableViz";
 import { CapTableByClass } from "@/components/project/CapTableByClass";
-import { computeCapTable } from "@/lib/services/cap-table";
+import { computeCapTable, computeCapTableByClass } from "@/lib/services/cap-table";
 import { BackLink } from "@/components/app/BackLink";
 import { embedUrl } from "@/lib/utils/embed";
 import {
@@ -124,22 +124,33 @@ export default async function ProjectPage({ params }: Params) {
   //     vistas muestran EXACTAMENTE el mismo cap table.
   const totalShares = project.totalShares;
   const sp = project.startupProfile;
-  const capTable = computeCapTable({
+  // Input UNIFICADO con clase de accionista. Lo consumen DOS vistas: el cap
+  // table nominal por holder (CapTableViz, owner/admin) vía `computeCapTable`,
+  // y la composición agregada por clase (CapTableByClass, miembro) vía
+  // `computeCapTableByClass`. Misma matemática (pool/verificación) en ambas.
+  const capInput = {
     totalShares,
     founders: (sp?.founders ?? [])
       .filter((f) => f.isActive)
-      .map((f) => ({ name: f.fullName, equityPercent: Number(f.equityPercent) })),
+      .map((f) => ({
+        name: f.fullName,
+        equityPercent: Number(f.equityPercent),
+        classId: f.shareholderClassId ?? null,
+      })),
     externalHoldings: project.externalHoldings.map((h) => ({
       label:
         h.label && h.label.trim() !== ""
           ? h.label
           : t.capTable.preExistingFallback,
       shareCount: h.shareCount,
+      peopleCount: h.peopleCount,
+      classId: h.shareholderClassId ?? null,
     })),
     participations: project.participations.map((p) => ({
       status: p.status,
       shareCount: p.shareCount,
       isPlatformStake: p.isPlatformStake,
+      classId: p.shareholderClassId ?? null,
       currentOwner: p.currentOwner
         ? {
             id: p.currentOwner.id,
@@ -148,7 +159,8 @@ export default async function ProjectPage({ params }: Params) {
           }
         : null,
     })),
-  });
+  };
+  const capTable = computeCapTable(capInput);
 
   const platformShares = capTable.platformShares;
   // `availableShares` es el pool AVAILABLE CRUDO de participaciones — se usa
@@ -186,74 +198,39 @@ export default async function ProjectPage({ params }: Params) {
   // Cap table por clase (anonimizado) — lo ve el miembro normal: composición
   // por clase de accionista (cantidad de personas + %), sin nombres. El
   // owner/admin ven el cap table nominal de arriba.
+  //
+  // Usa el MISMO helper unificado (`computeCapTableByClass`) que el dashboard
+  // del founder, así que AHORA incluye al equipo fundador (equity% → shares,
+  // por su clase) además de externas y asignados. Pool y "sin clasificar" van
+  // como filas propias (tone muted). La participación de AJDUT Platform NO se
+  // muestra en la vista anónima del miembro — se filtra la fila "platform".
   type ByClassRow = {
     label: string;
     people: number | null;
     shares: number;
     tone?: "default" | "platform" | "muted";
   };
-  const byClassRows: ByClassRow[] = [];
-  {
-    const UNCL = "__uncl__";
-    const buckets = new Map<
-      string,
-      { label: string; owners: Set<string>; extPeople: number; shares: number }
-    >();
-    for (const c of project.shareholderClasses) {
-      buckets.set(c.id, { label: c.name, owners: new Set(), extPeople: 0, shares: 0 });
-    }
-    buckets.set(UNCL, {
-      // Sin label visible — el row muestra solo el conteo de personas.
-      label: "",
-      owners: new Set(),
-      extPeople: 0,
-      shares: 0,
+  const byClass = computeCapTableByClass(
+    capInput,
+    project.shareholderClasses.map((c) => ({ id: c.id, name: c.name }))
+  );
+  const byClassRows: ByClassRow[] = byClass.rows
+    .filter((row) => row.kind !== "platform")
+    .map((row) => {
+      if (row.kind === "pool") {
+        return {
+          label: t.capTable.unassigned,
+          people: null,
+          shares: row.shares,
+          tone: "muted" as const,
+        };
+      }
+      if (row.kind === "unclassified") {
+        // Sin label visible — el row muestra solo el conteo de personas.
+        return { label: "", people: row.people, shares: row.shares, tone: "muted" as const };
+      }
+      return { label: row.name, people: row.people, shares: row.shares, tone: "default" as const };
     });
-    for (const p of project.participations) {
-      if (p.isPlatformStake || p.status === "AVAILABLE" || !p.currentOwnerId) continue;
-      const key =
-        p.shareholderClassId && buckets.has(p.shareholderClassId)
-          ? p.shareholderClassId
-          : UNCL;
-      const b = buckets.get(key)!;
-      b.owners.add(p.currentOwnerId);
-      b.shares += p.shareCount;
-    }
-    for (const h of project.externalHoldings) {
-      const key =
-        h.shareholderClassId && buckets.has(h.shareholderClassId)
-          ? h.shareholderClassId
-          : UNCL;
-      const b = buckets.get(key)!;
-      b.extPeople += h.peopleCount;
-      b.shares += h.shareCount;
-    }
-    for (const [key, b] of buckets) {
-      const people = b.owners.size + b.extPeople;
-      if (b.shares <= 0 && people <= 0) continue;
-      byClassRows.push({
-        label: b.label,
-        people,
-        shares: b.shares,
-        tone: key === UNCL ? "muted" : "default",
-      });
-    }
-    // La participación de AJDUT Platform NO se muestra en la vista anónima
-    // del miembro — el founder y el admin sí la ven en el cap table nominal
-    // (CapTableViz), abajo en este mismo sidebar.
-    //
-    // `availableForDisplay` ya descontó los externalHoldings (que sí están
-    // en las clases de arriba como shares). Usar `availableShares` crudo
-    // sumaría dos veces — esa era una de las patas del desfase.
-    if (availableForDisplay > 0) {
-      byClassRows.push({
-        label: t.capTable.unassigned,
-        people: null,
-        shares: availableForDisplay,
-        tone: "muted",
-      });
-    }
-  }
 
   // ¿Tiene el viewer participaciones en este proyecto?
   const myParticipations =

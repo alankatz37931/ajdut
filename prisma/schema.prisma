@@ -352,8 +352,15 @@ model Founder {
   references       String?
   linkedinUrl      String?
   equityPercent    Decimal        @db.Decimal(5, 2)
+  // Clase/tipo de participación del founder en el cap table (Directivo,
+  // Administrativo, etc.). Null = sin clasificar. Agrupa al founder junto a
+  // las participaciones y tenencias externas de la misma clase.
+  shareholderClassId String?
+  shareholderClass   ShareholderClass? @relation(fields: [shareholderClassId], references: [id])
   joinedAt         DateTime?
   isActive         Boolean        @default(true)
+
+  @@index([shareholderClassId])
 }
 
 model FundingRound {
@@ -520,6 +527,7 @@ model ShareholderClass {
 
   participations   Participation[]
   externalHoldings ExternalHolding[]
+  founders         Founder[]
 
   @@index([projectId, order])
 }

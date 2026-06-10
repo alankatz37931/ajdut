@@ -7,7 +7,8 @@ import { sequentialPrisma } from "@/lib/prisma/safe";
 import { StatusBadge } from "@/components/founder/StatusBadge";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { getDict, getLocale } from "@/lib/i18n";
-import { computeCapTable } from "@/lib/services/cap-table";
+import { computeCapTableByClass } from "@/lib/services/cap-table";
+import { CAP_TABLE_INCLUDE, buildCapTableInput } from "@/lib/services/project";
 import {
   formatNumber,
   formatPercent,
@@ -56,7 +57,18 @@ export default async function FounderDashboardPage({ params }: Params) {
         orderBy: { createdAt: "desc" },
         select: { id: true, title: true, storageKey: true, createdAt: true },
       },
-      externalHoldings: { select: { label: true, shareCount: true } },
+      externalHoldings: {
+        select: {
+          label: true,
+          shareCount: true,
+          shareholderClassId: true,
+          peopleCount: true,
+        },
+      },
+      shareholderClasses: {
+        orderBy: { order: "asc" },
+        select: { id: true, name: true, order: true },
+      },
       _count: { select: { shareholderClasses: true, externalHoldings: true } },
     },
   });
@@ -71,39 +83,30 @@ export default async function FounderDashboardPage({ params }: Params) {
   const t = dict.founderDashboard;
   const sp = project.startupProfile;
 
-  // ─── Cap table UNIFICADO ──────────────────────────────────────────
+  // ─── Cap table UNIFICADO, AGRUPADO POR CLASE ──────────────────────
   // Única fuente de verdad: el equipo fundador (equity%), las tenencias
   // externas, el stake de plataforma y los asignados vía AJDUT, todos sobre
   // `totalShares`. El pool disponible es el remanente. Misma proyección de
-  // inputs que la ficha pública (/proyectos/[slug]) → ambas vistas idénticas.
+  // inputs (`buildCapTableInput`) que la ficha pública (/proyectos/[slug]) →
+  // ambas vistas idénticas. `computeCapTableByClass` agrega TODO por clase de
+  // accionista (founders, externas y asignados), con pool y plataforma como
+  // filas propias y "sin clasificar" para lo que no tiene clase.
   const totalShares = project.totalShares;
-  const capTable = computeCapTable({
-    totalShares,
-    founders: (sp?.founders ?? [])
-      .filter((f) => f.isActive)
-      .map((f) => ({ name: f.fullName, equityPercent: Number(f.equityPercent) })),
-    externalHoldings: (project.externalHoldings ?? []).map((h) => ({
-      label: h.label ?? t.capTable.preExistingFallback,
-      shareCount: h.shareCount,
-    })),
-    participations: project.participations.map((p) => ({
-      status: p.status,
-      shareCount: p.shareCount,
-      isPlatformStake: p.isPlatformStake,
-      currentOwner: p.currentOwner
-        ? {
-            id: p.currentOwner.id,
-            alias: p.currentOwner.alias,
-            fullName: p.currentOwner.fullName,
-          }
-        : null,
-    })),
-  });
+  const capInput = buildCapTableInput(project);
+  // Etiqueta humana para externas sin label, coherente con la ficha pública.
+  capInput.externalHoldings = capInput.externalHoldings.map((h) => ({
+    ...h,
+    label: h.label || t.capTable.preExistingFallback,
+  }));
+  const byClass = computeCapTableByClass(
+    capInput,
+    project.shareholderClasses.map((c) => ({ id: c.id, name: c.name }))
+  );
 
   // El bloque "Fondeo" usa el pool unificado (remanente) como "disponible" y
   // los comprometidos como "colocadas" para la barra de progreso.
-  const available = capTable.poolShares;
-  const assigned = capTable.committedShares;
+  const available = byClass.poolShares;
+  const assigned = byClass.committedShares;
 
   // ─── KPIs operativos (lo que requiere atención hoy) ───────────────
   // Secuencial: con connection_limit=1 los 3 paralelos pelean por la única
@@ -594,10 +597,11 @@ export default async function FounderDashboardPage({ params }: Params) {
           </div>
           {/* Filas con hairline-b explícito (0.5px) — match con el header
               de arriba y con el resto del sistema editorial. Renderiza TODAS
-              las filas del cap table unificado: pool, plataforma, equipo
-              fundador, tenencias externas y holders asignados. */}
+              las filas del cap table AGRUPADO POR CLASE: pool, plataforma, una
+              fila por clase de accionista (founders + externas + asignados de
+              esa clase) y "sin clasificar". */}
           <ul>
-            {capTable.rows.map((row) => (
+            {byClass.rows.map((row) => (
               <CapHolderRow
                 key={row.key}
                 name={
@@ -605,11 +609,13 @@ export default async function FounderDashboardPage({ params }: Params) {
                     ? t.capTable.poolName
                     : row.name === "__platform__"
                       ? t.capTable.platformName
-                      : row.name
+                      : row.name === "__uncl__"
+                        ? t.capTable.unassignedClass
+                        : row.name
                 }
                 shares={row.shares}
                 totalShares={totalShares}
-                muted={row.kind === "pool"}
+                muted={row.kind === "pool" || row.kind === "unclassified"}
                 gold={row.kind === "platform"}
                 locale={locale}
               />
@@ -623,13 +629,13 @@ export default async function FounderDashboardPage({ params }: Params) {
             </span>
             <span
               className={`font-mono text-sm shrink-0 ${
-                capTable.overcommit ? "text-red-700" : "text-navy"
+                byClass.overcommit ? "text-red-700" : "text-navy"
               }`}
             >
-              {formatPercent(capTable.verificationPct, 1, locale)}
+              {formatPercent(byClass.verificationPct, 1, locale)}
             </span>
           </div>
-          {capTable.overcommit && (
+          {byClass.overcommit && (
             <p className="px-5 pb-3 text-xs text-red-700 leading-relaxed">
               {t.capTable.overcommitWarn}
             </p>

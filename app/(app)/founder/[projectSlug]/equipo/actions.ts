@@ -63,6 +63,8 @@ export async function upsertFounderAction(
   const joinedAtStr = String(formData.get("joinedAt") ?? "").trim();
   const joinedAt = joinedAtStr ? new Date(joinedAtStr) : null;
   const isActive = String(formData.get("isActive") ?? "true") === "true";
+  const shareholderClassIdRaw = String(formData.get("shareholderClassId") ?? "").trim();
+  const shareholderClassId = shareholderClassIdRaw || null;
 
   try {
     await upsertFounder({
@@ -77,6 +79,7 @@ export async function upsertFounderAction(
       equityPercent: Number.isFinite(equityPercent) ? equityPercent : 0,
       joinedAt,
       isActive,
+      shareholderClassId,
     });
     revalidatePath(`/founder/${projectSlug}/equipo`);
     revalidatePath(`/founder/${projectSlug}`);

@@ -19,17 +19,30 @@ export const CAP_TABLE_INCLUDE = {
   startupProfile: {
     select: {
       founders: {
-        select: { fullName: true, equityPercent: true, isActive: true },
+        select: {
+          fullName: true,
+          equityPercent: true,
+          isActive: true,
+          shareholderClassId: true,
+        },
       },
     },
   },
-  externalHoldings: { select: { label: true, shareCount: true } },
+  externalHoldings: {
+    select: {
+      label: true,
+      shareCount: true,
+      shareholderClassId: true,
+      peopleCount: true,
+    },
+  },
   participations: {
     select: {
       id: true,
       status: true,
       shareCount: true,
       isPlatformStake: true,
+      shareholderClassId: true,
       currentOwner: { select: { id: true, alias: true, fullName: true } },
     },
   },
@@ -44,13 +57,24 @@ export const CAP_TABLE_INCLUDE = {
 export type CapTableProjectShape = {
   totalShares: number;
   startupProfile: {
-    founders: { fullName: string; equityPercent: Prisma.Decimal; isActive: boolean }[];
+    founders: {
+      fullName: string;
+      equityPercent: Prisma.Decimal;
+      isActive: boolean;
+      shareholderClassId?: string | null;
+    }[];
   } | null;
-  externalHoldings: { label: string | null; shareCount: number }[];
+  externalHoldings: {
+    label: string | null;
+    shareCount: number;
+    shareholderClassId?: string | null;
+    peopleCount?: number;
+  }[];
   participations: {
     status: string;
     shareCount: number;
     isPlatformStake: boolean;
+    shareholderClassId?: string | null;
     currentOwner: { id: string; alias: string | null; fullName: string } | null;
   }[];
 };
@@ -67,15 +91,22 @@ export function buildCapTableInput(
     totalShares: project.totalShares,
     founders: (project.startupProfile?.founders ?? [])
       .filter((f) => f.isActive)
-      .map((f) => ({ name: f.fullName, equityPercent: Number(f.equityPercent) })),
+      .map((f) => ({
+        name: f.fullName,
+        equityPercent: Number(f.equityPercent),
+        classId: f.shareholderClassId ?? null,
+      })),
     externalHoldings: (project.externalHoldings ?? []).map((h) => ({
       label: h.label ?? "",
       shareCount: h.shareCount,
+      peopleCount: h.peopleCount,
+      classId: h.shareholderClassId ?? null,
     })),
     participations: project.participations.map((p) => ({
       status: p.status,
       shareCount: p.shareCount,
       isPlatformStake: p.isPlatformStake,
+      classId: p.shareholderClassId ?? null,
       currentOwner: p.currentOwner
         ? {
             id: p.currentOwner.id,

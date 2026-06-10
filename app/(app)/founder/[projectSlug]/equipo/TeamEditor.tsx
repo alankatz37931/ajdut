@@ -13,6 +13,8 @@ import {
 
 type EquipoDict = Dict["founderEquipo"];
 
+type ShareholderClass = { id: string; name: string };
+
 type Founder = {
   id: string;
   fullName: string;
@@ -23,6 +25,7 @@ type Founder = {
   equityPercent: number;
   joinedAt: string;
   isActive: boolean;
+  shareholderClassId: string;
 };
 
 const empty: Founder = {
@@ -35,19 +38,23 @@ const empty: Founder = {
   equityPercent: 0,
   joinedAt: "",
   isActive: true,
+  shareholderClassId: "",
 };
 
 export function TeamEditor({
   projectSlug,
   initialFounders,
+  shareholderClasses,
   dict,
   locale,
 }: {
   projectSlug: string;
   initialFounders: Founder[];
+  shareholderClasses: ShareholderClass[];
   dict: EquipoDict;
   locale: string;
 }) {
+  const classNameById = new Map(shareholderClasses.map((c) => [c.id, c.name]));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(initialFounders.length === 0);
   const [error, setError] = useState<string | null>(null);
@@ -119,6 +126,7 @@ export function TeamEditor({
           onCancel={() => setShowNew(false)}
           isPending={isPending}
           dict={dict}
+          shareholderClasses={shareholderClasses}
         />
       )}
 
@@ -132,12 +140,18 @@ export function TeamEditor({
                 onCancel={() => setEditingId(null)}
                 isPending={isPending}
                 dict={dict}
+                shareholderClasses={shareholderClasses}
               />
             ) : (
               <div className="grid grid-cols-12 items-center gap-x-3 gap-y-3">
                 <div className="col-span-12 sm:col-span-5 min-w-0">
                   <p className="font-sans text-navy break-words">{f.fullName}</p>
                   <p className="mt-1 eyebrow">{f.role}</p>
+                  <p className="mt-1 eyebrow !text-navy/60">
+                    {f.shareholderClassId
+                      ? classNameById.get(f.shareholderClassId) ?? dict.classNone
+                      : dict.classNone}
+                  </p>
                   {f.linkedinUrl && (
                     <a
                       href={f.linkedinUrl}
@@ -189,12 +203,14 @@ function FounderForm({
   onCancel,
   isPending,
   dict,
+  shareholderClasses,
 }: {
   founder: Founder;
   onSubmit: (fd: FormData) => void;
   onCancel: () => void;
   isPending: boolean;
   dict: EquipoDict;
+  shareholderClasses: ShareholderClass[];
 }) {
   const [fullName, setFullName] = useState(founder.fullName);
   const [role, setRole] = useState(founder.role);
@@ -206,6 +222,15 @@ function FounderForm({
   const [bio, setBio] = useState(founder.bio);
   const [references, setReferences] = useState(founder.references);
   const [isActive, setIsActive] = useState(String(founder.isActive));
+  const [shareholderClassId, setShareholderClassId] = useState(
+    founder.shareholderClassId
+  );
+
+  const hasClasses = shareholderClasses.length > 0;
+  const classOptions = [
+    { value: "", label: dict.classNone },
+    ...shareholderClasses.map((c) => ({ value: c.id, label: c.name })),
+  ];
 
   return (
     <form action={onSubmit} className="space-y-5">
@@ -276,6 +301,26 @@ function FounderForm({
           ]}
         />
         <input type="hidden" name="isActive" value={isActive} />
+      </div>
+      <div>
+        <FloatingSelect
+          id="shareholderClassId"
+          label={dict.classLabel}
+          value={shareholderClassId}
+          onChange={setShareholderClassId}
+          options={classOptions}
+          disabled={!hasClasses}
+        />
+        <input
+          type="hidden"
+          name="shareholderClassId"
+          value={shareholderClassId}
+        />
+        {!hasClasses && (
+          <p className="mt-1.5 eyebrow !text-navy/60">
+            {dict.classHintNoClasses}
+          </p>
+        )}
       </div>
       <div className="flex justify-end gap-4 hairline-t pt-4">
         <button

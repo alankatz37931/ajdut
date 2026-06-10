@@ -1574,6 +1574,7 @@ export const dict = {
       detailLink: "Detalle →",
       poolName: "Disponible (pool)",
       platformName: "AJDUT plataforma",
+      unassignedClass: "Sin clasificar",
       manageLink: "Gestionar clases de participantes →",
       preExistingFallback: "Socios pre-existentes",
       verificationLabel: "Verificación",
@@ -1815,6 +1816,9 @@ export const dict = {
     editBtn: "Editar",
     removeBtn: "Eliminar",
     removeConfirm: "¿Eliminar este miembro?",
+    classLabel: "Clase / tipo",
+    classNone: "Sin clasificar",
+    classHintNoClasses: "Creá clases de participantes en Composición.",
     form: {
       fullNameLabel: "Nombre completo",
       roleLabel: "Rol",
