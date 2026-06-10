@@ -78,7 +78,7 @@ export const dict: Dict = {
     ctaSignIn: "Sign in",
     ctaApply: "Apply to be part",
     pillarsHeading: "Why members choose AJDUT",
-    pillarManagementTitle: "Participation management and control",
+    pillarManagementTitle: "Coordination between partners",
     pillarManagementBody:
       "Assign roles, coordinate your partners with real-time information and keep your cap table always up to date and secure. Every change is recorded and certified transparently.",
     pillarEcosystemTitle: "Connection with the ecosystem",

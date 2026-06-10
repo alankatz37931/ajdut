@@ -82,7 +82,7 @@ export const dict = {
     ctaSignIn: "Acceder",
     ctaApply: "Aplica para ser parte",
     pillarsHeading: "Por qué los miembros eligen AJDUT",
-    pillarManagementTitle: "Gestión y control de participaciones",
+    pillarManagementTitle: "Coordinación entre socios",
     pillarManagementBody:
       "Asigna roles, coordina a tus socios con información en tiempo real y mantén tu cap table siempre actualizado y seguro. Cada cambio queda registrado y certificado de forma transparente.",
     pillarEcosystemTitle: "Conexión con el ecosistema",
