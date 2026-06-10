@@ -56,14 +56,6 @@ export default async function HomePage() {
             {t.descriptionBold}
           </p>
 
-          {/* Quote — la "economía del nosotros". Pull-quote a la izquierda,
-              acento gold, arriba del CTA. */}
-          <blockquote className="mt-5 sm:mt-6 border-l-2 border-gold/60 pl-4 sm:pl-5 max-w-md">
-            <p className="font-sans text-sm sm:text-[15px] text-navy/90 !leading-snug font-medium text-balance italic">
-              “{t.quote}”
-            </p>
-          </blockquote>
-
           {/* CTA único: 'Aplica para ser parte' — botón con presencia, hover premium */}
           <div className="mt-5 sm:mt-6 max-w-md">
             <Link
