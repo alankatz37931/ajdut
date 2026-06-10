@@ -83,10 +83,10 @@ export const dict: Dict = {
       "Assign roles, coordinate your partners with real-time information and keep your cap table always up to date and secure. Every change is recorded and certified transparently.",
     pillarEcosystemTitle: "Connection with like-minded people",
     pillarEcosystemBody:
-      "Access a network that brings together entrepreneurs, investors and collaborators aligned with your same values and vision, enabling key synergies.",
+      "AJDUT brings together entrepreneurs, investors and collaborators who share values and vision.",
     pillarAdvisoryTitle: "Support for your growth",
     pillarAdvisoryBody:
-      "Receive direct support and guidance to structure your company, define a precise valuation and strategically prepare for your next stage of scalability.",
+      "Direct advisory to structure your company, define your valuation and prepare for the next stage.",
   },
 
   publicNav: {
