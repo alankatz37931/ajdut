@@ -95,14 +95,6 @@ export default async function ProjectPage({ params }: Params) {
       : null;
   const partnerHasApprovedInfo = myInfoRequest?.status === "APPROVED";
 
-  // Métricas con visibility según rol.
-  const metrics = await prisma.startupMetric.findMany({
-    where: {
-      startupProfileId: project.startupProfile?.id,
-      ...(access.canSeePrivateMetrics ? {} : { visibility: "PUBLIC_TO_HOLDERS" }),
-    },
-    orderBy: { asOf: "desc" },
-  });
 
   // Snapshot de participaciones.
   //
@@ -284,21 +276,6 @@ export default async function ProjectPage({ params }: Params) {
         people: null,
         shares: availableForDisplay,
         tone: "muted",
-      });
-    }
-  }
-
-  // Métricas: agrupar por kind y mostrar el último valor.
-  type MetricRow = { kind: string; label: string; value: string; unit: string; asOf: Date };
-  const latestByKind = new Map<string, MetricRow>();
-  for (const m of metrics) {
-    if (!latestByKind.has(m.kind)) {
-      latestByKind.set(m.kind, {
-        kind: m.kind,
-        label: m.customLabel ?? t.metricLabels[m.kind] ?? m.kind,
-        value: Number(m.value).toLocaleString(locale),
-        unit: m.unit,
-        asOf: m.asOf,
       });
     }
   }
@@ -786,10 +763,10 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  // — Métricas (ref).
-  // Mismo StatCard que "Tu participación" — un solo lenguaje de tarjeta.
-  // Primero las métricas de composición (siempre presentes) y luego las
-  // operativas (MRR/ARR/etc.) que el founder haya reportado.
+  // — Métricas (ref). Solo las 4 métricas de comunidad/valuación. Las
+  // métricas operativas (MRR/DAU/etc.) se removieron a pedido — el foco
+  // es la composición de socios y la valuación. Con exactamente 4 tarjetas
+  // el grid queda 2×2 en mobile y una fila de 4 en desktop.
   {
     const valuationLabel =
       valuationNum !== null
@@ -799,7 +776,7 @@ export default async function ProjectPage({ params }: Params) {
       title: t.sections.metrics,
       tone: "ref",
       node: (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard
             label={t.metricSociosDirectivos}
             value={formatNumber(sociosDirectivos, undefined, locale)}
@@ -821,14 +798,6 @@ export default async function ProjectPage({ params }: Params) {
                 : undefined
             }
           />
-          {Array.from(latestByKind.values()).map((m) => (
-            <StatCard
-              key={m.kind}
-              label={m.label}
-              value={`${m.value} ${m.unit}`}
-              hint={formatDate(m.asOf, locale)}
-            />
-          ))}
         </div>
       ),
     });
