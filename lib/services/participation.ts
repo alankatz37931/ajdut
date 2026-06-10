@@ -273,7 +273,11 @@ export async function cancelResale(input: CancelResaleInput) {
   return prisma.$transaction(async (tx) => {
     const listing = await tx.resaleListing.findUnique({ where: { id: input.resaleListingId } });
     if (!listing) throw new NotFoundError("ResaleListing", input.resaleListingId);
-    if (!["LISTED", "IN_CONVERSATION"].includes(listing.status)) {
+    // El vendedor puede cancelar mientras la reventa siga abierta: publicada
+    // (LISTED), en conversación (IN_CONVERSATION) o incluso ya con comprador
+    // designado esperando validación (AWAITING_VALIDATION) — hasta que el admin
+    // ejecute el traspaso, el vendedor puede echarse atrás.
+    if (!ACTIVE_LISTING_STATUSES.includes(listing.status as (typeof ACTIVE_LISTING_STATUSES)[number])) {
       throw new IllegalTransition(listing.status, "RESALE_CANCELLED");
     }
 
@@ -285,7 +289,18 @@ export async function cancelResale(input: CancelResaleInput) {
 
     await tx.resaleListing.update({
       where: { id: listing.id },
-      data: { status: "CANCELLED", closedAt: new Date() },
+      data: {
+        status: "CANCELLED",
+        closedAt: new Date(),
+        // Si se canceló estando en AWAITING_VALIDATION, limpiamos al comprador
+        // designado y todo el estado de la validación tripartita para que el
+        // listing quede cerrado sin residuos.
+        proposedBuyerId: null,
+        buyerAcceptedAt: null,
+        ownerAcceptedAt: null,
+        buyerConfirmationTokenHash: null,
+        buyerConfirmationTokenExpiresAt: null,
+      },
     });
 
     // Solo revertimos el status de la participación a ASSIGNED si NO quedan
@@ -303,7 +318,13 @@ export async function cancelResale(input: CancelResaleInput) {
         where: { id: listing.participationId },
         select: { status: true },
       });
-      if (participation && participation.status === "IN_RESALE") {
+      // IN_RESALE (publicada) o TRANSFER_PENDING (ya con comprador designado)
+      // vuelven a ASSIGNED al cancelar.
+      if (
+        participation &&
+        (participation.status === "IN_RESALE" ||
+          participation.status === "TRANSFER_PENDING")
+      ) {
         await tx.participation.update({
           where: { id: listing.participationId },
           data: { status: "ASSIGNED" },

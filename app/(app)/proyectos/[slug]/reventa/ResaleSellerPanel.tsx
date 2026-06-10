@@ -260,7 +260,26 @@ function SellerRow({
       )}
 
       {inResale && mode === "idle" && (
-        <div className="mt-4 flex flex-wrap items-center gap-4">
+        <div className="mt-4 space-y-3">
+          {/* Resumen de lo listado: cantidad + precio + total. Para listings
+              legacy sin precio (null) mostramos "precio a convenir". */}
+          {(() => {
+            const lc = row.listing!.shareCount;
+            const pp = row.listing!.proposedPricePerShare;
+            const ppNum = pp !== null ? Number(pp) : null;
+            const summary =
+              ppNum !== null && Number.isFinite(ppNum)
+                ? s.listedSummaryFmt
+                    .replace("{shares}", fmtInt(lc))
+                    .replace("{price}", formatCurrency(ppNum, currency, 2, locale))
+                    .replace(
+                      "{total}",
+                      formatCurrency(lc * ppNum, currency, 2, locale)
+                    )
+                : s.listedSummaryNoPriceFmt.replace("{shares}", fmtInt(lc));
+            return <p className="font-mono text-sm text-navy">{summary}</p>;
+          })()}
+          <div className="flex flex-wrap items-center gap-4">
           <span className="eyebrow !text-navy/60">{s.inBoard}</span>
           <button
             onClick={() => setMode("designating")}
@@ -281,6 +300,7 @@ function SellerRow({
               {error}
             </span>
           )}
+          </div>
         </div>
       )}
 
