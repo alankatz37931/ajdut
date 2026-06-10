@@ -81,10 +81,10 @@ export const dict: Dict = {
     pillarManagementTitle: "Coordination between partners",
     pillarManagementBody:
       "Assign roles, coordinate your partners with real-time information and keep your cap table always up to date and secure. Every change is recorded and certified transparently.",
-    pillarEcosystemTitle: "Connection with the ecosystem",
+    pillarEcosystemTitle: "Connection with like-minded people",
     pillarEcosystemBody:
       "Access a network that brings together entrepreneurs, investors and collaborators aligned with your same values and vision, enabling key synergies.",
-    pillarAdvisoryTitle: "Advisory and integral growth",
+    pillarAdvisoryTitle: "Support for your growth",
     pillarAdvisoryBody:
       "Receive direct support and guidance to structure your company, define a precise valuation and strategically prepare for your next stage of scalability.",
   },

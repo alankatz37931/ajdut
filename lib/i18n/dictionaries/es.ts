@@ -85,10 +85,10 @@ export const dict = {
     pillarManagementTitle: "Coordinación entre socios",
     pillarManagementBody:
       "Asigna roles, coordina a tus socios con información en tiempo real y mantén tu cap table siempre actualizado y seguro. Cada cambio queda registrado y certificado de forma transparente.",
-    pillarEcosystemTitle: "Conexión con el ecosistema",
+    pillarEcosystemTitle: "Conexión con personas afines",
     pillarEcosystemBody:
       "Accede a una red que acerca a emprendedores, inversionistas y colaboradores alineados con tus mismos valores y visión, facilitando la creación de sinergias clave.",
-    pillarAdvisoryTitle: "Asesoría y crecimiento integral",
+    pillarAdvisoryTitle: "Acompañamiento en tu crecimiento",
     pillarAdvisoryBody:
       "Recibe acompañamiento y guía directa para estructurar tu empresa, definir una valuación precisa y prepararte estratégicamente para afrontar tu siguiente etapa de escalabilidad.",
   },
