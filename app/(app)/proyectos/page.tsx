@@ -416,7 +416,7 @@ export default async function ProjectsDiscoveryPage({
                   href={`/proyectos/${p.slug}` as Route}
                   className="group grid grid-cols-12 items-baseline gap-x-4 gap-y-2 px-2 py-4 hover:bg-paper-light transition-colors"
                 >
-                  <div className="col-span-12 sm:col-span-5 min-w-0">
+                  <div className="col-span-12 sm:col-span-4 min-w-0">
                     <p className="eyebrow">
                       {p.startupProfile?.sector ?? p.kind}
                       {p.startupProfile?.stage &&
@@ -488,12 +488,13 @@ export default async function ProjectsDiscoveryPage({
                     </p>
                   </div>
 
-                  <div className="col-span-12 sm:col-span-1 self-center sm:text-right">
+                  <div className="col-span-12 sm:col-span-2 self-center sm:flex sm:justify-end">
                     {isPending ? (
                       <span className="eyebrow !text-gold">{t.review}</span>
                     ) : (
-                      <span className="btn-outline shrink-0 !px-4 !py-2 text-xs tracking-wider uppercase">
+                      <span className="btn-outline !px-4 !py-2 !text-xs whitespace-nowrap shrink-0 group-hover:border-gold group-hover:!text-gold transition-colors">
                         {t.exploreBtn}
+                        <span aria-hidden>→</span>
                       </span>
                     )}
                   </div>

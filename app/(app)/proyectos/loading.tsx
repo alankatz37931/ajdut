@@ -22,7 +22,7 @@ export default function ProjectsDiscoveryLoading() {
       <ul aria-hidden className="mt-6 hairline-t">
         {Array.from({ length: 5 }).map((_, i) => (
           <li key={i} className="hairline-b grid grid-cols-12 gap-x-4 gap-y-2 px-2 py-4">
-            <div className="col-span-12 sm:col-span-5 space-y-2">
+            <div className="col-span-12 sm:col-span-4 space-y-2">
               <SkeletonLine width="w-24" height="h-3" />
               <SkeletonLine width="w-3/4" height="h-6" />
               <SkeletonLine width="w-full" height="h-3" />
@@ -39,8 +39,8 @@ export default function ProjectsDiscoveryLoading() {
               <SkeletonLine width="w-16" height="h-3" />
               <SkeletonLine width="w-20" height="h-4" />
             </div>
-            <div className="hidden sm:flex sm:col-span-1 justify-end">
-              <SkeletonLine width="w-4" height="h-3" />
+            <div className="hidden sm:flex sm:col-span-2 justify-end">
+              <SkeletonLine width="w-28" height="h-9" />
             </div>
             {/* Barra de fondeo */}
             <div className="col-span-12 mt-1">
