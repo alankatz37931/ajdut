@@ -440,39 +440,40 @@ export default async function FounderDashboardPage({ params }: Params) {
         </FounderSection>
 
         {/* ─── 05 · Métricas ────────────────────────────────────── */}
-        <FounderSection
-          n="05"
-          title={t.sectionMetricas}
-          editHref={`/founder/${project.slug}/metricas` as Route}
-          editLabel={t.editLabelMetricas}
-        >
-          {sp?.metrics.length ? (
-            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-line">
-              {sp.metrics.slice(0, 6).map((m) => (
-                <li key={m.id} className="bg-paper p-4">
-                  <p className="eyebrow !text-navy/40 truncate">
-                    {m.customLabel ?? m.kind}
-                  </p>
-                  <p className="mt-2 font-mono text-lg text-navy">
-                    {m.unit === "CURRENCY"
-                      ? formatCurrency(Number(m.value), sp.valuationCurrency, 2, locale)
-                      : m.unit === "PERCENT"
-                        ? formatPercent(Number(m.value), 1, locale)
-                        : formatNumber(Number(m.value), undefined, locale)}
-                  </p>
-                  <p className="mt-1 eyebrow !text-navy/40">
-                    {formatDate(m.asOf, locale)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <EmptyState
-              text={t.metrics.empty}
-              href={`/founder/${project.slug}/metricas` as Route}
-              cta={t.metrics.cta}
+        {/* Las 4 métricas de comunidad/valuación, iguales que la ficha
+            pública. Son calculadas (no editables) → sin link "Actualizar". */}
+        <FounderSection n="05" title={t.sectionMetricas}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <MetricStat
+              label={t.metricSociosDirectivos}
+              value={formatNumber(
+                sp?.founders.filter((f) => f.isActive).length ?? 0,
+                undefined,
+                locale,
+              )}
             />
-          )}
+            <MetricStat
+              label={t.metricSociosEmbajadores}
+              value={formatNumber(0, undefined, locale)}
+            />
+            <MetricStat
+              label={t.metricSociosTotales}
+              value={formatNumber(membersCount, undefined, locale)}
+            />
+            <MetricStat
+              label={t.metricValuacionActual}
+              value={
+                sp?.preMoneyValuation
+                  ? formatCurrency(
+                      Number(sp.preMoneyValuation),
+                      sp.valuationCurrency,
+                      0,
+                      locale,
+                    )
+                  : "—"
+              }
+            />
+          </div>
         </FounderSection>
 
         {/* ─── 06 · Documentos ──────────────────────────────────── */}
@@ -840,6 +841,19 @@ function SidebarStat({
       >
         {value}
       </p>
+    </div>
+  );
+}
+
+/**
+ * Tarjeta de métrica — mismo look que el StatCard de la ficha pública
+ * (hairline + eyebrow label + valor mono). Para las 4 métricas de comunidad.
+ */
+function MetricStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="hairline bg-paper py-3 px-4">
+      <p className="eyebrow !text-navy/40 truncate">{label}</p>
+      <p className="mt-1.5 font-mono text-lg leading-none text-navy">{value}</p>
     </div>
   );
 }
