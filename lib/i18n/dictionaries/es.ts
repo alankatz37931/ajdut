@@ -80,7 +80,7 @@ export const dict = {
     quote:
       "Cuando cada uno comparte la visión y hace su parte, todos crecemos. Esto es la economía del nosotros.",
     ctaSignIn: "Acceder",
-    ctaApply: "Aplica para ser parte",
+    ctaApply: "Quiero ser parte",
     pillarsHeading: "Por qué los miembros eligen AJDUT",
     pillarManagementTitle: "Coordinación entre socios",
     pillarManagementBody:
