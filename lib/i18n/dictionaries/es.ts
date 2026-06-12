@@ -1580,7 +1580,7 @@ export const dict = {
       platformName: "AJDUT plataforma",
       reservedLabel: "Reservado (vesting)",
       unassignedClass: "Sin clasificar",
-      manageLink: "Gestionar clases →",
+      manageLink: "Gestionar equipo →",
       preExistingFallback: "Socios pre-existentes",
       verificationLabel: "Verificación",
       overcommitWarn:

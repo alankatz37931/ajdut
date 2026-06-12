@@ -1572,7 +1572,7 @@ export const dict: Dict = {
       platformName: "AJDUT platform",
       reservedLabel: "Reserved (vesting)",
       unassignedClass: "Unclassified",
-      manageLink: "Manage classes →",
+      manageLink: "Manage team →",
       preExistingFallback: "Pre-existing shareholders",
       verificationLabel: "Verification",
       overcommitWarn:
