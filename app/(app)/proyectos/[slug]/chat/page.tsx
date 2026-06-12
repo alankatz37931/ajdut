@@ -70,7 +70,7 @@ export default async function ProjectChatPage({ params }: Params) {
   // se suspende en su propio async child: el composer no depende del feed,
   // así que el usuario puede empezar a tipear mientras los mensajes cargan.
   return (
-    <div>
+    <div className="max-w-4xl">
       <header className="pt-1 hairline-b pb-5">
         <BackLink fallback={`/proyectos/${slug}`}>{t.back}</BackLink>
         <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
