@@ -1515,7 +1515,7 @@ export const dict: Dict = {
     sectionCapTable: "Capital distribution",
     sectionEstado: "Project status",
     editLabelEditar: "Edit",
-    editLabelEquipo: "+ Invite / Edit",
+    editLabelEquipo: "View team",
     editLabelHitos: "+ Milestone / Edit",
     editLabelLeads: "View leads",
     editLabelMetricas: "Update",

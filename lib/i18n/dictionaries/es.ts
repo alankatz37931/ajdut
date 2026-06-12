@@ -1523,7 +1523,7 @@ export const dict = {
     sectionCapTable: "Distribución de capital",
     sectionEstado: "Estado del proyecto",
     editLabelEditar: "Editar",
-    editLabelEquipo: "+ Invitar / Modificar",
+    editLabelEquipo: "Ver equipo",
     editLabelHitos: "+ Hito / Editar",
     editLabelLeads: "Ver leads",
     editLabelMetricas: "Actualizar",
