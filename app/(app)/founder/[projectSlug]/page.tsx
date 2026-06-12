@@ -589,14 +589,8 @@ export default async function FounderDashboardPage({ params }: Params) {
 
         {/* ─── 08 · Cap table detallado por holder ──────────────── */}
         <div className="hairline bg-paper">
-          <div className="px-5 pt-5 pb-5 hairline-b flex flex-wrap items-baseline justify-between gap-x-3 gap-y-2">
+          <div className="px-5 pt-5 pb-5 hairline-b">
             <WidgetHeader n="08" title={t.sectionCapTable} />
-            <Link
-              href={`/proyectos/${project.slug}` as Route}
-              className="eyebrow !text-navy/50 hover:!text-gold transition-colors shrink-0"
-            >
-              {t.capTable.detailLink}
-            </Link>
           </div>
           {/* Filas con hairline-b explícito (0.5px) — match con el header
               de arriba y con el resto del sistema editorial. Renderiza TODAS
