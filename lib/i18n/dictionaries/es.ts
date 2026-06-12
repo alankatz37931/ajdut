@@ -1694,7 +1694,6 @@ export const dict = {
     description:
       "Cada participante pertenece a una de las 4 clases (Directivo, Administrativo, Embajador e Inversor pasivo). Los miembros ven la distribución de capital agregada por clase — cantidad de personas y porcentaje — sin nombres.",
     genericError: "Ocurrió un error.",
-    teamLink: "Equipo del proyecto →",
     holders: {
       eyebrow: "— Participantes de AJDUT",
       helper:

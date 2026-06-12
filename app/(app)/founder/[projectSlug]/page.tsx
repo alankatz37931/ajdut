@@ -204,7 +204,7 @@ export default async function FounderDashboardPage({ params }: Params) {
       done:
         project._count.shareholderClasses > 0 ||
         project._count.externalHoldings > 0,
-      href: `/founder/${project.slug}/composicion` as Route,
+      href: `/founder/${project.slug}/equipo` as Route,
       hint: t.checklist.itemCapHint,
     },
   ];
@@ -626,7 +626,7 @@ export default async function FounderDashboardPage({ params }: Params) {
           </ul>
           <div className="px-5 py-3 hairline-t">
             <Link
-              href={`/founder/${project.slug}/composicion` as Route}
+              href={`/founder/${project.slug}/equipo` as Route}
               className="eyebrow !text-gold hover:!text-navy transition-colors"
             >
               {t.capTable.manageLink}

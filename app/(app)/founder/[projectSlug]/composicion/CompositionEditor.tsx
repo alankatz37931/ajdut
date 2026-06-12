@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useTransition } from "react";
 import type { Dict } from "@/lib/i18n";
 import { InlineConfirm } from "@/components/ui/InlineConfirm";
@@ -212,16 +211,6 @@ export function CompositionEditor({
           </ul>
         )}
       </section>
-
-      {/* ─── Ir al equipo fundador ───────────────────────────────── */}
-      <div className="hairline-t pt-6">
-        <Link
-          href={`/founder/${projectSlug}/equipo`}
-          className="eyebrow hover:!text-gold"
-        >
-          {dict.teamLink}
-        </Link>
-      </div>
     </div>
   );
 }
