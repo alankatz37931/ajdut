@@ -1512,7 +1512,7 @@ export const dict: Dict = {
     sectionDocumentos: "Periodic reports",
     sectionAvisos: "Notices to members",
     sectionFondeo: "Funding",
-    sectionCapTable: "Cap table",
+    sectionCapTable: "Capital distribution",
     sectionEstado: "Project status",
     editLabelEditar: "Edit",
     editLabelEquipo: "+ Invite / Edit",

@@ -14,8 +14,7 @@ import { ProjectBody } from "./ProjectBody";
 import { ProjectHero } from "@/components/project/ProjectHero";
 import { ProjectVideo } from "@/components/project/ProjectVideo";
 import { ProjectSection } from "@/components/project/ProjectSection";
-import { CapTableViz } from "@/components/project/CapTableViz";
-import { CapTableByClass } from "@/components/project/CapTableByClass";
+import { CapTableByClassCompact } from "@/components/project/CapTableByClassCompact";
 import { computeCapTable, computeCapTableByClass } from "@/lib/services/cap-table";
 import { BackLink } from "@/components/app/BackLink";
 import { embedUrl } from "@/lib/utils/embed";
@@ -124,10 +123,10 @@ export default async function ProjectPage({ params }: Params) {
   //     vistas muestran EXACTAMENTE el mismo cap table.
   const totalShares = project.totalShares;
   const sp = project.startupProfile;
-  // Input UNIFICADO con clase de accionista. Lo consumen DOS vistas: el cap
-  // table nominal por holder (CapTableViz, owner/admin) vía `computeCapTable`,
-  // y la composición agregada por clase (CapTableByClass, miembro) vía
-  // `computeCapTableByClass`. Misma matemática (pool/verificación) en ambas.
+  // Input UNIFICADO con clase de accionista. `computeCapTable` se usa para las
+  // métricas/fondeo (pool, committed, plataforma); la distribución que se MUESTRA
+  // es la agregada por clase (`computeCapTableByClass`) en formato compacto, igual
+  // para los 3 tipos de usuario (CapTableByClassCompact).
   const capInput = {
     totalShares,
     founders: (sp?.founders ?? [])
@@ -173,29 +172,6 @@ export default async function ProjectPage({ params }: Params) {
   // El "disponible" que se muestra es el remanente del cap table unificado.
   const availableForDisplay = capTable.poolShares;
 
-  // Cap table nominal (por holder) para roles permitidos — derivado de las
-  // filas del helper, con los sentinelas traducidos. Incluye AHORA al equipo
-  // fundador y a las tenencias externas, además de pool/plataforma/asignados.
-  type CapRow = { holder: string; isPlatform: boolean; shares: number };
-  const capRows: CapRow[] = [];
-  if (access.canSeeCapTable) {
-    for (const row of capTable.rows) {
-      const holder =
-        row.name === "__pool__"
-          ? t.capTable.unassigned
-          : row.name === "__platform__"
-            ? t.capTable.platform
-            : row.name === "__reserved__"
-              ? t.capTable.reserved
-              : row.name;
-      capRows.push({
-        holder,
-        isPlatform: row.kind === "platform",
-        shares: row.shares,
-      });
-    }
-    capRows.sort((a, b) => b.shares - a.shares);
-  }
 
   // Cap table por clase (anonimizado) — lo ve el miembro normal: composición
   // por clase de accionista (cantidad de personas + %), sin nombres. El
@@ -206,12 +182,6 @@ export default async function ProjectPage({ params }: Params) {
   // por su clase) además de externas y asignados. Pool y "sin clasificar" van
   // como filas propias (tone muted). La participación de AJDUT Platform NO se
   // muestra en la vista anónima del miembro — se filtra la fila "platform".
-  type ByClassRow = {
-    label: string;
-    people: number | null;
-    shares: number;
-    tone?: "default" | "platform" | "muted";
-  };
   // Solo las 4 clases canónicas (con kind); AJDUT se fold en Inversor pasivo.
   const byClass = computeCapTableByClass(
     capInput,
@@ -219,31 +189,27 @@ export default async function ProjectPage({ params }: Params) {
       .filter((c) => c.kind)
       .map((c) => ({ id: c.id, name: c.name, kind: c.kind }))
   );
-  const byClassRows: ByClassRow[] = byClass.rows
+  // Distribución por clase en formato compacto — la ven los 3 tipos de usuario.
+  // Pool / reservado / sin-clasificar van atenuados; la plataforma ya está
+  // foldeada en Inversor pasivo, así que filtramos cualquier fila "platform".
+  const capCompactRows = byClass.rows
     .filter((row) => row.kind !== "platform")
-    .map((row) => {
-      if (row.kind === "pool") {
-        return {
-          label: t.capTable.unassigned,
-          people: null,
-          shares: row.shares,
-          tone: "muted" as const,
-        };
-      }
-      if (row.kind === "reserved") {
-        return {
-          label: t.capTable.reserved,
-          people: null,
-          shares: row.shares,
-          tone: "muted" as const,
-        };
-      }
-      if (row.kind === "unclassified") {
-        // Sin label visible — el row muestra solo el conteo de personas.
-        return { label: "", people: row.people, shares: row.shares, tone: "muted" as const };
-      }
-      return { label: row.name, people: row.people, shares: row.shares, tone: "default" as const };
-    });
+    .map((row) => ({
+      key: row.key,
+      name:
+        row.kind === "pool"
+          ? t.capTable.unassigned
+          : row.kind === "reserved"
+            ? t.capTable.reserved
+            : row.kind === "unclassified"
+              ? t.capTable.unclassified
+              : row.name,
+      shares: row.shares,
+      muted:
+        row.kind === "pool" ||
+        row.kind === "reserved" ||
+        row.kind === "unclassified",
+    }));
 
   // ¿Tiene el viewer participaciones en este proyecto?
   const myParticipations =
@@ -796,37 +762,6 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
-  // — Cap table (ref, gated). Va al sidebar — NO se incluye en sections.
-  // Se renderiza directamente abajo dentro del aside sticky.
-  const capTableNode =
-    access.canSeeCapTable && capRows.length > 0 ? (
-      <CapTableViz
-        rows={capRows}
-        totalShares={totalShares}
-        ofTotalLabel={`${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
-        formatShares={(n) => formatNumber(n, undefined, locale)}
-        formatPct={(p) => formatPercent(p, 2, locale)}
-        othersLabel={t.capTable.others}
-      />
-    ) : null;
-
-  // El miembro normal ve la composición anónima por clase.
-  const capByClassNode =
-    !access.canSeeCapTable && byClassRows.length > 0 ? (
-      <CapTableByClass
-        rows={byClassRows}
-        totalShares={totalShares}
-        ofTotalLabel={`${dict.projectList.of} ${formatNumber(totalShares, undefined, locale)}`}
-        formatShares={(n) => formatNumber(n, undefined, locale)}
-        formatPct={(p) => formatPercent(p, 2, locale)}
-        peopleLabel={(n) =>
-          `${formatNumber(n, undefined, locale)} ${
-            n === 1 ? t.capTable.person : t.capTable.people
-          }`
-        }
-      />
-    ) : null;
-
   // Embed del video — visible para cualquier viewer del proyecto.
   const videoEmbed = project.startupProfile?.videoUrl
     ? embedUrl(project.startupProfile.videoUrl)
@@ -1015,14 +950,18 @@ export default async function ProjectPage({ params }: Params) {
               )}
             </div>
 
-            {/* Cap table: nominal para owner/admin, por clase (anónimo)
-                para el miembro normal. */}
-            {(capTableNode || capByClassNode) && (
+            {/* Distribución de capital por clase (compacta) — la ven los 3
+                tipos de usuario por igual. */}
+            {capCompactRows.length > 0 && (
               <div className="hairline bg-paper">
                 <p className="px-5 pt-5 pb-3 eyebrow !text-navy/40 hairline-b">
                   {t.sections.capTable}
                 </p>
-                {capTableNode ?? capByClassNode}
+                <CapTableByClassCompact
+                  rows={capCompactRows}
+                  totalShares={totalShares}
+                  locale={locale}
+                />
               </div>
             )}
 

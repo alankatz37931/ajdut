@@ -1520,7 +1520,7 @@ export const dict = {
     sectionDocumentos: "Reportes periódicos",
     sectionAvisos: "Avisos a miembros",
     sectionFondeo: "Fondeo",
-    sectionCapTable: "Cap table",
+    sectionCapTable: "Distribución de capital",
     sectionEstado: "Estado del proyecto",
     editLabelEditar: "Editar",
     editLabelEquipo: "+ Invitar / Modificar",
