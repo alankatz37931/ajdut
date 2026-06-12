@@ -531,7 +531,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 00 · Fondeo (medidor + KPIs cortos) ──────────────── */}
         <div className="hairline bg-paper">
           <div className="px-5 pt-5 pb-5 hairline-b">
-            <WidgetHeader n="00" title={t.sectionFondeo} />
+            <WidgetHeader title={t.sectionFondeo} />
             <div className="mt-4">
               <p className="eyebrow !text-navy/50">{t.funding.placedLabel}</p>
               <p className="mt-1.5 font-mono text-2xl text-navy leading-none">
@@ -590,7 +590,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 08 · Cap table detallado por holder ──────────────── */}
         <div className="hairline bg-paper">
           <div className="px-5 pt-5 pb-5 hairline-b">
-            <WidgetHeader n="08" title={t.sectionCapTable} />
+            <WidgetHeader title={t.sectionCapTable} />
           </div>
           {/* Filas con hairline-b explícito (0.5px) — match con el header
               de arriba y con el resto del sistema editorial. Renderiza TODAS
@@ -637,7 +637,7 @@ export default async function FounderDashboardPage({ params }: Params) {
         {/* ─── 09 · Checklist owner ─────────────────────────────── */}
         <div className="hairline bg-paper">
           <div className="px-5 pt-5 pb-5 hairline-b">
-            <WidgetHeader n="09" title={t.sectionEstado} />
+            <WidgetHeader title={t.sectionEstado} />
           </div>
           <ChecklistInline items={checklist} completeBtn={t.checklist.completeBtn} />
         </div>
@@ -654,11 +654,15 @@ export default async function FounderDashboardPage({ params }: Params) {
  * Header de sección — mismo lenguaje para main column y sidebar widgets.
  * Mono "NN" gold + `·` navy/30 + título sans navy. Tracking wider, text-sm.
  */
-function WidgetHeader({ n, title }: { n: string; title: string }) {
+function WidgetHeader({ n, title }: { n?: string; title: string }) {
   return (
     <h2 className="font-mono text-sm tracking-wider text-navy">
-      <span className="text-gold">{n}</span>
-      <span className="text-navy/30"> · </span>
+      {n && (
+        <>
+          <span className="text-gold">{n}</span>
+          <span className="text-navy/30"> · </span>
+        </>
+      )}
       <span className="font-sans text-navy">{title}</span>
     </h2>
   );
