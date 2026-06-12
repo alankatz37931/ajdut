@@ -1249,6 +1249,7 @@ export const dict = {
     // Validación bilateral (Ola 2k) — appended al final del bloque por
     // convención (otro agente está renombrando keys en el medio).
     proposerAccepted: "Project owner confirmó",
+    proposerPending: "Project owner pendiente",
     targetAccepted: "Receptor confirmó",
     targetPending: "Receptor pendiente",
     proposerAcceptedFmt: "Project owner confirmó · {date}",

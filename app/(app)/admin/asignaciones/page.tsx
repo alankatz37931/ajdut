@@ -7,7 +7,6 @@ import { prisma } from "@/lib/db/client";
 import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
-import { SYMBOL } from "@/lib/utils/status-symbols";
 import { PendingAssignmentActions } from "./PendingAssignmentActions";
 
 const adminAsignacionesInclude = {
@@ -25,13 +24,6 @@ export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
   return { title: dict.metaTitles.adminAsignaciones };
 }
-
-// Paleta canónica en `@/lib/utils/status-symbols`.
-const STATUS_SYMBOL: Record<string, string> = {
-  PENDING: SYMBOL.open,
-  APPROVED: SYMBOL.done,
-  REJECTED: SYMBOL.reject,
-};
 
 export default async function AdminPendingAssignmentsPage({
   searchParams,
@@ -213,14 +205,7 @@ export default async function AdminPendingAssignmentsPage({
                         {SOURCE_LABEL[p.source] ?? p.source}
                       </span>
                       <span className="!text-navy/30" aria-hidden>·</span>
-                      <span
-                        className={`inline-flex items-center gap-1.5 ${
-                          isOpen ? "!text-gold" : "!text-navy/50"
-                        }`}
-                      >
-                        <span aria-hidden className="text-base leading-none">
-                          {STATUS_SYMBOL[p.status] ?? "·"}
-                        </span>
+                      <span className={isOpen ? "!text-gold" : "!text-navy/50"}>
                         {t.status[p.status] ?? p.status}
                       </span>
                     </p>
@@ -281,34 +266,34 @@ export default async function AdminPendingAssignmentsPage({
                             confirmación. Admin sólo puede aprobar normalmente
                             cuando ambos están seteados; si target no confirmó,
                             puede re-enviar el mail o usar el override. */}
-                        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 eyebrow">
+                        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 eyebrow">
                           <span
                             className={
                               p.proposerAcceptedAt
-                                ? "!text-navy/70"
+                                ? "!text-gold"
                                 : "!text-navy/40"
                             }
                           >
                             {p.proposerAcceptedAt
-                              ? `${SYMBOL.done} ${t.proposerAcceptedFmt.replace(
+                              ? t.proposerAcceptedFmt.replace(
                                   "{date}",
                                   formatDate(p.proposerAcceptedAt, locale)
-                                )}`
-                              : `${SYMBOL.open} ${t.proposerAccepted} —`}
+                                )
+                              : t.proposerPending}
                           </span>
                           <span
                             className={
                               p.targetAcceptedAt
-                                ? "!text-navy/70"
-                                : "!text-gold"
+                                ? "!text-gold"
+                                : "!text-navy/40"
                             }
                           >
                             {p.targetAcceptedAt
-                              ? `${SYMBOL.done} ${t.targetAcceptedFmt.replace(
+                              ? t.targetAcceptedFmt.replace(
                                   "{date}",
                                   formatDate(p.targetAcceptedAt, locale)
-                                )}`
-                              : `${SYMBOL.open} ${t.targetPending}`}
+                                )
+                              : t.targetPending}
                           </span>
                           {!p.targetAcceptedAt && (
                             <span className="!text-navy/40">

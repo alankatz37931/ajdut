@@ -1241,6 +1241,7 @@ export const dict: Dict = {
     },
     // Bilateral validation (Wave 2k) — appended at end of block.
     proposerAccepted: "Project owner confirmed",
+    proposerPending: "Project owner pending",
     targetAccepted: "Recipient confirmed",
     targetPending: "Recipient pending",
     proposerAcceptedFmt: "Project owner confirmed · {date}",
