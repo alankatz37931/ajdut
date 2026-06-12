@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { Dict } from "@/lib/i18n";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { formatDate } from "@/lib/utils/format";
@@ -38,9 +38,22 @@ export function DocumentsPanel({
   // Si la URL trae ?addDoc=1 (deep-link desde el checklist del founder),
   // abrimos el modal apenas montamos.
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   useEffect(() => {
     if (searchParams?.get("addDoc") === "1") setModalOpen(true);
   }, [searchParams]);
+
+  // Al cerrar volvemos a la página del proyecto limpia: sacamos el ?addDoc=1
+  // del URL (sino el link de arriba queda igual y al recargar reabre el modal).
+  function closeModal() {
+    setModalOpen(false);
+    if (searchParams?.get("addDoc") === "1") {
+      router.replace(pathname as Parameters<typeof router.replace>[0], {
+        scroll: false,
+      });
+    }
+  }
 
   return (
     <div>
@@ -66,7 +79,7 @@ export function DocumentsPanel({
       {modalOpen && (
         <UploadModal
           projectSlug={projectSlug}
-          onClose={() => setModalOpen(false)}
+          onClose={closeModal}
           dict={dict}
           uploadDict={uploadDict}
         />
