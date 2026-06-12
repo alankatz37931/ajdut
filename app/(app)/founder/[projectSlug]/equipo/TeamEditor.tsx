@@ -102,7 +102,7 @@ export function TeamEditor({
         </p>
       )}
 
-      <div className="hairline p-4 bg-paper flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <p className="eyebrow">
           {dict.equityTotalFmt.split(/(\{pct\})/).map((part, i) =>
             part === "{pct}" ? (
@@ -136,20 +136,21 @@ export function TeamEditor({
         />
       )}
 
-      <ul className="space-y-3">
-        {initialFounders.map((f) => (
-          <li key={f.id} className="hairline p-4 bg-paper">
-            {editingId === f.id ? (
-              <FounderForm
-                founder={f}
-                onSubmit={onSubmit}
-                onCancel={() => setEditingId(null)}
-                isPending={isPending}
-                dict={dict}
-                shareholderClasses={shareholderClasses}
-              />
-            ) : (
-              <div className="grid grid-cols-12 items-center gap-x-3 gap-y-3">
+      {initialFounders.length > 0 && (
+        <ul className="hairline-t">
+          {initialFounders.map((f) => (
+            <li key={f.id} className="hairline-b last:border-b-0 py-3">
+              {editingId === f.id ? (
+                <FounderForm
+                  founder={f}
+                  onSubmit={onSubmit}
+                  onCancel={() => setEditingId(null)}
+                  isPending={isPending}
+                  dict={dict}
+                  shareholderClasses={shareholderClasses}
+                />
+              ) : (
+                <div className="grid grid-cols-12 items-center gap-x-3 gap-y-2">
                 <div className="col-span-12 sm:col-span-5 min-w-0">
                   <p className="font-sans text-navy break-words">{f.fullName}</p>
                   <p className="mt-1 eyebrow">{f.role}</p>
@@ -198,14 +199,15 @@ export function TeamEditor({
                     disabled={isPending}
                   />
                 </div>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {initialFounders.length === 0 && !showNew && (
-        <p className="text-navy/60">{dict.empty}</p>
+        <p className="text-sm text-navy/55">{dict.empty}</p>
       )}
     </div>
   );
