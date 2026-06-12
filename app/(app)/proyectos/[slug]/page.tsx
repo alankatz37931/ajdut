@@ -573,20 +573,21 @@ export default async function ProjectPage({ params }: Params) {
     // Si el project owner definió una fecha de inicio de reventa que todavía
     // no llegó, el botón queda deshabilitado (la fecha se muestra bajo las
     // tarjetas). Fecha pasada (o null) → botón habilitado normal.
+    // Mismo estilo que las acciones del header del owner en su dashboard
+    // (eyebrow gold + flecha, p. ej. "NUEVO REPORTE →").
     const revenderAction = resaleLocked ? (
       <span
-        className="btn-outline !px-4 !py-2 !text-xs whitespace-nowrap inline-flex items-center gap-1.5 opacity-50 cursor-not-allowed pointer-events-none"
+        className="eyebrow !text-navy/30 shrink-0 whitespace-nowrap cursor-not-allowed"
         aria-disabled="true"
       >
-        {t.revenderBtn}
+        {t.revenderBtn} →
       </span>
     ) : (
       <Link
         href={`/proyectos/${project.slug}/reventa` as Route}
-        className="btn-outline !px-4 !py-2 !text-xs whitespace-nowrap inline-flex items-center gap-1.5 hover:border-gold hover:!text-gold transition-colors"
+        className="eyebrow !text-navy/50 hover:!text-gold transition-colors shrink-0 whitespace-nowrap"
       >
-        {t.revenderBtn}
-        <span aria-hidden>→</span>
+        {t.revenderBtn} →
       </Link>
     );
     sections.push({
