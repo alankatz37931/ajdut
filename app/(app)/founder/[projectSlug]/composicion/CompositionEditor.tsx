@@ -115,24 +115,6 @@ export function CompositionEditor({
         </p>
       )}
 
-      {/* ─── Clases (fijas) ──────────────────────────────────────── */}
-      <section className="space-y-4">
-        <div>
-          <p className="eyebrow">{dict.classes.eyebrow}</p>
-        </div>
-
-        <ul className="hairline-t">
-          {classes.map((c) => (
-            <li
-              key={c.id}
-              className="hairline-b last:border-b-0 py-2.5 text-sm text-navy"
-            >
-              {c.name}
-            </li>
-          ))}
-        </ul>
-      </section>
-
       {/* ─── Accionistas de AJDUT ────────────────────────────────── */}
       <section className="space-y-4">
         <div>
