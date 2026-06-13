@@ -29,9 +29,6 @@ const PUBLIC_PAGES = [
   "/aplicar",
   "/recuperar-contrasena",
   "/establecer-contrasena",
-  // El comprador propuesto confirma una reventa via un token capability-based
-  // (link de email de un solo uso). No requiere session.
-  "/confirmar-reventa",
   // El receptor de una asignacion pendiente confirma via token capability-based
   // (link de email de un solo uso). No requiere session.
   "/confirmar-asignacion",

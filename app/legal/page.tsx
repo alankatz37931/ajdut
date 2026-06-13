@@ -13,7 +13,7 @@ export default async function LegalPage() {
   const user = await getOptionalSession();
   const t = dict.legal;
   return (
-    <div className="mx-auto max-w-6xl px-6 sm:px-8">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 md:px-8">
       {/* Eyebrow: sin sesión es BackLink (volver al landing). Con sesión queda
           como label estático — el viewer navega con el sidebar. */}
       <section className="pt-5 pb-8 sm:pt-7 sm:pb-12">

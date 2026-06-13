@@ -9,18 +9,10 @@ type Status =
   | "CLOSED"
   | "ARCHIVED";
 
-const SYMBOL: Record<Status, string> = {
-  DRAFT: "○",
-  PENDING_APPROVAL: "◐",
-  ACTIVE: "●",
-  SUSPENDED: "▪",
-  CLOSED: "✕",
-  ARCHIVED: "◇",
-};
-
 /**
  * Píldora de estado de proyecto. Server component — usa getDict para
- * traducir el label según el idioma activo.
+ * traducir el label según el idioma activo. El estado se comunica solo
+ * con color (gold = activo, navy atenuado = resto), sin símbolos.
  */
 export async function StatusBadge({
   status,
@@ -44,14 +36,11 @@ export async function StatusBadge({
   return (
     <span
       className={cn(
-        "eyebrow inline-flex items-center gap-1.5 hairline px-2.5 py-1 whitespace-nowrap",
+        "eyebrow inline-flex items-center hairline px-2.5 py-1 whitespace-nowrap",
         tone,
         className,
       )}
     >
-      <span aria-hidden className="text-[0.85em] leading-none">
-        {SYMBOL[s] ?? "·"}
-      </span>
       {label}
     </span>
   );

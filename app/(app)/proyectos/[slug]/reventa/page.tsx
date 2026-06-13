@@ -338,21 +338,15 @@ export default async function ProjectResalePage({ params }: Params) {
                     <span className="!text-navy">{l.contactChannel}</span>
                   </p>
                   {/* First-to-acquire: cualquier socio aprobado adquiere una
-                      publicación libre (LISTED). El vendedor de la publicación
-                      no ve el botón (ve "Tu publicación"). */}
-                  {l.sellerId === user.id ? (
-                    <p className="mt-4 eyebrow !text-navy/40">
-                      {t.boardOwnListing}
-                    </p>
-                  ) : (
-                    l.status === "LISTED" && (
-                      <AcquireButton
-                        projectSlug={project.slug}
-                        resaleListingId={l.id}
-                        label={t.boardAcquireBtn}
-                        acquiringLabel={t.boardAcquiringBtn}
-                      />
-                    )
+                      publicación libre (LISTED). Las publicaciones propias no
+                      llegan acá: boardListings excluye al vendedor. */}
+                  {l.status === "LISTED" && (
+                    <AcquireButton
+                      projectSlug={project.slug}
+                      resaleListingId={l.id}
+                      label={t.boardAcquireBtn}
+                      acquiringLabel={t.boardAcquiringBtn}
+                    />
                   )}
                 </li>
               );

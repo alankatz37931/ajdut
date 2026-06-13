@@ -13,11 +13,11 @@ export default async function AccederPage() {
   const dict = await getDict();
   const t = dict.login;
   return (
-    <div className="mx-auto w-full max-w-lg px-4 sm:px-6">
+    <div className="mx-auto w-full max-w-lg px-4 sm:px-6 pb-section">
       <BackLink fallback="/">{t.eyebrow}</BackLink>
 
-      <h1 className="font-sans mt-4 text-h1 text-navy">{t.title}</h1>
-      <p className="mt-3 text-navy/75 leading-relaxed">
+      <h1 className="font-sans mt-6 text-h1 text-navy">{t.title}</h1>
+      <p className="mt-4 text-navy/75 leading-relaxed">
         {t.intro}{" "}
         <Link href="/aplicar" className="text-navy underline decoration-gold underline-offset-4">
           {t.applyLink}
@@ -25,7 +25,7 @@ export default async function AccederPage() {
         .
       </p>
 
-      <div className="mt-6 hairline p-6 bg-paper-light">
+      <div className="mt-10 hairline p-6 bg-paper-light">
         <LoginForm dict={t} />
       </div>
 

@@ -6,7 +6,7 @@ import { getDict, getLocale } from "@/lib/i18n";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { ensureProjectClasses } from "@/lib/services/shareholder-class";
 import { TeamEditor } from "./TeamEditor";
-import { CompositionEditor } from "../composicion/CompositionEditor";
+import { CompositionEditor } from "./CompositionEditor";
 
 type Params = { params: Promise<{ projectSlug: string }> };
 
@@ -126,11 +126,11 @@ export default async function FounderTeamPage({ params }: Params) {
         locale={locale}
       />
 
-      {/* Composición de participaciones — embebida dentro de Equipo. */}
+      {/* Composición de participaciones — embebida dentro de Equipo. Mismo
+          ritmo que el resto del sistema: h2 en escala text-h2 + descripción;
+          los eyebrows "— ..." de cada sub-sección viven en el editor. */}
       <div className="mt-14 pt-10 hairline-t">
-        <h2 className="font-sans text-2xl sm:text-[1.75rem] text-navy leading-tight">
-          {tc.section}
-        </h2>
+        <h2 className="font-sans text-h2 text-navy">{tc.section}</h2>
         <p className="mt-3 text-navy/75 leading-relaxed">{tc.description}</p>
       </div>
 

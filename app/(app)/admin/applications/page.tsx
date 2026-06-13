@@ -93,10 +93,11 @@ export default async function ApplicationsListPage({
     );
   }
 
+  // "Todas" va último — mismo orden que asignaciones/reventas.
   const filterEntries: Array<[string, string]> = [
-    ["all", t.filters.all],
     ["pending", t.filters.pending],
     ["resolved", t.filters.resolved],
+    ["all", t.filters.all],
   ];
 
   function emptyMessageFor(f: string): string {
@@ -119,7 +120,7 @@ export default async function ApplicationsListPage({
         )}
       </header>
 
-      <nav className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
+      <nav className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2">
         {filterEntries.map(([key, label]) => {
           const active = filter === key;
           const count = countsByFilter[key] ?? 0;
@@ -151,7 +152,13 @@ export default async function ApplicationsListPage({
               );
               const isOpen = a.status === "PENDING" || a.status === "UNDER_REVIEW";
               const isStale = daysOld > 7 && isOpen;
-              const railClass = isOpen ? "bg-gold" : "bg-navy/20";
+              // Mismo criterio que asignaciones/reventas: abierta = gold,
+              // aprobada = navy/60, rechazada = navy/20.
+              const railClass = isOpen
+                ? "bg-gold"
+                : a.status === "APPROVED"
+                ? "bg-navy/60"
+                : "bg-navy/20";
               const motivationPreview =
                 a.motivation.length > MOTIVATION_PREVIEW_CHARS
                   ? a.motivation.slice(0, MOTIVATION_PREVIEW_CHARS).trimEnd() + "…"

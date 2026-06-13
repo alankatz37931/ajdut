@@ -10,7 +10,6 @@ import {
   FloatingTextarea,
   FloatingDate,
 } from "@/components/ui/Floating";
-import { SYMBOL } from "@/lib/utils/status-symbols";
 
 type Status = "PLANNED" | "IN_PROGRESS" | "ACHIEVED" | "DELAYED" | "CANCELLED";
 type HitosDict = Dict["founderHitos"];
@@ -24,13 +23,14 @@ type Milestone = {
   achievedAt: string;
 };
 
-// Paleta canónica en `@/lib/utils/status-symbols`.
-const STATUS_SYMBOL: Record<Status, string> = {
-  PLANNED: SYMBOL.open,
-  IN_PROGRESS: SYMBOL.prog,
-  ACHIEVED: SYMBOL.done,
-  DELAYED: SYMBOL.delay,
-  CANCELLED: SYMBOL.reject,
+// Estado solo con color (sin símbolos): gold = logrado, navy pleno = en
+// marcha, navy atenuado = planeado/atrasado, navy/40 = cancelado.
+const STATUS_TONE: Record<Status, string> = {
+  PLANNED: "!text-navy/60",
+  IN_PROGRESS: "!text-navy",
+  ACHIEVED: "!text-gold",
+  DELAYED: "!text-navy/60",
+  CANCELLED: "!text-navy/40",
 };
 
 const empty: Milestone = {
@@ -131,10 +131,9 @@ export function MilestonesEditor({
                     <p className="font-sans text-navy break-words">{m.title}</p>
                     <p className="mt-2 text-navy/75 leading-relaxed break-words">{m.description}</p>
                   </div>
-                  <span className="eyebrow inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                    <span aria-hidden className="text-base leading-none">
-                      {STATUS_SYMBOL[m.status]}
-                    </span>
+                  <span
+                    className={`eyebrow shrink-0 whitespace-nowrap ${STATUS_TONE[m.status]}`}
+                  >
                     {dict.status[m.status] ?? m.status}
                   </span>
                 </div>

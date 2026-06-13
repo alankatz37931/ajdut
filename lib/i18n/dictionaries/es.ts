@@ -69,7 +69,6 @@ export const dict = {
     titleLine1: "El sistema que coordina",
     titleLine2: "lo más valioso de tu empresa:",
     titleLine3: "Socios, colaboradores e inversionistas.",
-    pillarsEyebrow: "Transparencia · Unidad · Valor",
     valueTransparency: "Transparencia",
     valueUnity: "Unidad",
     valueValue: "Valor",
@@ -77,9 +76,6 @@ export const dict = {
     description:
       "Con AJDUT puedes estructurar la participación de socios, comunicarte, enviar reportes y conectar con las personas correctas para crecer tu negocio mediante economía colaborativa.",
     descriptionBold: "Todo registrado, verificado y coordinado.",
-    quote:
-      "Cuando cada uno comparte la visión y hace su parte, todos crecemos. Esto es la economía del nosotros.",
-    ctaSignIn: "Acceder",
     ctaApply: "Quiero ser parte",
     pillarsHeading: "Por qué los miembros eligen AJDUT",
     pillarManagementTitle: "Coordinación entre socios",
@@ -106,7 +102,6 @@ export const dict = {
   login: {
     metaTitle: "Acceder · AJDUT",
     eyebrow: "Acceder",
-    backToHome: "Volver al inicio",
     title: "Acceso de miembros",
     intro: "El acceso a AJDUT es por invitación. Si aún no formas parte,",
     applyLink: "aplica para ser parte",
@@ -121,7 +116,6 @@ export const dict = {
   apply: {
     metaTitle: "Aplicar · AJDUT",
     eyebrow: "Aplicación de acceso",
-    backToHome: "Volver al inicio",
     title: "Quiero formar parte de AJDUT",
     intro:
       "Creemos en las conexiones reales y en el valor de cada miembro. Con tus datos, comenzamos a construir juntos.",
@@ -139,8 +133,6 @@ export const dict = {
       review: "Revisión",
     } as Record<string, string>,
     kind: {
-      eyebrow: "— ¿Cómo quieres sumarte?",
-      intro: "Hay dos tipos de aplicación.",
       personTitle: "Socio",
       personSubtitle: "Quiero ser miembro de la comunidad",
       personDescription:
@@ -167,14 +159,10 @@ export const dict = {
       kindStartup: "Startup",
       kindOther: "Otro",
       descriptionLabel: "Descripción corta de la propuesta",
-      descriptionPlaceholder:
-        "En pocas líneas: qué hace el proyecto, en qué etapa está, qué necesitas de AJDUT.",
       charsCounter: "caracteres",
     },
     motivation: {
       questionLabel: "¿Qué te motiva?",
-      detailsLabel: "Más detalles",
-      detailsPlaceholder: "Detalles adicionales (opcional)",
       options: [
         "Busco diversificar mi portafolio con proyectos reales",
         "Me interesa apoyar emprendimientos de mi región",
@@ -265,12 +253,10 @@ export const dict = {
     adminAvisos: "Avisos · Admin · AJDUT",
     founderNuevoProyecto: "Nuevo proyecto · AJDUT",
     founderAvisos: "Avisos a miembros · AJDUT",
-    founderComposicion: "Composición de participaciones · AJDUT",
     founderEditar: "Editar proyecto · AJDUT",
     founderEquipo: "Equipo · AJDUT",
     founderHitos: "Hitos · AJDUT",
     founderInvitar: "Invitar miembro · AJDUT",
-    founderVesting: "Vesting · AJDUT",
     founderMetricas: "Métricas · AJDUT",
     home: "AJDUT",
     founderHome: "Project owner · AJDUT",
@@ -291,7 +277,6 @@ export const dict = {
     emailLabel: "Email de tu cuenta",
     submitBtn: "Enviar link de recuperación",
     submittingBtn: "Enviando…",
-    errEmailInvalid: "El email no es válido.",
     submittedEyebrow: "Solicitud recibida",
     submittedTitle: "Hay un email en camino.",
     submittedBody:
@@ -670,17 +655,9 @@ export const dict = {
     },
     capTable: {
       unassigned: "Disponible (sin asignar)",
-      platform: "AJDUT plataforma",
       reserved: "Reservado (entrega gradual)",
-      others: "Otros",
-      ofTotal: "del total",
       unclassified: "Sin clasificar",
-      person: "persona",
-      people: "personas",
       preExistingFallback: "Socios pre-existentes",
-      verificationLabel: "Verificación",
-      overcommitWarn:
-        "El cap table excede el total emitido. Los socios pre-existentes figuran en Composición.",
     },
     participationStatus: {
       ASSIGNED: "Asignada",
@@ -928,14 +905,12 @@ export const dict = {
     boardPartialBadge: "Venta parcial",
     boardAcquireBtn: "Adquirir participaciones",
     boardAcquiringBtn: "Adquiriendo…",
-    boardOwnListing: "Tu publicación",
     seller: {
       sharesSuffix: "participaciones",
       transferPending: "Traspaso enviado · esperando aprobación del equipo de AJDUT",
       inBoard: "Publicada en reventa",
       awaitingBuyerValidation: "Un socio la adquirió — esperando validación",
       listBtn: "Poner en reventa →",
-      designateBtn: "Designar comprador →",
       removeBtn: "Cancelar reventa",
       removingBtn: "Cancelando…",
       listedSummaryFmt: "{shares} participaciones · {price} c/u · Total {total}",
@@ -945,16 +920,8 @@ export const dict = {
       listingConfirmBtn: "Confirmar reventa",
       listingConfirmingBtn: "Listando…",
       cancelBtn: "Cancelar",
-      designatingBuyerLabel: "Comprador",
-      designatingNoMembers:
-        "Todavía no hay otros miembros en este proyecto para designar como comprador.",
-      designatingNoteWithShares:
-        "Al confirmar, el traspaso de las {shares} participaciones queda pendiente de aprobación del equipo de AJDUT.",
-      designatingSubmitBtn: "Designar y enviar a aprobación",
-      designatingSubmittingBtn: "Enviando…",
       errNoteTooShort: "La nota debe tener al menos 10 caracteres.",
       errContactRequired: "Falta un medio de contacto.",
-      errBuyerRequired: "Falta elegir un comprador.",
       listingShareCountLabel: "Cuántas participaciones querés vender",
       listingShareCountHelperFmt:
         "Tenés {total} participaciones; podés revender hasta {available}.",
@@ -993,43 +960,9 @@ export const dict = {
       participationNotFound: "Participación no encontrada.",
       notOwner: "Solo el titular puede listar esta participación.",
       contactInvalid: "El medio de contacto no es válido.",
-      buyerRequired: "Falta elegir un comprador.",
       cannotAcquireOwn: "No podés adquirir tu propia participación.",
       serverError: "Error interno del servidor.",
     },
-  },
-
-  // Página pública donde el comprador propuesto confirma una reventa (token).
-  confirmarReventa: {
-    title: "Tu compra, pendiente de confirmación",
-    eyebrow: "— Reventa pendiente de tu confirmación",
-    body:
-      "{seller} acordó venderte {shares} participaciones de {project}. Antes de ejecutar el traspaso, el project owner y el equipo de AJDUT validan la operación. Necesitamos tu OK.",
-    projectLabel: "Proyecto",
-    sellerLabel: "Vendedor",
-    shareLabel: "Participaciones",
-    priceLabel: "Precio/participación",
-    totalLabel: "Total",
-    noteLabel: "Detalle del vendedor",
-    confirmBtn: "Sí, confirmo la compra →",
-    confirmingBtn: "Confirmando…",
-    doneTitle: "¡Gracias!",
-    doneBody:
-      "Tu confirmación quedó registrada. Cuando el project owner valide la operación, el equipo de AJDUT ejecutará el traspaso y recibirás tu certificado por mail.",
-    alreadyTitle: "Ya confirmaste esta compra",
-    alreadyBody:
-      "Tu confirmación quedó registrada el {date}. No hace falta volver a confirmar.",
-    invalidTitle: "Link no válido",
-    invalidBody:
-      "Este link no corresponde a ninguna reventa activa. Si te llegó por mail recientemente, el email más reciente es el válido.",
-    expiredTitle: "Link expirado",
-    expiredBody:
-      "Este link de confirmación venció. El vendedor puede reiniciar el trato para generar uno nuevo.",
-    resolvedTitle: "Reventa ya resuelta",
-    resolvedBody:
-      "Esta reventa ya fue ejecutada o cancelada. No hay nada más que confirmar de tu lado.",
-    back: "Volver al inicio",
-    expiresFmt: "Link válido hasta {date}",
   },
 
   documentsPanel: {
@@ -1118,10 +1051,10 @@ export const dict = {
     },
     // Validación tripartita (comprador + founder + admin) — appended al final.
     tripartite: {
-      buyerConfirmed: "Comprador confirmó ✓",
-      buyerPending: "Comprador pendiente —",
-      ownerConfirmed: "Project owner validó ✓",
-      ownerPending: "Project owner pendiente —",
+      buyerConfirmed: "Comprador confirmó",
+      buyerPending: "Comprador pendiente",
+      ownerConfirmed: "Project owner validó",
+      ownerPending: "Project owner pendiente",
       approveGatedHint:
         "Esperando que el comprador y el project owner confirmen antes de poder aprobar.",
       approveGatedTooltip:
@@ -1539,9 +1472,6 @@ export const dict = {
     chatBtn: "Abrir chat →",
     viewPublicLink: "Ver ficha pública",
     newProjectLink: "+ Otro proyecto",
-    vestingLink: "Vesting / entregas programadas",
-    vestingHint:
-      "Las participaciones se asignan a los miembros por tramos en el tiempo, no todo de una vez.",
     sectionResumen: "Resumen",
     sectionEquipo: "Equipo del proyecto",
     sectionHitos: "Hitos del roadmap",
@@ -1589,10 +1519,6 @@ export const dict = {
       requestsHintEmpty: "Bandeja al día",
       requestsHintFmt: "{n} sin resolver",
     },
-    metrics: {
-      empty: "Acá va tu primera medición (MRR, DAU, runway, etc.).",
-      cta: "Cargar métrica →",
-    },
     notices: {
       activeMembersSingleFmt:
         "Tenés {n} miembro activo en este proyecto. Podés mandarles un email desde acá.",
@@ -1609,16 +1535,12 @@ export const dict = {
       empty: "—",
     },
     capTable: {
-      detailLink: "Detalle →",
       poolName: "Disponible (pool)",
       platformName: "AJDUT plataforma",
       reservedLabel: "Reservado (entrega gradual)",
       unassignedClass: "Sin clasificar",
       manageLink: "Ver equipo →",
       preExistingFallback: "Socios pre-existentes",
-      verificationLabel: "Verificación",
-      overcommitWarn:
-        "El cap table excede el total emitido. El equipo y los socios pre-existentes figuran en Composición.",
     },
     checklist: {
       completeBtn: "Completar →",
@@ -1798,8 +1720,8 @@ export const dict = {
     countPlural: "{n} mediciones registradas",
     addBtn: "+ Agregar medición",
     empty: "Sin métricas cargadas todavía.",
-    visibilityPublic: "● Pública a miembros",
-    visibilityPrivate: "○ Privada",
+    visibilityPublic: "Pública a miembros",
+    visibilityPrivate: "Privada",
     removeBtn: "Eliminar",
     removeConfirm: "¿Eliminar esta medición?",
     kindLabels: {
@@ -1836,18 +1758,18 @@ export const dict = {
     section: "Equipo del proyecto",
     description:
       "Quiénes son los project owners detrás del proyecto. Se muestra en la ficha pública a quienes tengan acceso.",
+    membersEyebrow: "— Miembros del equipo",
     equityTotalFmt: "Participaciones asignadas total: {pct}%",
     addBtn: "+ Agregar miembro",
     empty: "Todavía no agregaste a nadie al equipo.",
     linkedin: "LinkedIn →",
-    active: "● Activo",
-    inactive: "○ Inactivo",
+    active: "Activo",
+    inactive: "Inactivo",
     editBtn: "Editar",
     removeBtn: "Eliminar",
     removeConfirm: "¿Eliminar este miembro?",
     classLabel: "Clase / tipo",
     classNone: "Sin clasificar",
-    classHintNoClasses: "Las clases de participantes se crean en Composición.",
     vestingModeLabel: "Asignación de participaciones",
     vestingModeAllAtOnce: "Todas juntas",
     vestingModeGradual: "De a poco",
@@ -1858,7 +1780,6 @@ export const dict = {
     vestingMonthlyPreviewFmt: "Mensual: {pct}% repartido en {n} meses",
     vestingSumError: "El % inicial + final no puede superar el total.",
     vestingBadgeFmt: "Entrega gradual · {n} meses",
-    vestingMonthsInvalid: "Los tramos deben ser entre 1 y 120 meses.",
     form: {
       fullNameLabel: "Nombre completo",
       roleLabel: "Rol",
@@ -1935,6 +1856,7 @@ export const dict = {
     section: "Interés de compra",
     description:
       "Quienes piden información primero y quienes ya quieren participar. Desde acá se aprueban solicitudes, se contactan leads y se proponen al admin las asignaciones.",
+    inviteLink: "Invitar miembro →",
     statRequests: "Solicitudes",
     statRequestsHint: "pendientes",
     statOpen: "Sin contactar",
@@ -2034,11 +1956,9 @@ export const dict = {
     projectAll: "Todos los proyectos",
     subjectLabel: "Asunto",
     bodyLabel: "Mensaje",
-    countBtn: "Calcular destinatarios",
     countingBtn: "Calculando…",
     countResultSingle: "{n} destinatario",
     countResultPlural: "{n} destinatarios",
-    countStale: "Filtros modificados — recalculá.",
     sendBtnIdle: "Enviar →",
     sendBtnFmt: "Enviar a {n} destinatarios →",
     sendBtnFmtSingle: "Enviar a {n} destinatario →",
@@ -2047,7 +1967,6 @@ export const dict = {
     successFmt: "Aviso enviado a {n} destinatarios.",
     successFmtSingle: "Aviso enviado a {n} destinatario.",
     errEmpty: "Faltan el asunto y el mensaje del aviso.",
-    errNotCounted: "Falta calcular los destinatarios antes de enviar.",
     // Confirmación en dos pasos del broadcast — appended al final.
     confirmTitle: "— Confirmación de envío",
     confirmBodyFmt: "Se enviará a {n} miembros.",
@@ -2216,81 +2135,6 @@ export const dict = {
     loading: "Cargando…",
   },
 
-  founderVesting: {
-    section: "Vesting / entregas programadas",
-    description:
-      "Un cronograma entrega participaciones a través del tiempo (por ejemplo, 1.000 participaciones en 10 tramos mensuales). El sistema crea cada entrega automáticamente en su fecha: queda como una propuesta pendiente que pasa por la misma validación que una invitación directa. No hace falta hacerlo a mano cada mes.",
-    poolLabel: "— Pool disponible ahora",
-
-    // Lista de cronogramas
-    listTitle: "Cronogramas",
-    emptyList:
-      "Todavía no hay ningún cronograma de vesting. El formulario de abajo programa la primera entrega.",
-    colTotal: "Total",
-    colProgress: "Entregadas",
-    colNext: "Próxima entrega",
-    progressFmt: "{x}/{y} tramos",
-    cancelBtn: "Cancelar cronograma",
-    cancelConfirm: "¿Cancelar las entregas pendientes?",
-
-    scheduleStatus: {
-      ACTIVE: "Activo",
-      COMPLETED: "Completado",
-      CANCELLED: "Cancelado",
-    },
-    releaseStatus: {
-      PENDING: "Programado",
-      RELEASED: "Liberado",
-      SKIPPED: "Saltado",
-      CANCELLED: "Cancelado",
-    },
-
-    // Formulario
-    formTitle: "Nuevo cronograma",
-    formIntro:
-      "Incluye el destinatario, el total a entregar y cómo se reparte en el tiempo. La opción mensual genera tramos iguales automáticamente.",
-
-    targetModeLabel: "Destinatario",
-    targetModeUser: "Socio existente",
-    targetModeEmail: "Por email (nuevo)",
-    targetUserLabel: "Socio",
-    emailLabel: "Email del destinatario",
-    nameLabel: "Nombre completo",
-    nameHelper:
-      "Se usa para crear la cuenta si el email no está registrado todavía.",
-
-    totalLabel: "Total de participaciones",
-    totalAvailableFmt: "Disponibles ahora: {n} (el pool puede cambiar)",
-
-    modeLabel: "Modo del cronograma",
-    modeMonthly: "Tramos iguales por mes",
-    modeCustom: "Tramos personalizados",
-
-    installmentsLabel: "Número de tramos",
-    startAtLabel: "Fecha del primer tramo",
-    perInstallmentFmt: "≈ {n} participaciones por tramo (el último ajusta el resto)",
-
-    customHelper:
-      "Cada tramo tiene su cantidad y fecha. La suma debe coincidir con el total.",
-    customSharesLabel: "Participaciones",
-    customDateLabel: "Fecha",
-    addRowBtn: "+ Agregar tramo",
-    removeRowBtn: "Quitar",
-    customSumFmt: "Suma de tramos: {n}",
-
-    reasonLabel: "Motivo / nota (opcional)",
-
-    createBtn: "Crear cronograma →",
-    creatingBtn: "Creando…",
-    disclaimer:
-      "Cada entrega se crea sola en su fecha como propuesta pendiente; recién cuando el admin la valida se asignan las participaciones.",
-
-    successEyebrow: "Cronograma creado",
-    successBodyFmt:
-      "Programaste {count} entregas por un total de {total} participaciones. El sistema va a crear cada propuesta automáticamente en su fecha.",
-    exceedsWarning:
-      "Atención: el total supera el pool disponible actual. Las entregas que no encuentren participaciones suficientes en su fecha quedarán saltadas para revisión manual.",
-  },
 };
 
 export type Dict = typeof dict;

@@ -7,15 +7,11 @@ import { getDict } from "@/lib/i18n";
 import { DomainError } from "@/lib/services/errors";
 import {
   listForResale,
-  closeResaleDeal,
   acquireResale,
   cancelResale,
   confirmResaleOwner,
 } from "@/lib/services/participation";
-import {
-  notifyResaleBuyerConfirm,
-  notifyOwnerResalePending,
-} from "@/lib/email/notifications";
+import { notifyOwnerResalePending } from "@/lib/email/notifications";
 
 export type ResaleResult = { ok: true } | { ok: false; error: string };
 
@@ -126,88 +122,6 @@ export async function acquireResaleAction(
   } catch (err) {
     if (err instanceof DomainError) return { ok: false, error: err.message };
     console.error("acquireResaleAction", err);
-    return { ok: false, error: e.serverError };
-  }
-
-  revalidatePath(`/proyectos/${projectSlug}/reventa`);
-  revalidatePath(`/proyectos/${projectSlug}`);
-  revalidatePath("/partner");
-  revalidatePath("/admin/reventas");
-  return { ok: true };
-}
-
-/**
- * @deprecated Flujo viejo "seller-designa-comprador". Reemplazado por
- * `acquireResaleAction`. Se mantiene en el archivo sin uso desde la UI para no
- * romper imports; usa `closeResaleDeal` que también quedó deprecada.
- *
- * El vendedor designa al comprador con quien cerró el trato. El traspaso
- * queda pendiente de aprobación del equipo de AJDUT.
- */
-export async function proposeBuyerAction(
-  projectSlug: string,
-  resaleListingId: string,
-  proposedBuyerId: string
-): Promise<ResaleResult> {
-  const user = await requireSession();
-  const dict = await getDict();
-  const e = dict.reventa.errors;
-
-  if (!proposedBuyerId) {
-    return { ok: false, error: e.buyerRequired };
-  }
-
-  try {
-    const result = await closeResaleDeal({
-      resaleListingId,
-      sellerId: user.id,
-      proposedBuyerId,
-      sellerSignedAt: new Date(),
-    });
-
-    // Validación tripartita: email + banner in-app ya disparados. Enviamos los
-    // mails fuera de la transacción (fire-and-forget, no rompen el flujo).
-    const firstName = result.buyerFullName.trim().split(/\s+/)[0] || "Hola";
-    const priceNum = result.pricePerShare ? Number(result.pricePerShare) : null;
-    const fmtMoney = (n: number) =>
-      new Intl.NumberFormat("es-MX", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 2,
-      }).format(n);
-
-    await notifyResaleBuyerConfirm({
-      to: result.buyerEmail,
-      buyerFirstName: firstName,
-      sellerName: result.sellerName,
-      projectName: result.projectName,
-      shareCount: result.shareCount,
-      pricePerShareFormatted: priceNum !== null ? fmtMoney(priceNum) : null,
-      totalFormatted:
-        priceNum !== null ? fmtMoney(priceNum * result.shareCount) : null,
-      confirmToken: result.buyerConfirmationToken,
-      expiresAt: result.buyerConfirmationExpiresAt,
-    });
-
-    // Email al founder avisándole que tiene una reventa para validar.
-    const owner = await prisma.user.findUnique({
-      where: { id: result.ownerId },
-      select: { email: true },
-    });
-    if (owner?.email) {
-      await notifyOwnerResalePending({
-        to: owner.email,
-        projectSlug,
-        projectName: result.projectName,
-        sellerName: result.sellerName,
-        buyerName: result.buyerFullName,
-        shareCount: result.shareCount,
-        intentNote: "",
-      });
-    }
-  } catch (err) {
-    if (err instanceof DomainError) return { ok: false, error: err.message };
-    console.error("proposeBuyerAction", err);
     return { ok: false, error: e.serverError };
   }
 

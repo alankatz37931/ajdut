@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import Link from "next/link";
+import type { Metadata, Route } from "next";
 import { notFound } from "next/navigation";
 import type { Prisma } from "@prisma/client";
 import { requireRole } from "@/lib/auth/session";
@@ -6,7 +7,6 @@ import { prisma } from "@/lib/db/client";
 import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
-import { SYMBOL } from "@/lib/utils/status-symbols";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { LeadActions } from "./LeadActions";
 import { InfoRequestActions } from "./InfoRequestActions";
@@ -45,16 +45,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       : dict.metaTitles.founderLeadsFallback,
   };
 }
-
-// Paleta canónica en `@/lib/utils/status-symbols`.
-const STATUS_SYMBOL: Record<string, string> = {
-  OPEN: SYMBOL.open,
-  CONTACTED: SYMBOL.half,
-  INTERVIEWING: SYMBOL.thrq,
-  CONVERTED: SYMBOL.done,
-  DISMISSED: SYMBOL.reject,
-  EXPIRED: SYMBOL.expire,
-};
 
 export default async function FounderLeadsPage({ params }: Params) {
   const user = await requireRole(["PROJECT_OWNER"]);
@@ -131,6 +121,14 @@ export default async function FounderLeadsPage({ params }: Params) {
         projectStatus={project.status}
         section={t.section}
         description={t.description}
+        action={
+          <Link
+            href={`/founder/${project.slug}/invitar` as Route}
+            className="eyebrow !text-gold hover:!text-navy transition-colors"
+          >
+            {t.inviteLink}
+          </Link>
+        }
       />
 
       {/* ─── Banda de stats compacta ───────────────────────────────── */}
@@ -253,14 +251,13 @@ export default async function FounderLeadsPage({ params }: Params) {
                     </div>
 
                     <p className="mt-1 eyebrow truncate">
+                      {/* Estado solo con color: gold = sin contactar, navy/70 =
+                          en conversación, navy/50 = cerrado. Sin símbolos. */}
                       <span
-                        className={`inline-flex items-center gap-1.5 ${
+                        className={
                           isOpen ? "!text-gold" : isCool ? "!text-navy/70" : "!text-navy/50"
-                        }`}
+                        }
                       >
-                        <span aria-hidden className="text-base leading-none">
-                          {STATUS_SYMBOL[l.status] ?? "·"}
-                        </span>
                         {t.status[l.status] ?? l.status}
                       </span>
                       {l.supportKind && (

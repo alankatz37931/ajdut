@@ -375,24 +375,21 @@ export default async function FounderDashboardPage({ params }: Params) {
               {sp.milestones.map((m) => {
                 const isDone = m.status === "ACHIEVED";
                 // Label por estado real (5 estados) — no aplanar todo lo no
-                // logrado a "Planeado". Los símbolos ●/○ siguen siendo binarios.
+                // logrado a "Planeado". El estado se marca solo con color:
+                // gold = logrado, navy atenuado = pendiente.
                 const statusLabel = dict.founderHitos.status[m.status] ?? m.status;
                 return (
                   <li
                     key={m.id}
                     className="hairline-b py-3 flex items-baseline gap-4 flex-wrap sm:flex-nowrap"
                   >
-                    {/* Status: dot + label compactos, no se empujan al extremo */}
-                    <span className="inline-flex items-baseline gap-2 shrink-0 min-w-[6.5rem]">
-                      <span
-                        className={`font-mono text-sm leading-none ${
-                          isDone ? "text-gold" : "text-navy/30"
-                        }`}
-                        aria-hidden
-                      >
-                        {isDone ? "●" : "○"}
-                      </span>
-                      <span className="eyebrow !text-navy/60">{statusLabel}</span>
+                    {/* Status: label coloreado compacto, no se empuja al extremo */}
+                    <span
+                      className={`eyebrow shrink-0 min-w-[6.5rem] ${
+                        isDone ? "!text-gold" : "!text-navy/40"
+                      }`}
+                    >
+                      {statusLabel}
                     </span>
                     {/* Fecha al lado del status, no en el otro extremo */}
                     <span className="eyebrow !text-navy/40 font-mono shrink-0 min-w-[5.5rem]">
@@ -458,8 +455,15 @@ export default async function FounderDashboardPage({ params }: Params) {
 
         {/* ─── 05 · Métricas ────────────────────────────────────── */}
         {/* Las 4 métricas de comunidad/valuación, iguales que la ficha
-            pública. Son calculadas (no editables) → sin link "Actualizar". */}
-        <FounderSection n="05" title={t.sectionMetricas} flush>
+            pública. Son calculadas, pero el founder carga sus mediciones
+            propias (MRR, usuarios, etc.) en /metricas → link "Actualizar". */}
+        <FounderSection
+          n="05"
+          title={t.sectionMetricas}
+          editHref={`/founder/${project.slug}/metricas` as Route}
+          editLabel={t.editLabelMetricas}
+          flush
+        >
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <MetricStat
               label={t.metricSociosDirectivos}
@@ -743,18 +747,12 @@ function ChecklistInline({
       {items.map((it) => (
         <li key={it.label} className="hairline-b last:border-b-0">
           <div className="flex items-start gap-3 px-5 py-3">
-            <span
-              aria-hidden
-              className={`mt-0.5 font-mono text-sm leading-none shrink-0 ${
-                it.done ? "text-gold" : "text-navy/30"
-              }`}
-            >
-              {it.done ? "●" : "○"}
-            </span>
+            {/* Estado solo con color: hecho = navy atenuado, pendiente = navy
+                pleno + CTA gold al lado. Sin símbolos geométricos. */}
             <div className="flex-1 min-w-0">
               <p
                 className={`text-sm leading-snug ${
-                  it.done ? "text-navy/55" : "text-navy"
+                  it.done ? "text-navy/45" : "text-navy"
                 }`}
               >
                 {it.label}

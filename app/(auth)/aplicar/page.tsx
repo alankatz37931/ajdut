@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ApplicationForm } from "./ApplicationForm";
 import { BackLink } from "@/components/app/BackLink";
-import { getDict, getLocale } from "@/lib/i18n";
+import { getDict } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
@@ -10,7 +10,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AplicarPage() {
   const dict = await getDict();
-  const locale = await getLocale();
   const t = dict.apply;
   return (
     <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
@@ -22,7 +21,7 @@ export default async function AplicarPage() {
       </p>
 
       <div className="mt-8">
-        <ApplicationForm dict={t} locale={locale} />
+        <ApplicationForm dict={t} />
       </div>
     </div>
   );

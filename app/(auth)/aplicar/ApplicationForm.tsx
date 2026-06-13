@@ -50,8 +50,7 @@ type Draft = {
   email: string;
   phone: string;
   country: string;
-  motivation: string; // Texto libre (detalles adicionales, opcional)
-  motivationOption: string; // Label del select elegido
+  motivationOption: string; // Label del select elegido; se persiste como `motivation`
   referredBy: string;
   // Solo COMPANY
   companyName: string;
@@ -59,23 +58,7 @@ type Draft = {
   companyKind: CompanyKind;
 };
 
-/**
- * Compone el string que se persiste como `motivation` en la Application:
- * label del select + (si hay) "\n\n" + texto libre. El backend valida
- * max(2000), sin mínimo.
- */
-function composeMotivation(opt: string, freeText: string): string {
-  const trimmed = freeText.trim();
-  if (trimmed.length === 0) return opt;
-  return `${opt}\n\n${trimmed}`;
-}
-
-export function ApplicationForm({
-  dict,
-}: {
-  dict: Dict["apply"];
-  locale: string;
-}) {
+export function ApplicationForm({ dict }: { dict: Dict["apply"] }) {
   // Opciones de motivación traducidas. Default a primera opción del dict.
   const motivationOptions = dict.motivation.options;
   const firstOption = motivationOptions[0] ?? "";
@@ -86,7 +69,6 @@ export function ApplicationForm({
     email: "",
     phone: "",
     country: "",
-    motivation: "",
     motivationOption: firstOption,
     referredBy: "",
     companyName: "",
@@ -158,14 +140,13 @@ export function ApplicationForm({
 
   function buildFormData(): FormData {
     const formData = new FormData();
-    const composed = composeMotivation(draft.motivationOption, draft.motivation);
     const payload: Record<string, string> = {
       kind: draft.kind,
       fullName: draft.fullName,
       email: draft.email,
       phone: draft.phone,
       country: draft.country,
-      motivation: composed,
+      motivation: draft.motivationOption,
       referredBy: draft.referredBy,
     };
     if (draft.kind === "COMPANY") {
@@ -472,7 +453,7 @@ export function ApplicationForm({
               )}
               <Cell
                 label={dict.review.motivationLabel}
-                value={composeMotivation(draft.motivationOption, draft.motivation)}
+                value={draft.motivationOption}
                 multiline
               />
             </div>

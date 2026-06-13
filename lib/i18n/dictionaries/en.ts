@@ -65,7 +65,6 @@ export const dict: Dict = {
     titleLine1: "The system that coordinates",
     titleLine2: "the most valuable part of your company:",
     titleLine3: "Partners, collaborators and investors.",
-    pillarsEyebrow: "Transparency · Unity · Value",
     valueTransparency: "Transparency",
     valueUnity: "Unity",
     valueValue: "Value",
@@ -73,9 +72,6 @@ export const dict: Dict = {
     description:
       "With AJDUT you can structure partner participation, communicate, send reports and connect with the right people to grow your business through collaborative economy.",
     descriptionBold: "All recorded, verified and coordinated.",
-    quote:
-      "When everyone shares the vision and does their part, we all grow. This is the economy of us.",
-    ctaSignIn: "Sign in",
     ctaApply: "Apply to be part",
     pillarsHeading: "Why members choose AJDUT",
     pillarManagementTitle: "Coordination between partners",
@@ -102,7 +98,6 @@ export const dict: Dict = {
   login: {
     metaTitle: "Sign in · AJDUT",
     eyebrow: "Sign in",
-    backToHome: "Back to home",
     title: "Member access",
     intro: "Access to AJDUT is by invitation. If you are not yet a member,",
     applyLink: "apply to be part",
@@ -117,7 +112,6 @@ export const dict: Dict = {
   apply: {
     metaTitle: "Apply · AJDUT",
     eyebrow: "Access application",
-    backToHome: "Back to home",
     title: "I want to be part of AJDUT",
     intro:
       "We believe in real connections and in the value of every member. With your details, we start building together.",
@@ -135,8 +129,6 @@ export const dict: Dict = {
       review: "Review",
     },
     kind: {
-      eyebrow: "— How would you like to join?",
-      intro: "The type of application.",
       personTitle: "Partner",
       personSubtitle: "I want to be a member of the community",
       personDescription:
@@ -163,14 +155,10 @@ export const dict: Dict = {
       kindStartup: "Startup",
       kindOther: "Other",
       descriptionLabel: "Short description of the proposal",
-      descriptionPlaceholder:
-        "In a few lines: what the project does, what stage it is at, what you need from AJDUT.",
       charsCounter: "characters",
     },
     motivation: {
       questionLabel: "What motivates you?",
-      detailsLabel: "More details",
-      detailsPlaceholder: "Additional details (optional)",
       options: [
         "I want to diversify my portfolio with real projects",
         "I want to support ventures from my region",
@@ -261,12 +249,10 @@ export const dict: Dict = {
     adminAvisos: "Notices · Admin · AJDUT",
     founderNuevoProyecto: "New project · AJDUT",
     founderAvisos: "Notices to members · AJDUT",
-    founderComposicion: "Participation composition · AJDUT",
     founderEditar: "Edit project · AJDUT",
     founderEquipo: "Team · AJDUT",
     founderHitos: "Milestones · AJDUT",
     founderInvitar: "Invite member · AJDUT",
-    founderVesting: "Vesting · AJDUT",
     founderMetricas: "Metrics · AJDUT",
     home: "AJDUT",
     founderHome: "Project owner · AJDUT",
@@ -287,7 +273,6 @@ export const dict: Dict = {
     emailLabel: "Your account email",
     submitBtn: "Send recovery link",
     submittingBtn: "Sending…",
-    errEmailInvalid: "The email is not valid.",
     submittedEyebrow: "Request received",
     submittedTitle: "The link is in your email.",
     submittedBody:
@@ -665,17 +650,9 @@ export const dict: Dict = {
     },
     capTable: {
       unassigned: "Available (unassigned)",
-      platform: "AJDUT Platform",
       reserved: "Reserved (gradual delivery)",
-      others: "Others",
-      ofTotal: "of total",
       unclassified: "Unclassified",
-      person: "person",
-      people: "people",
       preExistingFallback: "Pre-existing shareholders",
-      verificationLabel: "Verification",
-      overcommitWarn:
-        "The cap table exceeds total issued participations. Pre-existing shareholders can be reviewed in Composition.",
     },
     participationStatus: {
       ASSIGNED: "Assigned",
@@ -923,14 +900,12 @@ export const dict: Dict = {
     boardPartialBadge: "Partial sale",
     boardAcquireBtn: "Acquire participations",
     boardAcquiringBtn: "Acquiring…",
-    boardOwnListing: "Your listing",
     seller: {
       sharesSuffix: "participations",
       transferPending: "Transfer submitted · waiting for the AJDUT team to approve",
       inBoard: "Listed for resale",
       awaitingBuyerValidation: "A member acquired it — awaiting validation",
       listBtn: "Put up for resale →",
-      designateBtn: "Designate buyer →",
       removeBtn: "Cancel resale",
       removingBtn: "Cancelling…",
       listedSummaryFmt: "{shares} participations · {price} each · Total {total}",
@@ -940,16 +915,8 @@ export const dict: Dict = {
       listingConfirmBtn: "Confirm listing",
       listingConfirmingBtn: "Listing…",
       cancelBtn: "Cancel",
-      designatingBuyerLabel: "Buyer",
-      designatingNoMembers:
-        "There are no other members in this project to designate as buyer yet.",
-      designatingNoteWithShares:
-        "On confirmation, the transfer of {shares} participations is sent to the AJDUT team for approval.",
-      designatingSubmitBtn: "Designate and send for approval",
-      designatingSubmittingBtn: "Sending…",
       errNoteTooShort: "The note must be at least 10 characters.",
       errContactRequired: "A contact method is required.",
-      errBuyerRequired: "A buyer is required.",
       listingShareCountLabel: "How many participations to sell",
       listingShareCountHelperFmt:
         "You have {total} participations; you can resell up to {available}.",
@@ -988,43 +955,9 @@ export const dict: Dict = {
       participationNotFound: "Participation not found.",
       notOwner: "Only the holder can list this participation.",
       contactInvalid: "The contact method is not valid.",
-      buyerRequired: "A buyer is required.",
       cannotAcquireOwn: "You can't acquire your own participation.",
       serverError: "Internal server error.",
     },
-  },
-
-  // Public page where the proposed buyer confirms a resale (token).
-  confirmarReventa: {
-    title: "Confirm your purchase",
-    eyebrow: "— Resale pending your confirmation",
-    body:
-      "{seller} agreed to sell you {shares} participations of {project}. Before executing the transfer, the project owner and the AJDUT team validate the operation. We need your OK.",
-    projectLabel: "Project",
-    sellerLabel: "Seller",
-    shareLabel: "Participations",
-    priceLabel: "Price/participation",
-    totalLabel: "Total",
-    noteLabel: "Seller detail",
-    confirmBtn: "Yes, I confirm the purchase →",
-    confirmingBtn: "Confirming…",
-    doneTitle: "Thanks!",
-    doneBody:
-      "Your confirmation is on record. Once the project owner validates, the AJDUT team will execute the transfer and you'll receive your certificate by email.",
-    alreadyTitle: "You already confirmed this purchase",
-    alreadyBody:
-      "Your confirmation was recorded on {date}. No further action needed.",
-    invalidTitle: "Invalid link",
-    invalidBody:
-      "This link doesn't match any active resale. If you got it recently, the most recent email is the valid one.",
-    expiredTitle: "Link expired",
-    expiredBody:
-      "This confirmation link is expired. The seller can restart the deal to generate a new one.",
-    resolvedTitle: "Resale already resolved",
-    resolvedBody:
-      "This resale has already been executed or cancelled. Nothing more to confirm.",
-    back: "Back to home",
-    expiresFmt: "Link valid until {date}",
   },
 
   documentsPanel: {
@@ -1111,10 +1044,10 @@ export const dict: Dict = {
     },
     // Tripartite validation (buyer + founder + admin) — appended at end.
     tripartite: {
-      buyerConfirmed: "Buyer confirmed ✓",
-      buyerPending: "Buyer pending —",
-      ownerConfirmed: "Project owner validated ✓",
-      ownerPending: "Project owner pending —",
+      buyerConfirmed: "Buyer confirmed",
+      buyerPending: "Buyer pending",
+      ownerConfirmed: "Project owner validated",
+      ownerPending: "Project owner pending",
       approveGatedHint:
         "Waiting for the buyer and the project owner to confirm before approving.",
       approveGatedTooltip:
@@ -1531,9 +1464,6 @@ export const dict: Dict = {
     chatBtn: "Open chat →",
     viewPublicLink: "View public page",
     newProjectLink: "+ Another project",
-    vestingLink: "Vesting / scheduled grants",
-    vestingHint:
-      "Participations granted to members in tranches over time, not all at once.",
     sectionResumen: "Summary",
     sectionEquipo: "Project team",
     sectionHitos: "Roadmap milestones",
@@ -1581,10 +1511,6 @@ export const dict: Dict = {
       requestsHintEmpty: "Inbox cleared",
       requestsHintFmt: "{n} unresolved",
     },
-    metrics: {
-      empty: "Your first measurement (MRR, DAU, runway, etc.) goes here.",
-      cta: "Add metric →",
-    },
     notices: {
       activeMembersSingleFmt:
         "You have {n} active member in this project. You can email them from here.",
@@ -1601,16 +1527,12 @@ export const dict: Dict = {
       empty: "—",
     },
     capTable: {
-      detailLink: "Detail →",
       poolName: "Available (pool)",
       platformName: "AJDUT platform",
       reservedLabel: "Reserved (gradual delivery)",
       unassignedClass: "Unclassified",
       manageLink: "View team →",
       preExistingFallback: "Pre-existing shareholders",
-      verificationLabel: "Verification",
-      overcommitWarn:
-        "The cap table exceeds total issued participations. The team and pre-existing shareholders can be reviewed in Composition.",
     },
     checklist: {
       completeBtn: "Complete →",
@@ -1790,8 +1712,8 @@ export const dict: Dict = {
     countPlural: "{n} measurements recorded",
     addBtn: "+ Add measurement",
     empty: "No metrics loaded yet.",
-    visibilityPublic: "● Public to members",
-    visibilityPrivate: "○ Private",
+    visibilityPublic: "Public to members",
+    visibilityPrivate: "Private",
     removeBtn: "Remove",
     removeConfirm: "Remove this measurement?",
     kindLabels: {
@@ -1828,18 +1750,18 @@ export const dict: Dict = {
     section: "Project team",
     description:
       "Who the project owners behind the project are. Shown on the public project page to those with access.",
+    membersEyebrow: "— Team members",
     equityTotalFmt: "Total participations assigned: {pct}%",
     addBtn: "+ Add member",
     empty: "You haven't added anyone to the team yet.",
     linkedin: "LinkedIn →",
-    active: "● Active",
-    inactive: "○ Inactive",
+    active: "Active",
+    inactive: "Inactive",
     editBtn: "Edit",
     removeBtn: "Remove",
     removeConfirm: "Remove this member?",
     classLabel: "Class / type",
     classNone: "Unclassified",
-    classHintNoClasses: "Create participant classes in Composition.",
     vestingModeLabel: "Participation grant",
     vestingModeAllAtOnce: "All at once",
     vestingModeGradual: "Gradually",
@@ -1850,7 +1772,6 @@ export const dict: Dict = {
     vestingMonthlyPreviewFmt: "Monthly: {pct}% spread over {n} months",
     vestingSumError: "Initial + final % can't exceed the total.",
     vestingBadgeFmt: "Gradual delivery · {n} months",
-    vestingMonthsInvalid: "Tranches must be between 1 and 120 months.",
     form: {
       fullNameLabel: "Full name",
       roleLabel: "Role",
@@ -1927,6 +1848,7 @@ export const dict: Dict = {
     section: "Purchase interest",
     description:
       "Those who request information first, and those ready to participate. Approve requests, contact leads, and propose assignments to the admin.",
+    inviteLink: "Invite member →",
     statRequests: "Requests",
     statRequestsHint: "pending",
     statOpen: "Not contacted",
@@ -2025,11 +1947,9 @@ export const dict: Dict = {
     projectAll: "All projects",
     subjectLabel: "Subject",
     bodyLabel: "Message",
-    countBtn: "Compute recipients",
     countingBtn: "Computing…",
     countResultSingle: "{n} recipient",
     countResultPlural: "{n} recipients",
-    countStale: "Filters changed — the count is out of date.",
     sendBtnIdle: "Send →",
     sendBtnFmt: "Send to {n} recipients →",
     sendBtnFmtSingle: "Send to {n} recipient →",
@@ -2038,7 +1958,6 @@ export const dict: Dict = {
     successFmt: "Notice sent to {n} recipients.",
     successFmtSingle: "Notice sent to {n} recipient.",
     errEmpty: "The subject and message are missing.",
-    errNotCounted: "The recipients still need to be computed before sending.",
     // Two-step broadcast confirmation — appended at end.
     confirmTitle: "— Send confirmation",
     confirmBodyFmt: "It will be sent to {n} members.",
@@ -2207,76 +2126,4 @@ export const dict: Dict = {
     loading: "Loading…",
   },
 
-  founderVesting: {
-    section: "Vesting / scheduled grants",
-    description:
-      "A schedule to deliver participations over time (for example, 1,000 participations across 10 monthly installments). The system creates each grant automatically on its date: it becomes a pending proposal that goes through the same validation as a direct invite. You don't have to do it by hand every month.",
-    poolLabel: "— Pool available now",
-
-    listTitle: "Schedules",
-    emptyList:
-      "You haven't created any vesting schedule yet. The form below schedules the first grant.",
-    colTotal: "Total",
-    colProgress: "Delivered",
-    colNext: "Next grant",
-    progressFmt: "{x}/{y} installments",
-    cancelBtn: "Cancel schedule",
-    cancelConfirm: "Cancel the pending grants?",
-
-    scheduleStatus: {
-      ACTIVE: "Active",
-      COMPLETED: "Completed",
-      CANCELLED: "Cancelled",
-    },
-    releaseStatus: {
-      PENDING: "Scheduled",
-      RELEASED: "Released",
-      SKIPPED: "Skipped",
-      CANCELLED: "Cancelled",
-    },
-
-    formTitle: "New schedule",
-    formIntro:
-      "The recipient, the total to deliver and how it splits over time. The monthly option generates equal installments automatically.",
-
-    targetModeLabel: "Recipient",
-    targetModeUser: "Existing member",
-    targetModeEmail: "By email (new)",
-    targetUserLabel: "Member",
-    emailLabel: "Recipient email",
-    nameLabel: "Full name",
-    nameHelper: "Used to create the account if the email isn't registered yet.",
-
-    totalLabel: "Total participations",
-    totalAvailableFmt: "Available now: {n} (the pool may change)",
-
-    modeLabel: "Schedule mode",
-    modeMonthly: "Equal monthly installments",
-    modeCustom: "Custom installments",
-
-    installmentsLabel: "Number of installments",
-    startAtLabel: "First installment date",
-    perInstallmentFmt: "≈ {n} participations per installment (the last one adjusts the remainder)",
-
-    customHelper:
-      "Each installment has its amount and date. The sum must match the total.",
-    customSharesLabel: "Participations",
-    customDateLabel: "Date",
-    addRowBtn: "+ Add installment",
-    removeRowBtn: "Remove",
-    customSumFmt: "Installment sum: {n}",
-
-    reasonLabel: "Reason / note (optional)",
-
-    createBtn: "Create schedule →",
-    creatingBtn: "Creating…",
-    disclaimer:
-      "Each grant is created on its own on its date as a pending proposal; participations are only assigned once an admin validates it.",
-
-    successEyebrow: "Schedule created",
-    successBodyFmt:
-      "You scheduled {count} grants for a total of {total} participations. The system will create each proposal automatically on its date.",
-    exceedsWarning:
-      "Heads up: the total exceeds the currently available pool. Grants that don't find enough participations on their date will be skipped for manual review.",
-  },
 };

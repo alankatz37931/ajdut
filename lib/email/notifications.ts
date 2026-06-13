@@ -99,9 +99,6 @@ import {
 import {
   resaleRejectedEmail,
 } from "./templates/resale-rejected";
-import {
-  resaleBuyerConfirmEmail,
-} from "./templates/resale-buyer-confirm";
 
 export async function notifyApplicantReceived(input: { to: string } & ApplicationReceivedInput) {
   const { subject, html } = applicationReceivedEmail(input);
@@ -791,42 +788,6 @@ export async function notifyResaleRejected(input: {
 }
 
 // ─── Validación tripartita de la reventa ───────────────────────────
-
-/**
- * Email al comprador propuesto pidiéndole que confirme la compra. Parte de la
- * validación tripartita (comprador + founder + admin). El `confirmToken` viaja
- * como path-param de `/confirmar-reventa/[token]` y es single-use.
- */
-export async function notifyResaleBuyerConfirm(input: {
-  to: string;
-  buyerFirstName: string;
-  sellerName: string;
-  projectName: string;
-  shareCount: number;
-  pricePerShareFormatted: string | null;
-  totalFormatted: string | null;
-  confirmToken: string;
-  expiresAt: Date;
-}) {
-  const confirmUrl = `${appUrl()}/confirmar-reventa/${input.confirmToken}`;
-  const { subject, html } = resaleBuyerConfirmEmail({
-    buyerFirstName: input.buyerFirstName,
-    sellerName: input.sellerName,
-    projectName: input.projectName,
-    shareCount: input.shareCount,
-    pricePerShareFormatted: input.pricePerShareFormatted,
-    totalFormatted: input.totalFormatted,
-    confirmUrl,
-    expiresAt: input.expiresAt,
-  });
-  return sendEmail({
-    to: input.to,
-    subject,
-    html,
-    fireAndForget: true,
-    kind: "resale.buyer-confirm",
-  });
-}
 
 /**
  * Email al project owner (founder) avisándole que una reventa de SU proyecto

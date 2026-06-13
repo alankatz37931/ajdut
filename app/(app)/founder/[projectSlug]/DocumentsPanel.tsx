@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import type { Dict } from "@/lib/i18n";
 import { FileUpload } from "@/components/ui/FileUpload";
+import { InlineConfirm } from "@/components/ui/InlineConfirm";
 import { formatDate } from "@/lib/utils/format";
 import { useFocusTrap } from "@/components/hooks/useFocusTrap";
 import { uploadDocumentAction, deleteDocumentAction } from "./document-actions";
@@ -103,9 +104,6 @@ function DocRow({
   const [isPending, startTransition] = useTransition();
 
   function onDelete() {
-    if (!window.confirm(dict.deleteConfirm.replace("{title}", doc.title))) {
-      return;
-    }
     setError(null);
     startTransition(async () => {
       const r = await deleteDocumentAction(projectSlug, doc.id);
@@ -130,13 +128,15 @@ function DocRow({
         >
           {dict.openLink}
         </a>
-        <button
-          onClick={onDelete}
+        {/* Confirmación inline (sin window.confirm). InlineConfirm no
+            interpola placeholders — el {title} se resuelve acá. */}
+        <InlineConfirm
+          label={isPending ? dict.deletingBtn : dict.deleteBtn}
+          question={dict.deleteConfirm.replace("{title}", doc.title)}
+          onConfirm={onDelete}
           disabled={isPending}
           className="eyebrow !text-navy/40 hover:!text-navy disabled:opacity-50 p-0 m-0 border-0 bg-transparent cursor-pointer"
-        >
-          {isPending ? dict.deletingBtn : dict.deleteBtn}
-        </button>
+        />
         {error && (
           <span className="eyebrow !text-navy basis-full sm:basis-auto" role="alert">
             {error}

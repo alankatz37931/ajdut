@@ -8,6 +8,7 @@ import {
   upsertExternalHoldingAction,
   removeExternalHoldingAction,
 } from "./actions";
+import { LINE_INPUT, SELECT_CLS } from "./field-styles";
 
 type ClassRow = { id: string; name: string };
 type HolderRow = { userId: string; name: string; shares: number; classId: string };
@@ -28,11 +29,6 @@ type ExternalInput = {
 };
 
 type CompDict = Dict["founderComposicion"];
-
-const SELECT_CLS =
-  "hairline bg-paper px-2.5 py-1.5 font-sans text-sm text-navy outline-none focus:border-navy disabled:opacity-50";
-const LINE_INPUT =
-  "bg-transparent border-0 border-b-[0.5px] border-navy/25 px-0 py-1.5 font-sans text-sm text-navy outline-none focus:border-navy/60";
 
 export function CompositionEditor({
   projectSlug,
