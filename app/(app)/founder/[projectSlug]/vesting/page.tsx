@@ -26,9 +26,18 @@ export default async function FounderVestingPage({ params }: Params) {
 
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
-    select: { id: true, name: true, slug: true, ownerId: true, status: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      ownerId: true,
+      status: true,
+      deletedAt: true,
+    },
   });
-  if (!project) notFound();
+  // Soft-delete: un proyecto eliminado ya no existe para esta vista — la
+  // fuente de verdad es deletedAt (mismo patrón que el dashboard).
+  if (!project || project.deletedAt) notFound();
 
   const access = await getProjectAccess({
     userId: user.id,

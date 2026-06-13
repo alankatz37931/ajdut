@@ -75,7 +75,7 @@ export const dict = {
     valueValue: "Valor",
     valueLegacy: "Legado",
     description:
-      "Con Ajdut puedes estructurar la participación de socios, comunicarse, enviar reportes y conectar con las personas correctas para crecer tu negocio mediante economía colaborativa.",
+      "Con AJDUT puedes estructurar la participación de socios, comunicarte, enviar reportes y conectar con las personas correctas para crecer tu negocio mediante economía colaborativa.",
     descriptionBold: "Todo registrado, verificado y coordinado.",
     quote:
       "Cuando cada uno comparte la visión y hace su parte, todos crecemos. Esto es la economía del nosotros.",
@@ -100,14 +100,14 @@ export const dict = {
 
   publicFooter: {
     legal: "AVISO LEGAL",
-    copy: "AJDUT · 2026",
+    copy: "AJDUT · {year}",
   },
 
   login: {
     metaTitle: "Acceder · AJDUT",
     eyebrow: "Acceder",
     backToHome: "Volver al inicio",
-    title: "Identifícate",
+    title: "Acceso de miembros",
     intro: "El acceso a AJDUT es por invitación. Si aún no formas parte,",
     applyLink: "aplica para ser parte",
     emailLabel: "Email",
@@ -124,7 +124,7 @@ export const dict = {
     backToHome: "Volver al inicio",
     title: "Quiero formar parte de AJDUT",
     intro:
-      "Creemos en las conexiones reales y en el valor de cada miembro. Completa tus datos y comencemos a construir juntos.",
+      "Creemos en las conexiones reales y en el valor de cada miembro. Con tus datos, comenzamos a construir juntos.",
     backStep: "Volver a ",
     backShort: "← Atrás",
     continue: "Continuar →",
@@ -139,7 +139,7 @@ export const dict = {
       review: "Revisión",
     } as Record<string, string>,
     kind: {
-      eyebrow: "— ¿Cómo querés sumarte?",
+      eyebrow: "— ¿Cómo quieres sumarte?",
       intro: "Hay dos tipos de aplicación.",
       personTitle: "Socio",
       personSubtitle: "Quiero ser miembro de la comunidad",
@@ -168,7 +168,7 @@ export const dict = {
       kindOther: "Otro",
       descriptionLabel: "Descripción corta de la propuesta",
       descriptionPlaceholder:
-        "En pocas líneas: qué hace el proyecto, en qué etapa está, qué necesitás de AJDUT.",
+        "En pocas líneas: qué hace el proyecto, en qué etapa está, qué necesitas de AJDUT.",
       charsCounter: "caracteres",
     },
     motivation: {
@@ -204,6 +204,22 @@ export const dict = {
       body:
         "Tu solicitud queda en revisión manual. Te contactaremos al email proporcionado en cuanto el equipo complete la evaluación. No hay registro automático en AJDUT.",
       reference: "Referencia:",
+    },
+    errors: {
+      tooManyAttemptsIp:
+        "Hay demasiados intentos desde tu conexión; el límite se libera en unos minutos.",
+      tooManyAttemptsEmail:
+        "Ya hay varios envíos con este email; el límite se libera en una hora.",
+      emailInvalid: "El email no es válido.",
+      fullNameInvalid:
+        "El nombre no es válido — necesita entre 2 y 120 caracteres.",
+      companyNameInvalid:
+        "El nombre de la empresa o proyecto no es válido — necesita entre 2 y 160 caracteres.",
+      fieldInvalid: "Hay un dato inválido en el formulario.",
+      alreadyApplied:
+        "Ya existe una aplicación con este email. El equipo se pondrá en contacto contigo.",
+      accountExists:
+        "Ya existe una cuenta con este email. La opción de recuperar contraseña permite volver a entrar.",
     },
   },
 
@@ -271,7 +287,7 @@ export const dict = {
     metaTitle: "Recuperar contraseña · AJDUT",
     back: "Recuperar contraseña",
     title: "¿Olvidaste tu contraseña?",
-    intro: "Te enviamos un link a tu email.",
+    intro: "Recibirás un link en tu email.",
     emailLabel: "Email de tu cuenta",
     submitBtn: "Enviar link de recuperación",
     submittingBtn: "Enviando…",
@@ -289,7 +305,7 @@ export const dict = {
     back: "Acceso aprobado",
     helloName: "Hola, {name}.",
     intro:
-      "Tu aplicación fue aprobada. Con una contraseña ya tenés acceso a AJDUT.",
+      "Tu aplicación fue aprobada. Con una contraseña ya tienes acceso a AJDUT.",
     accountLabel: "Cuenta:",
     passwordLabel: "Contraseña",
     repeatLabel: "Repetir contraseña",
@@ -347,7 +363,7 @@ export const dict = {
     metaTitle: "Chat · AJDUT",
     back: "Chat del proyecto",
     subtitle:
-      "Conversación interna entre el project owner, los co-admins y los socios. Los miembros se ven con alias cuando lo configuraron. Sin tiempo real: actualizá la página para ver mensajes nuevos.",
+      "Conversación interna entre el project owner, los co-admins y los socios. Los miembros se ven con alias cuando lo configuraron. Sin tiempo real: los mensajes nuevos aparecen al actualizar la página.",
     sectionConversation: "Conversación",
     sectionNewMessage: "Nuevo mensaje",
     sectionNewPoll: "Nueva encuesta",
@@ -423,7 +439,7 @@ export const dict = {
     aliasPlaceholder:
       "Opcional — si lo dejás vacío, otros miembros ven tu nombre completo.",
     aliasFootnote:
-      "Aparece en el cap table de los proyectos. Tu nombre real se sigue usando en tu propio certificado y portafolio.",
+      "Aparece en la distribución de capital de los proyectos. Tu nombre real se sigue usando en tu propio certificado y portafolio.",
     countryLabel: "País",
     phoneLabel: "Teléfono",
     photoLabel: "Foto de perfil",
@@ -480,7 +496,7 @@ export const dict = {
     pendingApproval: "pendientes de aprobación",
     pendingApprovalSingular: "pendiente de aprobación",
     intro:
-      "Encontrá el proyecto que comparta tu visión y participá.",
+      "Entre estos proyectos está el que comparte tu visión.",
     searchLabel: "Buscar por nombre",
     searchClear: "Limpiar",
     searchPlaceholder: "Pushka, Mercurio, ...",
@@ -495,7 +511,7 @@ export const dict = {
     emptyArmados: "Aún no hay proyectos armados.",
     emptyReventas: "No hay participaciones en venta por ahora.",
     // Listing de reventa (mercado secundario)
-    resaleBy: "Vendido por",
+    resaleBy: "Vende",
     resalePartial: "Venta parcial",
     resaleSharesLabel: "Participaciones",
     resalePriceLabel: "Precio / participación",
@@ -596,13 +612,13 @@ export const dict = {
     yours: {
       shares: "Participaciones",
       value: "Valor",
-      participations: "Participaciones",
+      participations: "Registros",
       oneRecord: "1 registro",
       manyRecordsSuffix: "registros",
       noValuation: "sin valoración declarada",
       pricePerShareSuffix: "/ participación",
       partnersOnlyOwnPositionNote:
-        "Solo ves tu propia posición. El cap table completo es información sensible y queda reservada al project owner y al equipo de AJDUT.",
+        "Solo ves tu propia posición. La distribución de capital completa es información sensible y queda reservada al project owner y al equipo de AJDUT.",
       colSerial: "Serial",
       colShares: "Participaciones",
       colAcquired: "Adquirida",
@@ -654,8 +670,8 @@ export const dict = {
     },
     capTable: {
       unassigned: "Disponible (sin asignar)",
-      platform: "AJDUT Platform",
-      reserved: "Reservado (vesting)",
+      platform: "AJDUT plataforma",
+      reserved: "Reservado (entrega gradual)",
       others: "Otros",
       ofTotal: "del total",
       unclassified: "Sin clasificar",
@@ -701,7 +717,7 @@ export const dict = {
   },
 
   interestForm: {
-    title: "Quiero más información",
+    title: "Me interesa participar",
     backShort: "← Volver",
     cancel: "Cancelar",
     notAvailableYet: "Participación no disponible aún",
@@ -893,14 +909,14 @@ export const dict = {
     },
     empty: "Todavía no tenés movimientos registrados.",
     emptyFiltered: "No hay movimientos para ese filtro.",
-    sharesSuffix: "acc.",
+    sharesSuffix: "part.",
   },
 
   reventa: {
     metaTitle: "Reventa de participaciones · AJDUT",
     title: "Reventa de participaciones",
     intro:
-      "Listá tus participaciones para que otros miembros de la comunidad puedan adquirirlas desde el tablón. Cuando alguien las adquiere, el project owner y el equipo de AJDUT aprueban el traspaso para que quede registrado.",
+      "Tus participaciones se listan acá para que otros miembros de la comunidad puedan adquirirlas desde el tablón. Cuando alguien las adquiere, el project owner y el equipo de AJDUT aprueban el traspaso para que quede registrado.",
     sectionYours: "01 · Tus participaciones",
     sectionBoard: "02 · Tablón de reventa",
     emptyNoShares: "No tenés participaciones en este proyecto para revender.",
@@ -917,6 +933,7 @@ export const dict = {
       sharesSuffix: "participaciones",
       transferPending: "Traspaso enviado · esperando aprobación del equipo de AJDUT",
       inBoard: "Publicada en reventa",
+      awaitingBuyerValidation: "Un socio la adquirió — esperando validación",
       listBtn: "Poner en reventa →",
       designateBtn: "Designar comprador →",
       removeBtn: "Cancelar reventa",
@@ -1190,7 +1207,7 @@ export const dict = {
       approvedBodyFmt:
         "Le enviamos a {email} un email con un link de un solo uso para que establezca su propia contraseña.",
       approvedExpiresFmt:
-        "El link expira en {hours} horas. Si el usuario no lo recibe, podés reenviarlo desde el panel de usuarios.",
+        "El link expira en {hours} horas.",
       rejectedTitle: "Aplicación rechazada",
       rejectedBody:
         "El aplicante recibió un email con la nota que escribiste. La aplicación queda archivada.",
@@ -1430,6 +1447,23 @@ export const dict = {
     ARCHIVED: "Archivado",
   } as Record<string, string>,
 
+  // Home del project owner: lista de proyectos propios (2+) o empty state.
+  founderHome: {
+    eyebrow: "— Project owner",
+    title: "Tus proyectos",
+    countLineFmt:
+      "{n} proyectos bajo tu dirección. Desde cada uno gestionás leads, equipo, hitos y reportes.",
+    countLineFmtSingle:
+      "{n} proyecto bajo tu dirección. Desde ahí gestionás leads, equipo, hitos y reportes.",
+    newProjectBtn: "+ Nuevo proyecto",
+    emptyEyebrow: "— Tu primer proyecto",
+    emptyTitle: "Todavía no tenés proyectos en AJDUT.",
+    emptyBody:
+      "Tu primer proyecto se crea con los datos de tu empresa y la valoración actual. El equipo lo revisa, y una vez aprobado queda visible para los miembros.",
+    emptyCta: "Crear mi proyecto →",
+    openProject: "Abrir proyecto →",
+  },
+
   founderNuevoProyecto: {
     back: "Project owner · Nuevo proyecto",
     title: "Registro de tu empresa",
@@ -1578,7 +1612,7 @@ export const dict = {
       detailLink: "Detalle →",
       poolName: "Disponible (pool)",
       platformName: "AJDUT plataforma",
-      reservedLabel: "Reservado (vesting)",
+      reservedLabel: "Reservado (entrega gradual)",
       unassignedClass: "Sin clasificar",
       manageLink: "Ver equipo →",
       preExistingFallback: "Socios pre-existentes",
@@ -1668,9 +1702,9 @@ export const dict = {
       "La valoración divide limpio: el precio por participación es múltiplo de 10.",
     valuationWarnTitle: "⚠ Aviso",
     valuationWarnBodyFmt:
-      "Con esta valoración, lo \"limpio\" sería {price}/participación × {shares} participaciones. Pero tu proyecto ya tiene {current} participaciones emitidas, así que cambiar el total ahora rompería el cap table.",
+      "Con esta valoración, lo \"limpio\" sería {price}/participación × {shares} participaciones. Pero tu proyecto ya tiene {current} participaciones emitidas, así que cambiar el total ahora rompería la distribución de capital.",
     valuationWarnBody2:
-      "Podés actualizar la valoración: el precio por participación efectivo se recalcula sobre las participaciones existentes. Para reemitir el cap table, el equipo de AJDUT puede ayudarte.",
+      "Podés actualizar la valoración: el precio por participación efectivo se recalcula sobre las participaciones existentes. Para reemitir la distribución de capital, el equipo de AJDUT puede ayudarte.",
     emissionLegend:
       "El total de participaciones emitidas queda fijo. Para emitir nuevas participaciones deberás consultarlo con los propietarios. Podés actualizar la valoración: el valor por participación se recalcula sobre el total existente.",
     saveBtn: "Guardar cambios",
@@ -2014,6 +2048,13 @@ export const dict = {
     successFmtSingle: "Aviso enviado a {n} destinatario.",
     errEmpty: "Faltan el asunto y el mensaje del aviso.",
     errNotCounted: "Falta calcular los destinatarios antes de enviar.",
+    // Confirmación en dos pasos del broadcast — appended al final.
+    confirmTitle: "— Confirmación de envío",
+    confirmBodyFmt: "Se enviará a {n} miembros.",
+    confirmBodyFmtSingle: "Se enviará a {n} miembro.",
+    confirmBtn: "Confirmar envío",
+    cancelBtn: "Cancelar",
+    errNoRecipients: "No hay destinatarios para esos filtros.",
   },
 
   legal: {
@@ -2161,6 +2202,14 @@ export const dict = {
     tryAgainBtn: "Reintentar",
     goHomeBtn: "Volver al inicio",
     digestLabel: "Referencia",
+  },
+
+  // 404 global — cubre rutas públicas, app y founder.
+  notFound: {
+    title: "Página no encontrada",
+    body:
+      "La página que buscás no existe o ya no está disponible. Puede que el link esté vencido o que el contenido se haya movido.",
+    backHome: "Volver al inicio →",
   },
 
   loading: {

@@ -22,6 +22,8 @@ type Props = {
   ownerConfirmed: boolean;
   dict: ActionsDict;
   tripartiteDict: TripartiteDict;
+  /** Locale del viewer para formateo de números (no hardcodear es-MX). */
+  locale: string;
 };
 
 type Mode =
@@ -41,6 +43,7 @@ export function ResaleTransferActions({
   ownerConfirmed,
   dict,
   tripartiteDict,
+  locale,
 }: Props) {
   const [mode, setMode] = useState<Mode>("idle");
   const [note, setNote] = useState("");
@@ -142,7 +145,7 @@ export function ResaleTransferActions({
         <p className="eyebrow !text-gold">{dict.confirmTitle}</p>
         <p className="text-navy/85 text-sm leading-relaxed">
           {dict.confirmDescription
-            .replace("{shares}", shareCount.toLocaleString("es-MX"))
+            .replace("{shares}", shareCount.toLocaleString(locale))
             .replace("{seller}", sellerName)
             .replace("{buyer}", buyerName)}
         </p>

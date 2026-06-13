@@ -239,10 +239,18 @@ export default async function ProjectPage({ params }: Params) {
     if (p.currentOwnerId) distinctOwnerIds.add(p.currentOwnerId);
   }
   const sociosTotales = distinctOwnerIds.size;
-  // "Socios directivos y operativos" — founders/team del StartupProfile.
-  const sociosDirectivos = project.startupProfile?.founders.length ?? 0;
-  // TODO: define socio embajador semantics — sin modelo de datos por ahora.
-  const sociosEmbajadores = 0;
+  // "Socios directivos y operativos" — founders/team ACTIVOS del StartupProfile.
+  const sociosDirectivos =
+    project.startupProfile?.founders.filter((f) => f.isActive).length ?? 0;
+  // "Socios embajadores" — personas en la clase EMBAJADOR del cap table por
+  // clase (founders + externas + asignados de esa clase). 0 si no existe la
+  // clase o no tiene gente.
+  const embajadorClassId = project.shareholderClasses.find(
+    (c) => c.kind === "EMBAJADOR"
+  )?.id;
+  const sociosEmbajadores = embajadorClassId
+    ? (byClass.rows.find((r) => r.key === embajadorClassId)?.people ?? 0)
+    : 0;
 
   // Valor de la posición del viewer si hay valoración declarada.
   const valuationNum = project.startupProfile?.preMoneyValuation

@@ -8,6 +8,7 @@ import {
   notifyAdminsNewApplication,
   notifyApplicantReceived,
 } from "@/lib/email/notifications";
+import { getDict } from "@/lib/i18n";
 import { consumeRateLimit } from "@/lib/utils/rate-limit";
 
 // ─── Schemas ─────────────────────────────────────────────────────────
@@ -74,6 +75,8 @@ async function getClientIp(): Promise<string> {
 export async function submitApplication(
   formData: FormData
 ): Promise<SubmitResult> {
+  // Mensajes de error localizados — server action, puede leer la cookie de idioma.
+  const errDict = (await getDict()).apply.errors;
   const kindRaw = String(formData.get("kind") ?? "PERSON").trim().toUpperCase();
   const kind = kindRaw === "COMPANY" ? "COMPANY" : "PERSON";
   const baseRaw = {
@@ -115,18 +118,24 @@ export async function submitApplication(
     });
     return {
       ok: false,
-      error: "Demasiados intentos desde tu conexión. Intentá nuevamente en unos minutos.",
+      error: errDict.tooManyAttemptsIp,
     };
   }
 
   const parsed = applicationSchema.safeParse(raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
-    return {
-      ok: false,
-      error: first?.message ?? "Datos inválidos",
-      field: typeof first?.path[0] === "string" ? first.path[0] : undefined,
-    };
+    const field = typeof first?.path[0] === "string" ? first.path[0] : undefined;
+    // Mensaje declarativo del dict según el campo — nunca el mensaje crudo de Zod.
+    const error =
+      field === "email"
+        ? errDict.emailInvalid
+        : field === "fullName"
+          ? errDict.fullNameInvalid
+          : field === "companyName"
+            ? errDict.companyNameInvalid
+            : errDict.fieldInvalid;
+    return { ok: false, error, field };
   }
 
   // Rate limit por email
@@ -150,8 +159,7 @@ export async function submitApplication(
     });
     return {
       ok: false,
-      error:
-        "Ya recibimos varios envíos con este email. Esperá una hora antes de reintentar.",
+      error: errDict.tooManyAttemptsEmail,
       field: "email",
     };
   }
@@ -163,15 +171,14 @@ export async function submitApplication(
   if (existingApplication) {
     return {
       ok: false,
-      error: "Ya existe una aplicación con este email. El equipo se pondrá en contacto contigo.",
+      error: errDict.alreadyApplied,
       field: "email",
     };
   }
   if (existingUser) {
     return {
       ok: false,
-      error:
-        "Ya existe una cuenta con este email. Si perdiste el acceso, usá recuperar contraseña.",
+      error: errDict.accountExists,
       field: "email",
     };
   }

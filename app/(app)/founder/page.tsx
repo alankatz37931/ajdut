@@ -13,6 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function FounderRootPage() {
   const user = await requireRole(["PROJECT_OWNER"]);
+  const dict = await getDict();
+  const t = dict.founderHome;
 
   const projects = await prisma.project.findMany({
     // Soft-delete: el founder no debería seguir viendo un proyecto que ya fue
@@ -41,15 +43,16 @@ export default async function FounderRootPage() {
     <div>
       <header className="pt-5 sm:pt-7 pb-8 sm:pb-10 hairline-b flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="eyebrow">— Project owner</p>
+          <p className="eyebrow">{t.eyebrow}</p>
           <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
-            Tus proyectos
+            {t.title}
           </h1>
           {projects.length > 0 && (
             <p className="mt-3 text-navy/75 leading-relaxed">
-              {projects.length} proyecto{projects.length === 1 ? "" : "s"} bajo tu
-              dirección. Entrá a cualquiera para gestionar leads, equipo, hitos y
-              reportes.
+              {(projects.length === 1
+                ? t.countLineFmtSingle
+                : t.countLineFmt
+              ).replace("{n}", String(projects.length))}
             </p>
           )}
         </div>
@@ -57,26 +60,20 @@ export default async function FounderRootPage() {
           href={"/founder/nuevo-proyecto" as Route}
           className="btn-primary shrink-0"
         >
-          + Nuevo proyecto
+          {t.newProjectBtn}
         </Link>
       </header>
 
       {projects.length === 0 ? (
         <div className="mt-12 hairline p-8 sm:p-10 bg-paper-light max-w-2xl">
-          <p className="eyebrow">— Empezá acá</p>
-          <p className="mt-3 font-sans text-h2 text-navy">
-            Todavía no tenés proyectos en AJDUT.
-          </p>
-          <p className="mt-3 text-navy/75 leading-relaxed">
-            Creá tu primer proyecto con los datos de tu empresa y la valoración
-            actual. El equipo lo revisa, y una vez aprobado queda visible para
-            los miembros.
-          </p>
+          <p className="eyebrow">{t.emptyEyebrow}</p>
+          <p className="mt-3 font-sans text-h2 text-navy">{t.emptyTitle}</p>
+          <p className="mt-3 text-navy/75 leading-relaxed">{t.emptyBody}</p>
           <Link
             href={"/founder/nuevo-proyecto" as Route}
             className="btn-primary mt-6 inline-flex"
           >
-            Crear mi proyecto →
+            {t.emptyCta}
           </Link>
         </div>
       ) : (
@@ -105,7 +102,7 @@ export default async function FounderRootPage() {
                   )}
                 </div>
                 <span className="eyebrow !text-gold inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                  Abrir proyecto →
+                  {t.openProject}
                 </span>
               </Link>
             </li>

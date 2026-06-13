@@ -120,17 +120,20 @@ export default async function ProjectsDiscoveryPage({
   // plataforma. Query separada sobre ResaleListing; no entra a la lista de
   // proyectos. La búsqueda por nombre filtra por nombre de proyecto.
   if (tab === "reventas") {
-    const resaleWhere: Prisma.ResaleListingWhereInput = {
-      status: { in: [...RESALE_ACTIVE_STATUSES] },
-      // Respetar soft-delete del proyecto subyacente.
-      project: { deletedAt: null },
+    // Respetar soft-delete Y suspensión del proyecto subyacente: solo
+    // proyectos ACTIVE — un listing de un proyecto suspendido/cerrado
+    // renderizaría una card cuyo click termina en 404.
+    const resaleProjectWhere: Prisma.ProjectWhereInput = {
+      deletedAt: null,
+      status: "ACTIVE",
     };
     if (q) {
-      resaleWhere.project = {
-        deletedAt: null,
-        name: { contains: q, mode: "insensitive" },
-      };
+      resaleProjectWhere.name = { contains: q, mode: "insensitive" };
     }
+    const resaleWhere: Prisma.ResaleListingWhereInput = {
+      status: { in: [...RESALE_ACTIVE_STATUSES] },
+      project: resaleProjectWhere,
+    };
 
     const [listings, total] = await sequentialPrisma([
       {

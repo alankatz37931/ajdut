@@ -161,6 +161,16 @@ export default async function FounderDashboardPage({ params }: Params) {
 
   const pendingActions = openLeadsCount + pendingInfoRequestsCount;
 
+  // "Socios embajadores" — personas en la clase EMBAJADOR del cap table por
+  // clase (founders + externas + asignados de esa clase). 0 si no existe la
+  // clase o no tiene gente. Mismo cálculo que la ficha pública.
+  const embajadorClassId = project.shareholderClasses.find(
+    (c) => c.kind === "EMBAJADOR"
+  )?.id;
+  const sociosEmbajadores = embajadorClassId
+    ? (byClass.rows.find((r) => r.key === embajadorClassId)?.people ?? 0)
+    : 0;
+
   // ─── Checklist de completitud ─────────────────────────────────────
   const checklist = [
     {
@@ -364,7 +374,9 @@ export default async function FounderDashboardPage({ params }: Params) {
             <ul className="hairline-t">
               {sp.milestones.map((m) => {
                 const isDone = m.status === "ACHIEVED";
-                const statusLabel = isDone ? t.milestones.statusAchieved : t.milestones.statusPlanned;
+                // Label por estado real (5 estados) — no aplanar todo lo no
+                // logrado a "Planeado". Los símbolos ●/○ siguen siendo binarios.
+                const statusLabel = dict.founderHitos.status[m.status] ?? m.status;
                 return (
                   <li
                     key={m.id}
@@ -459,7 +471,7 @@ export default async function FounderDashboardPage({ params }: Params) {
             />
             <MetricStat
               label={t.metricSociosEmbajadores}
-              value={formatNumber(0, undefined, locale)}
+              value={formatNumber(sociosEmbajadores, undefined, locale)}
             />
             <MetricStat
               label={t.metricSociosTotales}

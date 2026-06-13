@@ -33,6 +33,7 @@ export default async function ProjectResalePage({ params }: Params) {
       slug: true,
       ownerId: true,
       status: true,
+      deletedAt: true,
       totalShares: true,
       resaleAllowedFrom: true,
       startupProfile: {
@@ -44,7 +45,9 @@ export default async function ProjectResalePage({ params }: Params) {
       },
     },
   });
-  if (!project) notFound();
+  // Soft-delete: mismo tratamiento que la ficha ([slug]/page.tsx) — un
+  // proyecto borrado no expone su tablón de reventa.
+  if (!project || project.deletedAt) notFound();
 
   const access = await getProjectAccess({
     userId: user.id,
@@ -129,13 +132,20 @@ export default async function ProjectResalePage({ params }: Params) {
     : [];
   const ownerBuyerMap = new Map(ownerBuyers.map((b) => [b.id, b]));
 
-  const myListingByPart = new Map<string, (typeof listings)[number]>();
-  for (const l of listings) {
-    if (l.sellerId === user.id) myListingByPart.set(l.participationId, l);
+  // Para reventa parcial pueden coexistir VARIOS listings activos del mismo
+  // seller sobre una participación — guardamos todos, no solo el último.
+  // Los listings vienen createdAt desc; los invertimos para mostrar al seller
+  // sus publicaciones en orden cronológico.
+  const myListingsByPart = new Map<string, (typeof listings)[number][]>();
+  for (const l of [...listings].reverse()) {
+    if (l.sellerId !== user.id) continue;
+    const prev = myListingsByPart.get(l.participationId) ?? [];
+    prev.push(l);
+    myListingsByPart.set(l.participationId, prev);
   }
-  // Sumar shareCount activo por participación (cualquier seller). Para reventa
-  // parcial pueden coexistir varios listings sobre la misma participación; el
-  // disponible = total - sum(activos).
+  // Sumar shareCount activo por participación (cualquier seller). El
+  // disponible para listar = total - sum(activos), espejo de la validación
+  // del servicio (listForResale).
   const activeSumByPart = new Map<string, number>();
   for (const l of listings) {
     const taken = l.shareCount ?? l.participation.shareCount;
@@ -161,26 +171,25 @@ export default async function ProjectResalePage({ params }: Params) {
   }
 
   const sellerRows = myParticipations.map((p) => {
-    const listing = myListingByPart.get(p.id);
-    const activeForOthers =
-      (activeSumByPart.get(p.id) ?? 0) - (listing ? listing.shareCount ?? p.shareCount : 0);
-    const available = Math.max(0, p.shareCount - activeForOthers);
+    const myListings = myListingsByPart.get(p.id) ?? [];
+    // Disponible = total - TODOS los listings activos (propios y ajenos),
+    // igual que valida el servicio. Si queda saldo, el seller puede publicar
+    // el remanente aunque ya tenga otras publicaciones vivas.
+    const available = Math.max(0, p.shareCount - (activeSumByPart.get(p.id) ?? 0));
     return {
       participationId: p.id,
       serialCode: p.serialCode,
       shareCount: p.shareCount,
       availableShares: available,
       status: p.status as string,
-      listing: listing
-        ? {
-            id: listing.id,
-            status: listing.status as string,
-            shareCount: listing.shareCount ?? p.shareCount,
-            proposedPricePerShare: listing.proposedPricePerShare
-              ? listing.proposedPricePerShare.toString()
-              : null,
-          }
-        : null,
+      listings: myListings.map((listing) => ({
+        id: listing.id,
+        status: listing.status as string,
+        shareCount: listing.shareCount ?? p.shareCount,
+        proposedPricePerShare: listing.proposedPricePerShare
+          ? listing.proposedPricePerShare.toString()
+          : null,
+      })),
     };
   });
 

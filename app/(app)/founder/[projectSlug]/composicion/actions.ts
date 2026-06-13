@@ -117,7 +117,7 @@ export async function upsertExternalHoldingAction(
       return { ok: false, error: "La cantidad de personas debe ser al menos 1." };
     }
     if (!Number.isInteger(shareCount) || shareCount < 1) {
-      return { ok: false, error: "La cantidad de acciones debe ser al menos 1." };
+      return { ok: false, error: "La cantidad de participaciones debe ser al menos 1." };
     }
     // Cap defensivo: 1e9 personas/acciones es claramente input erróneo y
     // protege contra inputs absurdos que pueden romper queries downstream.
@@ -125,7 +125,7 @@ export async function upsertExternalHoldingAction(
       return { ok: false, error: "La cantidad de personas excede el límite permitido." };
     }
     if (shareCount > 1e9) {
-      return { ok: false, error: "La cantidad de acciones excede el límite permitido." };
+      return { ok: false, error: "La cantidad de participaciones excede el límite permitido." };
     }
     const resolved = await resolveCanonicalClass(project.id, input.classId);
 

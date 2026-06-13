@@ -31,7 +31,9 @@ export default async function FounderMilestonesPage({ params }: Params) {
       },
     },
   });
-  if (!project) notFound();
+  // Soft-delete: un proyecto eliminado ya no existe para el founder — la
+  // fuente de verdad es deletedAt (mismo patrón que el dashboard).
+  if (!project || project.deletedAt) notFound();
   if (project.ownerId !== user.id) notFound();
   if (!project.startupProfile) notFound();
 

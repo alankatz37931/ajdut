@@ -63,7 +63,7 @@ export async function inviteMemberAction(
     return { ok: false, error: "Falta el nombre completo del invitado." };
   }
   if (!Number.isFinite(shareCount) || shareCount < 1) {
-    return { ok: false, error: "La cantidad de acciones debe ser un entero mayor o igual a 1." };
+    return { ok: false, error: "La cantidad de participaciones debe ser un entero mayor o igual a 1." };
   }
   if (message.length > 1000) {
     return { ok: false, error: "El mensaje no puede superar los 1000 caracteres." };

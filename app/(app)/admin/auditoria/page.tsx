@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/client";
 import { sequentialPrisma } from "@/lib/prisma/safe";
 import { getDict, getLocale, type Dict } from "@/lib/i18n";
 import { formatDate } from "@/lib/utils/format";
+import { LocalTime } from "@/components/ui/LocalTime";
 import { AuditSearch } from "./AuditSearch";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -277,7 +278,7 @@ export default async function AdminAuditPage({
                   </p>
                   <p className="eyebrow font-mono shrink-0 !text-navy/40">
                     {formatDate(l.createdAt, locale)} ·{" "}
-                    {l.createdAt.toISOString().slice(11, 16)}
+                    <LocalTime iso={l.createdAt.toISOString()} />
                   </p>
                 </div>
                 <p className="mt-1 eyebrow break-words [overflow-wrap:anywhere]">

@@ -1022,18 +1022,25 @@ export async function rejectTransfer(input: RejectTransferInput) {
     await tx.resaleListing.update({
       where: { id: listing.id },
       data: {
-        status: "IN_CONVERSATION", // vuelve al tablón
+        // Vuelve PUBLICADA al tablón: solo LISTED habilita AcquireButton y
+        // acquireResale, así otro socio puede adquirirla de nuevo.
+        status: "LISTED",
         // El comprador propuesto deja de estar designado; limpiamos las
-        // aceptaciones tripartitas y el token para que un futuro
+        // aceptaciones tripartitas, la firma del comprador y el token
+        // (espejo de cancelResale) para que un futuro acquireResale /
         // closeResaleDeal arranque limpio.
+        proposedBuyerId: null,
         buyerAcceptedAt: null,
+        buyerSignedAt: null,
         ownerAcceptedAt: null,
         buyerConfirmationTokenHash: null,
         buyerConfirmationTokenExpiresAt: null,
       },
     });
     // Solo revertimos el status global cuando el listing era total — para
-    // parciales la participación nunca dejó de estar ASSIGNED.
+    // parciales la participación nunca dejó de estar ASSIGNED. IN_RESALE es
+    // el estado canónico de "publicada" (state machine: TRANSFER_REJECTED →
+    // IN_RESALE), coherente con el listing de vuelta en LISTED.
     if (isFullTransfer) {
       await tx.participation.update({
         where: { id: participation.id },

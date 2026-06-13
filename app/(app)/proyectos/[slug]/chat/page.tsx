@@ -40,9 +40,12 @@ export default async function ProjectChatPage({ params }: Params) {
       name: true,
       ownerId: true,
       status: true,
+      deletedAt: true,
     },
   });
-  if (!project) notFound();
+  // Soft-delete: un proyecto eliminado ya no existe para esta vista — la
+  // fuente de verdad es deletedAt (mismo patrón que el dashboard del founder).
+  if (!project || project.deletedAt) notFound();
 
   const access = await getProjectAccess({
     userId: user.id,

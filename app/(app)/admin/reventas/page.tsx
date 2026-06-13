@@ -33,10 +33,6 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: dict.adminReventas.metaTitle };
 }
 
-function fmtInt(n: number): string {
-  return n.toLocaleString("es-MX");
-}
-
 export default async function AdminResalesPage({
   searchParams,
 }: {
@@ -48,6 +44,12 @@ export default async function AdminResalesPage({
   const t = dict.adminReventas;
   const sp = await searchParams;
   const filter = sp.filter ?? "pending";
+
+  // Números enteros en el locale del viewer (no hardcodear es-MX) — mismo
+  // patrón que admin/asignaciones.
+  function fmtInt(n: number): string {
+    return n.toLocaleString(locale);
+  }
 
   const where =
     filter === "completed"
@@ -268,6 +270,7 @@ export default async function AdminResalesPage({
                           ownerConfirmed={l.ownerAcceptedAt !== null}
                           dict={t.actions}
                           tripartiteDict={t.tripartite}
+                          locale={locale}
                         />
                       </div>
                     )}

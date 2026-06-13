@@ -13,18 +13,25 @@ import {
 import { useSafeAction } from "@/components/hooks/useSafeAction";
 import { formatCurrency } from "@/lib/utils/format";
 
+type RowListing = {
+  id: string;
+  status: string;
+  shareCount: number;
+  proposedPricePerShare: string | null;
+};
+
 type Row = {
   participationId: string;
   serialCode: string;
   shareCount: number;
   availableShares: number;
   status: string;
-  listing: {
-    id: string;
-    status: string;
-    shareCount: number;
-    proposedPricePerShare: string | null;
-  } | null;
+  /**
+   * Listings activos del seller sobre esta participación. En el modelo de
+   * reventa parcial pueden coexistir varios (50 publicadas + 30 publicadas
+   * después, etc.).
+   */
+  listings: RowListing[];
 };
 
 type ReventaDict = Dict["reventa"];
@@ -111,14 +118,14 @@ function SellerRow({
   // que llegan del action.
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // El seller puede listar si tiene al menos 1 participación disponible (no
-  // listada ya). En el modelo parcial, ASSIGNED e IN_RESALE pueden ambas
-  // aceptar nuevos listings si queda stock.
+  // El seller puede listar si queda al menos 1 participación sin listar.
+  // En el modelo parcial, ASSIGNED e IN_RESALE pueden ambas aceptar nuevos
+  // listings si queda stock — aunque ya exista otra publicación viva (tras
+  // publicar 50 de 100, el remanente de 50 sigue siendo publicable).
   const canList =
     (row.status === "ASSIGNED" || row.status === "IN_RESALE") &&
-    row.availableShares > 0 &&
-    !row.listing;
-  const inResale = row.listing !== null;
+    row.availableShares > 0;
+  const inResale = row.listings.length > 0;
   const transferPending = row.status === "TRANSFER_PENDING";
 
   // Cada acción tiene su propio hook (tipo de input distinto + onSuccess
@@ -138,18 +145,19 @@ function SellerRow({
     onSuccess: () => reset(),
   });
 
-  const cancelFn = useCallback(() => {
-    if (!row.listing) {
-      return Promise.resolve({ ok: false as const, error: s.errBuyerRequired });
-    }
-    return cancelResaleAction(projectSlug, row.listing.id);
-  }, [projectSlug, row.listing, s.errBuyerRequired]);
+  // Con varios listings por participación, el cancel recibe el id puntual.
+  // `cancellingId` distingue cuál botón mostrar como "Cancelando…".
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const cancelFn = useCallback(
+    (listingId: string) => cancelResaleAction(projectSlug, listingId),
+    [projectSlug]
+  );
   const {
     run: runCancel,
     isPending: isCancelPending,
     error: cancelError,
     reset: resetCancel,
-  } = useSafeAction<void>(cancelFn);
+  } = useSafeAction<string>(cancelFn);
 
   const isPending = isListPending || isCancelPending;
   const error = validationError ?? listError ?? cancelError;
@@ -190,11 +198,11 @@ function SellerRow({
     });
   }
 
-  function doCancel() {
+  function doCancel(listingId: string) {
     resetCancel();
     setValidationError(null);
-    if (!row.listing) return;
-    runCancel();
+    setCancellingId(listingId);
+    runCancel(listingId);
   }
 
   return (
@@ -207,24 +215,14 @@ function SellerRow({
         </p>
       )}
 
-      {canList && mode === "idle" && (
-        <div className="mt-4">
-          <p className="eyebrow !text-navy/50 mb-3">
-            {fmtInt(row.availableShares)} {s.sharesSuffix}
-          </p>
-          <button onClick={() => setMode("listing")} className="btn-outline">
-            {s.listBtn}
-          </button>
-        </div>
-      )}
-
       {inResale && mode === "idle" && (
-        <div className="mt-3 space-y-4">
-          {/* Resumen de lo listado: cantidad + precio + total. Para listings
+        <ul className="mt-3 space-y-4">
+          {/* Una entrada por listing activo (reventa parcial: pueden coexistir
+              varios). Resumen: cantidad + precio + total — para listings
               legacy sin precio (null) mostramos "precio a convenir". */}
-          {(() => {
-            const lc = row.listing!.shareCount;
-            const pp = row.listing!.proposedPricePerShare;
+          {row.listings.map((listing) => {
+            const lc = listing.shareCount;
+            const pp = listing.proposedPricePerShare;
             const ppNum = pp !== null ? Number(pp) : null;
             const summary =
               ppNum !== null && Number.isFinite(ppNum)
@@ -236,27 +234,48 @@ function SellerRow({
                       formatCurrency(lc * ppNum, currency, 2, locale)
                     )
                 : s.listedSummaryNoPriceFmt.replace("{shares}", fmtInt(lc));
+            // AWAITING_VALIDATION = un socio ya la adquirió y falta la
+            // validación (founder + admin) — no es lo mismo que "publicada".
+            // El seller igual puede cancelar hasta que se ejecute el traspaso.
+            const awaitingValidation = listing.status === "AWAITING_VALIDATION";
             return (
-              <div>
+              <li key={listing.id}>
                 <p className="font-mono text-sm text-navy">{summary}</p>
-                <p className="mt-1 eyebrow !text-navy/50">{s.inBoard}</p>
-              </div>
+                <p
+                  className={`mt-1 eyebrow ${awaitingValidation ? "!text-gold" : "!text-navy/50"}`}
+                >
+                  {awaitingValidation ? s.awaitingBuyerValidation : s.inBoard}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => doCancel(listing.id)}
+                    disabled={isPending}
+                    className="eyebrow !text-navy/40 hover:!text-navy p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
+                  >
+                    {isCancelPending && cancellingId === listing.id
+                      ? s.removingBtn
+                      : s.removeBtn}
+                  </button>
+                </div>
+              </li>
             );
-          })()}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={doCancel}
-              disabled={isPending}
-              className="eyebrow !text-navy/40 hover:!text-navy p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
-            >
-              {isCancelPending ? s.removingBtn : s.removeBtn}
-            </button>
-          </div>
+          })}
           {error && (
-            <p className="eyebrow !text-navy" role="alert">
+            <li className="eyebrow !text-navy" role="alert">
               {error}
-            </p>
+            </li>
           )}
+        </ul>
+      )}
+
+      {canList && mode === "idle" && (
+        <div className="mt-4">
+          <p className="eyebrow !text-navy/50 mb-3">
+            {fmtInt(row.availableShares)} {s.sharesSuffix}
+          </p>
+          <button onClick={() => setMode("listing")} className="btn-outline">
+            {s.listBtn}
+          </button>
         </div>
       )}
 

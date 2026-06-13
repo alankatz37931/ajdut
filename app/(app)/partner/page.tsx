@@ -77,20 +77,26 @@ export default async function PartnerDashboardPage() {
     return { ...p, pricePerShare, valueInProjectCurrency };
   });
 
+  // Conteos por PROYECTO DISTINTO — un socio puede tener varias
+  // participaciones del mismo proyecto y eso no son "N proyectos".
   const totalsByCurrency = new Map<string, number>();
-  let activeProjectsCount = 0;
+  const valuedProjectIds = new Set<string>();
   for (const r of rows) {
     if (r.valueInProjectCurrency === null) continue;
-    activeProjectsCount += 1;
+    valuedProjectIds.add(r.project.id);
     const currency = r.project.startupProfile?.valuationCurrency ?? "USD";
     totalsByCurrency.set(
       currency,
       (totalsByCurrency.get(currency) ?? 0) + r.valueInProjectCurrency
     );
   }
+  // Proyectos distintos con valoración informada (el valor del portafolio
+  // solo puede calcularse sobre estos).
+  const activeProjectsCount = valuedProjectIds.size;
 
   const totalShares = rows.reduce((s, r) => s + r.shareCount, 0);
-  const projectsCount = rows.length;
+  // Proyectos distintos del portafolio (no participaciones).
+  const projectsCount = new Set(rows.map((r) => r.project.id)).size;
   const primaryCurrency = totalsByCurrency.has("USD")
     ? "USD"
     : Array.from(totalsByCurrency.keys())[0] ?? "USD";
