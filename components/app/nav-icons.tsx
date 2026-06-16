@@ -37,6 +37,18 @@ export function MyProjectIcon() {
   );
 }
 
+// "Mi proyecto" del admin — layout/workspace (gestión del proyecto propio).
+export function WorkspaceIcon() {
+  return (
+    <svg {...BASE_PROPS}>
+      <rect width="7" height="9" x="3" y="3" rx="1" />
+      <rect width="7" height="5" x="14" y="3" rx="1" />
+      <rect width="7" height="9" x="14" y="12" rx="1" />
+      <rect width="7" height="5" x="3" y="16" rx="1" />
+    </svg>
+  );
+}
+
 export function ParticipationsIcon() {
   // Monedas apiladas — la cartera del miembro.
   return (

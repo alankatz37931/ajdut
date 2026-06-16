@@ -6,6 +6,7 @@ import type { Dict } from "@/lib/i18n";
 import {
   ProjectsIcon,
   MyProjectIcon,
+  WorkspaceIcon,
   ParticipationsIcon,
   ApplicationsIcon,
   AssignmentsIcon,
@@ -155,7 +156,7 @@ export async function navItemsFor(
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
       // El admin también puede crear/gestionar proyectos propios (quedan a su
       // nombre). "Mi proyecto" abre la misma página que ve el project owner.
-      { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
+      { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <WorkspaceIcon /> },
       ...(ownsShares ? [misParticipacionesItem, documentosItem, historialItem] : []),
       // ADMINISTRACIÓN
       {
