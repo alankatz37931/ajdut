@@ -43,7 +43,9 @@ export default async function FounderRootPage() {
     <div>
       <header className="pt-5 sm:pt-7 pb-8 sm:pb-10 hairline-b flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="eyebrow">{t.eyebrow}</p>
+          <p className="eyebrow">
+            {user.role === "ADMIN" ? t.eyebrowAdmin : t.eyebrow}
+          </p>
           <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
             {t.title}
           </h1>
@@ -65,7 +67,7 @@ export default async function FounderRootPage() {
       </header>
 
       {projects.length === 0 ? (
-        <div className="mt-12 hairline p-8 sm:p-10 bg-paper-light max-w-2xl">
+        <div className="mt-12 hairline p-8 sm:p-10 bg-paper-light">
           <p className="eyebrow">{t.emptyEyebrow}</p>
           <p className="mt-3 font-sans text-h2 text-navy">{t.emptyTitle}</p>
           <p className="mt-3 text-navy/75 leading-relaxed">{t.emptyBody}</p>
