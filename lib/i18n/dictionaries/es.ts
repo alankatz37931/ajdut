@@ -1383,7 +1383,7 @@ export const dict = {
   // Home del project owner: lista de proyectos propios (2+) o empty state.
   founderHome: {
     eyebrow: "— Project owner",
-    eyebrowAdmin: "— Mi proyecto",
+    eyebrowAdmin: "— Admin",
     title: "Tus proyectos",
     countLineFmt:
       "{n} proyectos bajo tu dirección. Desde cada uno gestionás leads, equipo, hitos y reportes.",

@@ -1375,7 +1375,7 @@ export const dict: Dict = {
   // Project owner home: list of own projects (2+) or empty state.
   founderHome: {
     eyebrow: "— Project owner",
-    eyebrowAdmin: "— My project",
+    eyebrowAdmin: "— Admin",
     title: "Your projects",
     countLineFmt:
       "{n} projects under your direction. From each one you manage leads, team, milestones and reports.",
