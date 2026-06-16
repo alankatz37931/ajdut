@@ -153,6 +153,9 @@ export async function navItemsFor(
     return [
       // PORTAFOLIO
       { label: n.projects, href: "/proyectos" as Route, group: SEC_PORTFOLIO, icon: <ProjectsIcon /> },
+      // El admin también puede crear/gestionar proyectos propios (quedan a su
+      // nombre). "Mi proyecto" abre la misma página que ve el project owner.
+      { label: n.myProject, href: "/founder" as Route, group: SEC_PORTFOLIO, icon: <MyProjectIcon /> },
       ...(ownsShares ? [misParticipacionesItem, documentosItem, historialItem] : []),
       // ADMINISTRACIÓN
       {

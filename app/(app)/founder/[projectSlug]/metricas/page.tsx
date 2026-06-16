@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FounderMetricsPage({ params }: Params) {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const dict = await getDict();
   const t = dict.founderMetricas;
   const { projectSlug } = await params;

@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FounderRootPage() {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const dict = await getDict();
   const t = dict.founderHome;
 

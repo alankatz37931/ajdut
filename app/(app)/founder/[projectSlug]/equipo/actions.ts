@@ -55,7 +55,7 @@ export async function upsertFounderAction(
   projectSlug: string,
   formData: FormData
 ): Promise<Result> {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const projectId = await resolveProjectId(projectSlug, user.id);
   if (!projectId) return { ok: false, error: "Proyecto no encontrado." };
 
@@ -133,7 +133,7 @@ export async function removeFounderAction(
   projectSlug: string,
   founderId: string
 ): Promise<Result> {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const projectId = await resolveProjectId(projectSlug, user.id);
   if (!projectId) return { ok: false, error: "Proyecto no encontrado." };
 
@@ -154,7 +154,7 @@ export async function removeFounderAction(
 
 /** Carga el proyecto y verifica que el viewer sea su owner. Throws si no. */
 async function ownedProject(projectSlug: string) {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
     select: { id: true, ownerId: true },

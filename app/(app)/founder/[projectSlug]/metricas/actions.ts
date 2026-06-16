@@ -46,7 +46,7 @@ export async function addMetricAction(
   projectSlug: string,
   formData: FormData
 ): Promise<Result> {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const projectId = await resolveProjectId(projectSlug, user.id);
   if (!projectId) return { ok: false, error: "Proyecto no encontrado." };
 
@@ -92,7 +92,7 @@ export async function removeMetricAction(
   projectSlug: string,
   metricId: string
 ): Promise<Result> {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const projectId = await resolveProjectId(projectSlug, user.id);
   if (!projectId) return { ok: false, error: "Proyecto no encontrado." };
 

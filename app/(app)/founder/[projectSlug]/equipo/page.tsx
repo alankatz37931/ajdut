@@ -16,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FounderTeamPage({ params }: Params) {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const dict = await getDict();
   const locale = await getLocale();
   const t = dict.founderEquipo;

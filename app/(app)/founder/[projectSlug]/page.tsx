@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function FounderDashboardPage({ params }: Params) {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const { projectSlug } = await params;
   const dict = await getDict();
   const locale = await getLocale();

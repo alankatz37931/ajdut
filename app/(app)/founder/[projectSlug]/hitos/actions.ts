@@ -40,7 +40,7 @@ export async function upsertMilestoneAction(
   projectSlug: string,
   formData: FormData
 ): Promise<Result> {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const projectId = await resolveProjectId(projectSlug, user.id);
   if (!projectId) return { ok: false, error: "Proyecto no encontrado." };
 
@@ -80,7 +80,7 @@ export async function removeMilestoneAction(
   projectSlug: string,
   milestoneId: string
 ): Promise<Result> {
-  const user = await requireRole(["PROJECT_OWNER"]);
+  const user = await requireRole(["PROJECT_OWNER", "ADMIN"]);
   const projectId = await resolveProjectId(projectSlug, user.id);
   if (!projectId) return { ok: false, error: "Proyecto no encontrado." };
 
