@@ -538,6 +538,7 @@ model OwnershipHistory {
 // se cuenta dentro de INVERSOR_PASIVO.
 enum ParticipantClass {
   DIRECTIVO
+  CONSEJERO
   ADMINISTRATIVO
   EMBAJADOR
   INVERSOR_PASIVO

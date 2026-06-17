@@ -1641,7 +1641,7 @@ export const dict: Dict = {
   founderComposicion: {
     section: "Shareholder composition",
     description:
-      "Each participant belongs to one of the 4 classes (Director, Administrative, Ambassador and Passive investor). Members see the capital distribution aggregated by class — number of people and percentage — without names.",
+      "Each participant belongs to one of the 5 classes (Director, Advisor, Administrative, Ambassador and Passive investor). Members see the capital distribution aggregated by class — number of people and percentage — without names.",
     genericError: "An error occurred.",
     holders: {
       eyebrow: "— AJDUT shareholders",

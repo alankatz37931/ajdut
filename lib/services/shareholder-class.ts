@@ -12,9 +12,10 @@ export const CANONICAL_CLASSES: {
   order: number;
 }[] = [
   { kind: "DIRECTIVO", name: "Directivo", order: 0 },
-  { kind: "ADMINISTRATIVO", name: "Administrativo", order: 1 },
-  { kind: "EMBAJADOR", name: "Embajador", order: 2 },
-  { kind: "INVERSOR_PASIVO", name: "Inversor pasivo", order: 3 },
+  { kind: "CONSEJERO", name: "Consejero", order: 1 },
+  { kind: "ADMINISTRATIVO", name: "Administrativo", order: 2 },
+  { kind: "EMBAJADOR", name: "Embajador", order: 3 },
+  { kind: "INVERSOR_PASIVO", name: "Inversor pasivo", order: 4 },
 ];
 
 export const INVESTOR_PASSIVE_KIND: ParticipantClass = "INVERSOR_PASIVO";
@@ -22,6 +23,7 @@ export const INVESTOR_PASSIVE_KIND: ParticipantClass = "INVERSOR_PASIVO";
 /** Mapa nombre (lowercase) → kind, para mapear data vieja sin `kind`. */
 const NAME_TO_KIND: Record<string, ParticipantClass> = {
   directivo: "DIRECTIVO",
+  consejero: "CONSEJERO",
   administrativo: "ADMINISTRATIVO",
   operativo: "ADMINISTRATIVO",
   embajador: "EMBAJADOR",
