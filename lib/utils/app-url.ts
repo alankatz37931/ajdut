@@ -10,7 +10,7 @@
  * fallback era `http://localhost:3001`, lo que mandaba los links de mail y el
  * logout a localhost si la env de Vercel faltaba o quedaba en localhost.
  */
-const PROD_URL = "https://www.ajdut.com";
+const PROD_URL = "https://ajdut.com";
 
 function isLocalhost(url: string): boolean {
   return /localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(url);
