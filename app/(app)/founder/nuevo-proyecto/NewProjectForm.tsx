@@ -36,7 +36,10 @@ type FormState = {
   legalName: string;
   jurisdiction: string;
   kind: Kind;
+  /** Valor del select de sector (un sector predefinido o "__OTHER__"). */
   sector: string;
+  /** Texto libre cuando sector === "__OTHER__". */
+  sectorOther: string;
   stage: Stage;
   location: string;
   targetRaiseAmount: string;
@@ -75,6 +78,7 @@ export function NewProjectForm({
     jurisdiction: "",
     kind: "STARTUP",
     sector: "",
+    sectorOther: "",
     stage: "IDEA",
     location: "",
     targetRaiseAmount: "",
@@ -139,12 +143,21 @@ export function NewProjectForm({
   // Labels resueltos del dict — recomputa solo si el dict cambia
   // (prácticamente nunca durante el ciclo del form).
   const STAGES = useMemo(
-    () => STAGE_DEFS.map((s) => ({ value: s.id, label: dict[s.key] })),
+    () => STAGE_DEFS.map((s) => ({ value: s.id, label: dict[s.key] as string })),
     [dict]
   );
   const KINDS = useMemo(
-    () => KIND_DEFS.map((k) => ({ value: k.id, label: dict[k.key] })),
+    () => KIND_DEFS.map((k) => ({ value: k.id, label: dict[k.key] as string })),
     [dict]
+  );
+  // Sectores predefinidos + placeholder + "Otro" (texto libre) al final.
+  const SECTORS = useMemo(
+    () => [
+      { value: "", label: dict.sectorPlaceholder },
+      ...dict.sectorOptions.map((s) => ({ value: s, label: s })),
+      { value: "__OTHER__", label: dict.sectorOther },
+    ],
+    [dict.sectorOptions, dict.sectorPlaceholder, dict.sectorOther]
   );
   const CURRENCY_OPTS = useMemo(
     () => [
@@ -245,13 +258,21 @@ export function NewProjectForm({
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
-          <FloatingInput
-            id="sector"
-            label={dict.sectorLabel}
-            value={form.sector}
-            onChange={handler("sector")}
-            required
-          />
+          <div>
+            <FloatingSelect
+              id="sector"
+              label={dict.sectorLabel}
+              value={form.sector}
+              onChange={handler("sector") as (v: string) => void}
+              options={SECTORS}
+            />
+            {/* El valor que persiste: el sector elegido, o el texto libre si "Otro". */}
+            <input
+              type="hidden"
+              name="sector"
+              value={form.sector === "__OTHER__" ? form.sectorOther : form.sector}
+            />
+          </div>
           <div>
             <FloatingSelect
               id="stage"
@@ -263,6 +284,15 @@ export function NewProjectForm({
             <input type="hidden" name="stage" value={form.stage} />
           </div>
         </div>
+        {form.sector === "__OTHER__" && (
+          <FloatingInput
+            id="sectorOther"
+            label={dict.sectorOtherLabel}
+            value={form.sectorOther}
+            onChange={handler("sectorOther")}
+            required
+          />
+        )}
         <FloatingInput
           id="websiteUrl"
           type="url"
