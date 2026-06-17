@@ -5,7 +5,12 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { approveProject } from "@/lib/services/project-approval";
-import { rejectProject } from "@/lib/services/project";
+import {
+  rejectProject,
+  suspendProject,
+  reactivateProject,
+  softDeleteProject,
+} from "@/lib/services/project";
 import { DomainError } from "@/lib/services/errors";
 import {
   notifyFounderProjectApproved,
@@ -82,4 +87,43 @@ export async function rejectProjectAction(
   });
 
   return { ok: true };
+}
+
+// Helper interno: corre una acción de moderación de proyecto por slug.
+async function runProjectModeration(
+  slug: string,
+  fn: (args: { projectId: string; adminId: string }) => Promise<unknown>
+): Promise<ProjectModerationResult> {
+  const admin = await requireRole(["ADMIN"]);
+  const project = await prisma.project.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  if (!project) return { ok: false, error: "Proyecto no encontrado.", code: "NOT_FOUND" };
+  try {
+    await fn({ projectId: project.id, adminId: admin.id });
+  } catch (e) {
+    if (e instanceof DomainError) return { ok: false, error: e.message, code: e.code };
+    console.error(e);
+    return { ok: false, error: "Error interno." };
+  }
+  revalidatePath(`/proyectos/${slug}`);
+  revalidatePath(`/proyectos`);
+  revalidatePath(`/founder/${slug}`);
+  return { ok: true };
+}
+
+/** Admin inactiva un proyecto (ACTIVE → SUSPENDED): deja de verse para miembros. */
+export async function suspendProjectAction(slug: string): Promise<ProjectModerationResult> {
+  return runProjectModeration(slug, suspendProject);
+}
+
+/** Admin reactiva un proyecto (SUSPENDED → ACTIVE). */
+export async function reactivateProjectAction(slug: string): Promise<ProjectModerationResult> {
+  return runProjectModeration(slug, reactivateProject);
+}
+
+/** Admin elimina un proyecto (soft-delete): desaparece de la plataforma. */
+export async function deleteProjectAction(slug: string): Promise<ProjectModerationResult> {
+  return runProjectModeration(slug, softDeleteProject);
 }

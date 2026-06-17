@@ -634,6 +634,114 @@ export type RejectProjectInput = {
  * Marca un proyecto pendiente como CLOSED con una razón. No hay flujo de
  * reintento — el founder debería crear uno nuevo si quiere insistir.
  */
+/** Inactiva un proyecto ACTIVE → SUSPENDED. Los miembros dejan de verlo;
+ *  owner y admin lo siguen viendo. Reversible con reactivateProject. */
+export async function suspendProject(input: { projectId: string; adminId: string }) {
+  return prisma.$transaction(async (tx) => {
+    const admin = await tx.user.findUnique({
+      where: { id: input.adminId },
+      select: { role: true, isActive: true },
+    });
+    if (!admin || admin.role !== "ADMIN" || !admin.isActive) {
+      throw new ForbiddenError("Solo un ADMIN activo puede inactivar proyectos.");
+    }
+    const project = await tx.project.findUnique({
+      where: { id: input.projectId },
+      select: { status: true, deletedAt: true },
+    });
+    if (!project || project.deletedAt) throw new NotFoundError("Project", input.projectId);
+    if (project.status !== "ACTIVE") {
+      throw new ValidationError(
+        "status",
+        `Solo proyectos ACTIVE se pueden inactivar. Actual: ${project.status}.`
+      );
+    }
+    await tx.project.update({
+      where: { id: input.projectId },
+      data: { status: "SUSPENDED" },
+    });
+    await recordAudit(tx, {
+      actorId: input.adminId,
+      projectId: input.projectId,
+      action: "PROJECT.SUSPENDED",
+      entityType: "Project",
+      entityId: input.projectId,
+      payload: { by: "admin" },
+    });
+    return { ok: true as const };
+  });
+}
+
+/** Reactiva un proyecto SUSPENDED → ACTIVE (vuelve a ser visible para miembros). */
+export async function reactivateProject(input: { projectId: string; adminId: string }) {
+  return prisma.$transaction(async (tx) => {
+    const admin = await tx.user.findUnique({
+      where: { id: input.adminId },
+      select: { role: true, isActive: true },
+    });
+    if (!admin || admin.role !== "ADMIN" || !admin.isActive) {
+      throw new ForbiddenError("Solo un ADMIN activo puede reactivar proyectos.");
+    }
+    const project = await tx.project.findUnique({
+      where: { id: input.projectId },
+      select: { status: true, deletedAt: true },
+    });
+    if (!project || project.deletedAt) throw new NotFoundError("Project", input.projectId);
+    if (project.status !== "SUSPENDED") {
+      throw new ValidationError(
+        "status",
+        `Solo proyectos SUSPENDED se pueden reactivar. Actual: ${project.status}.`
+      );
+    }
+    await tx.project.update({
+      where: { id: input.projectId },
+      data: { status: "ACTIVE" },
+    });
+    await recordAudit(tx, {
+      actorId: input.adminId,
+      projectId: input.projectId,
+      action: "PROJECT.REACTIVATED",
+      entityType: "Project",
+      entityId: input.projectId,
+      payload: { by: "admin" },
+    });
+    return { ok: true as const };
+  });
+}
+
+/** Soft-delete: el proyecto desaparece de la plataforma para todos (las páginas
+ *  chequean deletedAt → notFound; el listado lo filtra). Reversible solo en DB. */
+export async function softDeleteProject(input: { projectId: string; adminId: string }) {
+  return prisma.$transaction(async (tx) => {
+    const admin = await tx.user.findUnique({
+      where: { id: input.adminId },
+      select: { role: true, isActive: true },
+    });
+    if (!admin || admin.role !== "ADMIN" || !admin.isActive) {
+      throw new ForbiddenError("Solo un ADMIN activo puede eliminar proyectos.");
+    }
+    const project = await tx.project.findUnique({
+      where: { id: input.projectId },
+      select: { deletedAt: true },
+    });
+    if (!project) throw new NotFoundError("Project", input.projectId);
+    if (project.deletedAt) return { ok: true as const }; // idempotente
+    await tx.project.update({
+      where: { id: input.projectId },
+      data: { deletedAt: new Date() },
+    });
+    await recordAudit(tx, {
+      actorId: input.adminId,
+      projectId: input.projectId,
+      action: "PROJECT.DELETED",
+      entityType: "Project",
+      entityId: input.projectId,
+      payload: { by: "admin" },
+    });
+    return { ok: true as const };
+  });
+}
+
 export async function rejectProject(input: RejectProjectInput) {
   return prisma.$transaction(async (tx) => {
     const admin = await tx.user.findUnique({

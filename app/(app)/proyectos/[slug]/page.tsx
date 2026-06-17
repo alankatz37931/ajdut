@@ -10,6 +10,7 @@ import { getDict, getLocale, localeFor } from "@/lib/i18n";
 import { InterestForm } from "./InterestForm";
 import { InfoRequestForm } from "./InfoRequestForm";
 import { AdminApprovalActions } from "./AdminApprovalActions";
+import { AdminModerationActions } from "./AdminModerationActions";
 import { ProjectBody } from "./ProjectBody";
 import { ProjectHero } from "@/components/project/ProjectHero";
 import { ProjectVideo } from "@/components/project/ProjectVideo";
@@ -841,6 +842,18 @@ export default async function ProjectPage({ params }: Params) {
           <AdminApprovalActions projectSlug={project.slug} dict={dict.adminApproval} />
         </div>
       )}
+
+      {/* Moderación de un proyecto ya aprobado: inactivar / reactivar / eliminar. */}
+      {access.role === "ADMIN" &&
+        (project.status === "ACTIVE" || project.status === "SUSPENDED") && (
+          <div className="mt-8">
+            <AdminModerationActions
+              projectSlug={project.slug}
+              status={project.status}
+              dict={dict.adminApproval}
+            />
+          </div>
+        )}
 
       {/* Forms — viven antes del cuerpo y, cuando abren su hash, ProjectBody
           oculta el resto del scroll para foco total.
