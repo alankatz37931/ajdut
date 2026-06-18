@@ -843,17 +843,6 @@ export default async function ProjectPage({ params }: Params) {
         </div>
       )}
 
-      {/* Moderación de un proyecto ya aprobado: inactivar / reactivar / eliminar. */}
-      {access.role === "ADMIN" &&
-        (project.status === "ACTIVE" || project.status === "SUSPENDED") && (
-          <div className="mt-8">
-            <AdminModerationActions
-              projectSlug={project.slug}
-              status={project.status}
-              dict={dict.adminApproval}
-            />
-          </div>
-        )}
 
       {/* Forms — viven antes del cuerpo y, cuando abren su hash, ProjectBody
           oculta el resto del scroll para foco total.
@@ -1010,6 +999,17 @@ export default async function ProjectPage({ params }: Params) {
                   ))}
               </div>
             )}
+
+            {/* Moderación del admin (inactivar / reactivar / eliminar) — barra
+                fina debajo del CTA, solo para admin sobre proyectos aprobados. */}
+            {access.role === "ADMIN" &&
+              (project.status === "ACTIVE" || project.status === "SUSPENDED") && (
+                <AdminModerationActions
+                  projectSlug={project.slug}
+                  status={project.status}
+                  dict={dict.adminApproval}
+                />
+              )}
 
             {/* Link a las políticas DEL PROYECTO (participaciones, dividendos,
                 frecuencia) — ancla a la sección de políticas más abajo en la

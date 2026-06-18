@@ -1361,11 +1361,8 @@ export const dict: Dict = {
     confirmRejectBtn: "Confirm rejection",
     cancelBtn: "Cancel",
     errReasonTooShort: "The reason must be at least 10 characters.",
-    moderationActiveEyebrow: "Moderation · active project",
-    moderationActiveBody: "The project is active and visible to members.",
-    moderationSuspendedEyebrow: "Moderation · inactive project",
-    moderationSuspendedBody:
-      "The project is inactive: members can't see it, only you and the project owner.",
+    moderationActiveBody: "Active · visible to members",
+    moderationSuspendedBody: "Inactive · only you and the project owner see it",
     inactivateBtn: "Deactivate",
     inactivateBody:
       "It stops being visible to members (you and the owner still see it). You can reactivate it anytime.",

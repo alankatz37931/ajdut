@@ -15,11 +15,11 @@ import {
 type AdminDict = Dict["adminApproval"];
 
 /**
- * Moderación del admin sobre un proyecto ya aprobado:
+ * Barra fina de moderación del admin sobre un proyecto ya aprobado:
  *  - ACTIVE  → Inactivar (lo oculta a los miembros) + Eliminar.
  *  - SUSPENDED → Reactivar + Eliminar.
- * El control de acceso ya hace el resto (un proyecto no-ACTIVE no lo ven los
- * miembros; uno con deletedAt desaparece para todos).
+ * El control de acceso hace el resto (no-ACTIVE oculto a miembros; deletedAt
+ * desaparece para todos).
  */
 export function AdminModerationActions({
   projectSlug,
@@ -52,46 +52,42 @@ export function AdminModerationActions({
   }
 
   return (
-    <div className="hairline p-6 bg-paper-light space-y-4">
-      <p className="eyebrow">
-        {isActive ? dict.moderationActiveEyebrow : dict.moderationSuspendedEyebrow}
-      </p>
-      <p className="text-navy/75 leading-relaxed">
+    <div className="mt-6 hairline-t pt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+      <span className="eyebrow !text-navy/40">
         {isActive ? dict.moderationActiveBody : dict.moderationSuspendedBody}
-      </p>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        {isActive ? (
-          <InlineConfirm
-            label={dict.inactivateBtn}
-            question={dict.inactivateBody}
-            confirmLabel={dict.confirmInactivateBtn}
-            onConfirm={() => run(suspendProjectAction)}
-            disabled={isPending}
-            className="eyebrow hover:!text-gold"
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => run(reactivateProjectAction)}
-            disabled={isPending}
-            className="btn-primary disabled:opacity-50"
-          >
-            {isPending ? dict.reactivatingBtn : dict.reactivateBtn}
-          </button>
-        )}
+      </span>
+      {isActive ? (
         <InlineConfirm
-          label={dict.deleteBtn}
-          question={dict.deleteBody}
-          confirmLabel={dict.confirmDeleteBtn}
-          onConfirm={() => run(deleteProjectAction, "/proyectos")}
+          label={dict.inactivateBtn}
+          question={dict.inactivateBody}
+          confirmLabel={dict.confirmInactivateBtn}
+          onConfirm={() => run(suspendProjectAction)}
           disabled={isPending}
-          className="eyebrow !text-navy/50 hover:!text-navy"
+          className="eyebrow hover:!text-gold"
         />
-      </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => run(reactivateProjectAction)}
+          disabled={isPending}
+          className="eyebrow !text-gold hover:!text-navy disabled:opacity-50 p-0 m-0 border-0 bg-transparent cursor-pointer"
+        >
+          {isPending ? dict.reactivatingBtn : dict.reactivateBtn}
+        </button>
+      )}
+      <span aria-hidden className="eyebrow !text-navy/20">·</span>
+      <InlineConfirm
+        label={dict.deleteBtn}
+        question={dict.deleteBody}
+        confirmLabel={dict.confirmDeleteBtn}
+        onConfirm={() => run(deleteProjectAction, "/proyectos")}
+        disabled={isPending}
+        className="eyebrow !text-navy/40 hover:!text-navy"
+      />
       {error && (
-        <p className="eyebrow !text-navy" role="alert">
+        <span className="eyebrow !text-navy basis-full" role="alert">
           {error}
-        </p>
+        </span>
       )}
     </div>
   );
