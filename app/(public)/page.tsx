@@ -15,9 +15,9 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-[72px] lg:items-start">
         {/* Hero (col izquierda en desktop) — usa todo el ancho de su col */}
         <section>
-          <p className="eyebrow leading-tight">{t.eyebrow}</p>
+          <p className="eyebrow leading-tight text-center sm:text-left whitespace-nowrap text-[0.625rem] tracking-[0.02em] sm:whitespace-normal sm:text-xs sm:tracking-[0.18em]">{t.eyebrow}</p>
 
-          <h1 className="font-sans mt-3 sm:mt-4 text-[1.6rem] sm:text-[2.5rem] lg:text-[1.9rem] !leading-[1.1] font-bold break-words">
+          <h1 className="font-sans mt-3 sm:mt-4 text-[1.4rem] sm:text-[2.5rem] lg:text-[1.9rem] !leading-[1.1] font-bold break-words text-center sm:text-left">
             <span className="text-navy">{t.titleLine1}</span>{" "}
             <span className="text-navy">{t.titleLine2}</span>{" "}
             {/* Tercera línea en gold — el foco de la propuesta de valor */}
@@ -25,39 +25,41 @@ export default async function HomePage() {
           </h1>
 
           {/* Valores fundacionales — ícono + label en eyebrow, separados por
-              bullet gold. El icono va navy/40 para no competir con el label. */}
-          <div className="mt-4 sm:mt-5 flex items-center flex-wrap gap-x-2 gap-y-1 eyebrow !text-navy/60">
-            <span className="inline-flex items-center gap-1.5">
-              <TransparencyIcon />
+              bullet gold. El icono va navy/40 para no competir con el label.
+              En mobile: una sola línea (íconos ocultos + tamaño/tracking
+              reducidos). Desde sm: vuelve a íconos + tamaño normal. */}
+          <div className="mt-3 sm:mt-5 flex items-center justify-center sm:justify-start flex-nowrap sm:flex-wrap whitespace-nowrap gap-x-1.5 sm:gap-x-2 gap-y-1 eyebrow !text-navy/60 text-[0.625rem] tracking-[0.05em] sm:text-xs sm:tracking-[0.18em]">
+            <span className="inline-flex items-center gap-0 sm:gap-1.5">
+              <span className="hidden sm:inline-flex"><TransparencyIcon /></span>
               {t.valueTransparency}
             </span>
             <span className="text-gold">·</span>
-            <span className="inline-flex items-center gap-1.5">
-              <UnityIcon />
+            <span className="inline-flex items-center gap-0 sm:gap-1.5">
+              <span className="hidden sm:inline-flex"><UnityIcon /></span>
               {t.valueUnity}
             </span>
             <span className="text-gold">·</span>
-            <span className="inline-flex items-center gap-1.5">
-              <ValueIcon />
+            <span className="inline-flex items-center gap-0 sm:gap-1.5">
+              <span className="hidden sm:inline-flex"><ValueIcon /></span>
               {t.valueValue}
             </span>
             <span className="text-gold">·</span>
-            <span className="inline-flex items-center gap-1.5">
-              <LegacyIcon />
+            <span className="inline-flex items-center gap-0 sm:gap-1.5">
+              <span className="hidden sm:inline-flex"><LegacyIcon /></span>
               {t.valueLegacy}
             </span>
           </div>
 
-          <p className="mt-4 sm:mt-5 text-base sm:text-lg text-navy/80 leading-relaxed">
+          <p className="mt-4 sm:mt-5 text-[14.5px] sm:text-lg text-navy/80 leading-relaxed text-justify sm:text-left">
             {t.description}
           </p>
 
-          <p className="mt-3 text-base sm:text-lg text-navy font-bold leading-relaxed">
+          <p className="mt-2 sm:mt-3 text-sm sm:text-lg text-navy font-bold leading-relaxed text-center sm:text-left">
             {t.descriptionBold}
           </p>
 
           {/* CTA único: 'Aplica para ser parte' — botón con presencia, hover premium */}
-          <div className="mt-5 sm:mt-6 max-w-md">
+          <div className="mt-6 sm:mt-6 max-w-md mx-auto sm:mx-0">
             <Link
               href="/aplicar"
               className="btn-primary w-full sm:w-auto text-center transition-all duration-300 hover:shadow-lg hover:shadow-navy/15 hover:-translate-y-0.5"
@@ -70,7 +72,7 @@ export default async function HomePage() {
 
         {/* Pilares (col derecha en desktop, debajo en mobile) */}
         <aside className="flex flex-col gap-3 sm:gap-4">
-          <p className="eyebrow !text-navy/60 font-medium lg:text-left mb-1 sm:mb-2">
+          <p className="eyebrow !text-navy/60 font-medium text-center lg:text-left mb-1 sm:mb-2">
             {t.pillarsHeading}
           </p>
           <Pillar
