@@ -18,9 +18,6 @@ export type CreateProjectResult =
 const VALID_STAGES = ["IDEA", "PRE_SEED", "SEED", "EARLY_REVENUE", "GROWTH", "SCALE"] as const;
 type Stage = (typeof VALID_STAGES)[number];
 
-const VALID_KINDS = ["STARTUP", "REAL_ESTATE", "MERCHANDISE"] as const;
-type Kind = (typeof VALID_KINDS)[number];
-
 export async function createProjectAction(
   formData: FormData
 ): Promise<CreateProjectResult> {
@@ -32,7 +29,7 @@ export async function createProjectAction(
   const description = get("description");
   const sector = get("sector");
   const stageRaw = get("stage");
-  const kindRaw = get("kind");
+  const kind = get("kind");
   const location = get("location") || undefined;
   const targetRaiseRaw = get("targetRaiseAmount");
   const problemStatement = get("problemStatement");
@@ -73,9 +70,8 @@ export async function createProjectAction(
   if (name.length < 2) return { ok: false, error: "Falta el nombre del proyecto." };
   if (oneLiner.length < 10) return { ok: false, error: "Falta un one-liner descriptivo." };
   if (description.length < 30) return { ok: false, error: "La descripción necesita más detalle (mín 30 caracteres)." };
-  if (sector.length < 2) return { ok: false, error: "Falta el sector." };
+  if (kind.length < 2) return { ok: false, error: "Falta el tipo." };
   if (!VALID_STAGES.includes(stageRaw as Stage)) return { ok: false, error: "Stage inválido." };
-  const kind: Kind = VALID_KINDS.includes(kindRaw as Kind) ? (kindRaw as Kind) : "STARTUP";
   let targetRaiseAmount: number | undefined;
   if (targetRaiseRaw !== "") {
     const n = Number.parseFloat(targetRaiseRaw);

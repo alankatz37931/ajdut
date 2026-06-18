@@ -59,10 +59,8 @@ export async function updateProjectInfoAction(
       name: pickStr("name"),
       shortPitch: pickStr("shortPitch"),
       description: pickStr("description"),
-      kind:
-        kind && ["STARTUP", "REAL_ESTATE", "MERCHANDISE", "OTHER"].includes(kind)
-          ? (kind as "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER")
-          : undefined,
+      // Tipo: rubro libre (string). Solo lo aplicamos si vino con valor.
+      kind: kind ? kind : undefined,
       sector: pickStr("sector"),
       stage:
         stage && ["IDEA", "PRE_SEED", "SEED", "EARLY_REVENUE", "GROWTH", "SCALE"].includes(stage)

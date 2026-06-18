@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/Floating";
 
 type NewDict = Dict["founderNuevoProyecto"];
-type Kind = "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER";
 type Stage = "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
 
 // Hoisted fuera del render: solo ids + dict-keys, sin labels resueltos
@@ -25,21 +24,17 @@ const STAGE_DEFS: Array<{ id: Stage; key: keyof NewDict }> = [
   { id: "GROWTH", key: "stageGrowth" },
   { id: "SCALE", key: "stageScale" },
 ];
-const KIND_DEFS: Array<{ id: Kind; key: keyof NewDict }> = [
-  { id: "REAL_ESTATE", key: "kindRealEstate" },
-  { id: "MERCHANDISE", key: "kindMerchandise" },
-  { id: "STARTUP", key: "kindOther" },
-];
 
 type FormState = {
   name: string;
   legalName: string;
   jurisdiction: string;
-  kind: Kind;
-  /** Valor del select de sector (un sector predefinido o "__OTHER__"). */
+  /** Rubro elegido en el select de Tipo, o "__OTHER__" para texto libre. */
+  kind: string;
+  /** Texto libre cuando kind === "__OTHER__". */
+  kindOther: string;
+  /** Sector — texto libre opcional. */
   sector: string;
-  /** Texto libre cuando sector === "__OTHER__". */
-  sectorOther: string;
   stage: Stage;
   location: string;
   targetRaiseAmount: string;
@@ -76,9 +71,9 @@ export function NewProjectForm({
     name: "",
     legalName: "",
     jurisdiction: "",
-    kind: "STARTUP",
+    kind: "",
+    kindOther: "",
     sector: "",
-    sectorOther: "",
     stage: "IDEA",
     location: "",
     targetRaiseAmount: "",
@@ -146,18 +141,14 @@ export function NewProjectForm({
     () => STAGE_DEFS.map((s) => ({ value: s.id, label: dict[s.key] as string })),
     [dict]
   );
-  const KINDS = useMemo(
-    () => KIND_DEFS.map((k) => ({ value: k.id, label: dict[k.key] as string })),
-    [dict]
-  );
-  // Sectores predefinidos + placeholder + "Otro" (texto libre) al final.
-  const SECTORS = useMemo(
+  // Tipo: placeholder + rubros predefinidos + "Otro" (texto libre) al final.
+  const TIPOS = useMemo(
     () => [
-      { value: "", label: dict.sectorPlaceholder },
-      ...dict.sectorOptions.map((s) => ({ value: s, label: s })),
-      { value: "__OTHER__", label: dict.sectorOther },
+      { value: "", label: dict.kindPlaceholder },
+      ...dict.kindOptions.map((s) => ({ value: s, label: s })),
+      { value: "__OTHER__", label: dict.kindOtherOption },
     ],
-    [dict.sectorOptions, dict.sectorPlaceholder, dict.sectorOther]
+    [dict.kindOptions, dict.kindPlaceholder, dict.kindOtherOption]
   );
   const CURRENCY_OPTS = useMemo(
     () => [
@@ -246,9 +237,14 @@ export function NewProjectForm({
               label={dict.kindLabel}
               value={form.kind}
               onChange={handler("kind") as (v: string) => void}
-              options={KINDS}
+              options={TIPOS}
             />
-            <input type="hidden" name="kind" value={form.kind} />
+            {/* El valor que persiste: el rubro elegido, o el texto libre si "Otro". */}
+            <input
+              type="hidden"
+              name="kind"
+              value={form.kind === "__OTHER__" ? form.kindOther : form.kind}
+            />
           </div>
           <FloatingInput
             id="location"
@@ -257,22 +253,22 @@ export function NewProjectForm({
             onChange={handler("location")}
           />
         </div>
+        {form.kind === "__OTHER__" && (
+          <FloatingInput
+            id="kindOther"
+            label={dict.kindOtherLabel}
+            value={form.kindOther}
+            onChange={handler("kindOther")}
+            required
+          />
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
-          <div>
-            <FloatingSelect
-              id="sector"
-              label={dict.sectorLabel}
-              value={form.sector}
-              onChange={handler("sector") as (v: string) => void}
-              options={SECTORS}
-            />
-            {/* El valor que persiste: el sector elegido, o el texto libre si "Otro". */}
-            <input
-              type="hidden"
-              name="sector"
-              value={form.sector === "__OTHER__" ? form.sectorOther : form.sector}
-            />
-          </div>
+          <FloatingInput
+            id="sector"
+            label={dict.sectorLabel}
+            value={form.sector}
+            onChange={handler("sector")}
+          />
           <div>
             <FloatingSelect
               id="stage"
@@ -284,15 +280,6 @@ export function NewProjectForm({
             <input type="hidden" name="stage" value={form.stage} />
           </div>
         </div>
-        {form.sector === "__OTHER__" && (
-          <FloatingInput
-            id="sectorOther"
-            label={dict.sectorOtherLabel}
-            value={form.sectorOther}
-            onChange={handler("sectorOther")}
-            required
-          />
-        )}
         <FloatingInput
           id="websiteUrl"
           type="url"

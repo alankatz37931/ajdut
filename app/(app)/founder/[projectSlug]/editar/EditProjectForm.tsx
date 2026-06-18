@@ -17,7 +17,9 @@ type Initial = {
   name: string;
   shortPitch: string;
   description: string;
-  kind: "STARTUP" | "REAL_ESTATE" | "MERCHANDISE" | "OTHER";
+  /** Rubro guardado (string libre). Puede ser un valor viejo (STARTUP/OTHER)
+   *  o un rubro custom fuera de la lista. */
+  kind: string;
   sector: string;
   stage: "IDEA" | "PRE_SEED" | "SEED" | "EARLY_REVENUE" | "GROWTH" | "SCALE";
   location: string;
@@ -59,11 +61,9 @@ const STAGE_DEFS: Array<{ id: Initial["stage"]; key: keyof EditDict }> = [
   { id: "SCALE", key: "stageScale" },
 ];
 
-const KIND_DEFS: Array<{ id: Initial["kind"]; key: keyof EditDict }> = [
-  { id: "REAL_ESTATE", key: "kindRealEstate" },
-  { id: "MERCHANDISE", key: "kindMerchandise" },
-  { id: "STARTUP", key: "kindOther" },
-];
+// Estado del form: extiende Initial con kindOther (texto libre cuando el rubro
+// guardado no está en la lista de opciones).
+type FormState = Initial & { kindOther: string };
 
 export function EditProjectForm({
   projectSlug,
@@ -84,7 +84,18 @@ export function EditProjectForm({
   dict: EditDict;
   locale: string;
 }) {
-  const [form, setForm] = useState<Initial>(initial);
+  // Precarga del Tipo: si el rubro guardado está en la lista → el select lo
+  // muestra. Si no (valores viejos STARTUP/OTHER o rubros custom) → el select
+  // queda en "__OTHER__" y el texto libre conserva el valor guardado, así no
+  // se pierde al editar.
+  const [form, setForm] = useState<FormState>(() => {
+    const inList = dict.kindOptions.includes(initial.kind);
+    return {
+      ...initial,
+      kind: inList ? initial.kind : initial.kind ? "__OTHER__" : "",
+      kindOther: inList ? "" : initial.kind,
+    };
+  });
   const boundAction = useCallback(
     (formData: FormData) => updateProjectInfoAction(projectSlug, formData),
     [projectSlug]
@@ -93,12 +104,17 @@ export function EditProjectForm({
 
   // Labels resueltos del dict — recomputa solo si el dict cambia.
   const STAGES = useMemo(
-    () => STAGE_DEFS.map((s) => ({ value: s.id, label: dict[s.key] })),
+    () => STAGE_DEFS.map((s) => ({ value: s.id, label: dict[s.key] as string })),
     [dict]
   );
-  const KINDS = useMemo(
-    () => KIND_DEFS.map((k) => ({ value: k.id, label: dict[k.key] })),
-    [dict]
+  // Tipo: placeholder + rubros predefinidos + "Otro" (texto libre) al final.
+  const TIPOS = useMemo(
+    () => [
+      { value: "", label: dict.kindPlaceholder },
+      ...dict.kindOptions.map((s) => ({ value: s, label: s })),
+      { value: "__OTHER__", label: dict.kindOtherOption },
+    ],
+    [dict.kindOptions, dict.kindPlaceholder, dict.kindOtherOption]
   );
   const CURRENCY_OPTS = useMemo(
     () => [
@@ -108,7 +124,7 @@ export function EditProjectForm({
     [dict.currencyUsd, dict.currencyMxn]
   );
 
-  function update<K extends keyof Initial>(key: K, value: Initial[K]) {
+  function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((p) => ({ ...p, [key]: value }));
   }
 
@@ -167,10 +183,15 @@ export function EditProjectForm({
                   id="kind"
                   label={dict.kindLabel}
                   value={form.kind}
-                  onChange={(v) => update("kind", v as Initial["kind"])}
-                  options={KINDS}
+                  onChange={(v) => update("kind", v)}
+                  options={TIPOS}
                 />
-                <input type="hidden" name="kind" value={form.kind} />
+                {/* El valor que persiste: el rubro elegido, o el texto libre si "Otro". */}
+                <input
+                  type="hidden"
+                  name="kind"
+                  value={form.kind === "__OTHER__" ? form.kindOther : form.kind}
+                />
               </div>
               <FloatingInput
                 id="location"
@@ -179,6 +200,15 @@ export function EditProjectForm({
                 onChange={(v) => update("location", v)}
               />
             </div>
+            {form.kind === "__OTHER__" && (
+              <FloatingInput
+                id="kindOther"
+                label={dict.kindOtherLabel}
+                value={form.kindOther}
+                onChange={(v) => update("kindOther", v)}
+                required
+              />
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 sm:items-end">
               <FloatingInput
                 id="sector"

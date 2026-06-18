@@ -204,7 +204,11 @@ model Project {
   id               String        @id @default(cuid())
   slug             String        @unique
   name             String
-  kind             ProjectKind   @default(STARTUP)
+  // Tipo del proyecto — texto libre (el form ofrece una lista de rubros +
+  // "Otro" con campo abierto). Antes era el enum ProjectKind; se pasó a String
+  // para soportar la lista ampliada de tipos. (ProjectKind sigue usado por
+  // Application.companyKind.)
+  kind             String        @default("OTHER")
   status           ProjectStatus @default(DRAFT)
   ownerId          String
   owner            User          @relation("ProjectOwner", fields: [ownerId], references: [id])
