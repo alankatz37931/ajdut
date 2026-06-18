@@ -1427,7 +1427,6 @@ export const dict = {
     legalNameHelper: "Si está en blanco, usamos el nombre del proyecto.",
     jurisdictionLabel: "Jurisdicción",
     kindLabel: "Tipo",
-    kindPlaceholder: "Elegí un tipo",
     kindOptions: [
       "Tecnología",
       "Inmobiliario",
@@ -1611,7 +1610,6 @@ export const dict = {
     shortPitchLabel: "Pitch corto",
     descriptionLabel: "Descripción larga",
     kindLabel: "Tipo",
-    kindPlaceholder: "Elegí un tipo",
     kindOptions: [
       "Tecnología",
       "Inmobiliario",

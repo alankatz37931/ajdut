@@ -92,7 +92,7 @@ export function EditProjectForm({
     const inList = dict.kindOptions.includes(initial.kind);
     return {
       ...initial,
-      kind: inList ? initial.kind : initial.kind ? "__OTHER__" : "",
+      kind: inList ? initial.kind : initial.kind ? "__OTHER__" : dict.kindOptions[0]!,
       kindOther: inList ? "" : initial.kind,
     };
   });
@@ -107,14 +107,14 @@ export function EditProjectForm({
     () => STAGE_DEFS.map((s) => ({ value: s.id, label: dict[s.key] as string })),
     [dict]
   );
-  // Tipo: placeholder + rubros predefinidos + "Otro" (texto libre) al final.
+  // Tipo: rubros predefinidos + "Otro" (texto libre) al final. Sin placeholder:
+  // el default es el primer rubro (Tecnología) cuando no hay valor previo.
   const TIPOS = useMemo(
     () => [
-      { value: "", label: dict.kindPlaceholder },
       ...dict.kindOptions.map((s) => ({ value: s, label: s })),
       { value: "__OTHER__", label: dict.kindOtherOption },
     ],
-    [dict.kindOptions, dict.kindPlaceholder, dict.kindOtherOption]
+    [dict.kindOptions, dict.kindOtherOption]
   );
   const CURRENCY_OPTS = useMemo(
     () => [

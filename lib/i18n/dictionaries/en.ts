@@ -1418,7 +1418,6 @@ export const dict: Dict = {
     legalNameHelper: "If blank, we use the project name.",
     jurisdictionLabel: "Jurisdiction",
     kindLabel: "Type",
-    kindPlaceholder: "Choose a type",
     kindOptions: [
       "Technology",
       "Real estate",
@@ -1602,7 +1601,6 @@ export const dict: Dict = {
     shortPitchLabel: "Short pitch",
     descriptionLabel: "Long description",
     kindLabel: "Type",
-    kindPlaceholder: "Choose a type",
     kindOptions: [
       "Technology",
       "Real estate",
