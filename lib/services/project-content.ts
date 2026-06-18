@@ -16,6 +16,8 @@ export type UpsertFounderInput = {
   bio?: string | null;
   references?: string | null;
   linkedinUrl?: string | null;
+  /** Vínculo opcional a una cuenta de usuario (ya resuelto a su id). */
+  userId?: string | null;
   equityPercent: number;
   joinedAt?: Date | null;
   isActive: boolean;
@@ -180,6 +182,7 @@ export async function upsertFounder(input: UpsertFounderInput) {
           bio: input.bio?.trim() || null,
           references: input.references?.trim() || null,
           linkedinUrl: input.linkedinUrl || null,
+          userId: input.userId ?? null,
           equityPercent: new Prisma.Decimal(input.equityPercent),
           joinedAt: input.joinedAt ?? null,
           isActive: input.isActive,
@@ -205,6 +208,7 @@ export async function upsertFounder(input: UpsertFounderInput) {
           bio: input.bio?.trim() || null,
           references: input.references?.trim() || null,
           linkedinUrl: input.linkedinUrl || null,
+          userId: input.userId ?? null,
           equityPercent: new Prisma.Decimal(input.equityPercent),
           joinedAt: input.joinedAt ?? null,
           isActive: input.isActive,

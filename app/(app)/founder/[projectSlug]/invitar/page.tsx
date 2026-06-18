@@ -8,19 +8,26 @@ import { getAvailableSharesForProposal } from "@/lib/services/pending-assignment
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
 import { InvitarForm } from "./InvitarForm";
 
-type Params = { params: Promise<{ projectSlug: string }> };
+type Params = {
+  params: Promise<{ projectSlug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDict();
   return { title: dict.metaTitles.founderInvitar };
 }
 
-export default async function InvitarMiembroPage({ params }: Params) {
+export default async function InvitarMiembroPage({ params, searchParams }: Params) {
   const user = await requireSession();
   const dict = await getDict();
   const locale = await getLocale();
   const t = dict.founderInvitar;
   const { projectSlug } = await params;
+  // Precarga opcional desde el botón "Invitar como usuario" del equipo.
+  const sp = await searchParams;
+  const initialName = typeof sp.name === "string" ? sp.name : "";
+  const initialShares = typeof sp.shares === "string" ? sp.shares : "";
 
   const project = await prisma.project.findUnique({
     where: { slug: projectSlug },
@@ -70,6 +77,8 @@ export default async function InvitarMiembroPage({ params }: Params) {
       <InvitarForm
         projectSlug={project.slug}
         availableShares={availableShares}
+        initialName={initialName}
+        initialShares={initialShares}
         dict={t}
         locale={locale}
       />

@@ -72,6 +72,26 @@ export async function upsertFounderAction(
       field: "linkedinUrl",
     };
   }
+  // Vínculo opcional a una cuenta de usuario por email. Si vino un email, tiene
+  // que corresponder a un usuario activo ya registrado; sino, founder sin cuenta.
+  const userEmail = String(formData.get("userEmail") ?? "").trim().toLowerCase();
+  let linkedUserId: string | null = null;
+  if (userEmail) {
+    const linked = await prisma.user.findUnique({
+      where: { email: userEmail },
+      select: { id: true, isActive: true, deletedAt: true, role: true },
+    });
+    if (!linked || !linked.isActive || linked.deletedAt || linked.role === "PLATFORM") {
+      return {
+        ok: false,
+        error:
+          "No encontramos una cuenta activa con ese email. Invitá primero a la persona (o dejá el campo vacío).",
+        field: "userEmail",
+      };
+    }
+    linkedUserId = linked.id;
+  }
+
   const equityRaw = String(formData.get("equityPercent") ?? "0");
   const equityPercent = Number.parseFloat(equityRaw);
   const joinedAtStr = String(formData.get("joinedAt") ?? "").trim();
@@ -106,6 +126,7 @@ export async function upsertFounderAction(
       bio: bio || null,
       references: references || null,
       linkedinUrl: linkedinUrlNormalized,
+      userId: linkedUserId,
       equityPercent: Number.isFinite(equityPercent) ? equityPercent : 0,
       joinedAt,
       isActive,

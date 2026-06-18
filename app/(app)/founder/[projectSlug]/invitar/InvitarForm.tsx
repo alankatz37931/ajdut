@@ -11,6 +11,8 @@ type InvitarDict = Dict["founderInvitar"];
 type Props = {
   projectSlug: string;
   availableShares: number;
+  initialName?: string;
+  initialShares?: string;
   dict: InvitarDict;
   locale: string;
 };
@@ -25,13 +27,15 @@ type SuccessState = {
 export function InvitarForm({
   projectSlug,
   availableShares,
+  initialName = "",
+  initialShares = "",
   dict,
   locale,
 }: Props) {
   const [success, setSuccess] = useState<SuccessState | null>(null);
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [shareCount, setShareCount] = useState("");
+  const [fullName, setFullName] = useState(initialName);
+  const [shareCount, setShareCount] = useState(initialShares);
   const [message, setMessage] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -62,6 +66,12 @@ export function InvitarForm({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} className="mt-10 space-y-6">
+      {initialName && (
+        <p className="hairline p-3 bg-paper-light text-sm text-navy/75 leading-relaxed">
+          {dict.fromTeamNote}
+        </p>
+      )}
+
       <FloatingInput
         id="email"
         type="email"

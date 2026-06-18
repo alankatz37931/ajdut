@@ -791,6 +791,11 @@ export const dict = {
     colValue: "Valor",
     colStatus: "Estado",
     colAcquired: "Adquirida",
+    founderEquityTitle: "Tu equity como fundador",
+    founderEquityNote:
+      "Tu participación como parte del equipo de estos proyectos. Se calcula sobre tu porcentaje acordado; no es transferible ni emite certificado (no es una participación comprada).",
+    founderColRole: "Rol",
+    founderColEquity: "Equity",
     receivedTotal: "Recibido total:",
     lastPayment: "Último pago:",
     certificateLabel: "Certificado",
@@ -1796,6 +1801,9 @@ export const dict = {
     membersEyebrow: "— Miembros del equipo",
     equityTotalFmt: "Participaciones asignadas total: {pct}%",
     addBtn: "+ Agregar miembro",
+    inviteAsUserBtn: "Invitar como usuario",
+    linkedAccountFmt: "Cuenta: {email}",
+    notLinked: "Sin cuenta vinculada",
     empty: "Todavía no agregaste a nadie al equipo.",
     linkedin: "LinkedIn →",
     active: "Activo",
@@ -1820,6 +1828,9 @@ export const dict = {
       roleLabel: "Rol",
       equityLabel: "Participaciones %",
       joinedAtLabel: "Se unió (opcional)",
+      userEmailLabel: "Cuenta de usuario — email (opcional)",
+      userEmailHelper:
+        "Vinculá a este miembro con su cuenta para que su participación aparezca en su portafolio. Tiene que ser un usuario ya registrado; si no lo es, primero invitalo.",
       linkedinLabel: "LinkedIn (opcional)",
       bioLabel: "Bio / experiencia (opcional)",
       referencesLabel: "Referencias (3) — opcional",
@@ -1885,6 +1896,8 @@ export const dict = {
     sendingBtn: "Enviando…",
     disclaimer:
       "La propuesta queda pendiente. Recién cuando el admin la valida se crea la cuenta, se asignan las participaciones y se le avisa al invitado.",
+    fromTeamNote:
+      "Le vas a asignar participaciones reales (del pool disponible) y se le creará su cuenta a esta persona. Si ya figura en el equipo con un porcentaje, ese porcentaje está reservado aparte: ajustalo para no contar las acciones dos veces.",
   },
 
   founderLeads: {

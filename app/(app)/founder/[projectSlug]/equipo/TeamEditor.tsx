@@ -24,6 +24,8 @@ type Founder = {
   vestingMonths: number;
   vestingInitialPercent: number;
   vestingFinalPercent: number;
+  userEmail: string;
+  userName: string;
 };
 
 const empty: Founder = {
@@ -40,18 +42,22 @@ const empty: Founder = {
   vestingMonths: 0,
   vestingInitialPercent: 0,
   vestingFinalPercent: 0,
+  userEmail: "",
+  userName: "",
 };
 
 export function TeamEditor({
   projectSlug,
   initialFounders,
   shareholderClasses,
+  totalShares,
   dict,
   locale,
 }: {
   projectSlug: string;
   initialFounders: Founder[];
   shareholderClasses: ShareholderClass[];
+  totalShares: number;
   dict: EquipoDict;
   locale: string;
 }) {
@@ -159,6 +165,11 @@ export function TeamEditor({
                         ? classNameById.get(f.shareholderClassId) ?? dict.classNone
                         : dict.classNone}
                     </p>
+                    <p className="mt-1 eyebrow !text-navy/60 normal-case">
+                      {f.userEmail
+                        ? dict.linkedAccountFmt.replace("{email}", f.userEmail)
+                        : dict.notLinked}
+                    </p>
                     {f.linkedinUrl && (
                       <a
                         href={f.linkedinUrl}
@@ -184,7 +195,15 @@ export function TeamEditor({
                   <div className="col-span-6 sm:col-span-2 eyebrow">
                     {f.isActive ? dict.active : dict.inactive}
                   </div>
-                  <div className="col-span-12 sm:col-span-3 flex justify-end gap-3 sm:justify-end">
+                  <div className="col-span-12 sm:col-span-3 flex flex-wrap justify-end gap-x-3 gap-y-1 sm:justify-end">
+                    <a
+                      href={`/founder/${projectSlug}/invitar?name=${encodeURIComponent(
+                        f.fullName
+                      )}&shares=${Math.round((f.equityPercent / 100) * totalShares)}`}
+                      className="eyebrow hover:!text-gold"
+                    >
+                      {dict.inviteAsUserBtn}
+                    </a>
                     <button
                       type="button"
                       onClick={() => setEditingId(f.id)}
@@ -235,6 +254,7 @@ function FounderForm({
     founder.equityPercent ? String(founder.equityPercent) : ""
   );
   const [joinedAt, setJoinedAt] = useState(founder.joinedAt);
+  const [userEmail, setUserEmail] = useState(founder.userEmail);
   const [linkedinUrl, setLinkedinUrl] = useState(founder.linkedinUrl);
   const [bio, setBio] = useState(founder.bio);
   const [references, setReferences] = useState(founder.references);
@@ -317,6 +337,23 @@ function FounderForm({
             className={`mt-1 w-full font-mono ${LINE_INPUT}`}
           />
         </label>
+      </div>
+
+      <div>
+        <label className="block">
+          <span className="eyebrow !text-navy/50">{dict.form.userEmailLabel}</span>
+          <input
+            name="userEmail"
+            type="email"
+            inputMode="email"
+            value={userEmail}
+            onChange={(e) => setUserEmail(e.target.value)}
+            className={`mt-1 w-full ${LINE_INPUT}`}
+          />
+        </label>
+        <p className="eyebrow !text-navy/50 mt-1.5 normal-case">
+          {dict.form.userEmailHelper}
+        </p>
       </div>
 
       <div className="space-y-3">

@@ -786,6 +786,11 @@ export const dict: Dict = {
     colValue: "Value",
     colStatus: "Status",
     colAcquired: "Acquired",
+    founderEquityTitle: "Your founder equity",
+    founderEquityNote:
+      "Your stake as part of the team in these projects. Based on your agreed percentage; it's not transferable and issues no certificate (it isn't a purchased participation).",
+    founderColRole: "Role",
+    founderColEquity: "Equity",
     receivedTotal: "Total received:",
     lastPayment: "Last payment:",
     certificateLabel: "Certificate",
@@ -1787,6 +1792,9 @@ export const dict: Dict = {
     membersEyebrow: "— Team members",
     equityTotalFmt: "Total participations assigned: {pct}%",
     addBtn: "+ Add member",
+    inviteAsUserBtn: "Invite as user",
+    linkedAccountFmt: "Account: {email}",
+    notLinked: "No linked account",
     empty: "You haven't added anyone to the team yet.",
     linkedin: "LinkedIn →",
     active: "Active",
@@ -1811,6 +1819,9 @@ export const dict: Dict = {
       roleLabel: "Role",
       equityLabel: "Participations %",
       joinedAtLabel: "Joined (optional)",
+      userEmailLabel: "User account — email (optional)",
+      userEmailHelper:
+        "Link this member to their account so their stake shows up in their portfolio. Must be an already-registered user; if not, invite them first.",
       linkedinLabel: "LinkedIn (optional)",
       bioLabel: "Bio / experience (optional)",
       referencesLabel: "References (3) — optional",
@@ -1876,6 +1887,8 @@ export const dict: Dict = {
     sendingBtn: "Sending…",
     disclaimer:
       "The proposal stays pending. Only when the admin validates it the account is created, participations are assigned, and the invitee is notified.",
+    fromTeamNote:
+      "You're assigning real participations (from the available pool) and this person's account will be created. If they already appear in the team with a percentage, that percentage is reserved separately — adjust it so the shares aren't counted twice.",
   },
 
   founderLeads: {

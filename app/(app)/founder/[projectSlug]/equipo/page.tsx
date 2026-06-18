@@ -28,7 +28,10 @@ export default async function FounderTeamPage({ params }: Params) {
     include: {
       startupProfile: {
         include: {
-          founders: { orderBy: [{ isActive: "desc" }, { equityPercent: "desc" }] },
+          founders: {
+            orderBy: [{ isActive: "desc" }, { equityPercent: "desc" }],
+            include: { user: { select: { email: true, fullName: true } } },
+          },
         },
       },
       externalHoldings: { orderBy: { createdAt: "asc" } },
@@ -63,6 +66,8 @@ export default async function FounderTeamPage({ params }: Params) {
     equityPercent: Number(f.equityPercent),
     joinedAt: f.joinedAt ? f.joinedAt.toISOString().slice(0, 10) : "",
     isActive: f.isActive,
+    userEmail: f.user?.email ?? "",
+    userName: f.user?.fullName ?? "",
     shareholderClassId: f.shareholderClassId ?? "",
     vestingMonths: f.vestingMonths ?? 0,
     vestingInitialPercent:
@@ -122,6 +127,7 @@ export default async function FounderTeamPage({ params }: Params) {
         projectSlug={projectSlug}
         initialFounders={founders}
         shareholderClasses={classes}
+        totalShares={project.totalShares}
         dict={t}
         locale={locale}
       />

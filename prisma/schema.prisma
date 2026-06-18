@@ -127,6 +127,9 @@ model User {
 
   // Relaciones inversas
   ownedProjects         Project[]              @relation("ProjectOwner")
+  // Founders (miembros del equipo) vinculados a esta cuenta — su equity se
+  // refleja en el portafolio del usuario sin crear participaciones nuevas.
+  foundersLinked        Founder[]
   coAdminAssignments    ProjectCoAdmin[]
   participationsOwned   Participation[]        @relation("CurrentOwner")
   ownershipFrom         OwnershipHistory[]     @relation("TransferFrom")
@@ -355,6 +358,12 @@ model Founder {
   bio              String?
   references       String?
   linkedinUrl      String?
+  // Vínculo OPCIONAL a una cuenta de usuario real. Si está seteado, el equity
+  // de este founder se refleja en el portafolio de ese usuario (/partner) —
+  // sin crear participaciones ni tocar el cap table (el equity sigue contándose
+  // una sola vez como equity de founder).
+  userId           String?
+  user             User?          @relation(fields: [userId], references: [id])
   // equityPercent es el TOTAL acordado del socio. Si tiene vesting, lo
   // efectivamente entregado (vested) se calcula en vivo desde vestingStartAt +
   // vestingMonths (lineal por tramos mensuales). Lo no entregado queda
@@ -380,6 +389,7 @@ model Founder {
   isActive         Boolean        @default(true)
 
   @@index([shareholderClassId])
+  @@index([userId])
 }
 
 model FundingRound {

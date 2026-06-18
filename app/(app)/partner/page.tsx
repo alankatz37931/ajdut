@@ -77,6 +77,73 @@ export default async function PartnerDashboardPage() {
     return { ...p, pricePerShare, valueInProjectCurrency };
   });
 
+  // Equity como fundador: founders vinculados a esta cuenta (Founder.userId).
+  // Su % se refleja acá SIN crear participaciones — el mismo equity se cuenta
+  // una sola vez (sigue siendo equity de founder en el cap table del proyecto).
+  // Es read-only: no es transferible ni emite certificado.
+  const founderLinks = await prisma.founder.findMany({
+    where: {
+      userId: user.id,
+      isActive: true,
+      startupProfile: { project: { deletedAt: null } },
+    },
+    select: {
+      id: true,
+      role: true,
+      equityPercent: true,
+      startupProfile: {
+        select: {
+          preMoneyValuation: true,
+          valuationCurrency: true,
+          project: {
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              shortPitch: true,
+              totalShares: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  type FounderRow = {
+    id: string;
+    role: string;
+    equityPercent: number;
+    shares: number;
+    currency: string;
+    value: number | null;
+    project: { id: string; slug: string; name: string; shortPitch: string | null };
+  };
+
+  const founderRows: FounderRow[] = founderLinks
+    .filter((f) => f.startupProfile?.project)
+    .map((f) => {
+      const sp = f.startupProfile!;
+      const project = sp.project!;
+      const equityPercent = Number(f.equityPercent);
+      const shares = Math.round((equityPercent / 100) * project.totalShares);
+      const val = sp.preMoneyValuation ? Number(sp.preMoneyValuation) : null;
+      const value = val !== null ? (val * equityPercent) / 100 : null;
+      return {
+        id: f.id,
+        role: f.role,
+        equityPercent,
+        shares,
+        currency: sp.valuationCurrency ?? "USD",
+        value,
+        project: {
+          id: project.id,
+          slug: project.slug,
+          name: project.name,
+          shortPitch: project.shortPitch,
+        },
+      };
+    });
+
   // Conteos por PROYECTO DISTINTO — un socio puede tener varias
   // participaciones del mismo proyecto y eso no son "N proyectos".
   const totalsByCurrency = new Map<string, number>();
@@ -90,13 +157,27 @@ export default async function PartnerDashboardPage() {
       (totalsByCurrency.get(currency) ?? 0) + r.valueInProjectCurrency
     );
   }
+  // Equity de founder suma al valor del portafolio igual que las participaciones.
+  for (const f of founderRows) {
+    if (f.value === null) continue;
+    valuedProjectIds.add(f.project.id);
+    totalsByCurrency.set(
+      f.currency,
+      (totalsByCurrency.get(f.currency) ?? 0) + f.value
+    );
+  }
   // Proyectos distintos con valoración informada (el valor del portafolio
   // solo puede calcularse sobre estos).
   const activeProjectsCount = valuedProjectIds.size;
 
-  const totalShares = rows.reduce((s, r) => s + r.shareCount, 0);
-  // Proyectos distintos del portafolio (no participaciones).
-  const projectsCount = new Set(rows.map((r) => r.project.id)).size;
+  const totalShares =
+    rows.reduce((s, r) => s + r.shareCount, 0) +
+    founderRows.reduce((s, f) => s + f.shares, 0);
+  // Proyectos distintos del portafolio (participaciones + equity de founder).
+  const projectsCount = new Set([
+    ...rows.map((r) => r.project.id),
+    ...founderRows.map((f) => f.project.id),
+  ]).size;
   const primaryCurrency = totalsByCurrency.has("USD")
     ? "USD"
     : Array.from(totalsByCurrency.keys())[0] ?? "USD";
@@ -120,7 +201,7 @@ export default async function PartnerDashboardPage() {
         </Link>
       </div>
 
-      {participations.length > 0 && (
+      {(participations.length > 0 || founderRows.length > 0) && (
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-px bg-line lg:grid-cols-3">
           <KpiCard
             label={t.portfolioValue}
@@ -271,6 +352,71 @@ export default async function PartnerDashboardPage() {
           </ul>
         )}
       </Section>
+
+      {founderRows.length > 0 && (
+        <Section title={t.founderEquityTitle}>
+          <p className="mb-4 text-navy/70 leading-relaxed">{t.founderEquityNote}</p>
+          <ul className="flex flex-col gap-4">
+            {founderRows.map((f) => (
+              <li key={f.id} className="hairline bg-paper p-5 sm:p-6">
+                <div>
+                  <Link
+                    href={`/proyectos/${f.project.slug}` as Route}
+                    className="font-sans text-navy hover:!text-gold break-words"
+                  >
+                    {f.project.name}
+                  </Link>
+                  {f.project.shortPitch && (
+                    <p className="mt-1 eyebrow">{f.project.shortPitch}</p>
+                  )}
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+                  <div>
+                    <p className="eyebrow">{t.founderColRole}</p>
+                    <p className="mt-1 eyebrow !text-navy">{f.role}</p>
+                  </div>
+                  <div>
+                    <p className="eyebrow">{t.founderColEquity}</p>
+                    <p className="mt-1 font-mono text-navy">
+                      {f.equityPercent.toLocaleString(locale)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="eyebrow">{t.colShares}</p>
+                    <p className="mt-1 font-mono text-navy">
+                      {formatNumber(f.shares, undefined, locale)}
+                    </p>
+                  </div>
+                  <div className="sm:text-right">
+                    <p className="eyebrow">{t.colValue}</p>
+                    <p className="mt-1 font-mono text-navy">
+                      {f.value !== null
+                        ? formatCurrency(f.value, f.currency, 2, locale)
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link
+                    href={`/proyectos/${f.project.slug}` as Route}
+                    className="btn-primary"
+                  >
+                    {t.seeProjectBtn}
+                  </Link>
+                  <Link
+                    href={`/proyectos/${f.project.slug}/chat` as Route}
+                    className="btn-outline"
+                  >
+                    {t.chatBtn}
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
     </div>
   );
 }
