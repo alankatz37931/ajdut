@@ -163,7 +163,7 @@ function PurposeItem({ label, body }: { label: string; body: string }) {
   return (
     <div>
       <p className="eyebrow !text-navy/50">{label}</p>
-      <p className="mt-2 text-navy/85 leading-relaxed">{body}</p>
+      <p className="mt-2 text-navy/85 leading-relaxed text-justify">{body}</p>
     </div>
   );
 }
