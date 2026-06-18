@@ -48,6 +48,9 @@ type Props = {
    * (ej. <BackLink>) para que el eyebrow doble como botón de retorno.
    */
   contextEyebrow?: React.ReactNode;
+  /** Nodo opcional alineado a la derecha del eyebrow de contexto (ej. el chip
+   *  de estado/moderación del admin). */
+  contextAside?: React.ReactNode;
   /**
    * Video del proyecto. Cuando viene, el hero se parte en 2 columnas:
    * texto a la izquierda, video a la derecha — el video deja de flotar
@@ -103,6 +106,7 @@ export function ProjectHero({
   actions,
   satellite,
   contextEyebrow,
+  contextAside,
   video,
 }: Props) {
   const eyebrowParts: React.ReactNode[] = [];
@@ -135,12 +139,15 @@ export function ProjectHero({
   // Bloque de texto del hero — reutilizado tal cual lleve o no video al lado.
   const textBlock = (
     <div className="min-w-0">
-      {contextEyebrow && (
-        typeof contextEyebrow === "string" ? (
-          <p className="eyebrow !text-navy/40 mb-5">{contextEyebrow}</p>
-        ) : (
-          <div className="mb-5">{contextEyebrow}</div>
-        )
+      {(contextEyebrow || contextAside) && (
+        <div className="mb-5 flex items-center justify-between gap-3">
+          {typeof contextEyebrow === "string" ? (
+            <p className="eyebrow !text-navy/40">{contextEyebrow}</p>
+          ) : (
+            <div className="min-w-0">{contextEyebrow}</div>
+          )}
+          {contextAside && <div className="shrink-0">{contextAside}</div>}
+        </div>
       )}
       {eyebrowParts.length > 0 && (
         // leading-none: la caja de línea abraza el texto, así el ícono

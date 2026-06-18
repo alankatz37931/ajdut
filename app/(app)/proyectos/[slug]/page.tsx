@@ -786,6 +786,16 @@ export default async function ProjectPage({ params }: Params) {
               {t.heroContextEyebrow.replace(/^—\s*/, "")}
             </BackLink>
           }
+          contextAside={
+            access.role === "ADMIN" &&
+            (project.status === "ACTIVE" || project.status === "SUSPENDED") ? (
+              <AdminModerationActions
+                projectSlug={project.slug}
+                status={project.status}
+                dict={dict.adminApproval}
+              />
+            ) : undefined
+          }
           eyebrow={{
             kind: t.kind[project.kind] ?? project.kind,
             sector: project.startupProfile?.sector,
@@ -1000,16 +1010,6 @@ export default async function ProjectPage({ params }: Params) {
               </div>
             )}
 
-            {/* Moderación del admin (inactivar / reactivar / eliminar) — barra
-                fina debajo del CTA, solo para admin sobre proyectos aprobados. */}
-            {access.role === "ADMIN" &&
-              (project.status === "ACTIVE" || project.status === "SUSPENDED") && (
-                <AdminModerationActions
-                  projectSlug={project.slug}
-                  status={project.status}
-                  dict={dict.adminApproval}
-                />
-              )}
 
             {/* Link a las políticas DEL PROYECTO (participaciones, dividendos,
                 frecuencia) — ancla a la sección de políticas más abajo en la
