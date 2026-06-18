@@ -16,9 +16,9 @@ type Pending = "inactivate" | "activate" | "delete";
 
 /**
  * Estado del proyecto (Activo / Inactivo) como un chip de color, con un menú
- * que despliega las acciones de moderación del admin. Cambiar de estado o
- * eliminar abre un modal mínimo de confirmación. Solo lo ve el admin. Va en
- * el hero, a la derecha del eyebrow de contexto.
+ * que despliega las acciones de moderación del admin. Cambiar de estado se
+ * aplica directo; eliminar (irreversible) pide confirmación en un modal.
+ * Solo lo ve el admin. Va en el hero, al lado del eyebrow de contexto.
  */
 export function AdminModerationActions({
   projectSlug,
@@ -31,7 +31,7 @@ export function AdminModerationActions({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [confirm, setConfirm] = useState<Pending | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -49,44 +49,35 @@ export function AdminModerationActions({
   }, [open]);
 
   useEffect(() => {
-    if (!confirm) return;
+    if (!confirmDelete) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setConfirm(null);
+      if (e.key === "Escape") setConfirmDelete(false);
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [confirm]);
+  }, [confirmDelete]);
 
-  function execute() {
-    if (!confirm) return;
+  function run(p: Pending) {
     const action: (slug: string) => Promise<ProjectModerationResult> =
-      confirm === "inactivate"
+      p === "inactivate"
         ? suspendProjectAction
-        : confirm === "activate"
+        : p === "activate"
           ? reactivateProjectAction
           : deleteProjectAction;
-    const redirectTo = confirm === "delete" ? "/proyectos" : undefined;
+    const redirectTo = p === "delete" ? "/proyectos" : undefined;
     setError(null);
+    setOpen(false);
+    setConfirmDelete(false);
     startTransition(async () => {
       const r = await action(projectSlug);
       if (!r.ok) {
         setError(r.error);
-        setConfirm(null);
         return;
       }
-      setConfirm(null);
       if (redirectTo) router.push(redirectTo as Route);
       else router.refresh();
     });
   }
-
-  const question =
-    confirm === "inactivate"
-      ? dict.confirmInactivateQuestion
-      : confirm === "activate"
-        ? dict.confirmActivateQuestion
-        : dict.confirmDeleteQuestion;
-  const isDelete = confirm === "delete";
 
   return (
     <div ref={wrapRef} className="relative inline-block">
@@ -134,10 +125,7 @@ export function AdminModerationActions({
             <button
               type="button"
               role="menuitem"
-              onClick={() => {
-                setOpen(false);
-                setConfirm("inactivate");
-              }}
+              onClick={() => run("inactivate")}
               className="block w-full text-left px-3 py-2 text-sm text-amber-700 hover:bg-paper-light"
             >
               {dict.inactivateBtn}
@@ -146,10 +134,7 @@ export function AdminModerationActions({
             <button
               type="button"
               role="menuitem"
-              onClick={() => {
-                setOpen(false);
-                setConfirm("activate");
-              }}
+              onClick={() => run("activate")}
               className="block w-full text-left px-3 py-2 text-sm text-emerald-700 hover:bg-paper-light"
             >
               {dict.reactivateBtn}
@@ -160,7 +145,7 @@ export function AdminModerationActions({
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              setConfirm("delete");
+              setConfirmDelete(true);
             }}
             className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-paper-light hairline-t"
           >
@@ -175,10 +160,10 @@ export function AdminModerationActions({
         </p>
       )}
 
-      {confirm && (
+      {confirmDelete && (
         <div
           className="fixed inset-0 z-50 bg-navy/40 flex items-center justify-center p-4 text-left"
-          onClick={() => setConfirm(null)}
+          onClick={() => setConfirmDelete(false)}
         >
           <div
             role="dialog"
@@ -186,11 +171,11 @@ export function AdminModerationActions({
             className="bg-paper hairline w-full max-w-sm p-6 space-y-5"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-navy leading-relaxed">{question}</p>
+            <p className="text-navy leading-relaxed">{dict.confirmDeleteQuestion}</p>
             <div className="flex items-center justify-end gap-5">
               <button
                 type="button"
-                onClick={() => setConfirm(null)}
+                onClick={() => setConfirmDelete(false)}
                 disabled={isPending}
                 className="eyebrow hover:!text-gold p-0 m-0 border-0 bg-transparent cursor-pointer disabled:opacity-50"
               >
@@ -198,13 +183,11 @@ export function AdminModerationActions({
               </button>
               <button
                 type="button"
-                onClick={execute}
+                onClick={() => run("delete")}
                 disabled={isPending}
-                className={`btn-primary disabled:opacity-50 ${
-                  isDelete ? "!bg-red-600 hover:!bg-red-700" : ""
-                }`}
+                className="btn-primary !bg-red-600 hover:!bg-red-700 disabled:opacity-50"
               >
-                {isDelete ? dict.confirmDeleteBtn : dict.confirmYesBtn}
+                {dict.confirmDeleteBtn}
               </button>
             </div>
           </div>

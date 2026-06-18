@@ -1366,10 +1366,7 @@ export const dict: Dict = {
     inactivateBtn: "Deactivate",
     reactivateBtn: "Activate",
     deleteBtn: "Delete",
-    confirmInactivateQuestion: "Set this project to inactive?",
-    confirmActivateQuestion: "Set this project to active?",
     confirmDeleteQuestion: "Delete this project? This action can't be undone.",
-    confirmYesBtn: "Yes, confirm",
     confirmDeleteBtn: "DELETE",
   },
 

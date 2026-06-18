@@ -1374,11 +1374,8 @@ export const dict = {
     inactivateBtn: "Inactivar",
     reactivateBtn: "Activar",
     deleteBtn: "Eliminar",
-    confirmInactivateQuestion: "¿Seguro que querés pasarlo a inactivo?",
-    confirmActivateQuestion: "¿Seguro que querés pasarlo a activo?",
     confirmDeleteQuestion:
       "¿Seguro que querés eliminarlo? Esta acción no se puede deshacer.",
-    confirmYesBtn: "Sí, aceptar",
     confirmDeleteBtn: "ELIMINAR",
   },
 
