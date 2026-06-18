@@ -57,14 +57,6 @@ export default async function NosotrosPage() {
             </p>
             <div className="space-y-4">
               <PurposeItem
-                label={t.purpose.mision.label}
-                body={t.purpose.mision.body}
-              />
-              <PurposeItem
-                label={t.purpose.vision.label}
-                body={t.purpose.vision.body}
-              />
-              <PurposeItem
                 label={t.purpose.propuesta.label}
                 body={t.purpose.propuesta.body}
               />

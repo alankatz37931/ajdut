@@ -2067,14 +2067,6 @@ export const dict = {
     },
     purpose: {
       sectionTitle: "Propósito",
-      mision: {
-        label: "Misión",
-        body: "Coordinar comunidades de negocio donde la confianza, la comunicación y el valor compartido son la base de cada participación.",
-      },
-      vision: {
-        label: "Visión",
-        body: "Ser la plataforma de referencia en Latinoamérica para comunidades de negocio donde el valor se construye colectivamente —y se hereda.",
-      },
       propuesta: {
         label: "Propuesta",
         body: "Convertimos proyectos en comunidades. Cada participación es una membresía activa: acceso a información, reportes y comunicación directa con quienes operan el negocio.",

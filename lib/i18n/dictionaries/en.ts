@@ -2057,14 +2057,6 @@ export const dict: Dict = {
     },
     purpose: {
       sectionTitle: "Purpose",
-      mision: {
-        label: "Mission",
-        body: "Coordinate business communities where trust, communication and shared value are the foundation of every participation.",
-      },
-      vision: {
-        label: "Vision",
-        body: "To be Latin America's reference platform for business communities where value is built collectively —and inherited.",
-      },
       propuesta: {
         label: "Proposition",
         body: "We turn projects into communities. Every participation is an active membership: access to information, reports and direct communication with the people running the business.",
