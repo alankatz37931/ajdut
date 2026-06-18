@@ -180,22 +180,22 @@ export function ProjectHero({
       {/* Byline del founder + CTAs en UN grid de 2 columnas: así la web
           (col 2, fila 1) queda alineada justo arriba del botón secundario
           / "Abrir chat" (col 2, fila 2). Las columnas comparten track. */}
-      <div className="mt-8 grid grid-cols-[auto_auto] justify-start gap-x-3 gap-y-6 items-center">
-        {/* Col 1 · Fila 1 — bloque del founder */}
-        <div className="flex items-center gap-3 min-w-0">
-          <span
-            aria-hidden
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center hairline font-mono text-xs text-navy bg-paper-light"
-          >
-            {initialsOf(founderName)}
-          </span>
-          <div className="min-w-0">
-            <p className="text-navy leading-tight truncate">{founderName}</p>
-            <p className="eyebrow !text-navy/40 mt-1">{founderRoleLabel}</p>
+      <div className="mt-8 space-y-6">
+        {/* Founder + web del proyecto — separación fija, consistente esté el
+            proyecto activo o inactivo (no depende de los CTAs de abajo). */}
+        <div className="flex flex-wrap items-center gap-x-12 gap-y-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <span
+              aria-hidden
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center hairline font-mono text-xs text-navy bg-paper-light"
+            >
+              {initialsOf(founderName)}
+            </span>
+            <div className="min-w-0">
+              <p className="text-navy leading-tight truncate">{founderName}</p>
+              <p className="eyebrow !text-navy/40 mt-1">{founderRoleLabel}</p>
+            </div>
           </div>
-        </div>
-        {/* Col 2 · Fila 1 — web del proyecto */}
-        <div className="min-w-0">
           {cleanWebsite && websiteUrl && (
             <a
               href={websiteUrl}
@@ -207,11 +207,10 @@ export function ProjectHero({
             </a>
           )}
         </div>
-        {/* Fila 2 — CTAs en una fila que ocupa las dos columnas y alinea a la
-            izquierda. Así, si falta el primario (p.ej. proyecto inactivo), el
-            secundario/chat no queda corrido a la derecha. */}
+        {/* CTAs — fila propia, alineada a la izquierda. Si falta el primario
+            (proyecto inactivo), el secundario/chat no queda corrido. */}
         {actions.length > 0 && (
-          <div className="col-span-2 flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {primaryAction && <ActionLink a={primaryAction} />}
             {secondaryAction && <ActionLink a={secondaryAction} />}
           </div>
