@@ -1369,18 +1369,17 @@ export const dict = {
     confirmRejectBtn: "Confirmar rechazo",
     cancelBtn: "Cancelar",
     errReasonTooShort: "La razón debe tener al menos 10 caracteres.",
-    moderationActiveBody: "Activo · visible para los miembros",
-    moderationSuspendedBody: "Inactivo · solo lo ven vos y el project owner",
+    stateActive: "Activo",
+    stateInactive: "Inactivo",
     inactivateBtn: "Inactivar",
-    inactivateBody:
-      "Deja de verse para los miembros (vos y el owner lo siguen viendo). Se puede reactivar cuando quieras.",
-    confirmInactivateBtn: "Sí, inactivar",
-    reactivateBtn: "Reactivar",
-    reactivatingBtn: "Reactivando…",
+    reactivateBtn: "Activar",
     deleteBtn: "Eliminar",
-    deleteBody:
-      "El proyecto desaparece de la plataforma para todos. Esto se revierte solo desde la base de datos.",
-    confirmDeleteBtn: "Sí, eliminar",
+    confirmInactivateQuestion: "¿Seguro que querés pasarlo a inactivo?",
+    confirmActivateQuestion: "¿Seguro que querés pasarlo a activo?",
+    confirmDeleteQuestion:
+      "¿Seguro que querés eliminarlo? Esta acción no se puede deshacer.",
+    confirmYesBtn: "Sí, aceptar",
+    confirmDeleteBtn: "ELIMINAR",
   },
 
   projectStatus: {

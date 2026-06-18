@@ -1361,18 +1361,16 @@ export const dict: Dict = {
     confirmRejectBtn: "Confirm rejection",
     cancelBtn: "Cancel",
     errReasonTooShort: "The reason must be at least 10 characters.",
-    moderationActiveBody: "Active · visible to members",
-    moderationSuspendedBody: "Inactive · only you and the project owner see it",
+    stateActive: "Active",
+    stateInactive: "Inactive",
     inactivateBtn: "Deactivate",
-    inactivateBody:
-      "It stops being visible to members (you and the owner still see it). You can reactivate it anytime.",
-    confirmInactivateBtn: "Yes, deactivate",
-    reactivateBtn: "Reactivate",
-    reactivatingBtn: "Reactivating…",
+    reactivateBtn: "Activate",
     deleteBtn: "Delete",
-    deleteBody:
-      "The project disappears from the platform for everyone. This can only be reverted from the database.",
-    confirmDeleteBtn: "Yes, delete",
+    confirmInactivateQuestion: "Set this project to inactive?",
+    confirmActivateQuestion: "Set this project to active?",
+    confirmDeleteQuestion: "Delete this project? This action can't be undone.",
+    confirmYesBtn: "Yes, confirm",
+    confirmDeleteBtn: "DELETE",
   },
 
   projectStatus: {
