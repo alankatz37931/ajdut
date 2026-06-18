@@ -207,13 +207,14 @@ export function ProjectHero({
             </a>
           )}
         </div>
-        {/* Fila 2 — CTA primario (col 1) + secundario/chat (col 2).
-            Solo si hay alguna acción, para no dejar una fila vacía. */}
+        {/* Fila 2 — CTAs en una fila que ocupa las dos columnas y alinea a la
+            izquierda. Así, si falta el primario (p.ej. proyecto inactivo), el
+            secundario/chat no queda corrido a la derecha. */}
         {actions.length > 0 && (
-          <>
-            <div>{primaryAction && <ActionLink a={primaryAction} />}</div>
-            <div>{secondaryAction && <ActionLink a={secondaryAction} />}</div>
-          </>
+          <div className="col-span-2 flex flex-wrap items-center gap-3">
+            {primaryAction && <ActionLink a={primaryAction} />}
+            {secondaryAction && <ActionLink a={secondaryAction} />}
+          </div>
         )}
       </div>
 
