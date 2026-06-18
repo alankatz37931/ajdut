@@ -89,7 +89,7 @@ export function AdminModerationActions({
   const isDelete = confirm === "delete";
 
   return (
-    <div ref={wrapRef} className="relative inline-block text-right">
+    <div ref={wrapRef} className="relative inline-block">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -128,7 +128,7 @@ export function AdminModerationActions({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-1 min-w-[11rem] hairline bg-paper shadow-md shadow-navy/10 text-left"
+          className="absolute left-0 z-20 mt-1 min-w-[11rem] hairline bg-paper shadow-md shadow-navy/10 text-left"
         >
           {isActive ? (
             <button

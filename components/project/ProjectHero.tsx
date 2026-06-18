@@ -140,13 +140,18 @@ export function ProjectHero({
   const textBlock = (
     <div className="min-w-0">
       {(contextEyebrow || contextAside) && (
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-5 flex items-center gap-3 flex-wrap">
           {typeof contextEyebrow === "string" ? (
             <p className="eyebrow !text-navy/40">{contextEyebrow}</p>
           ) : (
-            <div className="min-w-0">{contextEyebrow}</div>
+            contextEyebrow
           )}
-          {contextAside && <div className="shrink-0">{contextAside}</div>}
+          {contextEyebrow && contextAside && (
+            <span aria-hidden className="text-navy/30">
+              ·
+            </span>
+          )}
+          {contextAside}
         </div>
       )}
       {eyebrowParts.length > 0 && (
