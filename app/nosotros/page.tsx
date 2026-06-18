@@ -46,8 +46,8 @@ export default async function NosotrosPage() {
             <p className="font-mono text-sm tracking-wider text-navy mb-3">
               <span className="text-gold">01</span> · {t.origin.title}
             </p>
-            <p className="text-navy/85 leading-relaxed">{t.origin.body1}</p>
-            <p className="mt-3 text-navy/85 leading-relaxed">{t.origin.body2}</p>
+            <p className="text-navy/85 leading-relaxed text-justify">{t.origin.body1}</p>
+            <p className="mt-3 text-navy/85 leading-relaxed text-justify">{t.origin.body2}</p>
           </div>
 
           {/* 02 · Propósito */}
@@ -104,7 +104,6 @@ export default async function NosotrosPage() {
         <p className="font-mono text-sm tracking-wider text-navy mb-3">
           <span className="text-gold">04</span> · {t.coreValues.sectionTitle}
         </p>
-        <p className="mb-4 text-navy/75 leading-relaxed">{t.coreValues.intro}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-stretch gap-6">
           <ValueCard
             title={t.coreValues.cards.transparency.title}

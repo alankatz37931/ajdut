@@ -2099,8 +2099,6 @@ export const dict = {
     },
     coreValues: {
       sectionTitle: "Valores",
-      intro:
-        "No son aspiracionales. Son criterios de entrada. Quien entra a la plataforma —como responsable o como miembro— los asume como parte del acuerdo.",
       cards: {
         transparency: {
           title: "Transparencia",

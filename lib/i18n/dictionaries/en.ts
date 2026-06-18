@@ -2089,8 +2089,6 @@ export const dict: Dict = {
     },
     coreValues: {
       sectionTitle: "Values",
-      intro:
-        "Not aspirational. They are entry criteria. Whoever enters the platform —as a project owner or as a member— accepts them as part of the agreement.",
       cards: {
         transparency: {
           title: "Transparency",
