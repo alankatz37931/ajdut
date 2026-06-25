@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils/cn";
 export function BrandMark({
   className,
   variant = "navy",
-  ariaLabel = "AJDUT — Hermandad y Unión — inicio",
+  ariaLabel = "AJDUT — Comunidades de Negocio — inicio",
 }: {
   className?: string;
   variant?: "navy" | "paper";
@@ -29,9 +29,9 @@ export function BrandMark({
     <Link href="/" aria-label={ariaLabel} className={cn("inline-flex", className)}>
       <Image
         src={src}
-        alt="AJDUT — Hermandad y Unión"
-        width={1123}
-        height={331}
+        alt="AJDUT — Comunidades de Negocio"
+        width={1920}
+        height={575}
         priority
         unoptimized
         className="h-11 w-auto"
