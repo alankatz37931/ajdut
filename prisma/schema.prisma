@@ -347,6 +347,11 @@ model StartupProfile {
   policyShares       String?
   policyDividends    String?
   dividendsFrequency String?
+
+  // Bases y condiciones del proyecto (texto libre). Las define el project owner
+  // al crear/editar el proyecto y quedan registradas como las reglas bajo las
+  // que los miembros participan. Visible en la ficha del proyecto.
+  termsAndConditions String?
 }
 
 model Founder {

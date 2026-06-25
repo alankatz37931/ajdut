@@ -58,6 +58,7 @@ type FormState = {
   policyShares: string;
   policyDividends: string;
   dividendsFrequency: string;
+  termsAndConditions: string;
 };
 
 export function NewProjectForm({
@@ -97,6 +98,7 @@ export function NewProjectForm({
     policyShares: "",
     policyDividends: "",
     dividendsFrequency: "",
+    termsAndConditions: "",
   });
   const { run, isPending, error } = useSafeAction(createProjectAction);
 
@@ -366,6 +368,20 @@ export function NewProjectForm({
           value={form.dividendsFrequency}
           onChange={handler("dividendsFrequency")}
           maxLength={120}
+        />
+      </section>
+
+      {/* Bases y condiciones */}
+      <section className="space-y-5 hairline-t pt-8">
+        <p className="eyebrow">{dict.sectionTerms}</p>
+        <p className="text-navy/75 leading-relaxed">{dict.termsIntro}</p>
+        <FloatingTextarea
+          id="termsAndConditions"
+          label={dict.termsLabel}
+          value={form.termsAndConditions}
+          onChange={handler("termsAndConditions")}
+          rows={6}
+          maxLength={8000}
         />
       </section>
 

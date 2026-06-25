@@ -772,6 +772,25 @@ export default async function ProjectPage({ params }: Params) {
     });
   }
 
+  // — Bases y condiciones (ungated). Son las reglas del proyecto que el viewer
+  // debería poder leer antes de manifestar interés, así que NO van detrás del
+  // gate de letra-chica: se muestran a cualquier viewer de la ficha.
+  const hasTerms = !!project.startupProfile?.termsAndConditions;
+  if (hasTerms) {
+    sections.push({
+      title: t.sections.terms,
+      tone: "ref",
+      anchorId: "bases",
+      node: (
+        <div className="max-w-4xl">
+          <p className="text-navy/85 leading-relaxed whitespace-pre-line text-justify">
+            {project.startupProfile?.termsAndConditions}
+          </p>
+        </div>
+      ),
+    });
+  }
+
   // Embed del video — visible para cualquier viewer del proyecto.
   const videoEmbed = project.startupProfile?.videoUrl
     ? embedUrl(project.startupProfile.videoUrl)
@@ -909,7 +928,9 @@ export default async function ProjectPage({ params }: Params) {
                 index={i + 1}
                 title={s.title}
                 tone={s.tone}
-                isFirst={i === 0}
+                // Sin regla superior en la primera sección y en la que sigue a
+                // Métricas (se pidió quitar la línea divisoria debajo de Métricas).
+                isFirst={i === 0 || sections[i - 1]?.title === t.sections.metrics}
                 anchorId={s.anchorId}
                 headerAction={s.headerAction}
               >
@@ -1023,6 +1044,19 @@ export default async function ProjectPage({ params }: Params) {
                   className="block text-center eyebrow !text-navy/40 hover:!text-gold transition-colors"
                 >
                   {t.politicasLink}
+                </a>
+              </div>
+            )}
+
+            {/* Link a las bases y condiciones del proyecto — ancla a la sección
+                de más abajo. Visible para cualquier viewer (no gated). */}
+            {hasTerms && (
+              <div className="pt-1">
+                <a
+                  href="#bases"
+                  className="block text-center eyebrow !text-navy/40 hover:!text-gold transition-colors"
+                >
+                  {t.terminosLink}
                 </a>
               </div>
             )}

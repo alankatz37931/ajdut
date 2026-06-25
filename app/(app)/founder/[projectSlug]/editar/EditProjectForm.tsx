@@ -44,6 +44,7 @@ type Initial = {
   policyShares: string;
   policyDividends: string;
   dividendsFrequency: string;
+  termsAndConditions: string;
   availableShares: number;
   /** "YYYY-MM-DD" para el <input type="date">, o "" si no hay fecha. */
   resaleAllowedFrom: string;
@@ -328,6 +329,20 @@ export function EditProjectForm({
               value={form.dividendsFrequency}
               onChange={(v) => update("dividendsFrequency", v)}
               maxLength={120}
+            />
+          </section>
+
+          {/* Bases y condiciones */}
+          <section className="space-y-5 hairline-t pt-8">
+            <p className="eyebrow">{dict.sectionTerms}</p>
+            <p className="text-navy/75 leading-relaxed">{dict.termsIntro}</p>
+            <FloatingTextarea
+              id="termsAndConditions"
+              label={dict.termsLabel}
+              value={form.termsAndConditions}
+              onChange={(v) => update("termsAndConditions", v)}
+              rows={6}
+              maxLength={8000}
             />
           </section>
 

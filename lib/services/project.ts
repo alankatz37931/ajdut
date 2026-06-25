@@ -302,6 +302,8 @@ export type UpdateProjectInfoInput = {
   policyShares?: string | null;
   policyDividends?: string | null;
   dividendsFrequency?: string | null;
+  // Bases y condiciones del proyecto (texto libre informativo).
+  termsAndConditions?: string | null;
   // Fecha a partir de la cual se habilita la reventa de participaciones.
   // String "YYYY-MM-DD" del <input type="date"> o "" / null para limpiar.
   resaleAllowedFrom?: string | null;
@@ -415,6 +417,10 @@ export async function updateProjectInfo(input: UpdateProjectInfoInput) {
         profileUpdates.dividendsFrequency = input.dividendsFrequency
           ? input.dividendsFrequency.trim() || null
           : null;
+      if (input.termsAndConditions !== undefined)
+        profileUpdates.termsAndConditions = input.termsAndConditions
+          ? input.termsAndConditions.trim() || null
+          : null;
 
       if (Object.keys(profileUpdates).length > 0) {
         await tx.startupProfile.update({
@@ -484,6 +490,8 @@ export type CreateProjectInput = {
   policyShares?: string | null;
   policyDividends?: string | null;
   dividendsFrequency?: string | null;
+  // Bases y condiciones del proyecto (texto libre informativo).
+  termsAndConditions?: string | null;
 };
 
 function slugify(text: string): string {
@@ -598,6 +606,7 @@ export async function createProject(input: CreateProjectInput) {
         policyShares: input.policyShares?.trim() || null,
         policyDividends: input.policyDividends?.trim() || null,
         dividendsFrequency: input.dividendsFrequency?.trim() || null,
+        termsAndConditions: input.termsAndConditions?.trim() || null,
       },
     });
 

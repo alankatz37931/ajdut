@@ -132,6 +132,7 @@ export default async function EditProjectPage({ params }: Params) {
           policyShares: project.startupProfile?.policyShares ?? "",
           policyDividends: project.startupProfile?.policyDividends ?? "",
           dividendsFrequency: project.startupProfile?.dividendsFrequency ?? "",
+          termsAndConditions: project.startupProfile?.termsAndConditions ?? "",
           availableShares: currentAvailable,
           // <input type="date"> exige "YYYY-MM-DD"; tomamos la parte de fecha
           // del ISO (UTC) del DateTime. "" cuando no hay restricción.

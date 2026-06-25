@@ -531,6 +531,7 @@ export const dict: Dict = {
     editInfo: "Edit information",
     seeProject: "View project →",
     politicasLink: "Company policies",
+    terminosLink: "Terms & conditions",
     revenderBtn: "Resell your participation",
     resaleLockedFmt: "You'll be able to resell your participation starting {date}.",
     resaleStartsFmt: "Resales for this project start on {date}.",
@@ -563,6 +564,7 @@ export const dict: Dict = {
       reports: "Reports",
       capTable: "Cap table",
       policies: "Policies",
+      terms: "Terms & conditions",
       yourParticipation: "Your position",
     },
     summary: {
@@ -1453,6 +1455,10 @@ export const dict: Dict = {
     policySharesLabel: "Participation policy (optional)",
     policyDividendsLabel: "Dividend policy (optional)",
     dividendsFreqLabel: "Dividend frequency (optional)",
+    sectionTerms: "Terms & conditions",
+    termsIntro:
+      "The rules and conditions under which members take part in your project. They're kept on record and shown on the project page. Optional but recommended.",
+    termsLabel: "Terms & conditions (optional)",
     videoIntro:
       "If there's a pitch video, its link goes here.",
     videoUrlLabel: "Video URL (YouTube / Vimeo)",
@@ -1635,6 +1641,10 @@ export const dict: Dict = {
     policySharesLabel: "Participation policy (optional)",
     policyDividendsLabel: "Dividend policy (optional)",
     dividendsFreqLabel: "Dividend frequency (optional)",
+    sectionTerms: "Terms & conditions",
+    termsIntro:
+      "The rules and conditions under which members take part in your project. They're kept on record and shown on the project page. Optional but recommended.",
+    termsLabel: "Terms & conditions (optional)",
     availableLabelFmt: "Available (max {n})",
     todayAvailableFmt: "Today: {n} available.",
     emissionConsultLegend:

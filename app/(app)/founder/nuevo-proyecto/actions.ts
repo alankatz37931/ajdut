@@ -66,6 +66,7 @@ export async function createProjectAction(
   }
   const policyDividends = get("policyDividends") || undefined;
   const dividendsFrequency = get("dividendsFrequency") || undefined;
+  const termsAndConditions = get("termsAndConditions") || undefined;
 
   if (name.length < 2) return { ok: false, error: "Falta el nombre del proyecto." };
   if (oneLiner.length < 10) return { ok: false, error: "Falta un one-liner descriptivo." };
@@ -147,6 +148,7 @@ export async function createProjectAction(
       policyShares,
       policyDividends,
       dividendsFrequency,
+      termsAndConditions,
     });
   } catch (e) {
     if (e instanceof DomainError) {

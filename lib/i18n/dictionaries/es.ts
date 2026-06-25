@@ -536,6 +536,7 @@ export const dict = {
     editInfo: "Editar información",
     seeProject: "Ver proyecto →",
     politicasLink: "Políticas de la empresa",
+    terminosLink: "Bases y condiciones",
     revenderBtn: "Revender tu participación",
     resaleLockedFmt: "Podrás revender tu participación a partir del {date}.",
     resaleStartsFmt: "Las reventas de este proyecto inician el {date}.",
@@ -568,6 +569,7 @@ export const dict = {
       reports: "Reportes",
       capTable: "Distribución de capital",
       policies: "Políticas",
+      terms: "Bases y condiciones",
       yourParticipation: "Tu participación",
     } as Record<string, string>,
     summary: {
@@ -1462,6 +1464,10 @@ export const dict = {
     policySharesLabel: "Política de participaciones (opcional)",
     policyDividendsLabel: "Política de dividendos (opcional)",
     dividendsFreqLabel: "Frecuencia de dividendos (opcional)",
+    sectionTerms: "Bases y condiciones",
+    termsIntro:
+      "Las reglas y condiciones bajo las que los miembros participan en tu proyecto. Quedan registradas y visibles en la ficha. Es opcional pero recomendado.",
+    termsLabel: "Bases y condiciones (opcional)",
     videoIntro:
       "Si hay un video de presentación del proyecto, su link va acá.",
     videoUrlLabel: "URL del video (YouTube / Vimeo)",
@@ -1644,6 +1650,10 @@ export const dict = {
     policySharesLabel: "Política de participaciones (opcional)",
     policyDividendsLabel: "Política de dividendos (opcional)",
     dividendsFreqLabel: "Frecuencia de dividendos (opcional)",
+    sectionTerms: "Bases y condiciones",
+    termsIntro:
+      "Las reglas y condiciones bajo las que los miembros participan en tu proyecto. Quedan registradas y visibles en la ficha. Es opcional pero recomendado.",
+    termsLabel: "Bases y condiciones (opcional)",
     availableLabelFmt: "Disponibles (máximo {n})",
     todayAvailableFmt: "Hoy: {n} disponibles.",
     emissionConsultLegend:
