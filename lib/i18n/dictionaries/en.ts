@@ -256,7 +256,7 @@ export const dict: Dict = {
     founderMetricas: "Metrics · AJDUT",
     home: "AJDUT",
     founderHome: "Project owner · AJDUT",
-    partner: "Partner · AJDUT",
+    partner: "Member · AJDUT",
     proyectos: "Projects · AJDUT",
     proyectoDetailFallback: "Project · AJDUT",
     founderDashboardFallback: "Project owner · AJDUT",

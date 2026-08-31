@@ -260,7 +260,7 @@ export const dict = {
     founderMetricas: "Métricas · AJDUT",
     home: "AJDUT",
     founderHome: "Project owner · AJDUT",
-    partner: "Socio · AJDUT",
+    partner: "Miembro · AJDUT",
     proyectos: "Proyectos · AJDUT",
     proyectoDetailFallback: "Proyecto · AJDUT",
     founderDashboardFallback: "Project owner · AJDUT",
