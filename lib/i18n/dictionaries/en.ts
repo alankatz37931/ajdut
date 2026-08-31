@@ -170,7 +170,7 @@ export const dict: Dict = {
     },
     review: {
       typeLabel: "Type",
-      typePerson: "Partner",
+      typePerson: "Member",
       typeCompany: "Company",
       nameLabel: "Name",
       emailLabel: "Email",
@@ -2057,7 +2057,7 @@ export const dict: Dict = {
       liability: {
         title: "Disclaimer of liability",
         body:
-          "AJDUT acts exclusively as a registry and traceability platform. The platform is not responsible for the outcome, financial performance, administrative management, or veracity of the information of the projects published. Responsibility for compliance with obligations, management of resources, accuracy of metrics, investment decisions, and any resulting damages rests solely with the project owners and the parties involved. Partners acknowledge and accept that their participation is their own independent decision and at their own risk.",
+          "AJDUT acts exclusively as a registry and traceability platform. The platform is not responsible for the outcome, financial performance, administrative management, or veracity of the information of the projects published. Responsibility for compliance with obligations, management of resources, accuracy of metrics, investment decisions, and any resulting damages rests solely with the project owners and the parties involved. Members acknowledge and accept that their participation is their own independent decision and at their own risk.",
       },
     },
   },

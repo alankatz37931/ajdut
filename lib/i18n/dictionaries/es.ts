@@ -174,7 +174,7 @@ export const dict = {
     },
     review: {
       typeLabel: "Tipo",
-      typePerson: "Socio",
+      typePerson: "Miembro",
       typeCompany: "Empresa",
       nameLabel: "Nombre",
       emailLabel: "Email",
@@ -2067,7 +2067,7 @@ export const dict = {
       liability: {
         title: "Cláusula de no responsabilidad",
         body:
-          "AJDUT actúa exclusivamente como plataforma de registro y trazabilidad. La plataforma no se hace responsable por el resultado, desempeño financiero, gestión administrativa, ni veracidad de la información de los proyectos publicados. La responsabilidad sobre el cumplimiento de obligaciones, la administración de los recursos, la veracidad de las métricas, las decisiones de inversión y cualquier daño derivado recae exclusivamente sobre los project owners y las partes involucradas. Los socios reconocen y aceptan que su participación es una decisión propia, independiente y bajo su propio riesgo.",
+          "AJDUT actúa exclusivamente como plataforma de registro y trazabilidad. La plataforma no se hace responsable por el resultado, desempeño financiero, gestión administrativa, ni veracidad de la información de los proyectos publicados. La responsabilidad sobre el cumplimiento de obligaciones, la administración de los recursos, la veracidad de las métricas, las decisiones de inversión y cualquier daño derivado recae exclusivamente sobre los project owners y las partes involucradas. Los miembros reconocen y aceptan que su participación es una decisión propia, independiente y bajo su propio riesgo.",
       },
     },
   },
