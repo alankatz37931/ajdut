@@ -39,6 +39,8 @@ describe("getProjectAccess — OWNER", () => {
       canSeeCapTable: true,
       canSeePrivateMetrics: true,
       canManifestInterest: false,
+      // Dueño que NO es admin → no modera (aprobación es facultad de ADMIN).
+      canModerate: false,
     });
   });
 
@@ -50,6 +52,19 @@ describe("getProjectAccess — OWNER", () => {
       projectStatus: "PENDING_APPROVAL",
     });
     expect(access.canEdit).toBe(true);
+  });
+
+  it("un dueño que ADEMÁS es admin puede moderar su propio proyecto (aprobar el suyo)", async () => {
+    const access = await getProjectAccess({
+      ...baseArgs,
+      userId: "owner-1",
+      userRole: "ADMIN",
+      projectStatus: "PENDING_APPROVAL",
+    });
+    // Sigue siendo OWNER (edita su contenido) pero conserva la facultad de moderar.
+    expect(access.role).toBe("OWNER");
+    expect(access.canEdit).toBe(true);
+    expect(access.canModerate).toBe(true);
   });
 });
 
@@ -83,6 +98,29 @@ describe("getProjectAccess — ADMIN", () => {
     const pending = await getProjectAccess({ ...baseArgs, userRole: "ADMIN", projectStatus: "PENDING_APPROVAL" });
     expect(active.canManifestInterest).toBe(true);
     expect(pending.canManifestInterest).toBe(false);
+  });
+
+  it("admin (no dueño) puede moderar", async () => {
+    const access = await getProjectAccess({ ...baseArgs, userRole: "ADMIN" });
+    expect(access.canModerate).toBe(true);
+  });
+});
+
+describe("getProjectAccess — canModerate es exclusivo de ADMIN", () => {
+  it.each([
+    ["PARTNER" as const],
+    ["PROJECT_OWNER" as const],
+    ["PLATFORM" as const],
+  ])("rol %s (no dueño) no puede moderar", async (role) => {
+    const access = await getProjectAccess({ ...baseArgs, userRole: role });
+    expect(access.canModerate).toBe(false);
+  });
+
+  it("CO_ADMIN vinculado tampoco modera (aprobar es solo ADMIN)", async () => {
+    findUniqueMock.mockResolvedValueOnce({ projectId: "project-1", userId: "user-1" });
+    const access = await getProjectAccess({ ...baseArgs, userRole: "CO_ADMIN" });
+    expect(access.role).toBe("CO_ADMIN");
+    expect(access.canModerate).toBe(false);
   });
 });
 

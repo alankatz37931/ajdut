@@ -15,6 +15,15 @@ export type ProjectAccess = {
   canSeeCapTable: boolean;
   canSeePrivateMetrics: boolean;
   canManifestInterest: boolean;
+  /**
+   * Puede moderar el proyecto: aprobar/rechazar (PENDING_APPROVAL) y
+   * suspender/reactivar/eliminar (ACTIVE/SUSPENDED). Es una facultad del rol
+   * ADMIN de la plataforma, INDEPENDIENTE de la propiedad: un admin que además
+   * es dueño del proyecto igual puede moderarlo (aprobar el suyo). El backing
+   * server action igualmente exige `requireRole(["ADMIN"])`, así que esta flag
+   * solo gobierna la visibilidad de los controles en la UI.
+   */
+  canModerate: boolean;
 };
 
 /**
@@ -25,6 +34,7 @@ export type ProjectAccess = {
  *  - Ver proyecto ACTIVE: cualquier usuario autenticado (público dentro de la app).
  *  - Comprar/manifestar interés: cualquier usuario autenticado EXCEPTO el propio dueño.
  *  - Cap table y métricas privadas: solo Admin + Owner (info sensible).
+ *  - Moderar (aprobar/suspender/eliminar): cualquier ADMIN, aunque sea el dueño.
  */
 export async function getProjectAccess(args: {
   userId: string;
@@ -34,8 +44,13 @@ export async function getProjectAccess(args: {
   projectStatus: string;
 }): Promise<ProjectAccess> {
   const isActive = args.projectStatus === "ACTIVE";
+  // La facultad de moderar la da el rol ADMIN de la plataforma, no la relación
+  // con el proyecto. Se calcula una vez y se propaga incluso al branch de OWNER,
+  // para que un admin pueda aprobar/moderar un proyecto propio.
+  const isAdmin = args.userRole === "ADMIN";
 
-  // Owner del proyecto → control total de contenido, sin manifestar interés sobre sí mismo
+  // Owner del proyecto → control total de contenido, sin manifestar interés
+  // sobre sí mismo. Si además es admin, conserva la facultad de moderar.
   if (args.ownerId === args.userId) {
     return {
       role: "OWNER",
@@ -44,6 +59,7 @@ export async function getProjectAccess(args: {
       canSeeCapTable: true,
       canSeePrivateMetrics: true,
       canManifestInterest: false,
+      canModerate: isAdmin,
     };
   }
 
@@ -56,6 +72,7 @@ export async function getProjectAccess(args: {
       canSeeCapTable: false,
       canSeePrivateMetrics: false,
       canManifestInterest: false,
+      canModerate: false,
     };
   }
 
@@ -68,6 +85,7 @@ export async function getProjectAccess(args: {
       canSeeCapTable: true,
       canSeePrivateMetrics: true,
       canManifestInterest: isActive,
+      canModerate: true,
     };
   }
 
@@ -84,6 +102,7 @@ export async function getProjectAccess(args: {
         canSeeCapTable: true,
         canSeePrivateMetrics: true,
         canManifestInterest: isActive,
+        canModerate: false,
       };
     }
   }
@@ -98,6 +117,7 @@ export async function getProjectAccess(args: {
       canSeeCapTable: false,
       canSeePrivateMetrics: false,
       canManifestInterest: true,
+      canModerate: false,
     };
   }
 
@@ -109,5 +129,6 @@ export async function getProjectAccess(args: {
     canSeeCapTable: false,
     canSeePrivateMetrics: false,
     canManifestInterest: false,
+    canModerate: false,
   };
 }

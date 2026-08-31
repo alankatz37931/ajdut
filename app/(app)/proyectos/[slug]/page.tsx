@@ -806,7 +806,7 @@ export default async function ProjectPage({ params }: Params) {
             </BackLink>
           }
           contextAside={
-            access.role === "ADMIN" &&
+            access.canModerate &&
             (project.status === "ACTIVE" || project.status === "SUSPENDED") ? (
               <AdminModerationActions
                 projectSlug={project.slug}
@@ -865,8 +865,10 @@ export default async function ProjectPage({ params }: Params) {
         </div>
       )}
 
-      {/* Panel de moderación: admin sobre un proyecto PENDING_APPROVAL. */}
-      {access.role === "ADMIN" && project.status === "PENDING_APPROVAL" && (
+      {/* Panel de moderación: admin sobre un proyecto PENDING_APPROVAL.
+          `canModerate` es true para cualquier ADMIN, incluso si es el dueño del
+          proyecto, así que un admin puede aprobar el suyo propio. */}
+      {access.canModerate && project.status === "PENDING_APPROVAL" && (
         <div className="mt-8">
           <AdminApprovalActions projectSlug={project.slug} dict={dict.adminApproval} />
         </div>
