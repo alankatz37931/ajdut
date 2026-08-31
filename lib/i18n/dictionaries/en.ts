@@ -129,10 +129,10 @@ export const dict: Dict = {
       review: "Review",
     },
     kind: {
-      personTitle: "Partner",
+      personTitle: "Member",
       personSubtitle: "I want to be a member of the community",
       personDescription:
-        "Join as an individual partner: explore projects, express interest and take part in the network.",
+        "Join as an individual member: explore projects, express interest and take part in the network.",
       companyTitle: "Company",
       companySubtitle: "I want to register my project",
       companyDescription:

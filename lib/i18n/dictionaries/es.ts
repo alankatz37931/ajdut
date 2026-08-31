@@ -133,10 +133,10 @@ export const dict = {
       review: "Revisión",
     } as Record<string, string>,
     kind: {
-      personTitle: "Socio",
+      personTitle: "Miembro",
       personSubtitle: "Quiero ser miembro de la comunidad",
       personDescription:
-        "Para sumarse como socio individual: ver proyectos, manifestar interés y participar de la red.",
+        "Para sumarse como miembro individual: ver proyectos, manifestar interés y participar de la red.",
       companyTitle: "Empresa",
       companySubtitle: "Quiero registrar mi proyecto",
       companyDescription:
