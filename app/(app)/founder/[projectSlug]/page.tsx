@@ -505,6 +505,16 @@ export default async function FounderDashboardPage({ params }: Params) {
           editHref={`/founder/${project.slug}?addDoc=1#documentos` as Route}
           editLabel={dict.documentsPanel.newDocEyebrow}
           flush={project.documents.length > 0}
+          secondaryAction={
+            <a
+              href={`/panel-print/${project.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="eyebrow !text-navy/50 hover:!text-gold transition-colors shrink-0"
+            >
+              {dict.documentsPanel.downloadReportBtn}
+            </a>
+          }
         >
           <DocumentsPanel
             projectSlug={project.slug}
@@ -696,6 +706,7 @@ function FounderSection({
   editLabel,
   id,
   flush,
+  secondaryAction,
   children,
 }: {
   n: string;
@@ -708,6 +719,9 @@ function FounderSection({
    *  cierra con su propia divisoria (última fila de una lista) o cuando se
    *  prefiere la sección sin línea divisoria. */
   flush?: boolean;
+  /** Acción extra en el header, a la IZQUIERDA del link de edición, con el mismo
+   *  estilo eyebrow. Ej.: "Descargar reporte trimestral" junto a "Nuevo reporte". */
+  secondaryAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -717,13 +731,18 @@ function FounderSection({
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <WidgetHeader n={n} title={title} />
-        {editHref && editLabel && (
-          <Link
-            href={editHref}
-            className="eyebrow !text-navy/50 hover:!text-gold transition-colors shrink-0"
-          >
-            {editLabel} →
-          </Link>
+        {(secondaryAction || (editHref && editLabel)) && (
+          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 shrink-0">
+            {secondaryAction}
+            {editHref && editLabel && (
+              <Link
+                href={editHref}
+                className="eyebrow !text-navy/50 hover:!text-gold transition-colors shrink-0"
+              >
+                {editLabel} →
+              </Link>
+            )}
+          </div>
         )}
       </div>
       <div className="mt-5">{children}</div>
