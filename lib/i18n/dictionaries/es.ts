@@ -68,17 +68,17 @@ export const dict = {
     eyebrow: "— Donde los proyectos construyen su comunidad",
     titleLine1: "El sistema que coordina",
     titleLine2: "lo más valioso de tu empresa:",
-    titleLine3: "Socios, colaboradores e inversionistas.",
+    titleLine3: "Miembros, colaboradores e inversionistas.",
     valueTransparency: "Transparencia",
     valueUnity: "Unidad",
     valueValue: "Valor",
     valueLegacy: "Legado",
     description:
-      "Con AJDUT puedes estructurar la participación de socios, comunicarte, enviar reportes y conectar con las personas correctas para crecer tu negocio mediante economía colaborativa.",
+      "Con AJDUT puedes estructurar la participación de miembros, comunicarte, enviar reportes y conectar con las personas correctas para crecer tu negocio mediante economía colaborativa.",
     descriptionBold: "Todo registrado, verificado y coordinado.",
     ctaApply: "Quiero ser parte",
     pillarsHeading: "Por qué los miembros eligen AJDUT",
-    pillarManagementTitle: "Coordinación entre socios",
+    pillarManagementTitle: "Coordinación entre miembros",
     pillarManagementBody:
       "Asigna participaciones, define roles y mantén a todos alineados con la misma información en tiempo real.",
     pillarEcosystemTitle: "Conexión con personas afines",
@@ -348,7 +348,7 @@ export const dict = {
     metaTitle: "Chat · AJDUT",
     back: "Chat del proyecto",
     subtitle:
-      "Conversación interna entre el project owner, los co-admins y los socios. Los miembros se ven con alias cuando lo configuraron. Sin tiempo real: los mensajes nuevos aparecen al actualizar la página.",
+      "Conversación interna entre el project owner, los co-admins y los miembros. Los miembros se ven con alias cuando lo configuraron. Sin tiempo real: los mensajes nuevos aparecen al actualizar la página.",
     sectionConversation: "Conversación",
     sectionNewMessage: "Nuevo mensaje",
     sectionNewPoll: "Nueva encuesta",
@@ -542,7 +542,7 @@ export const dict = {
     resaleStartsFmt: "Las reventas de este proyecto inician el {date}.",
     metricSociosDirectivos: "Directivos",
     metricSociosEmbajadores: "Embajadores",
-    metricSociosTotales: "Socios",
+    metricSociosTotales: "Miembros",
     metricValuacionActual: "Valuación",
     heroContextEyebrow: "— Ficha del proyecto",
     nextStep: "Próximo paso",
@@ -629,7 +629,7 @@ export const dict = {
       CAC: "CAC",
       LTV: "LTV",
       GROSS_MARGIN: "Margen bruto",
-      HEADCOUNT: "Socios directivos y operativos",
+      HEADCOUNT: "Miembros directivos y operativos",
       CUSTOM: "Custom",
     } as Record<string, string>,
     policies: {
@@ -659,7 +659,7 @@ export const dict = {
       unassigned: "Disponible (sin asignar)",
       reserved: "Reservado (entrega gradual)",
       unclassified: "Sin clasificar",
-      preExistingFallback: "Socios pre-existentes",
+      preExistingFallback: "Miembros pre-existentes",
     },
     participationStatus: {
       ASSIGNED: "Asignada",
@@ -916,7 +916,7 @@ export const dict = {
       sharesSuffix: "participaciones",
       transferPending: "Traspaso enviado · esperando aprobación del equipo de AJDUT",
       inBoard: "Publicada en reventa",
-      awaitingBuyerValidation: "Un socio la adquirió — esperando validación",
+      awaitingBuyerValidation: "Un miembro la adquirió — esperando validación",
       listBtn: "Poner en reventa →",
       removeBtn: "Cancelar reventa",
       removingBtn: "Cancelando…",
@@ -947,7 +947,7 @@ export const dict = {
     ownerValidation: {
       sectionTitle: "00 · Reventas pendientes de tu validación",
       intro:
-        "Como project owner, tu OK es necesario para que una reventa avance. Esto te da control sobre quién entra como socio: podés ofrecer primero a socios activos y evitar socios no deseados.",
+        "Como project owner, tu OK es necesario para que una reventa avance. Esto te da control sobre quién entra como miembro: podés ofrecer primero a miembros activos y evitar miembros no deseados.",
       sharesSuffix: "participaciones",
       fromTo: "{seller} → {buyer}",
       priceLabel: "Precio/participación",
@@ -1027,7 +1027,7 @@ export const dict = {
     metricsEmpty: "No se registraron métricas en este período.",
     activityEyebrow: "Actividad del período",
     milestonesLabel: "Hitos logrados",
-    newHoldersLabel: "Nuevos socios",
+    newHoldersLabel: "Nuevos miembros",
     newHoldersFmt: "{count} nuevo(s) · {shares} participaciones asignadas",
     dividendsLabel: "Dividendos repartidos",
     docsLabel: "Reportes subidos",
@@ -1545,7 +1545,7 @@ export const dict = {
     sectionMetricas: "Métricas",
     metricSociosDirectivos: "Directivos",
     metricSociosEmbajadores: "Embajadores",
-    metricSociosTotales: "Socios",
+    metricSociosTotales: "Miembros",
     metricValuacionActual: "Valuación",
     sectionDocumentos: "Reportes periódicos",
     sectionAvisos: "Avisos a miembros",
@@ -1606,7 +1606,7 @@ export const dict = {
       reservedLabel: "Reservado (entrega gradual)",
       unassignedClass: "Sin clasificar",
       manageLink: "Ver equipo →",
-      preExistingFallback: "Socios pre-existentes",
+      preExistingFallback: "Miembros pre-existentes",
     },
     checklist: {
       completeBtn: "Completar →",
@@ -1725,7 +1725,7 @@ export const dict = {
     stageScale: "Scale — en expansión territorial",
     resaleAllowedFromLabel: "Reventa habilitada a partir de",
     resaleAllowedFromHelper:
-      "Si queda vacío, la reventa está habilitada desde el inicio. Con una fecha, los socios no pueden revender antes de esa fecha.",
+      "Si queda vacío, la reventa está habilitada desde el inicio. Con una fecha, los miembros no pueden revender antes de esa fecha.",
   },
 
   founderComposicion: {
@@ -1819,7 +1819,7 @@ export const dict = {
       CAC: "CAC",
       LTV: "LTV",
       GROSS_MARGIN: "Gross margin",
-      HEADCOUNT: "Socios directivos y operativos",
+      HEADCOUNT: "Miembros directivos y operativos",
       CUSTOM: "Personalizada",
     } as Record<string, string>,
     form: {
@@ -1921,7 +1921,7 @@ export const dict = {
   founderInvitar: {
     section: "Invitar miembro",
     description:
-      "Una propuesta para agregar un socio a tu proyecto. La propuesta queda pendiente de validación por el equipo de AJDUT. Cuando un admin la apruebe se crea la cuenta (si hace falta), se asignan las participaciones desde el pool y se le envía el email al invitado.",
+      "Una propuesta para agregar un miembro a tu proyecto. La propuesta queda pendiente de validación por el equipo de AJDUT. Cuando un admin la apruebe se crea la cuenta (si hace falta), se asignan las participaciones desde el pool y se le envía el email al invitado.",
     poolLabel: "— Pool disponible para proponer",
     emailLabel: "Email del invitado",
     fullNameLabel: "Nombre completo",
