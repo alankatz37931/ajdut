@@ -974,6 +974,7 @@ export const dict = {
 
   documentsPanel: {
     addBtn: "+ Agregar reporte",
+    downloadReportBtn: "Descargar reporte trimestral ↓",
     newDocEyebrow: "Nuevo reporte",
     empty: "Todavía no compartiste ningún reporte con tus miembros.",
     deleteConfirm:
@@ -1001,6 +1002,38 @@ export const dict = {
       notFound: "Reporte no encontrado.",
       deleteError: "Error al eliminar el reporte.",
     },
+  },
+
+  reportPrint: {
+    metaTitle: "Reporte trimestral · AJDUT",
+    docTitle: "Reporte trimestral",
+    periodLabel: "Período",
+    generatedLabel: "Generado el",
+    toolbarHint: "Usá \"Guardar como PDF\" en el diálogo de impresión.",
+    downloadBtn: "Descargar PDF",
+    companyEyebrow: "La empresa",
+    valuationLabel: "Valuación",
+    totalSharesLabel: "Participaciones",
+    committedLabel: "Colocadas",
+    ofLabel: "de",
+    noValuation: "Sin valuación declarada",
+    capTableEyebrow: "Composición de capital",
+    capEmpty: "Todavía no hay composición de capital para mostrar.",
+    capPool: "Disponible",
+    capReserved: "Reservado",
+    capUnclassified: "Sin clasificar",
+    teamEyebrow: "Equipo",
+    metricsEyebrow: "Métricas · últimos 3 meses",
+    metricsEmpty: "No se registraron métricas en este período.",
+    activityEyebrow: "Actividad del período",
+    milestonesLabel: "Hitos logrados",
+    newHoldersLabel: "Nuevos socios",
+    newHoldersFmt: "{count} nuevo(s) · {shares} participaciones asignadas",
+    dividendsLabel: "Dividendos repartidos",
+    docsLabel: "Reportes subidos",
+    activityEmpty: "Sin actividad registrada en el período.",
+    disclaimer:
+      "Documento generado automáticamente por AJDUT a partir de los datos cargados en la plataforma. Las cifras son informativas y no constituyen un estado financiero auditado.",
   },
 
   adminReventas: {

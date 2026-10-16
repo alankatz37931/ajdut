@@ -969,6 +969,7 @@ export const dict: Dict = {
 
   documentsPanel: {
     addBtn: "+ Add report",
+    downloadReportBtn: "Download quarterly report ↓",
     newDocEyebrow: "New report",
     empty: "You haven't shared any reports with your members yet.",
     deleteConfirm: "Remove \"{title}\"? This cannot be undone.",
@@ -996,6 +997,38 @@ export const dict: Dict = {
       notFound: "Report not found.",
       deleteError: "Error removing the report.",
     },
+  },
+
+  reportPrint: {
+    metaTitle: "Quarterly report · AJDUT",
+    docTitle: "Quarterly report",
+    periodLabel: "Period",
+    generatedLabel: "Generated on",
+    toolbarHint: "Use \"Save as PDF\" in the print dialog.",
+    downloadBtn: "Download PDF",
+    companyEyebrow: "The company",
+    valuationLabel: "Valuation",
+    totalSharesLabel: "Participations",
+    committedLabel: "Placed",
+    ofLabel: "of",
+    noValuation: "No valuation declared",
+    capTableEyebrow: "Capital composition",
+    capEmpty: "No capital composition to show yet.",
+    capPool: "Available",
+    capReserved: "Reserved",
+    capUnclassified: "Unclassified",
+    teamEyebrow: "Team",
+    metricsEyebrow: "Metrics · last 3 months",
+    metricsEmpty: "No metrics recorded in this period.",
+    activityEyebrow: "Activity in the period",
+    milestonesLabel: "Milestones achieved",
+    newHoldersLabel: "New members",
+    newHoldersFmt: "{count} new · {shares} participations assigned",
+    dividendsLabel: "Dividends distributed",
+    docsLabel: "Reports uploaded",
+    activityEmpty: "No activity recorded in the period.",
+    disclaimer:
+      "Document generated automatically by AJDUT from the data loaded into the platform. Figures are informational and do not constitute an audited financial statement.",
   },
 
   adminReventas: {

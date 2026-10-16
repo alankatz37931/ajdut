@@ -58,6 +58,20 @@ export function DocumentsPanel({
 
   return (
     <div>
+      {/* Reporte trimestral auto-generado: abre la ruta de impresión en una
+          pestaña nueva, que arma el PDF con los datos de la empresa + lo que
+          pasó en los últimos 3 meses y dispara el diálogo de descarga. */}
+      <div className="mb-5">
+        <a
+          href={`/panel-print/${projectSlug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-outline inline-block"
+        >
+          {dict.downloadReportBtn}
+        </a>
+      </div>
+
       {/* El CTA "Nuevo documento →" vive en el FounderSection (top-right),
           mismo estilo que las otras secciones (Métricas, Avisos, etc.).
           Llega como ?addDoc=1 y se atrapa en el useEffect de arriba. */}
