@@ -1,94 +1,119 @@
 import { describe, it, expect } from "vitest";
 import {
-  buildParticipationExportRows,
+  buildHoldingsExportRows,
   type ExportProject,
 } from "@/lib/services/participations-export";
 
 const owner = (id: string, fullName: string) => ({ id, fullName });
 
-describe("buildParticipationExportRows", () => {
-  it("una fila por persona-proyecto, sumando varias participaciones de la misma persona", () => {
-    const projects: ExportProject[] = [
-      {
+// Helper para armar un proyecto con defaults vacíos.
+function project(partial: Partial<ExportProject> & { name: string }): ExportProject {
+  return {
+    totalShares: 10000,
+    participations: [],
+    founders: [],
+    externalHoldings: [],
+    ...partial,
+  };
+}
+
+describe("buildHoldingsExportRows — participaciones", () => {
+  it("una fila por persona, sumando varias participaciones de la misma persona", () => {
+    const rows = buildHoldingsExportRows([
+      project({
         name: "Niv",
         participations: [
           { shareCount: 100, isPlatformStake: false, currentOwner: owner("u1", "Ana") },
           { shareCount: 50, isPlatformStake: false, currentOwner: owner("u1", "Ana") },
           { shareCount: 200, isPlatformStake: false, currentOwner: owner("u2", "Beto") },
         ],
-      },
-    ];
-    const rows = buildParticipationExportRows(projects);
+      }),
+    ]);
     expect(rows).toEqual([
-      { projectName: "Niv", personName: "Ana", shares: 150 },
-      { projectName: "Niv", personName: "Beto", shares: 200 },
+      { projectName: "Niv", personName: "Ana", type: "PARTICIPATION", shares: 150 },
+      { projectName: "Niv", personName: "Beto", type: "PARTICIPATION", shares: 200 },
     ]);
   });
 
   it("excluye el pool disponible (sin dueño) y el stake institucional de plataforma", () => {
-    const projects: ExportProject[] = [
-      {
-        name: "Proyecto X",
+    const rows = buildHoldingsExportRows([
+      project({
+        name: "X",
         participations: [
-          { shareCount: 1000, isPlatformStake: false, currentOwner: null }, // pool
-          { shareCount: 500, isPlatformStake: true, currentOwner: owner("plat", "AJDUT") }, // plataforma
+          { shareCount: 1000, isPlatformStake: false, currentOwner: null },
+          { shareCount: 500, isPlatformStake: true, currentOwner: owner("plat", "AJDUT") },
           { shareCount: 300, isPlatformStake: false, currentOwner: owner("u1", "Ana") },
         ],
-      },
-    ];
-    const rows = buildParticipationExportRows(projects);
-    expect(rows).toEqual([{ projectName: "Proyecto X", personName: "Ana", shares: 300 }]);
+      }),
+    ]);
+    expect(rows).toEqual([
+      { projectName: "X", personName: "Ana", type: "PARTICIPATION", shares: 300 },
+    ]);
   });
+});
 
-  it("agrupa por id, no por nombre (dos personas con el mismo nombre = dos filas)", () => {
-    const projects: ExportProject[] = [
-      {
+describe("buildHoldingsExportRows — fundadores", () => {
+  it("convierte el equity% del fundador activo a acciones sobre el total", () => {
+    const rows = buildHoldingsExportRows([
+      project({
         name: "P",
-        participations: [
-          { shareCount: 10, isPlatformStake: false, currentOwner: owner("u1", "Juan Pérez") },
-          { shareCount: 20, isPlatformStake: false, currentOwner: owner("u2", "Juan Pérez") },
+        totalShares: 10000,
+        founders: [
+          { fullName: "Dani", equityPercent: 80, isActive: true }, // 80% de 10000 = 8000
+          { fullName: "Inactivo", equityPercent: 10, isActive: false }, // excluido
         ],
-      },
-    ];
-    const rows = buildParticipationExportRows(projects);
-    expect(rows).toHaveLength(2);
-    expect(rows.every((r) => r.personName === "Juan Pérez")).toBe(true);
-    expect(rows.map((r) => r.shares).sort()).toEqual([10, 20]);
+      }),
+    ]);
+    expect(rows).toEqual([
+      { projectName: "P", personName: "Dani", type: "FOUNDER", shares: 8000 },
+    ]);
   });
+});
 
-  it("ordena por proyecto y luego por persona", () => {
-    const projects: ExportProject[] = [
-      {
-        name: "Zeta",
-        participations: [
-          { shareCount: 5, isPlatformStake: false, currentOwner: owner("u1", "Ana") },
+describe("buildHoldingsExportRows — acciones previas (externas)", () => {
+  it("incluye tenencias externas con su label y shareCount", () => {
+    const rows = buildHoldingsExportRows([
+      project({
+        name: "P",
+        externalHoldings: [
+          { label: "Inversor ángel", shareCount: 500 },
+          { label: null, shareCount: 300 }, // usa fallback
+          { label: "  ", shareCount: 0 }, // 0 → excluido
         ],
-      },
-      {
+      }),
+    ]);
+    expect(rows).toEqual([
+      { projectName: "P", personName: "Inversor ángel", type: "EXTERNAL", shares: 500 },
+      { projectName: "P", personName: "Pre-existente", type: "EXTERNAL", shares: 300 },
+    ]);
+  });
+});
+
+describe("buildHoldingsExportRows — combinado + orden", () => {
+  it("incluye las tres fuentes y ordena por proyecto → tipo (fundador, previo, participación) → persona", () => {
+    const rows = buildHoldingsExportRows([
+      project({
         name: "Alfa",
+        totalShares: 1000,
         participations: [
-          { shareCount: 5, isPlatformStake: false, currentOwner: owner("u3", "Carlos") },
-          { shareCount: 5, isPlatformStake: false, currentOwner: owner("u2", "Ana") },
+          { shareCount: 100, isPlatformStake: false, currentOwner: owner("u1", "Zoe") },
         ],
-      },
-    ];
-    const rows = buildParticipationExportRows(projects);
-    expect(rows.map((r) => `${r.projectName}/${r.personName}`)).toEqual([
-      "Alfa/Ana",
-      "Alfa/Carlos",
-      "Zeta/Ana",
+        founders: [{ fullName: "Fede", equityPercent: 50, isActive: true }], // 500
+        externalHoldings: [{ label: "Previo", shareCount: 50 }],
+      }),
+    ]);
+    expect(rows.map((r) => `${r.type}:${r.personName}:${r.shares}`)).toEqual([
+      "FOUNDER:Fede:500",
+      "EXTERNAL:Previo:50",
+      "PARTICIPATION:Zoe:100",
     ]);
   });
 
-  it("proyecto sin participaciones de personas → sin filas", () => {
-    const projects: ExportProject[] = [
-      {
-        name: "Vacío",
-        participations: [
-          { shareCount: 1000, isPlatformStake: false, currentOwner: null },
-        ],
-      },
-    ];
-    expect(buildParticipationExportRows(projects)).toEqual([]);
+  it("ordena por nombre de proyecto primero", () => {
+    const rows = buildHoldingsExportRows([
+      project({ name: "Zeta", founders: [{ fullName: "A", equityPercent: 10, isActive: true }], totalShares: 100 }),
+      project({ name: "Alfa", founders: [{ fullName: "B", equityPercent: 10, isActive: true }], totalShares: 100 }),
+    ]);
+    expect(rows.map((r) => r.projectName)).toEqual(["Alfa", "Zeta"]);
   });
 });
