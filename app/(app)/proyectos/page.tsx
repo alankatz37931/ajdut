@@ -107,9 +107,19 @@ export default async function ProjectsDiscoveryPage({
   const header = (
     <header className="pt-5 pb-5 sm:pt-7 sm:pb-7">
       <p className="eyebrow">{t.eyebrowMember}</p>
-      <h1 className="font-sans mt-3 sm:mt-4 text-h1 text-navy break-words">
-        {t.title}
-      </h1>
+      <div className="mt-3 sm:mt-4 flex flex-wrap items-end justify-between gap-3">
+        <h1 className="font-sans text-h1 text-navy break-words">{t.title}</h1>
+        {/* Export a Excel de participaciones (proyecto · persona · acciones).
+            Descarga directa vía la ruta GET — solo admin, dato sensible. */}
+        {isAdmin && (
+          <a
+            href="/api/export/participaciones"
+            className="btn-outline !px-4 !py-2 !text-xs whitespace-nowrap shrink-0"
+          >
+            {t.exportExcelBtn}
+          </a>
+        )}
+      </div>
       {!isAdmin && (
         <p className="mt-3 text-navy/75 leading-relaxed">{t.intro}</p>
       )}

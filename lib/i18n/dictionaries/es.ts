@@ -477,6 +477,7 @@ export const dict = {
   projectList: {
     eyebrowMember: "— AJDUT",
     title: "Proyectos",
+    exportExcelBtn: "Descargar Excel",
     exploreBtn: "Conoce más",
     pendingApproval: "pendientes de aprobación",
     pendingApprovalSingular: "pendiente de aprobación",
