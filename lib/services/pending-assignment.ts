@@ -1110,9 +1110,12 @@ export async function inspectTargetConfirmationToken(
   });
   if (!pending) return { ok: false, error: "TOKEN_NOT_FOUND" };
   if (pending.status !== "PENDING") return { ok: false, error: "TOKEN_RESOLVED" };
+  // Si el target YA confirmó, mostramos "ya confirmaste" aunque el token haya
+  // expirado — el feedback de éxito no depende de la expiry.
   if (
-    !pending.targetConfirmationTokenExpiresAt ||
-    pending.targetConfirmationTokenExpiresAt.getTime() < Date.now()
+    !pending.targetAcceptedAt &&
+    (!pending.targetConfirmationTokenExpiresAt ||
+      pending.targetConfirmationTokenExpiresAt.getTime() < Date.now())
   ) {
     return { ok: false, error: "TOKEN_EXPIRED" };
   }
@@ -1129,7 +1132,10 @@ export async function inspectTargetConfirmationToken(
     shareCount: pending.shareCount,
     message: pending.inviteMessage,
     alreadyAcceptedAt: pending.targetAcceptedAt,
-    expiresAt: pending.targetConfirmationTokenExpiresAt,
+    // En el branch "ya confirmado" salteamos el check de expiry y el token puede
+    // seguir vivo; la página no muestra `expiresAt` en ese caso. El fallback solo
+    // satisface el tipo (Date no nullable) — en el flujo normal nunca es null.
+    expiresAt: pending.targetConfirmationTokenExpiresAt ?? new Date(),
   };
 }
 
@@ -1168,6 +1174,21 @@ export async function confirmTargetAcceptance(
         `La propuesta ya fue resuelta (${pending.status}).`
       );
     }
+
+    // Idempotente: si el target YA confirmó, no re-ejecutamos efectos ni
+    // re-registramos auditoría. El link se deja vivo a propósito (ver abajo)
+    // para que al recargar/reabrir muestre "ya confirmaste" en vez de
+    // "link no válido".
+    if (pending.targetAcceptedAt) {
+      return {
+        pendingId: pending.id,
+        projectName: pending.project.name,
+        projectSlug: pending.project.slug,
+        shareCount: pending.shareCount,
+        bothPartiesConfirmed: pending.proposerAcceptedAt !== null,
+      };
+    }
+
     if (
       !pending.targetConfirmationTokenExpiresAt ||
       pending.targetConfirmationTokenExpiresAt.getTime() < Date.now()
@@ -1183,9 +1204,11 @@ export async function confirmTargetAcceptance(
       where: { id: pending.id },
       data: {
         targetAcceptedAt: now,
-        // Consumir el token (single-use).
-        targetConfirmationTokenHash: null,
-        targetConfirmationTokenExpiresAt: null,
+        // El token NO se anula acá: queda vivo para que, si el target recarga
+        // o reabre el link, vea "ya confirmaste" (antes mostraba "link no
+        // válido" porque el server re-renderiza y no encontraba el token).
+        // El admin lo anula al aprobar/rechazar la propuesta; la re-confirmación
+        // es idempotente (guard de arriba), así que no es un hueco de seguridad.
       },
     });
 
