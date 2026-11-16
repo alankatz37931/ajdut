@@ -1723,8 +1723,15 @@ export const dict: Dict = {
   founderComposicion: {
     section: "Shareholder composition",
     description:
-      "Each participant belongs to one of the 5 classes (Director, Advisor, Administrative, Ambassador and Passive investor). Members see the capital distribution aggregated by class — number of people and percentage — without names.",
+      "Each participant belongs to one of the classes (Director, Advisor, Administrative, Ambassador, Passive investor) or to a custom class you create with “Other…”. Members see the capital distribution aggregated by class — number of people and percentage — without names.",
     genericError: "An error occurred.",
+    newClass: {
+      option: "Other… (create class)",
+      placeholder: "E.g.: CTO, CAE…",
+      createBtn: "Create →",
+      creatingBtn: "Creating…",
+      cancelBtn: "Cancel",
+    },
     holders: {
       eyebrow: "— AJDUT shareholders",
       helper:

@@ -4,7 +4,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/client";
 import { getDict, getLocale } from "@/lib/i18n";
 import { ProjectHeader } from "@/components/founder/ProjectHeader";
-import { ensureProjectClasses } from "@/lib/services/shareholder-class";
+import { getAssignableClasses } from "@/lib/services/shareholder-class";
 import { TeamEditor } from "./TeamEditor";
 import { CompositionEditor } from "./CompositionEditor";
 
@@ -49,12 +49,10 @@ export default async function FounderTeamPage({ params }: Params) {
   if (project.ownerId !== user.id) notFound();
   if (!project.startupProfile) notFound();
 
-  // Clases FIJAS: las 4 canónicas (idempotente). Sirven tanto al selector de
-  // clase del equipo como a la reasignación de participantes de la composición.
-  const classes = (await ensureProjectClasses(prisma, project.id)).map((c) => ({
-    id: c.id,
-    name: c.name,
-  }));
+  // Clases asignables: las 5 canónicas (idempotentes) + las custom del owner
+  // ("Otro…"). Sirven tanto al selector de clase del equipo como a la
+  // reasignación de participantes de la composición.
+  const classes = await getAssignableClasses(prisma, project.id);
 
   const founders = project.startupProfile.founders.map((f) => ({
     id: f.id,

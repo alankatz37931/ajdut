@@ -107,3 +107,35 @@ describe("computeCapTableByClass — el reservado es fila propia", () => {
     expect(byClass.poolShares).toBe(700);
   });
 });
+
+describe("computeCapTableByClass — clases custom (sin kind)", () => {
+  it("una clase custom pasada en `classes` es fila propia con su nombre, no 'sin clasificar'", () => {
+    const byClass = computeCapTableByClass(
+      {
+        totalShares: 1000,
+        founders: [],
+        externalHoldings: [],
+        participations: [
+          {
+            status: "ASSIGNED",
+            shareCount: 150,
+            isPlatformStake: false,
+            classId: "custom-cto",
+            currentOwner: { id: "u1", alias: null, fullName: "Ana" },
+          },
+        ],
+      },
+      [
+        { id: "c-dir", name: "Directivo", kind: "DIRECTIVO" },
+        { id: "custom-cto", name: "CTO", kind: null },
+      ]
+    );
+    const cto = byClass.rows.find((r) => r.key === "custom-cto");
+    expect(cto).toBeDefined();
+    expect(cto?.kind).toBe("class");
+    expect(cto?.name).toBe("CTO");
+    expect(cto?.shares).toBe(150);
+    expect(cto?.people).toBe(1);
+    expect(byClass.rows.some((r) => r.kind === "unclassified")).toBe(false);
+  });
+});

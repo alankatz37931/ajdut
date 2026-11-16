@@ -1,4 +1,5 @@
 import type { ParticipantClass, Prisma, PrismaClient } from "@prisma/client";
+import { ValidationError } from "./errors";
 
 /**
  * Las 4 clases de participación son FIJAS para todo proyecto. No se crean ni
@@ -122,4 +123,75 @@ export async function ensureProjectClasses(
   }
 
   return result.sort((a, b) => a.order - b.order);
+}
+
+// ─── Clases custom ("Otro…") ────────────────────────────────────────
+//
+// El owner puede crear clases propias (ej. "CTO", "CAE") además de las 5
+// canónicas. Se guardan con `kind=null` y `custom=true`. Las legacy sin kind
+// quedan `custom=false` y no se muestran (compat hacia atrás).
+
+/** Nombres reservados: los de las canónicas + sus alias (ver NAME_TO_KIND). */
+const RESERVED_NAMES = new Set<string>([
+  ...CANONICAL_CLASSES.map((c) => c.name.toLowerCase()),
+  ...Object.keys(NAME_TO_KIND),
+]);
+
+/**
+ * Clases que el owner puede ASIGNAR a un participante: las 5 canónicas
+ * (garantizadas vía ensureProjectClasses) + las custom del proyecto. Ordenadas.
+ */
+export async function getAssignableClasses(
+  db: Db,
+  projectId: string
+): Promise<{ id: string; name: string }[]> {
+  await ensureProjectClasses(db, projectId);
+  return db.shareholderClass.findMany({
+    where: { projectId, OR: [{ kind: { not: null } }, { custom: true }] },
+    orderBy: { order: "asc" },
+    select: { id: true, name: true },
+  });
+}
+
+/**
+ * Crea una clase custom (kind=null, custom=true) para el proyecto y la devuelve.
+ * Si ya existe una clase con ese nombre (case-insensitive), la reutiliza.
+ * Rechaza nombres vacíos/largos o que choquen con una clase canónica.
+ */
+export async function createCustomClass(
+  db: Db,
+  projectId: string,
+  rawName: string
+): Promise<{ id: string; name: string }> {
+  const name = rawName.trim();
+  if (name.length < 2 || name.length > 40) {
+    throw new ValidationError(
+      "name",
+      "El nombre de la clase debe tener entre 2 y 40 caracteres."
+    );
+  }
+  if (RESERVED_NAMES.has(name.toLowerCase())) {
+    throw new ValidationError(
+      "name",
+      "Ese nombre corresponde a una clase del sistema. Elegí otro."
+    );
+  }
+
+  // Reutilizar si ya existe una clase con ese nombre en el proyecto.
+  const existing = await db.shareholderClass.findFirst({
+    where: { projectId, name: { equals: name, mode: "insensitive" } },
+    select: { id: true, name: true },
+  });
+  if (existing) return existing;
+
+  const agg = await db.shareholderClass.aggregate({
+    where: { projectId },
+    _max: { order: true },
+  });
+  const order = (agg._max.order ?? CANONICAL_CLASSES.length - 1) + 1;
+
+  return db.shareholderClass.create({
+    data: { projectId, name, kind: null, custom: true, order },
+    select: { id: true, name: true },
+  });
 }

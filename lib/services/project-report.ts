@@ -171,7 +171,7 @@ export async function getProjectReport(
   const byClass = computeCapTableByClass(
     buildCapTableInput(project),
     project.shareholderClasses
-      .filter((c) => c.kind)
+      .filter((c) => c.kind || c.custom)
       .map((c) => ({ id: c.id, name: c.name, kind: c.kind }))
   );
 

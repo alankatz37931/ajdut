@@ -67,7 +67,7 @@ export default async function FounderDashboardPage({ params }: Params) {
       },
       shareholderClasses: {
         orderBy: { order: "asc" },
-        select: { id: true, name: true, kind: true, order: true },
+        select: { id: true, name: true, kind: true, custom: true, order: true },
       },
       _count: { select: { shareholderClasses: true, externalHoldings: true } },
     },
@@ -103,7 +103,7 @@ export default async function FounderDashboardPage({ params }: Params) {
   const byClass = computeCapTableByClass(
     capInput,
     project.shareholderClasses
-      .filter((c) => c.kind)
+      .filter((c) => c.kind || c.custom)
       .map((c) => ({ id: c.id, name: c.name, kind: c.kind }))
   );
 

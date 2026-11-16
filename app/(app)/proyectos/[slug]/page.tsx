@@ -187,7 +187,7 @@ export default async function ProjectPage({ params }: Params) {
   const byClass = computeCapTableByClass(
     capInput,
     project.shareholderClasses
-      .filter((c) => c.kind)
+      .filter((c) => c.kind || c.custom)
       .map((c) => ({ id: c.id, name: c.name, kind: c.kind }))
   );
   // Distribución por clase en formato compacto — la ven los 3 tipos de usuario.

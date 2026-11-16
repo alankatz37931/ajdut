@@ -1732,8 +1732,15 @@ export const dict = {
   founderComposicion: {
     section: "Composición de participaciones",
     description:
-      "Cada participante pertenece a una de las 5 clases (Directivo, Consejero, Administrativo, Embajador e Inversor pasivo). Los miembros ven la distribución de capital agregada por clase — cantidad de personas y porcentaje — sin nombres.",
+      "Cada participante pertenece a una de las clases (Directivo, Consejero, Administrativo, Embajador, Inversor pasivo) o a una clase propia que crees con «Otro…». Los miembros ven la distribución de capital agregada por clase — cantidad de personas y porcentaje — sin nombres.",
     genericError: "Ocurrió un error.",
+    newClass: {
+      option: "Otro… (crear clase)",
+      placeholder: "Ej.: CTO, CAE…",
+      createBtn: "Crear →",
+      creatingBtn: "Creando…",
+      cancelBtn: "Cancelar",
+    },
     holders: {
       eyebrow: "— Participantes de AJDUT",
       helper:

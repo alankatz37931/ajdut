@@ -11,6 +11,7 @@ import {
 import { normalizeOptionalUrl } from "@/lib/utils/url";
 import { buildCapTableInput, CAP_TABLE_INCLUDE } from "@/lib/services/project";
 import { computeCapTable } from "@/lib/services/cap-table";
+import { createCustomClass } from "@/lib/services/shareholder-class";
 
 type Result =
   | { ok: true }
@@ -187,22 +188,47 @@ async function ownedProject(projectSlug: string) {
 }
 
 /**
- * Las 4 clases de participación son FIJAS (ver `lib/services/shareholder-class`):
- * no se crean, renombran ni borran. El owner solo REASIGNA participantes entre
- * ellas. Por eso este helper valida que la clase destino exista en el proyecto Y
- * sea una de las canónicas (`kind != null`); las legacy sin `kind` no son
- * destino válido. Devuelve el `id` resuelto o `null` para "sin clase".
+ * Valida que la clase destino sea ASIGNABLE: una de las 5 canónicas
+ * (`kind != null`) o una clase custom del owner (`custom = true`). Las legacy
+ * sin `kind` y sin `custom` no son destino válido. Devuelve el `id` resuelto o
+ * `null` para "sin clase".
  */
-async function resolveCanonicalClass(
+async function resolveAssignableClass(
   projectId: string,
   classId: string
 ): Promise<string | null> {
   if (!classId) return null;
-  const cls = await prisma.shareholderClass.findUnique({ where: { id: classId } });
-  if (!cls || cls.projectId !== projectId || cls.kind === null) {
+  const cls = await prisma.shareholderClass.findUnique({
+    where: { id: classId },
+    select: { projectId: true, kind: true, custom: true },
+  });
+  if (!cls || cls.projectId !== projectId || (cls.kind === null && !cls.custom)) {
     throw new ValidationError("classId", "Clase no encontrada.");
   }
   return classId;
+}
+
+export type CreateClassResult =
+  | { ok: true; class: { id: string; name: string } }
+  | { ok: false; error: string; code?: string; field?: string };
+
+/**
+ * Crea una clase custom ("Otro…") para el proyecto y la devuelve. No asigna
+ * nada: el cliente, con la clase creada, asigna al holder o la selecciona en el
+ * formulario de tenencias externas.
+ */
+export async function createCustomClassAction(
+  projectSlug: string,
+  className: string
+): Promise<CreateClassResult> {
+  try {
+    const project = await ownedProject(projectSlug);
+    const cls = await createCustomClass(prisma, project.id, className);
+    revalidatePath(`/founder/${projectSlug}/equipo`);
+    return { ok: true, class: cls };
+  } catch (e) {
+    return toFailure(e, "createCustomClassAction");
+  }
 }
 
 export async function assignHolderClassAction(
@@ -212,7 +238,7 @@ export async function assignHolderClassAction(
 ): Promise<Result> {
   try {
     const project = await ownedProject(projectSlug);
-    const resolved = await resolveCanonicalClass(project.id, classId);
+    const resolved = await resolveAssignableClass(project.id, classId);
     await prisma.participation.updateMany({
       where: { projectId: project.id, currentOwnerId: holderUserId },
       data: { shareholderClassId: resolved },
@@ -258,7 +284,7 @@ export async function upsertExternalHoldingAction(
     if (shareCount > 1e9) {
       return { ok: false, error: "La cantidad de participaciones excede el límite permitido." };
     }
-    const resolved = await resolveCanonicalClass(project.id, input.classId);
+    const resolved = await resolveAssignableClass(project.id, input.classId);
 
     // ── Candado del cap table unificado ──────────────────────────────
     // equipo + plataforma + asignados + (todas las externas CON el cambio) no

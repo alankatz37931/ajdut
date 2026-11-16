@@ -569,6 +569,10 @@ model ShareholderClass {
   project   Project           @relation(fields: [projectId], references: [id])
   name      String
   kind      ParticipantClass?
+  // Clase propia creada por el owner (ej. "CTO", "CAE") vía "Otro…". Las
+  // canónicas tienen `kind` y `custom=false`; las custom tienen `kind=null` y
+  // `custom=true`. Las legacy sin kind quedan `custom=false` → no se muestran.
+  custom    Boolean           @default(false)
   order     Int               @default(0)
   createdAt DateTime          @default(now())
 
